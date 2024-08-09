@@ -1,0 +1,22 @@
+﻿FUNCTION "Suspension_BR" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Broyeur : "S_Broyage";
+   END_VAR
+
+   VAR_TEMP 
+      Ret : Bool;
+   END_VAR
+
+
+BEGIN
+	#Ret:= "Test_Etat_Mobile"("Index_Mobile" := #Broyeur.Mob_Alim, Etat:="Defaut");
+	IF #Ret THEN
+	    #Suspension_BR := TRUE;
+	    RETURN;
+	END_IF;
+	#Suspension_BR := FALSE;
+	RETURN;
+END_FUNCTION
+

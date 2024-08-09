@@ -1,0 +1,45 @@
+﻿FUNCTION "AttentePoidsStable" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Chpont : "S_ChargPont";
+   END_VAR
+
+   VAR_TEMP 
+      Stable : Bool;
+      Tps_Passe : Time;
+      ret : Bool;
+      Ret_RD_Sys_T : Int;
+   END_VAR
+
+
+BEGIN
+	IF NOT #Stable THEN
+	    #ret:="Tempo"(Duree:=#Chpont._TpPoidsStab, Tps_Picke:=#Chpont._DebStable, Anticip:=FALSE, Tps_Passe=>#Tps_Passe);
+	    IF #ret THEN
+	        IF #Chpont._ChargCommun._Vbasc - #Chpont._MemoPoids > #Chpont._EcartPoidsStab THEN
+	            #Chpont._MemoPoids := #Chpont._ChargCommun._Vbasc;
+	            #Stable := FALSE;
+	            #Ret_RD_Sys_T := RD_SYS_T(#Chpont._DebStable);
+	        ELSE
+	            #Stable := TRUE;
+	        END_IF;
+	    END_IF;
+	
+	    
+	    IF #Chpont._Bouton="DEBCYCLE" THEN
+	        #Chpont._SuspCircuit:=TRUE;
+	    END_IF;
+	    IF  #Chpont._Bouton="BTSUSP" THEN
+	        #Chpont._SuspCircuit := FALSE ;
+	    END_IF;
+	END_IF;
+	IF #Stable THEN
+	    #AttentePoidsStable := TRUE;
+	ELSE
+	    #AttentePoidsStable := FALSE;
+	END_IF;
+	
+	
+END_FUNCTION
+

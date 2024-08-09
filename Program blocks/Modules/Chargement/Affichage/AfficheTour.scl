@@ -1,0 +1,38 @@
+﻿FUNCTION "AfficheTour" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      GeTour : "S_GEST_TOUR";
+   END_VAR
+
+   VAR_TEMP 
+      i : USInt;
+   END_VAR
+
+
+BEGIN
+	#GeTour._ChargCommun._PtAff.Tournee._CdTour:= #GeTour._Ptzs._InfoTour._NoTour ;
+	#GeTour._ChargCommun._PtAff.Tournee._Camion := #GeTour._Ptzs._InfoTour._Camion;
+	#GeTour._ChargCommun._PtAff.Tournee._Immat := #GeTour._Ptzs._InfoTour._ImmatCamion;
+	#GeTour._ChargCommun._PtAff.Tournee._NbCommande := #GeTour._Ptzs._NbCommande;
+	
+	(* FOR #i := 0 TO #GeTour._Ptzs._NbCommande DO
+	   // #GeTour._ChargCommun._PtAff.Commande[#i]._Pf := #GeTour._Ptzs._Commande[#i]._CdMatComm;
+	   //  #GeTour._ChargCommun._PtAff.Commande[#i]._LibPf := #GeTour._Ptzs._Commande[#i]._LbMatComm;
+	   // #GeTour._ChargCommun._PtAff.Commande[#i]._Orig := #GeTour._Ptzs._Commande[#i]._Cel;
+	   //  #GeTour._ChargCommun._PtAff.Commande[#i]._ConsQte := #GeTour._Ptzs._Commande[#i]._QteCommande;
+	    #GeTour._ChargCommun._PtAff.Commande[#i]._NbCompo := #GeTour._Ptzs._Commande[#i]._NbCompo;
+	    #GeTour._ChargCommun._PtAff.Commande[#i]._CdClient := #GeTour._Ptzs._Commande[#i]._CdClient;
+	    #GeTour._ChargCommun._PtAff.Commande[#i]._NomClient := #GeTour._Ptzs._Commande[#i]._NomClient;
+	    #GeTour._ChargCommun._PtAff.Commande[#i]._Ville := #GeTour._Ptzs._Commande[#i]._Ville;
+	    #GeTour._ChargCommun._PtAff.Commande[#i]._CdPost := #GeTour._Ptzs._Commande[#i]._CdPost;
+	    #GeTour._ChargCommun._PtAff.Commande[#i]._Case := #GeTour._Ptzs._Commande[#i]._Case;
+	    
+	    
+	    // #GeTour._ChargCommun._PtAff.Commande[#i]._AutrePont := #GeTour._Ptzs._Commande[#i]._AutrePont;
+	    // #GeTour._ChargCommun._PtAff.Commande[#i]._NoCommande := #GeTour._Ptzs._Commande[#i]._NoCommande;
+	END_FOR;
+	
+	*)
+END_FUNCTION
+

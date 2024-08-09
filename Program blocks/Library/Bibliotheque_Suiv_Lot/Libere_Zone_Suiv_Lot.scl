@@ -1,0 +1,58 @@
+﻿FUNCTION "Libere_Zone_Suiv_Lot" : SInt
+TITLE = Liberation d'une zone de suivi
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : 'I.Daoudi'
+FAMILY : Suiv_Lot
+VERSION : 0.1
+//Cette fonction sert à libérer une zone de suivi si et seulement si toutes les taches sont au niveau max
+//- Paramètre d'entré : + Numéro de la zone
+//- Valeurs de retour : + 1 si cette zone existe et toutes les taches sont à leurs niveau max
+//                                     + -1 si cette zone n'existe pas ou niveau d'une tache au moin n'est pas au niveau max
+   VAR_INPUT 
+      Num_Zone : SInt;
+   END_VAR
+
+   VAR_TEMP 
+      j : SInt;
+      Ret : SInt;
+      Index_Acquit : USInt;
+      Sys_T : Date_And_Time;
+      Ret_RD_Sys_T : Int;
+      Ret_Test_Valid_Zone : SInt;
+   END_VAR
+
+
+BEGIN
+	(*
+	================================================  Documentation  ================================================
+	Cette fonction sert à libérer une zone de suivi si et seulement si toutes les taches sont au niveau max
+	- Paramètre d'entré : + Numéro de la zone
+	- Valeurs de retour : + 1 si cette zone existe et toutes les taches sont à leurs niveau max
+	                      + -1 si cette zone n'existe pas ou niveau d'une tache au moins n'est pas au niveau max
+	================================================  Documentation  ================================================
+	*)
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | Version | Date       | Autheur     | Ajouts/Modifications                                                   |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | V_1     | 13.10.2023 | I.DAOUDI    | Creation du block                                                      |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	#Ret_RD_Sys_T := RD_SYS_T(#Sys_T);
+	// Test de la validite du numero de la zone
+	#Ret_Test_Valid_Zone := "Test_Valid_Zone"(#Num_Zone);
+	IF #Ret_Test_Valid_Zone = -1 THEN
+	    #Libere_Zone_Suiv_Lot := -1;
+	    RETURN;
+	END_IF;
+	// Test si toutes les taches de la zone de suivi sont a leurs niveau haut
+	FOR #j := 0 TO "Nbr_Max_Tache" DO
+	    IF "DB_BIBLIOTHEQUE".Zones_Suivi[#Num_Zone].Taches[#j].Niveau < "Niv_Tache_Max" THEN
+	        
+	        #Libere_Zone_Suiv_Lot := -1;
+	        RETURN;
+	    END_IF;
+	END_FOR;
+	"Init_Zone_Suivi"(#Num_Zone);
+	#Libere_Zone_Suiv_Lot := 1;
+	RETURN;
+END_FUNCTION
+

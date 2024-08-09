@@ -1,0 +1,83 @@
+﻿FUNCTION "COMBASE" : WString
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : DAOUDI
+VERSION : 0.1
+   VAR_INPUT 
+      procedure_name : String;
+      values_of_record : Array[0..20] of String;
+      parameters_number : SInt;
+   END_VAR
+
+   VAR_OUTPUT 
+      ERROR_MESSAGE : String;
+   END_VAR
+
+   VAR_TEMP 
+      status : Int;
+      I : Int;
+      STRING_ID : String;
+      STRING_QUANTITE : String;
+      RECUP : WString[6000];
+      j : USInt;
+   END_VAR
+
+
+BEGIN
+	REGION INITILIZATION
+	(/*             START INITIALIZATION                */)
+	    "DB_EXECUTE_StoredProcedure".sResult := STRING_TO_WSTRING('');
+	    "DB_EXECUTE_StoredProcedure".xExecute := TRUE;
+	(/*               END INITIALIZATION                */)
+	END_REGION
+	
+	REPEAT
+	    REGION EXECUTE STORED PROCEDURE
+	        //===============================================================================================================
+	        //============================ START CALL FB StoredProcedureInputParams_SCL  ====================================
+	        //===============================================================================================================
+	       (* "DB_EXECUTE_StoredProcedure"(procedure_name := #procedure_name,
+	                                     values_of_record := #values_of_record,
+	                                     parameters_number := #parameters_number,
+	                                     sResult => #RECUP,
+	                                     stSql4SiemensInterface := "dbSql4SiemensInterface".stSql4SiemensInterface); *)
+	       "DB_EXECUTE_StoredProcedure"(procedure_name:=#procedure_name,
+	                                    values_of_record:=#values_of_record,
+	                                    parameters_number := #parameters_number,
+	                                     xReady=>"DB_EXECUTE_StoredProcedure".xReady,
+	                                     xBusy=>"DB_EXECUTE_StoredProcedure".xBusy,
+	                                     xDone=>"DB_EXECUTE_StoredProcedure".xDone,
+	                                     xError=>"DB_EXECUTE_StoredProcedure".xError,
+	                                     diResultState=>"DB_EXECUTE_StoredProcedure".diResultState,
+	                                     sResult=>#RECUP,
+	                                     stSql4SiemensInterface:= "dbSql4SiemensInterface".stSql4SiemensInterface );
+	
+	        //===============================================================================================================
+	        //============================   END CALL FB StoredProcedureInputParams_SCL  ====================================
+	        //===============================================================================================================
+	        "ResultProc".ResulRechInfoZoneREC := #RECUP;
+	    END_REGION
+	 
+	    //===================================================================================================================================================================================================================
+	    //=============================================================================== START GETTING DATA AND STORE IT ON DB RECEPTION ===================================================================================
+	    //===================================================================================================================================================================================================================
+	    IF "DB_EXECUTE_StoredProcedure".diResultState = 0   THEN //CHECK IF THE CALL HAS BEEN DONE SUCCEFULLY
+	        #COMBASE := #RECUP;
+	
+	  (*  ELSE
+	        REGION PICK_ERRORS
+	            "Gestion_Erreur_DB"(diResultState := "DB_EXECUTE_StoredProcedure".diResultState,
+	                                erreur => #ERROR_MESSAGE,
+	                                stSql4SiemensInterface := "dbSql4SiemensInterface".stSql4SiemensInterface);
+	        END_REGION *)
+	    END_IF;
+	    "Gestion_Erreur_DB"(diResultState := "DB_EXECUTE_StoredProcedure".diResultState,
+	                        erreur => #ERROR_MESSAGE,
+	                        stSql4SiemensInterface := "dbSql4SiemensInterface".stSql4SiemensInterface);
+	UNTIL "DB_EXECUTE_StoredProcedure".xExecute = FALSE  AND "DB_EXECUTE_StoredProcedure".xReady
+	    
+	END_REPEAT;
+	#COMBASE := #RECUP;
+	RETURN ;
+	
+END_FUNCTION
+

@@ -1,0 +1,29 @@
+﻿FUNCTION "FC_Ouverture_Magnetique" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Index_Mob_Magnet : Int;
+   END_VAR
+
+   VAR_TEMP 
+      Ret_Arr_Imm_Mobile : SInt;
+   END_VAR
+
+   VAR CONSTANT 
+      Pos_Fermeture : USInt := 0;
+      Pos_Ouverture : USInt := 1;
+   END_VAR
+
+
+BEGIN
+	IF "Valid_Index"(#Index_Mob_Magnet) THEN
+	    IF "DB_BIBLIOTHEQUE".Mobile[#Index_Mob_Magnet].Nbr_Pos > #Pos_Ouverture THEN
+	        "FC_Posit_Mob"(Index_Mob := #Index_Mob_Magnet,
+	                       Position := #Pos_Ouverture);
+	        RETURN;
+	    END_IF;
+	    #Ret_Arr_Imm_Mobile := "Arr_Imm_Mobile"(#Index_Mob_Magnet);
+	END_IF;
+	
+END_FUNCTION
+

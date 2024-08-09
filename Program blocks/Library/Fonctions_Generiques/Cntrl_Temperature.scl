@@ -1,0 +1,63 @@
+﻿FUNCTION "Cntrl_Temperature" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Temp : "S_Cntrl_Temperature";
+   END_VAR
+
+   VAR_TEMP 
+      Ret_RD_Sys_T : Int;
+      ret : Bool;
+      tpspasse : Time;
+   END_VAR
+
+
+BEGIN
+	//suspension amont
+	IF (#Temp._T1 <= #Temp._SeuilTempMax AND #Temp._T2 <= #Temp._SeuilTempMax) OR
+	    ("DB_BIBLIOTHEQUE".Mobile[#Temp._Mobile].Etat <> 4 AND "DB_BIBLIOTHEQUE".Mobile[#Temp._Mobile].Etat <> 3 AND "DB_BIBLIOTHEQUE".Mobile[#Temp._Mobile].Etat <> 5)
+	THEN
+	    
+	    
+	    IF #Temp._FgArretAmont = FALSE THEN
+	        #Ret_RD_Sys_T := RD_SYS_T(#Temp._DebutSuspensionAmont);
+	    END_IF;
+	    IF #Temp._FgDefaut = FALSE THEN
+	        #Ret_RD_Sys_T := RD_SYS_T(#Temp._DebutArretMobile);
+	    END_IF;
+	    
+	    
+	END_IF;
+	#ret := "Tempo"(Duree := #Temp._TpAvSuspAmo, Tps_Picke := #Temp._DebutSuspensionAmont, Anticip := FALSE, Tps_Passe => #tpspasse);
+	IF #ret THEN
+	    #Temp._FgArretAmont := TRUE;
+	    #Temp._FgAlerte := TRUE;
+	END_IF;
+	//redemarrage amont
+	IF #Temp._FgArretAmont AND (#Temp._T1 > #Temp._SeuilRelance OR #Temp._T2 > #Temp._SeuilRelance) THEN
+	    #Ret_RD_Sys_T := RD_SYS_T(#Temp._DebutRedemarrageAmont);
+	END_IF;
+	#ret := "Tempo"(Duree := #Temp._TpAvRedAmo, Tps_Picke := #Temp._DebutRedemarrageAmont, Anticip := FALSE, Tps_Passe => #tpspasse);
+	IF #ret THEN
+	    #Temp._FgArretAmont := FALSE;
+	    #Temp._FgAlerte := FALSE;
+	END_IF;
+	//arret mobile
+	
+	#ret := "Tempo"(Duree := #Temp._TpAvArrMobi, Tps_Picke := #Temp._DebutArretMobile, Anticip := FALSE, Tps_Passe => #tpspasse);
+	IF #ret THEN
+	    #Temp._FgArretMobile := TRUE;
+	    #Temp._FgDefaut := TRUE;
+	END_IF;
+	//redemarrage mobile
+	IF #Temp._FgArretMobile AND (#Temp._T1 > #Temp._SeuilRelance OR #Temp._T2 > #Temp._SeuilRelance) THEN
+	    #Ret_RD_Sys_T := RD_SYS_T(#Temp._DebutRedemarrageMobile);
+	END_IF;
+	#ret := "Tempo"(Duree := #Temp._TpAvRedMob, Tps_Picke := #Temp._DebutRedemarrageMobile, Anticip := FALSE, Tps_Passe => #tpspasse);
+	IF #ret THEN
+	    #Temp._FgArretMobile := FALSE;
+	    #Temp._FgDefaut := FALSE;
+	END_IF;
+	
+END_FUNCTION
+

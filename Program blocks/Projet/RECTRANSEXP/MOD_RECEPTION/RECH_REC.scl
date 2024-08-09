@@ -1,0 +1,200 @@
+﻿FUNCTION "RECH_REC" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      fgbase : Bool;
+   END_VAR
+
+
+BEGIN
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                        ╔════════════════════════════════════╗
+	                                                                        ║         RECEPTION FOSSE 1          ║
+	                                                                        ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	"DB_REC".REC[0].RecCommun.CommunGeneral._ParCal._MbTrans := 0; //T01
+	    "TRAIT_REC"(Fg_Base:=#fgbase,
+	                Badge := "BadgeReception1"._ptmodrec,
+	                  PT_Suiv => "DB_PTSUIV_REC"."THIS"[0],
+	                  REC:= "DB_REC".REC[0]);
+	    "Reception"(fgbase:=#fgbase,
+	                PtSuivRec := "DB_PTSUIV_REC"."THIS"[0],
+	                REC :=  "DB_REC".REC[0]);
+	    "Masquage_Cntrl_NH"(Duree:= "DB_REC".REC[0]._TpMaskNh,
+	                        TpsPicke:= "DB_REC".REC[0].RecCommun.CommunGeneral._TpsPicke,
+	                        FgMaskCtrlNh:= "DB_REC".REC[0]._FgMaskCtrlNh);
+	    "Cal_Qte_Possi"( "DB_REC".REC[0]);
+	    "Calcul_Quantité"(ParCal:= "DB_REC".REC[0].RecCommun.CommunGeneral._ParCal );
+	    "Calcul_Temps"(PARCAL :=  "DB_REC".REC[0].RecCommun.CommunGeneral._ParCal);
+	    "Scan_Intensite"("DB_CntrlInt"."THIS"[0]);
+	    "Surveillance_AlertIntensite"(fgbase:=#fgbase,
+	                                  CntrlIntens := "DB_CntrlInt"."THIS"[0] );
+	    "Surveillance_DefIntensite"(fgbase:=#fgbase,
+	                                CntrlIntens := "DB_CntrlInt"."THIS"[0]);
+	    "Gestion_DeportBande"("DB_DeportBande"."THIS"[0]);
+	    "Surveillance_AlertDB"(fgbase:=#fgbase,
+	                           No_Lot:= "DB_REC".REC[0]._Ptzs._NoLot,
+	                           Automatisme:= "DB_REC".REC[0].RecCommun.CommunGeneral._Autom,
+	                           DeportBande := "DB_DeportBande"."THIS"[0]);
+	    "Surveillance_DefDB"(fgbase:=#fgbase,
+	                         No_Lot:= "DB_REC".REC[0]._Ptzs._NoLot,
+	                         Automatisme:= "DB_REC".REC[0].RecCommun.CommunGeneral._Autom,
+	                         DeportBande :=  "DB_DeportBande"."THIS"[0]);
+	    "Badge"(fgbase := #fgbase,
+	            Badge := "BadgeReception1",
+	            REC :=  "DB_REC".REC[0]);
+	    "Voyant_Badge"(etape :=  "DB_REC".REC[0].RecCommun.CommunGeneral._Etp,
+	                   Badge := "BadgeReception1");
+	    
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                        ╔════════════════════════════════════╗
+	                                                                        ║         RECEPTION FOSSE 2          ║
+	                                                                        ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	    "DB_REC".REC[3].RecCommun.CommunGeneral._ParCal._MbTrans :=80;//TR10
+	    "TRAIT_REC"(Fg_Base:=#fgbase,
+	                "Badge" := "BadgeReception2"._ptmodrec,
+	                  PT_Suiv => "DB_PTSUIV_REC"."THIS"[3],
+	                  REC:= "DB_REC".REC[3]);
+	      "Reception"(fgbase:=#fgbase,
+	                PtSuivRec := "DB_PTSUIV_REC"."THIS"[3],
+	                REC :=  "DB_REC".REC[3]);
+	    "Masquage_Cntrl_NH"(Duree :=  "DB_REC".REC[3]._TpMaskNh,
+	                        TpsPicke :=  "DB_REC".REC[3].RecCommun.CommunGeneral._TpsPicke,
+	                        FgMaskCtrlNh :=  "DB_REC".REC[3]._FgMaskCtrlNh);
+	    "Cal_Qte_Possi"( "DB_REC".REC[3]);
+	    "Calcul_Quantité"(ParCal :=  "DB_REC".REC[3].RecCommun.CommunGeneral._ParCal);
+	    "Calcul_Temps"(PARCAL :=  "DB_REC".REC[3].RecCommun.CommunGeneral._ParCal);
+	    "Scan_Intensite"("DB_CntrlInt"."THIS"[3]);
+	    "Surveillance_AlertIntensite"(fgbase:=#fgbase,
+	                                  CntrlIntens := "DB_CntrlInt"."THIS"[3]);
+	    "Surveillance_DefIntensite"(fgbase:=#fgbase,
+	                                CntrlIntens := "DB_CntrlInt"."THIS"[3]);
+	    "Gestion_DeportBande"("DB_DeportBande"."THIS"[3]);
+	    "Surveillance_AlertDB"(fgbase:=#fgbase,
+	                           No_Lot:= "DB_REC".REC[3]._Ptzs._NoLot,
+	                           Automatisme:= "DB_REC".REC[3].RecCommun.CommunGeneral._Autom,
+	                           DeportBande := "DB_DeportBande"."THIS"[3]);
+	   
+	    
+	    "Surveillance_DefDB"(fgbase:=#fgbase,
+	                         No_Lot :=  "DB_REC".REC[3]._Ptzs._NoLot,
+	                         Automatisme :=  "DB_REC".REC[3].RecCommun.CommunGeneral._Autom,
+	                         DeportBande := "DB_DeportBande"."THIS"[3]);
+	    "Badge"(fgbase:=#fgbase,
+	            Badge := "BadgeReception2",
+	            REC :=  "DB_REC".REC[3]);
+	    "Voyant_Badge"(etape :=  "DB_REC".REC[3].RecCommun.CommunGeneral._Etp,
+	                   Badge := "BadgeReception2");
+	    
+	    
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                        ╔════════════════════════════════════╗
+	                                                                        ║         RECEPTION FOSSE 3          ║
+	                                                                        ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	    "DB_REC".REC[1].RecCommun.CommunGeneral._ParCal._MbTrans := 4;//T06
+	    "TRAIT_REC"(Fg_Base:=#fgbase,
+	                "Badge" := "BadgeReception3"._ptmodrec,
+	                  PT_Suiv => "DB_PTSUIV_REC"."THIS"[1],
+	                  REC:= "DB_REC".REC[1]);
+	      "Reception"(fgbase:=#fgbase,
+	                PtSuivRec := "DB_PTSUIV_REC"."THIS"[1],
+	                REC :=  "DB_REC".REC[1]);
+	    "Masquage_Cntrl_NH"(Duree :=  "DB_REC".REC[1]._TpMaskNh,
+	                        TpsPicke :=  "DB_REC".REC[1].RecCommun.CommunGeneral._TpsPicke,
+	                        FgMaskCtrlNh :=  "DB_REC".REC[1]._FgMaskCtrlNh);
+	    "Cal_Qte_Possi"( "DB_REC".REC[1]);
+	    "Calcul_Quantité"(ParCal :=  "DB_REC".REC[1].RecCommun.CommunGeneral._ParCal);
+	    "Calcul_Temps"(PARCAL :=  "DB_REC".REC[1].RecCommun.CommunGeneral._ParCal);
+	    "Scan_Intensite"("DB_CntrlInt"."THIS"[1]);
+	    "Surveillance_AlertIntensite"(fgbase:=#fgbase,
+	                                  CntrlIntens := "DB_CntrlInt"."THIS"[1]);
+	    "Surveillance_DefIntensite"(fgbase:=#fgbase,
+	                                CntrlIntens := "DB_CntrlInt"."THIS"[1]);
+	    "Gestion_DeportBande"("DB_DeportBande"."THIS"[1]);
+	    "Surveillance_AlertDB"(fgbase:=#fgbase,
+	                           No_Lot :=  "DB_REC".REC[1]._Ptzs._NoLot,
+	                           Automatisme :=  "DB_REC".REC[1].RecCommun.CommunGeneral._Autom,
+	                           DeportBande := "DB_DeportBande"."THIS"[1]);
+	    "Surveillance_DefDB"(fgbase:=#fgbase,
+	                         No_Lot :=  "DB_REC".REC[1]._Ptzs._NoLot,
+	                         Automatisme :=  "DB_REC".REC[1].RecCommun.CommunGeneral._Autom,
+	                         DeportBande := "DB_DeportBande"."THIS"[1]);
+	    "Badge"(fgbase:=#fgbase,
+	            Badge := "BadgeReception3",
+	            REC :=  "DB_REC".REC[1]);
+	    "Voyant_Badge"(etape :=  "DB_REC".REC[1].RecCommun.CommunGeneral._Etp,
+	                   Badge := "BadgeReception3");
+	    
+	    
+	    
+	    
+	    
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                        ╔════════════════════════════════════╗
+	                                                                        ║         RECEPTION FOSSE 4          ║
+	                                                                        ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	    "DB_REC".REC[2].RecCommun.CommunGeneral._ParCal._MbTrans := 8;//T12
+	    "TRAIT_REC"(Fg_Base:=#fgbase,
+	                "Badge" := "BadgeReception4"._ptmodrec,
+	                  PT_Suiv => "DB_PTSUIV_REC"."THIS"[2],
+	                  REC:= "DB_REC".REC[2]);
+	      "Reception"(fgbase:=#fgbase,
+	                  PtSuivRec := "DB_PTSUIV_REC"."THIS"[2],
+	                  REC :=  "DB_REC".REC[2]);
+	      "Masquage_Cntrl_NH"(Duree :=  "DB_REC".REC[2]._TpMaskNh,
+	                          TpsPicke :=  "DB_REC".REC[2].RecCommun.CommunGeneral._TpsPicke,
+	                          FgMaskCtrlNh :=  "DB_REC".REC[2]._FgMaskCtrlNh);
+	      "Cal_Qte_Possi"( "DB_REC".REC[2]);
+	      "Calcul_Quantité"(ParCal :=  "DB_REC".REC[2].RecCommun.CommunGeneral._ParCal);
+	      "Calcul_Temps"(PARCAL :=  "DB_REC".REC[2].RecCommun.CommunGeneral._ParCal);
+	    "Scan_Intensite"("DB_CntrlInt"."THIS"[2]);
+	    "Surveillance_AlertIntensite"(fgbase:=#fgbase,
+	                                  CntrlIntens := "DB_CntrlInt"."THIS"[2]);
+	    "Surveillance_DefIntensite"(fgbase:=#fgbase,
+	                                CntrlIntens := "DB_CntrlInt"."THIS"[2]);
+	    "Gestion_DeportBande"("DB_DeportBande"."THIS"[2]);
+	    "Surveillance_AlertDB"(fgbase:=#fgbase,
+	                           No_Lot :=  "DB_REC".REC[2]._Ptzs._NoLot,
+	                           Automatisme :=  "DB_REC".REC[2].RecCommun.CommunGeneral._Autom,
+	                           DeportBande := "DB_DeportBande"."THIS"[2]);
+	    "Surveillance_DefDB"(fgbase:=#fgbase,
+	                         No_Lot :=  "DB_REC".REC[2]._Ptzs._NoLot,
+	                         Automatisme :=  "DB_REC".REC[2].RecCommun.CommunGeneral._Autom,
+	                         DeportBande := "DB_DeportBande"."THIS"[2]);
+	    "Badge"(fgbase := #fgbase,
+	            Badge := "BadgeReception4",
+	            REC :=  "DB_REC".REC[2]);
+	    "Voyant_Badge"(etape :=  "DB_REC".REC[2].RecCommun.CommunGeneral._Etp,
+	                   Badge := "BadgeReception4");
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+END_FUNCTION
+

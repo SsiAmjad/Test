@@ -1,0 +1,35 @@
+﻿FUNCTION "FC_Calcul_Debit_PV_Benne" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Benne : "S_Benne";
+   END_VAR
+
+   VAR_TEMP 
+      Qte_PV : Real;
+      Tps_PV : UDInt;
+      Ret_RD_SYS_T : Int;
+      Tps_Act : Date_And_Time;
+      Tps_Passe : Time;
+   END_VAR
+
+
+BEGIN
+	IF #Benne.Nbr_Relance_Enc>0 THEN
+	    #Ret_RD_SYS_T := RD_SYS_T(#Benne.Tps_Picke_Debit);
+	    #Benne.Poids_Memo_Debit := #Benne.Composant.Net;
+	END_IF;
+	
+	// Debit en PV
+	IF "Tempo"(Duree:=T#3s, Tps_Picke:=#Benne.Tps_Picke_Debit, Anticip:=FALSE, Tps_Passe=>#Tps_Passe) THEN
+	    #Qte_PV := (#Benne.Composant.Net - (#Benne.Poids_Memo_Debit));
+	    
+	    #Benne.Composant.Debit_PV := #Qte_PV * 1.2;
+	    #Ret_RD_SYS_T := RD_SYS_T(#Benne.Tps_Picke_Debit);
+	    #Benne.Poids_Memo_Debit := #Benne.Composant.Net;
+	    RETURN;
+	END_IF;
+	
+	
+END_FUNCTION
+

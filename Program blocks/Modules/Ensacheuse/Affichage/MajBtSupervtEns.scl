@@ -1,0 +1,48 @@
+﻿FUNCTION "MajBtSupervtEns" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      "Type" : USInt;
+   END_VAR
+
+   VAR_IN_OUT 
+      Ensachage : "S_ENSACHAGE";
+   END_VAR
+
+
+BEGIN
+	CASE #Type OF
+	    0: //Chargement a l'arret
+	        #Ensachage._BtFin:= 0;
+	        #Ensachage._BtSusp := 0;
+	        #Ensachage._BtDepCycle := 0;
+	        #Ensachage._EnsaCommun._DefEvol := 0;
+	        RETURN;
+	    1: //Attente demarrage chargement
+	        #Ensachage._BtFin := 1;
+	        #Ensachage._BtSusp := 0;
+	        #Ensachage._BtDepCycle := 1;
+	        #Ensachage._EnsaCommun._DefEvol := 1;
+	        RETURN;
+	    2: // chargement en cours
+	        #Ensachage._BtFin := 1;
+	        #Ensachage._BtSusp := 1;
+	        #Ensachage._BtDepCycle := 1;
+	        #Ensachage._FgCgtOrg := 1;
+	        RETURN;
+	    3: // Suspension
+	        #Ensachage._BtFin := 1;
+	        #Ensachage._BtSusp := 0;
+	        #Ensachage._BtDepCycle := 1;
+	        #Ensachage._FgCgtOrg :=0;
+	        RETURN;
+	    4: // Attente acquit fin chargement
+	        #Ensachage._BtFin := 1;
+	        #Ensachage._BtSusp := 0;
+	        #Ensachage._BtDepCycle := 1;
+	        RETURN;
+	        
+	END_CASE;
+	#Ensachage._MemoAppuiBP:=0;
+END_FUNCTION
+

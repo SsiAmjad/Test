@@ -1,0 +1,59 @@
+﻿FUNCTION "Proc_Changement_Dest_REC" : String[254]
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      NumPoste : UInt;
+      IdRecep : ULInt;
+      AncDest : String;
+      NvDest : String;
+      QTE : Real;
+      TpsMarche : Time;
+   END_VAR
+
+   VAR_OUTPUT 
+      Msg_Def : String;
+   END_VAR
+
+   VAR_TEMP 
+      parameters_value : Array[0..20] of String;
+      ErreurMessage : String;
+      Resultat_Decode : WString;
+      status : Int;
+   END_VAR
+
+
+BEGIN
+	//Insertion des parametres 
+	#parameters_value[0] := ULINT_TO_STRING(#NumPoste);
+	#parameters_value[1] := ULINT_TO_STRING(#IdRecep);
+	#parameters_value[2] := #AncDest;
+	#parameters_value[3] := #NvDest;
+	#parameters_value[4] := REAL_TO_STRING(#QTE);
+	#parameters_value[5] := ULINT_TO_STRING(TIME_TO_ULINT(#TpsMarche));
+	//Insertion keywords 
+	
+	
+	//++++++++++++++++++++++++++++++++++++
+	#Resultat_Decode := "COMBASE"(procedure_name := 'SP_REC_ChangDest',
+	                                 values_of_record := #parameters_value,
+	                                 parameters_number := 6,
+	                                 ERROR_MESSAGE => #ErreurMessage);
+	
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := 'REPONSE:',     //EXTRACT THE VALUE OF NUM_RECEPTION"DB_RECH_RECEPTION".RECEP_DECODE_KEYWORDS[1], 
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Proc_Changement_Dest_REC);     //"DB_RECH_RECEPTION".RECEPTION.RECEPTION.NUM_RECEPTION); //STORE THE VALUE IN DB RECEPTION   ; ;
+	
+	IF #Proc_Changement_Dest_REC = 'NOK' THEN
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := 'MESS:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Msg_Def);
+	END_IF;
+	
+	
+	
+	
+	
+	
+END_FUNCTION
+

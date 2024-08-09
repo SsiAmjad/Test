@@ -1,0 +1,58 @@
+﻿FUNCTION "FCT_DECODE_TRAME" : Int
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : DAOUDI
+VERSION : 0.1
+   VAR_INPUT 
+      KEYWORD : String;
+      BUFFER : WString;
+   END_VAR
+
+   VAR_OUTPUT 
+      Retour_VAL : String;
+   END_VAR
+
+   VAR_TEMP 
+      TRAME : WString[500];
+      POSITION_CLE : Int;
+      POSITION_SEPARATEUR : Int;
+      EMPTY_BEFFER : Int;
+      I : Int;
+   END_VAR
+
+   VAR CONSTANT 
+      SEPARATOR : Char := '|';
+      EXECUTION_OK : Int := 0;
+      PAS_CLE : Int := 10;
+      PAS_SEPARATEUR : Int := 20;
+      BUFER_VIDE : Int := 99;
+   END_VAR
+
+
+BEGIN
+	//Memorisation de la trame à traiter en Local
+	#TRAME := #BUFFER;
+	//INTIALISATION DES VARIABLES en Local
+	#POSITION_CLE := 0; //RETOURNER LE CURSEUR A LA POSITION INITIALE
+	#Retour_VAL :='';  //VIDER LE RETOUR DE LA VALEUR
+	
+	IF LEN(#TRAME) > 0 THEN //CHECK IF THE BUFFER IS NOT EMPTY
+	    #POSITION_CLE := FIND(IN1 := #TRAME, IN2 := STRING_TO_WSTRING(#KEYWORD));
+	    IF #POSITION_CLE > 0 THEN
+	        #TRAME := DELETE(IN := #TRAME, L := LEN(#KEYWORD) + #POSITION_CLE - 1, P := 1);
+	        #POSITION_SEPARATEUR := FIND(IN1 := #TRAME, IN2 :=STRING_TO_WSTRING(#SEPARATOR));
+	        IF #POSITION_SEPARATEUR > 0 THEN
+	            #Retour_VAL := WSTRING_TO_STRING( LEFT(IN := #TRAME, L := FIND(IN1 := #TRAME, IN2 := STRING_TO_WSTRING(#SEPARATOR)) - LEN(#SEPARATOR)));
+	          
+	            #TRAME := DELETE(IN := #TRAME, L := LEN(#Retour_VAL) + LEN(#SEPARATOR), P := 1);
+	            #FCT_DECODE_TRAME := #EXECUTION_OK; // FIN DE DECODAGE REUSSI
+	        ELSE
+	            #FCT_DECODE_TRAME := #PAS_SEPARATEUR; //SEPARATEUR NON TROUVE
+	        END_IF;
+	    ELSE
+	        #FCT_DECODE_TRAME := #PAS_CLE;
+	    END_IF;
+	ELSE
+	    #FCT_DECODE_TRAME := #BUFER_VIDE; // TRAME VIDE
+	END_IF;
+END_FUNCTION
+

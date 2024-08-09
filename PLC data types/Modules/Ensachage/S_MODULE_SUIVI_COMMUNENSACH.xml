@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Document>
+  <Engineering version="V17" />
+  <DocumentInfo>
+    <Created>2024-08-09T12:53:24.7337085Z</Created>
+    <ExportSetting>WithDefaults</ExportSetting>
+    <InstalledProducts>
+      <Product>
+        <DisplayName>Totally Integrated Automation Portal</DisplayName>
+        <DisplayVersion>V17 Update 7</DisplayVersion>
+      </Product>
+      <OptionPackage>
+        <DisplayName>TIA Portal Openness</DisplayName>
+        <DisplayVersion>V17 Update 7</DisplayVersion>
+      </OptionPackage>
+      <OptionPackage>
+        <DisplayName>TIA Portal Version Control Interface</DisplayName>
+        <DisplayVersion>V17</DisplayVersion>
+      </OptionPackage>
+      <Product>
+        <DisplayName>STEP 7 Professional</DisplayName>
+        <DisplayVersion>V17 Update 7</DisplayVersion>
+      </Product>
+      <OptionPackage>
+        <DisplayName>STEP 7 Safety</DisplayName>
+        <DisplayVersion>V17 Update 6</DisplayVersion>
+      </OptionPackage>
+      <Product>
+        <DisplayName>WinCC Professional</DisplayName>
+        <DisplayVersion>V17 Update 7</DisplayVersion>
+      </Product>
+    </InstalledProducts>
+  </DocumentInfo>
+  <SW.Types.PlcStruct ID="0">
+    <AttributeList>
+      <Interface><Sections xmlns="http://www.siemens.com/automation/Openness/SW/Interface/v5">
+  <Section Name="None">
+    <Member Name="Tab_Lots" Datatype="Array[0..&quot;MAX_LOTS&quot;] of &quot;S_SUIVI_ENSACHAGE&quot;"><AttributeList><BooleanAttribute Name="ExternalAccessible" SystemDefined="true">false</BooleanAttribute><BooleanAttribute Name="ExternalVisible" SystemDefined="true">false</BooleanAttribute><BooleanAttribute Name="ExternalWritable" SystemDefined="true">false</BooleanAttribute><BooleanAttribute Name="SetPoint" SystemDefined="true">false</BooleanAttribute></AttributeList><Comment><MultiLanguageText Lang="en-US">Table des zones de suivi lot</MultiLanguageText></Comment><Sections><Section Name="None"><Member Name="_ParEns" Datatype="&quot;S_PAR_ENS&quot;"><Sections><Section Name="None"><Member Name="_FgTamis" Datatype="Char" /><Member Name="_FgTypeCharg" Datatype="Char" /><Member Name="_FgPosBd" Datatype="Char" /><Member Name="_FgTypeTamis" Datatype="Bool" /><Member Name="_FgAspiration" Datatype="Bool" /><Member Name="_VitExt" Datatype="Int" /></Section></Sections></Member><Member Name="_PtcelOrig" Datatype="&quot;S_Cellule&quot;"><Sections><Section Name="None"><Member Name="_Extrac" Datatype="Array[0..&quot;NB_MOB_EXT&quot;] of &quot;S_CirExt&quot;"><Sections><Section Name="None"><Member Name="_IndexMob" Datatype="Int" /><Member Name="_PosPv" Datatype="SInt" /><Member Name="_PosGv" Datatype="SInt" /><Member Name="_PosArret" Datatype="SInt" /><Member Name="_TypMob" Datatype="SInt" /></Section></Sections></Member><Member Name="_Cel" Datatype="String[&quot;T_CD_CEL&quot;]" /><Member Name="_Tpvidbois" Datatype="Time" /><Member Name="_TpMarteau" Datatype="Time" /><Member Name="_Moborg" Datatype="Int" /><Member Name="_Mobdest" Datatype="Int" /><Member Name="_Vibreur" Datatype="Int" /><Member Name="_Marteau" Datatype="Int" /><Member Name="_NumBouche" Datatype="USInt" /><Member Name="_NumBenne" Datatype="USInt" /><Member Name="_TauxRemplissage" Datatype="USInt" /><Member Name="_FgColChuteChgtCase" Datatype="USInt" /><Member Name="_NumPont" Datatype="USInt" /><Member Name="_Type" Datatype="USInt" /><Member Name="_SAV" Datatype="USInt" /><Member Name="_FgDosageDebit" Datatype="Bool" /><Member Name="_VoyantBouche" Datatype="Bool" /><Member Name="_Remp" Datatype="Bool" /><Member Name="_NivHaut" Datatype="Bool" /><Member Name="_NivBas" Datatype="Bool" /><Member Name="_NivInterm" Datatype="Bool" /><Member Name="_FgVibreur" Datatype="Bool" /><Member Name="_ExtractionEnCours" Datatype="Bool" /><Member Name="_SeuilAppel" Datatype="Bool" /></Section></Sections></Member><Member Name="_TpEnsachage" Datatype="Time" /><Member Name="_TpsMarche" Datatype="Time" /><Member Name="_NoLot" Datatype="String[&quot;T_Num_Lot&quot;]" /><Member Name="_CdMatEmb" Datatype="String[&quot;T_CD_MAT&quot;]" /><Member Name="_CdMatOrg" Datatype="String[&quot;T_CD_MAT&quot;]" /><Member Name="_Orig" Datatype="String[&quot;T_CD_CEL&quot;]" /><Member Name="_Dest" Datatype="String[&quot;T_CD_CEL&quot;]" /><Member Name="_NouvDest" Datatype="String[&quot;T_CD_CEL&quot;]" /><Member Name="_Densite" Datatype="Real" /><Member Name="_TolVide" Datatype="Real" /><Member Name="_QteArret" Datatype="Real" /><Member Name="_QtePrev" Datatype="Real" /><Member Name="_ColChute" Datatype="Real" /><Member Name="_Debit" Datatype="Real" /><Member Name="_PoidsSacsControle" Datatype="Real" /><Member Name="_QteDesaf" Datatype="Real" /><Member Name="_Brut" Datatype="Real" /><Member Name="_Tare" Datatype="Real" /><Member Name="_ChutePartielle" Datatype="Real" /><Member Name="_Vibreur" Datatype="Int" /><Member Name="_IndexDest" Datatype="Int" /><Member Name="_DsdSacsControle" Datatype="Int" /><Member Name="_SacsPerces" Datatype="Int" /><Member Name="_SacsChgtCellule" Datatype="Int" /><Member Name="_vitGV" Datatype="USInt" /><Member Name="_vitPV" Datatype="USInt" /><Member Name="_SacsPrev" Datatype="USInt" /><Member Name="_Conditionnement" Datatype="USInt" /><Member Name="_FgModArret" Datatype="Char" /><Member Name="_TypeArret" Datatype="Char" /><Member Name="_FgEnsach" Datatype="Char" /><Member Name="_FgTam" Datatype="Char" /><Member Name="_Abandon" Datatype="Bool" /><Member Name="_FgLancCir" Datatype="Bool" /></Section></Sections></Member>
+  </Section>
+</Sections></Interface>
+      <IsFailsafeCompliant>false</IsFailsafeCompliant>
+      <Name>S_MODULE_SUIVI_COMMUNENSACH</Name>
+    </AttributeList>
+    <ObjectList>
+      <MultilingualText ID="1" CompositionName="Comment">
+        <ObjectList>
+          <MultilingualTextItem ID="2" CompositionName="Items">
+            <AttributeList>
+              <Culture>en-US</Culture>
+              <Text />
+            </AttributeList>
+          </MultilingualTextItem>
+        </ObjectList>
+      </MultilingualText>
+      <MultilingualText ID="3" CompositionName="Title">
+        <ObjectList>
+          <MultilingualTextItem ID="4" CompositionName="Items">
+            <AttributeList>
+              <Culture>en-US</Culture>
+              <Text />
+            </AttributeList>
+          </MultilingualTextItem>
+        </ObjectList>
+      </MultilingualText>
+    </ObjectList>
+  </SW.Types.PlcStruct>
+</Document>

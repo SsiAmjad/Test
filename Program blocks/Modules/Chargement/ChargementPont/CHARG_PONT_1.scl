@@ -1,0 +1,2777 @@
+﻿FUNCTION "CHARG_PONT_1" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      FgBase : Bool;
+      Ptzs : "S_SuiviCommande";
+   END_VAR
+
+   VAR_IN_OUT 
+      GestTour : "S_GEST_TOUR";
+      ChPont : "S_ChargPont";
+      PtSuivCharg : "S_MODULE_SUIVI_COMMUNCHARG";
+   END_VAR
+
+   VAR_TEMP 
+      Commande : "S_ComLign";
+      ParCal : "S_CAL_FAR";
+      Ret_Bool : Bool;
+      Ret_Sint : SInt;
+      Text_Def : String;
+      Ret_RD_Sys_T : Int;
+      i : USInt;
+      tempbool : Bool;
+      MajNiv : SInt;
+      Tps_Passe : Time;
+      TempDbl : Real;
+      Ret_Usint : USInt;
+      Ret_int : Int;
+      CelVid : Char;
+      Ecart : Real;
+      tempConsQte : String;
+      tempqtereel : String;
+      tempecart : String;
+      tolsup : String;
+      tolinf : String;
+      Mess_Def : String;
+      ret_string : String;
+      Err_Sql : String;
+      Etat : Char;
+   END_VAR
+
+   VAR CONSTANT 
+      Etape_Repos : SInt := 0;   // Attente lot a traiter
+      Etape_RechParam : SInt := 1;   // Recherche parametre
+      Etape_VerifCelOrig : SInt := 2;   // Verif Cellule Origine
+      Etape_CtrlColChute : SInt := 3  ;   // Controle colonne de chute
+      Etape_AttCond : SInt := 4;   // Att condition
+      Etape_Extract : SInt := 5;
+      Etape_RechCirc : SInt := 6;   // Recherche circuit
+      Etape_DemCirc : SInt := 7;   // DEMARRAGE CIRCUIT
+      Etape_Surveillance : SInt := 8;   // SURVEILLANCE
+      Etape_DefVidCellule : SInt := 9;   // DEF VID CEL
+      Etape_DefArrProd : SInt := 10;   // PB ARRIVEE PRODUIT
+      Etape_SuspChgtCase : SInt := 12;   // SUSP CHGT CASE
+      Etape_SuspChargement : SInt := 13;   // Suspension chargement
+      Etape_ConfFinChargement : SInt := 14;   // Attente confirmation fin chargement
+      Etape_VidCircuit : SInt := 15;   // Vidange circuit
+      Etape_AttFinVidCircuit : SInt := 16;
+      Etape_AttFinVidCompo : SInt := 17;   // Att fin vidange autre composant
+      Etape_AttPoidsStable : SInt := 18;   // Attente Poids stable
+      Etape_TestTolerance : SInt := 19;   // TEST TOLERANCE
+      Etape_FinLot : SInt := 20;   // FIN DE LOT
+      Etape_Attente_RepDial : SInt := 21;
+      Etape_ControleDest : SInt := 22;
+      Test : USInt := 100;
+      TestValide : SInt := 2;
+      Abandon : SInt := 4;
+      AutrePont : SInt := 3;
+      EXT_PV : SInt := 0;
+      EXT_GV : SInt := 1;
+   END_VAR
+
+
+BEGIN
+	    
+	    // Simulateur de poids
+	    "AfficheCommande"(Chpont := #ChPont);
+	      #Ret_Sint := "RechIndexCel"(#ChPont._Commande._PtcelOrig._Cel);
+	    
+	    
+	    IF #Ret_Sint > -1 AND #Ret_Sint < "NB_CEL_MAX" THEN
+	        #ChPont._Commande._PtcelOrig := "DB_Mod_Cellule"._TabCel["RechIndexCel"(#ChPont._Commande._PtcelOrig._Cel)];
+	    END_IF; 
+	    IF #ChPont._ChargCommun._FgPresPont THEN
+	    "FC_Simul_Poids"(SAV := #ChPont._Commande._PtcelOrig._SAV,
+	                     Simul := #ChPont._ChargCommun._Simul,
+	                     Poids_Incorp := #ChPont._ChargCommun._Vbasc);
+	    END_IF;
+	    
+	
+	    
+	    
+	    
+	    CASE #ChPont._ChargCommun._CommunGeneral._Etp OF
+	 (*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                        ╔════════════════════════════════════╗
+	                                                        ║          Etape "Repos"             ║
+	                                                        ╚════════════════════════════════════╝
+	*************************************** *************************************** *************************************** *************************************** ***************************************
+	 *)
+	    #Etape_Repos:
+	        REGION Traitement preliminaire "repos"
+	            IF (#ChPont._ChargCommun._CommunGeneral._Etp <> #ChPont._ChargCommun._CommunGeneral._EtpPrec) THEN
+	                #ChPont._ChargCommun._CommunGeneral._EtpPrec := #ChPont._ChargCommun._CommunGeneral._Etp;
+	                #ChPont._ChargCommun._CommunGeneral._DescEtp := 'Etape repos';
+	                #ChPont._ChargCommun._PtAff._MessOper := '';
+	                //Initialisation des flags
+	                #ChPont._ValidPasArriveeProduit := TRUE;
+	                IF NOT #ChPont._ArrImmMemeProd THEN
+	                    #ChPont._SuspCircuit := FALSE;
+	                END_IF;
+	                "RazTabIncmop"(#ChPont._TabMobIncomp);
+	                //Appel Fonction qui gere les boutons de la supervision);
+	                "MajBtSupervChPont"(Type := 0,
+	                                    ChPont := #ChPont);
+	                #ChPont._ChargDebit := FALSE;
+	                #ChPont._ChargCycle := FALSE;
+	                #ChPont._MemoRajout := FALSE;
+	                #ChPont._MemoAppuiBP := 0;
+	                #ChPont._AutorMAJColChute := FALSE;
+	                #ChPont._NbRelAuto := 0;
+	                
+	                #ChPont._ExtReel := 0;
+	                #ChPont._ExtCons := 0;
+	                #ChPont._TpRestOuv := T#0s;
+	                #ChPont._Fpv := 0;
+	                
+	                
+	                #ChPont._ChargCommun._Simul._ValBascInc := FALSE;
+	                #ChPont._ChargCommun._Simul._ValBascDec := FALSE;
+	                #ChPont._Commande := #Commande;
+	                IF #ChPont._Ptzs._NumCommande >= #ChPont._Ptzs._NbCommande THEN
+	                    #ChPont._Ptzs._NumCommande := 0;
+	                END_IF;
+	            END_IF;
+	        END_REGION Traitement preliminaire    
+	        REGION Traitement cyclique "repos" 
+	            //Attente de l'activation de la tâche
+	            #Ret_Sint := "Test_Lot_Att_Tache"(Num_Tache := #ChPont._ChargCommun._CommunGeneral._Tache, Num_Zone => #ChPont._ChargCommun._CommunGeneral._NumZone);
+	            IF #Ret_Sint = 1 THEN
+	                #ChPont._Commande := #ChPont._Ptzs._ComLig[#ChPont._Ptzs._NumCommande];
+	                "AfficheCommande"(Chpont := #ChPont);
+	                #ChPont._FgCycleOuverture := 0;
+	                //Prise de la tare
+	                #ChPont._Commande._QteTare := #ChPont._ChargCommun._Vbasc;
+	                #ChPont.CycleOF._TpCycleOuv := #ChPont._TpCycleOuverture;
+	                IF #FgBase THEN
+	                    ;
+	                    // Lecture des ligne de commande
+	                    //MajCommExpVrac(pt_zs->NoCommande, pt_zs->NoLigne, pt_zs); ;
+	                END_IF;
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_RechParam;
+	                RETURN;
+	            END_IF;
+	        END_REGION Traitement cyclique "repos" 
+	    (*      
+	    *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                ╔════════════════════════════════════╗
+	                                                                ║          Etape "RechParam"         ║
+	                                                                ╚════════════════════════════════════╝
+	    *************************************** *************************************** *************************************** *************************************** ***************************************
+	    *)
+	    #Etape_RechParam:
+	        REGION Traitement preliminaire "'Etape Rech Param'"
+	            IF (#ChPont._ChargCommun._CommunGeneral._Etp <> #ChPont._ChargCommun._CommunGeneral._EtpPrec) THEN
+	                #ChPont._ChargCommun._CommunGeneral._EtpPrec := #ChPont._ChargCommun._CommunGeneral._Etp;
+	                #ChPont._ChargCommun._CommunGeneral._DescEtp := 'Etape Rech Param';
+	                #MajNiv := "Maj_Niv"(Num_Zone := #ChPont._ChargCommun._CommunGeneral._NumZone, Num_Tache := #ChPont._ChargCommun._CommunGeneral._Tache, Niveau := "N_DEBLOT");
+	                #ChPont._ParamTrouve := FALSE;
+	                #ChPont._Ptzs._Abandon := FALSE;
+	                #Ret_RD_Sys_T := RD_SYS_T(#ChPont._TpsPicke);
+	                #ChPont._ChargCommun._PtAff._MessOper := 'Recupration parametres chargement';
+	                IF #ChPont.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #ChPont.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO RechParam_DEF1;
+	                    END_CASE;
+	                END_IF;
+	            END_IF;
+	        END_REGION Traitement preliminaire    
+	        REGION Traitement cyclique "Etape Rech Param" 
+	            
+	            IF #FgBase AND #ChPont._FgParamAuto AND NOT #ChPont._Ptzs._Abandon THEN
+	                
+	                
+	                #ret_string := "Proc_InfoComm"(NumPoste := "Num_Poste",
+	                                               IdComLign := #ChPont._Commande._IdComLig,
+	                                               Msg_Def => #Mess_Def,
+	                                               ComLign := #ChPont._Commande);
+	                
+	                
+	                
+	                // Appel Proc RechParamVrac 
+	                
+	                IF #ret_string = 'NOK' THEN
+	                    #Text_Def := #Mess_Def;
+	                    #ChPont._ParamTrouve := FALSE;
+	                    #ChPont.Dial_Def.Num_Def_Etape := 1;
+	                    #ChPont.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #FgBase,
+	                                                                         Msg_Defaut := #Text_Def,
+	                                                                         Type_Defaut := 2,
+	                                                                         Automatisme := #ChPont._ChargCommun._CommunGeneral._Autom,
+	                                                                         Num_Lot := #ChPont._ChargCommun._CommunGeneral._NumLot,
+	                                                                         Origine_Defaut := 'Rech Parametre',
+	                                                                         Libelle_Origine := 'Parametres Expedition',
+	                                                                         Acq1 := 'ABANDON',
+	                                                                         Acq2 := 'RELANCE',
+	                                                                         Acq3 := '',
+	                                                                         Acq4 := '',
+	                                                                         Acq5 := '',
+	                                                                         Acq6 := '',
+	                                                                         Acq7 := '',
+	                                                                         Acq8 := '',
+	                                                                         Acq_Choisi := -1,
+	                                                                         Date_Arrivee := #ChPont._TpsPicke);
+	                        #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                        RETURN;
+	                    END_IF;
+	                END_IF;
+	                IF #ret_string = 'OK' THEN
+	                    #ChPont._Ptzs._ComLig[#ChPont._Ptzs._NumCommande] := #ChPont._Commande;
+	                    #ret_string := '';
+	                    #ChPont._ParamTrouve := TRUE;
+	                    #ret_string := "Proc_LancComm"(NumPoste := "Num_Poste",
+	                                                   IdComLign := #ChPont._Commande._IdComLig,
+	                                                   Origine := #ChPont._Commande._PtcelOrig._Cel,
+	                                                   Msg_Def => #Mess_Def);
+	                    IF #ret_string = 'NOK' THEN
+	                        #Text_Def := #Mess_Def;
+	                        #ChPont._ParamTrouve := FALSE;
+	                        #ChPont.Dial_Def.Num_Def_Etape := 1;
+	                        #ChPont.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #FgBase,
+	                                                                         Msg_Defaut := #Text_Def,
+	                                                                         Type_Defaut := 2,
+	                                                                         Automatisme := #ChPont._ChargCommun._CommunGeneral._Autom,
+	                                                                         Num_Lot := #ChPont._ChargCommun._CommunGeneral._NumLot,
+	                                                                         Origine_Defaut := 'Rech Parametre',
+	                                                                         Libelle_Origine := 'Lancement Ligne Com',
+	                                                                         Acq1 := 'ABANDON',
+	                                                                         Acq2 := 'RELANCE',
+	                                                                         Acq3 := '',
+	                                                                         Acq4 := '',
+	                                                                         Acq5 := '',
+	                                                                         Acq6 := '',
+	                                                                         Acq7 := '',
+	                                                                         Acq8 := '',
+	                                                                         Acq_Choisi := -1,
+	                                                                         Date_Arrivee := #ChPont._TpsPicke);
+	                        #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                        RETURN;
+	                    END_IF;
+	                    
+	                END_IF;
+	            
+	            
+	            IF NOT #ChPont._Ptzs._Abandon AND #ChPont._ParamTrouve = TRUE THEN
+	                IF #ChPont._Ptzs._TolInf < #ChPont._ChargCommun._TolEcartCharge THEN
+	                    #ChPont._Ptzs._TolInf := #ChPont._ChargCommun._TolEcartCharge;
+	                END_IF;
+	                IF #ChPont._Ptzs._TolSup < #ChPont._ChargCommun._TolEcartCharge THEN
+	                    #ChPont._Ptzs._TolSup := #ChPont._ChargCommun._TolEcartCharge;
+	                END_IF;
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_VerifCelOrig;
+	            END_IF;
+	        RechParam_DEF1:
+	            //================================== Traitement des reponses pour le defaut1  =============================================================//
+	            IF #ChPont.Dial_Def.Reponse_Def = 'ABANDON' THEN
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_FinLot;
+	                #ChPont._Ptzs._Abandon := TRUE;
+	                #ChPont.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            IF #ChPont.Dial_Def.Reponse_Def = 'RELANCE' THEN
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_RechParam;
+	                #ChPont.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            //============================================  Fin traitement  ====================================================================//
+	            
+	        END_REGION Traitement cyclique "Etape Rech Param" 
+	    (*      
+	    *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                        ╔════════════════════════════════════╗
+	                                                        ║       Etape "VerifCelOrig"         ║
+	                                                        ╚════════════════════════════════════╝
+	    *************************************** *************************************** *************************************** *************************************** ***************************************
+	    *)
+	    #Etape_VerifCelOrig:
+	        REGION Traitement preliminaire "VerifCelOrig"
+	            IF (#ChPont._ChargCommun._CommunGeneral._Etp <> #ChPont._ChargCommun._CommunGeneral._EtpPrec) THEN
+	                #ChPont._ChargCommun._CommunGeneral._EtpPrec := #ChPont._ChargCommun._CommunGeneral._Etp;
+	                #ChPont._ChargCommun._CommunGeneral._DescEtp := 'EtapeVerifCelOrig';
+	                #ChPont._ChargCommun._PtAff._MessOper := 'Verification cellules origines';
+	                #ChPont._ChargCommun.CntlDest.IndexCompo := 0;
+	                IF #ChPont._ChargCommun._CommunGeneral._EtpMemo = #Etape_ControleDest THEN
+	                    #ChPont._ChargCommun._CommunGeneral._EtpMemo := -1;
+	                    GOTO CtrlDestEtpVerifCelOrig;
+	                END_IF;
+	            END_IF;
+	        END_REGION Traitement preliminaire    
+	        REGION Traitement cyclique "VerifCelOrig" 
+	            IF #ChPont._Commande._Type <> 'R' THEN
+	                #ChPont._ChargCommun.CntlDest.Dest := #ChPont._Commande._PtcelOrig._Cel;//#ChPont._Ptzs._Compo[#ChPont._ChargCommun.CntlDest.IndexCompo]._Cel;
+	                // #CelVid := 'N';
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_ControleDest;
+	                RETURN;
+	            END_IF;
+	        CtrlDestEtpVerifCelOrig:
+	            
+	            IF #ChPont._ChargCommun.CntlDest.TestComplet THEN
+	                IF #ChPont._ChargCommun.CntlDest.Controle = #Abandon OR #ChPont._ChargCommun.CntlDest.Controle = #AutrePont THEN
+	                    IF #ChPont._ChargCommun.CntlDest.Controle = #AutrePont THEN
+	                        #ChPont._Ptzs._AutrePont := TRUE;
+	                    END_IF;
+	                    #ChPont._Ptzs._EtatChar := "A_COMPLETER"; //A completer
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_FinLot;
+	                    #ChPont._Ptzs._Abandon := TRUE;
+	                    RETURN;
+	                END_IF;
+	                IF #ChPont._ChargCommun.CntlDest.Controle = #TestValide THEN
+	                    #ChPont._ChargCommun._VidCirChgCell := FALSE;
+	                    IF #FgBase THEN
+	                        ;
+	                        //Blocage(NoSocket, LireNomAuto(), pt_compo->Cel, 0, 'O'); ;
+	                    END_IF;
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_CtrlColChute;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	            
+	            
+	        END_REGION Traitement cyclique "VerifCelOrig" 
+	    (*      
+	    *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                        ╔════════════════════════════════════╗
+	                                                        ║       Etape "CtrlColChute"         ║
+	                                                        ╚════════════════════════════════════╝
+	    *************************************** *************************************** *************************************** *************************************** ***************************************
+	    *)
+	    #Etape_CtrlColChute:
+	        REGION Traitement preliminaire "CtrlColChute"
+	            IF (#ChPont._ChargCommun._CommunGeneral._Etp <> #ChPont._ChargCommun._CommunGeneral._EtpPrec) THEN
+	                #ChPont._ChargCommun._CommunGeneral._EtpPrec := #ChPont._ChargCommun._CommunGeneral._Etp;
+	                #ChPont._ChargCommun._CommunGeneral._DescEtp := 'EtapeCtrlColChute';
+	                #ChPont._ChargCommun._VidCirChgCell := FALSE;
+	                #ChPont._Ptzs._BoucheVrac := #ChPont._Commande._PtcelOrig._NumBouche;
+	                #ChPont._Commande._PtcelOrig._VoyantBouche := TRUE;
+	                IF NOT #ChPont._ChargCommun._FgPresPont THEN
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_AttCond;
+	                    RETURN;
+	                END_IF;
+	                
+	            END_IF;
+	        END_REGION Traitement preliminaire    
+	        REGION Traitement cyclique "CtrlColChute" 
+	            "AffichePoids1"(ChargCommun := #ChPont._ChargCommun,
+	                            Ptzs := #ChPont._Ptzs,
+	                            Commande := #ChPont._Commande);
+	            (* IF NOT #ChPont._Ptzs._HorsPont OR NOT #ChPont._CtrlPoidsHorsPont THEN
+	                IF #FgBase THEN
+	                    IF #ChPont._Commande._Type <> 'R' THEN
+	                        "RecupColChute"(Fgbase := #FgBase,
+	                                        NumPont := #ChPont._ChargCommun._NumCharg,
+	                                        Commande := #ChPont._Commande);
+	                    END_IF;
+	                ELSE
+	                    #ChPont._Commande._VitPV := 30;
+	                    #ChPont._Commande._VitGV := 100;
+	                END_IF;
+	            END_IF; *)
+	            
+	            //calcul consigne d'arret
+	            "CalculConsArret"(ArrCirPlein := #PtSuivCharg.ArrCirPlein,
+	                              ChPont := #ChPont);
+	            
+	            IF #ChPont._Commande._DebitCel < #ChPont._ChargCommun._DebitMin THEN
+	                #ChPont._Commande._DebitCel := #ChPont._ChargCommun._DebitMin;
+	            END_IF;
+	            IF #ChPont._ChargDebit THEN
+	                "DemCalculDebit"(#ChPont);
+	            END_IF;
+	            
+	            // Sortie etiq echant en debut de chargement si flag a 1
+	            IF #FgBase AND #ChPont._FgEtiqDebutChar THEN
+	    (*
+	    for (int i = 0; i < pt_zs->nbCase; i++)
+	    {  if (i == 0) Wsprintf(_txt, L"%c", pt_zs->Cases[i].noCase);
+	       else Wsprintf(_txt, L",%c", pt_zs->Cases[i].noCase); }*)
+	                
+	                //Appel proc EtiqEchantexp((wchar_t)&pt_zs->No_Lot, _txt);
+	                ;
+	            END_IF;
+	            
+	            
+	            
+	            // calcul de la chute de la commande suivante dans le cas o la colonne de chute est suprieur  la commande suivante
+	            #tempbool := FALSE;
+	            IF #ChPont._Ptzs._FgDemArrImm THEN
+	                IF NOT #ChPont._Ptzs._FgDemArrImmCmdSuiv AND #ChPont._Ptzs._ConsQteCmdSuiv > 0 THEN
+	                    // #ChPont._Ptzs._ChuteCmdSuiv := #ChPont._Ptzs._ColChuteTotal - #ChPont._Commande._consqteCmdSuiv;
+	                    IF #ChPont._Ptzs._ChuteCmdSuiv < 0 THEN
+	                        #ChPont._Ptzs._ChuteCmdSuiv := 0;
+	                    END_IF;
+	                    #tempbool := TRUE;
+	                END_IF;
+	            END_IF;
+	            IF NOT #tempbool THEN
+	                #ChPont._Ptzs._ChuteCmdSuiv := 0;
+	            END_IF;
+	            #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_AttCond;
+	            RETURN;
+	            
+	        END_REGION Traitement cyclique "CtrlColChute" 
+	    (*      
+	    *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                        ╔════════════════════════════════════╗
+	                                                        ║          Etape "AttCond"           ║
+	                                                        ╚════════════════════════════════════╝
+	    *************************************** *************************************** *************************************** *************************************** ***************************************
+	    *)
+	    #Etape_AttCond:
+	        REGION Traitement preliminaire "AttCond"
+	            IF (#ChPont._ChargCommun._CommunGeneral._Etp <> #ChPont._ChargCommun._CommunGeneral._EtpPrec) THEN
+	                #ChPont._ChargCommun._CommunGeneral._EtpPrec := #ChPont._ChargCommun._CommunGeneral._Etp;
+	                #ChPont._ChargCommun._CommunGeneral._DescEtp := 'Etape AttCond';
+	                #MajNiv := "Maj_Niv"(Num_Zone := #ChPont._ChargCommun._CommunGeneral._NumZone, Num_Tache := #ChPont._ChargCommun._CommunGeneral._Tache, Niveau := "NIV_SURPONT_ATT_DEM_CIR");
+	                #Ret_RD_Sys_T := RD_SYS_T(#ChPont._TpsPicke);
+	                IF #ChPont.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #ChPont.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO ConfAbandon_DEF1;
+	                    END_CASE;
+	                END_IF;
+	                "MajBtSupervChPont"(Type := 1,
+	                                    ChPont := #ChPont);
+	                #ChPont._DemChgtCase := 0;
+	                IF NOT #ChPont._ChargCommun._FgPresPont THEN
+	                    #ChPont._Ptzs._TareOk := 2;
+	                END_IF;
+	                
+	            END_IF;
+	        END_REGION Traitement preliminaire    
+	        REGION Traitement cyclique "AttCond" 
+	            IF #ChPont._PriseTareAvDem AND #ChPont._Ptzs._TareOk = 0 THEN
+	                #ChPont._ChargCommun._PtAff._MessOper := 'Attente Prise Tare';
+	            ELSE
+	                #ChPont._ChargCommun._PtAff._MessOper := CONCAT(IN1 := 'Attente DepCycle pour demarrer le chargement du composant ', IN2 := #ChPont._Commande._CdMat, IN3 := ' ou TARE si chargement hors pont ou FinChar pour Abandon');
+	            END_IF;
+	            "AffichePoids1"(ChargCommun := #ChPont._ChargCommun,
+	                            Ptzs := #ChPont._Ptzs,
+	                            Commande := #ChPont._Commande);
+	            
+	            #Ret_Usint := "LireActionBoutonChPont"(ChPont := #ChPont);
+	            
+	            IF (#ChPont._Ptzs._Abandon OR #Ret_Usint = "ABANDONCHARG") AND NOT #ChPont._SuspCircuit THEN
+	                //TEST
+	                //#ChPont._Ptzs._FgStopMiPesee := FALSE;
+	                
+	                #ChPont.Dial_Def.Num_Def_Etape := 1;
+	                #Text_Def := CONCAT(IN1 := 'Confirmez vous l abandon du chargement du composant  ', IN2 := #ChPont._Commande._CdMat);
+	                #ChPont.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #FgBase,
+	                                                                 Msg_Defaut := #Text_Def,
+	                                                                 Type_Defaut := 2,
+	                                                                 Automatisme := #ChPont._ChargCommun._CommunGeneral._Autom,
+	                                                                 Num_Lot := #ChPont._Commande._NoLot,
+	                                                                 Origine_Defaut := 'Confirmation Abandon',
+	                                                                 Libelle_Origine := 'Confirmation Abandon',
+	                                                                 Acq1 := 'Oui',
+	                                                                 Acq2 := 'Non',
+	                                                                 Acq3 := '',
+	                                                                 Acq4 := '',
+	                                                                 Acq5 := '',
+	                                                                 Acq6 := '',
+	                                                                 Acq7 := '',
+	                                                                 Acq8 := '',
+	                                                                 Acq_Choisi := -1,
+	                                                                 Date_Arrivee := #ChPont._TpsPicke);
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                RETURN;
+	                
+	                
+	                
+	                
+	                
+	    (* IF #ChPont._Ptzs._TareOk = 0 THEN
+	     #ChPont._Ptzs._Abandon := TRUE;
+	     #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_FinLot;
+	     RETURN;
+	    ELSE
+	     #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_AttFinVidCompo;
+	     RETURN;
+	    END_IF; *)
+	            END_IF;
+	            
+	            // Demande de tare avant demarrage
+	            IF #Ret_Usint = "DEMTARE" AND #ChPont._Ptzs._TareOk <> 2 AND "ConditionTare"() THEN
+	                #ChPont._BtDemTare := 1;
+	                #ChPont._MemoAppuiBP := 0;
+	                IF #FgBase THEN
+	                    // IF (!TestDernierePeseeTour(pt_zs))
+	                    //     {
+	                    //     RETURN;
+	                    //     }
+	                    //     IF (!pt_zs->TareOk)
+	                    //         {
+	                    //         DebExpVrac((wchar_t*)&pt_zs->No_Lot);
+	                    //         }
+	                    ;
+	                END_IF;
+	                //#Ret_Bool := "Poids_DSD"(Simul := "Simul", Cas := "TARE", ChPont := #ChPont);
+	                #ChPont._Commande._QteTare := #ChPont._ChargCommun._Vbasc;
+	                #ChPont._Commande._TareCel := #ChPont._Commande._QteTare;
+	                IF #ChPont._Ptzs._Cases[#ChPont._Commande._Case]._FgTareOK = 0 THEN
+	                    #ChPont._Ptzs._Cases[#ChPont._Commande._Case]._Tare := #ChPont._ChargCommun._Vbasc;
+	                    #ChPont._Ptzs._Cases[#ChPont._Commande._Case]._FgTareOK := 1;
+	                END_IF;
+	                #ChPont._Ptzs._TareOk := 1;
+	            END_IF;
+	            
+	            // demande de changement de case(supervision)
+	            "ControleChgtCase"(Chpont := #ChPont);
+	            
+	            
+	            // Attente condition et appui sur Bt
+	            IF #ChPont._Ptzs._FgRelSansConf OR #ChPont._MemoAppuiBP = "DEBCYCLE" THEN //#Ret_Sint = "DEBCYCLE" THEN
+	                #ChPont._BtDepCycle := 1;
+	                #ChPont._MemoAppuiBP := 0;
+	                IF "CondChargement"(#ChPont) AND "FC_Test_Niv_AmontAval"(Num_Zone := #ChPont._ChargCommun._CommunGeneral._NumZone, Lst_Taches := #ChPont._ListeTaAttAutDemarrage) THEN
+	                    IF NOT #ChPont._Ptzs._HorsPont AND #ChPont._Ptzs._TareOk = 0 THEN
+	                        IF #FgBase THEN
+	                            // IF !TestDernierePeseeTour(pt_zs)RETURN;
+	                            ;
+	                        END_IF;
+	                        // #Ret_Bool := "Poids_DSD"(Simul := "Simul", Cas := "TARE", ChPont := #ChPont);
+	                        #ChPont._Commande._QteTare := #ChPont._Commande._QteTare;
+	                        #ChPont._Commande._TareCel := #ChPont._Commande._QteTare;
+	                        IF #FgBase THEN
+	                            //DebExpVrac((wchar_t*)&pt_zs->No_Lot) ;
+	                            ;
+	                        END_IF;
+	                    END_IF;
+	                    IF #ChPont._Ptzs._Cases[#ChPont._Commande._Case]._FgTareOK = 0 THEN
+	                        #ChPont._Ptzs._Cases[#ChPont._Commande._Case]._Tare := #ChPont._ChargCommun._Vbasc;
+	                        #ChPont._Ptzs._Cases[#ChPont._Commande._Case]._FgTareOK := 1;
+	                    END_IF;
+	                    #ChPont._Ptzs._TareOk := 2;
+	                    #ChPont._Ptzs._FgRelSansConf := FALSE;
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_RechCirc;
+	                    RETURN;
+	                ELSE
+	                    #ChPont._ChargCommun._PtAff._MessOper := 'Attente Condition ok pour demarrage';
+	                END_IF;
+	            END_IF;
+	            
+	            
+	            
+	            
+	        ConfAbandon_DEF1:
+	            //============ Traitement des reponses Confirmation Abandon  ====================================//
+	            IF #ChPont.Dial_Def.Reponse_Def = 'Oui' THEN //Relance
+	                #ChPont._Ptzs._FgStopMiPesee := FALSE;
+	                #ChPont.Dial_Def.Reponse_Def := '';
+	                IF #ChPont._Ptzs._TareOk = 0 THEN
+	                    #ChPont._Ptzs._Abandon := TRUE;
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_FinLot;
+	                    RETURN;
+	                ELSE
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_AttFinVidCompo;
+	                    RETURN;
+	                END_IF;
+	                
+	                RETURN;
+	            END_IF;
+	            IF #ChPont.Dial_Def.Reponse_Def = 'Non' THEN
+	                #ChPont.Dial_Def.Reponse_Def := '';
+	                "MajBtSupervChPont"(Type := 1,
+	                                    ChPont := #ChPont);
+	                #ChPont._Ptzs._Abandon := TRUE;
+	                RETURN;
+	                
+	            END_IF;
+	            
+	            
+	            
+	            
+	            
+	            
+	            
+	        END_REGION Traitement cyclique "AttCond" 
+	        
+	    (*      
+	    *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                        ╔════════════════════════════════════╗
+	                                                        ║          Etape "RechCirc"          ║
+	                                                        ╚════════════════════════════════════╝
+	    *************************************** *************************************** *************************************** *************************************** ***************************************
+	    *)
+	    #Etape_RechCirc:
+	        REGION Traitement preliminaire "RechCirc"
+	            IF (#ChPont._ChargCommun._CommunGeneral._Etp <> #ChPont._ChargCommun._CommunGeneral._EtpPrec) THEN
+	                #ChPont._ChargCommun._CommunGeneral._EtpPrec := #ChPont._ChargCommun._CommunGeneral._Etp;
+	                #ChPont._ChargCommun._CommunGeneral._DescEtp := 'Etape RechCirc';
+	                #ChPont._ChargCommun._PtAff._MessOper := 'Recherche circuit';
+	                #ChPont._SuspCircuit := FALSE;
+	                #Ret_RD_Sys_T := RD_SYS_T(#ChPont._TpsPicke);
+	                IF #ChPont.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #ChPont.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO RECHCIR_DEF1;
+	                    END_CASE;
+	                END_IF;
+	            END_IF;
+	        END_REGION Traitement preliminaire    
+	        REGION Traitement cyclique "RechCirc" 
+	            "AffichePoids1"(ChargCommun := #ChPont._ChargCommun,
+	                            Ptzs := #ChPont._Ptzs,
+	                            Commande := #ChPont._Commande);
+	            //lorsque le le chargement ne contient que des trappes
+	            IF #ChPont._Commande._PtcelOrig._Moborg = -1 THEN
+	                IF #ChPont._ActionAvantDemarCircuit THEN
+	                    "ActionApresDemarCircuit"();
+	                END_IF;
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_Extract;
+	                RETURN;
+	            END_IF;
+	            
+	            IF #ChPont._MbTamis > -1 THEN //cad renseigne
+	                IF #ChPont._Ptzs._ParVrac._FgTamis = 'O' OR #ChPont._Ptzs._ParVrac._FgTamis = 'F' OR #ChPont._Ptzs._ParVrac._FgTamis = 'G' THEN
+	                    #ChPont._Circuit.Criteres[0].Mobile := #ChPont._MbTamis;
+	                    #ChPont._Circuit.Criteres[0].Critere := "Mob_Preferentiel";
+	                ELSE
+	                    #ChPont._Circuit.Criteres[0].Mobile := #ChPont._MbTamis;
+	                    #ChPont._Circuit.Criteres[0].Critere := "Mob_Exclu";
+	                END_IF;
+	                
+	            END_IF;
+	            
+	            // recuperation d'origine destination et num circuit
+	            #ChPont._Circuit.Origine := #ChPont._Commande._PtcelOrig._Moborg;
+	            #ChPont._Circuit.Destination := #ChPont._Commande._PtcelOrig._Mobdest;
+	            #ChPont._Circuit.Num_Circuit := #ChPont._ChargCommun._NoCircuit;
+	            
+	            #Ret_Sint := "Rech_Cir"(Circuit := #ChPont._Circuit);
+	            
+	            IF #Ret_Sint = -1 THEN
+	                //appel dialogue defaut
+	                #ChPont.Dial_Def.Num_Def_Etape := 1;
+	                #Text_Def := CONCAT(IN1 := 'Circuit de ', IN2 := "Nom_Mobile"(#ChPont._Circuit.Origine), IN3 := ' vers ', IN4 := "Nom_Mobile"(#ChPont._Circuit.Destination), IN5 := ' introuvable ou reserve ');
+	                #ChPont.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #FgBase, Msg_Defaut := #Text_Def,
+	                                                                 Type_Defaut := 2,
+	                                                                 Automatisme := #ChPont._ChargCommun._CommunGeneral._Autom,
+	                                                                 Num_Lot := #ChPont._Commande._NoLot,
+	                                                                 Origine_Defaut := 'Circuit Introuvable ou reserve',
+	                                                                 Libelle_Origine := 'Circuit Introuvable ou reserve',
+	                                                                 Acq1 := 'Relance',
+	                                                                 Acq2 := 'Abandon',
+	                                                                 Acq3 := '',
+	                                                                 Acq4 := '',
+	                                                                 Acq5 := '',
+	                                                                 Acq6 := '',
+	                                                                 Acq7 := '',
+	                                                                 Acq8 := '',
+	                                                                 Acq_Choisi := -1,
+	                                                                 Date_Arrivee := #ChPont._TpsPicke);
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                RETURN;
+	            ELSE
+	                IF #FgBase THEN
+	                    "TestIncompMobilesCircuit"(MobInc => #ChPont._MobInc,
+	                                               TabMobIncomp := #ChPont._TabMobIncomp,
+	                                               Circuit := #ChPont._Circuit);
+	                END_IF;
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_DemCirc;
+	                RETURN;
+	            END_IF;
+	        RECHCIR_DEF1:
+	            //============ Traitement des reponses pour le defaut Recherche circuit  ====================================//
+	            IF #ChPont.Dial_Def.Reponse_Def = 'Relance' THEN //Relance
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_RechCirc;
+	                #ChPont.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            IF #ChPont.Dial_Def.Reponse_Def = 'Abandon' THEN
+	                #ChPont._Ptzs._Abandon := TRUE;
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_FinLot;
+	                #ChPont.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	        END_REGION Traitement cyclique "RechCirc"
+	    (*      
+	    *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                        ╔════════════════════════════════════╗
+	                                                        ║          Etape "DemCirc"           ║
+	                                                        ╚════════════════════════════════════╝
+	    *************************************** *************************************** *************************************** *************************************** ***************************************
+	    *)
+	    #Etape_DemCirc:
+	        REGION Traitement preliminaire "DemCirc"
+	            IF (#ChPont._ChargCommun._CommunGeneral._Etp <> #ChPont._ChargCommun._CommunGeneral._EtpPrec) THEN
+	                #ChPont._ChargCommun._CommunGeneral._EtpPrec := #ChPont._ChargCommun._CommunGeneral._Etp;
+	                #ChPont._ChargCommun._CommunGeneral._DescEtp := 'Etape DemCirc';
+	                #ChPont._ChargCommun._PtAff._MessOper := 'Demarrage circuit';
+	                #MajNiv := "Maj_Niv"(Num_Zone := #ChPont._ChargCommun._CommunGeneral._NumZone, Num_Tache := #ChPont._ChargCommun._CommunGeneral._Tache, Niveau := "NIV_SURPONT_DEM_CIR");
+	                IF #ChPont._ActionAvantDemarCircuit THEN
+	                    "ActionAvantDemCircuit"();
+	                END_IF;
+	                #Ret_Sint := "Dem_Circuit"(#ChPont._Circuit);
+	                //Appel Fonction qui gere les boutons de la supervision);
+	                "MajBtSupervChPont"(Type := 0,
+	                                    ChPont := #ChPont);
+	            END_IF;
+	        END_REGION Traitement preliminaire    
+	        REGION Traitement cyclique "DemCirc" 
+	            "AffichePoids1"(ChargCommun := #ChPont._ChargCommun,
+	                            Ptzs := #ChPont._Ptzs,
+	                            Commande := #ChPont._Commande);
+	            #Ret_Bool := "Test_Etat_Circuit"(Etat := "Pret", Debut := 0, CIRCUIT := #ChPont._Circuit);
+	            IF #Ret_Bool THEN
+	                IF #ChPont._ActionApresDemarCircuit THEN
+	                    "ActionApresDemarCircuit"();
+	                END_IF;
+	                #ChPont._PoidsPrec := #ChPont._ChargCommun._Vbasc;
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_Extract;
+	                RETURN;
+	            END_IF;
+	        END_REGION Traitement cyclique "DemCirc"   
+	        
+	        
+	        
+	        
+	    (*      
+	    *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                        ╔════════════════════════════════════╗
+	                                                        ║           Etape "Extract"          ║
+	                                                        ╚════════════════════════════════════╝
+	    *************************************** *************************************** *************************************** *************************************** ***************************************
+	    *)
+	    #Etape_Extract:
+	        REGION Traitement preliminaire "Extract"
+	            IF (#ChPont._ChargCommun._CommunGeneral._Etp <> #ChPont._ChargCommun._CommunGeneral._EtpPrec) THEN
+	                #ChPont._ChargCommun._CommunGeneral._EtpPrec := #ChPont._ChargCommun._CommunGeneral._Etp;
+	                #ChPont._ChargCommun._CommunGeneral._DescEtp := '';
+	                #ChPont._Fpv := 0;
+	                #ChPont._MemoVit := 0;
+	                #MajNiv := "Maj_Niv"(Num_Zone := #ChPont._ChargCommun._CommunGeneral._NumZone, Num_Tache := #ChPont._ChargCommun._CommunGeneral._Tache, Niveau := "NIV_SURPONT_CIRCUIT_PRET");
+	            END_IF;
+	        END_REGION Traitement preliminaire    
+	        REGION Traitement cyclique "Extract" 
+	            "AffichePoids1"( ChargCommun := #ChPont._ChargCommun,
+	                            Ptzs := #ChPont._Ptzs,
+	                            Commande := #ChPont._Commande);
+	            IF NOT #ChPont._Ptzs._HorsPont OR (#ChPont._Fpv = 0 AND #ChPont._MemoVit = 0) THEN
+	                IF ((#ChPont._Commande._QteNet >= (#ChPont._Commande._ConsArret - #ChPont._Commande._SeuilPV) OR #ChPont._Fpv > 0)
+	                    AND #ChPont._MemoVit <> 1 AND NOT #ChPont._Commande._FgaVider) THEN
+	                    //Demmarage extracteur PV
+	                    "Dem_Ext"(Nature := #EXT_PV,
+	                              Commande := #ChPont._Commande,
+	                              ChargCommun := #ChPont._ChargCommun,
+	                              Ptcel := #ChPont._Commande._PtcelOrig);
+	                    #ChPont._Fpv := 1; //* memorisation passage en PV */
+	                    #ChPont._MemoVit := 1;
+	                    #ChPont._ChargCommun._Simul._ValBascInc := TRUE;
+	                    #ChPont._ChargCommun._Simul._ValBascDec := FALSE;
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_Surveillance;
+	                    RETURN;
+	                END_IF;
+	                IF (#ChPont._Fpv = 0 OR NOT #ChPont._Commande._FgaVider) AND #ChPont._MemoVit <> 2 AND NOT #ChPont._MemoRajout THEN
+	                    //Demmarage extracteur GV
+	                    "Dem_Ext"(Nature := #EXT_GV,
+	                              Commande := #ChPont._Commande,
+	                              ChargCommun := #ChPont._ChargCommun,
+	                              Ptcel := #ChPont._Commande._PtcelOrig);
+	                    #ChPont._MemoVit := 2;
+	                    #ChPont._ChargCommun._Simul._ValBascInc := TRUE;
+	                    #ChPont._ChargCommun._Simul._ValBascDec := FALSE;
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_Surveillance;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	            
+	            
+	        END_REGION Traitement cyclique "Extract" 
+	    (*      
+	    *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                        ╔════════════════════════════════════╗
+	                                                        ║         Etape "Surveillance"       ║
+	                                                        ╚════════════════════════════════════╝
+	    *************************************** *************************************** *************************************** *************************************** ***************************************
+	    *)
+	    #Etape_Surveillance:
+	        REGION Traitement preliminaire "Surveillance"
+	            IF (#ChPont._ChargCommun._CommunGeneral._Etp <> #ChPont._ChargCommun._CommunGeneral._EtpPrec) THEN
+	                #ChPont._ChargCommun._CommunGeneral._EtpPrec := #ChPont._ChargCommun._CommunGeneral._Etp;
+	                #ChPont._ChargCommun._CommunGeneral._DescEtp := 'Etape Surveillance';
+	                #ChPont._ChargCommun._PtAff._MessOper := 'Chargement en cours';
+	                #ChPont._ChargCommun._PtAff._ExtEc := 2;
+	                #MajNiv := "Maj_Niv"(Num_Zone := #ChPont._ChargCommun._CommunGeneral._NumZone, Num_Tache := #ChPont._ChargCommun._CommunGeneral._Tache, Niveau := "NIV_SURPONT_CHARG_EC");
+	                "MajBtSupervChPont"(Type := 2,
+	                                    ChPont := #ChPont);
+	                #ChPont._NbRelDefArrProd := 0;
+	                #ChPont._MemoDemChgCel := FALSE;
+	                IF #ChPont._ChargCommun._FgPresPont THEN
+	                    #ChPont._ChargCommun._DefEvol := 1;
+	                END_IF;
+	                
+	                #Ret_RD_Sys_T := RD_SYS_T(#ChPont._TpsPicke);
+	                //Initialisation pour boucle cntrl evolution
+	                #Ret_RD_Sys_T := RD_SYS_T(#ChPont.CtrlEvol._Debut);
+	                #ChPont.CtrlEvol._PoidsPrec := #ChPont._ChargCommun._Vbasc;
+	                
+	            END_IF;
+	        END_REGION Traitement preliminaire    
+	        REGION Traitement cyclique "Surveillance" 
+	            "AffichePoids1"( ChargCommun := #ChPont._ChargCommun,
+	                            Ptzs := #ChPont._Ptzs,
+	                            Commande := #ChPont._Commande);
+	            
+	            //Passage en PV
+	            IF #ChPont._Commande._QteNet >= (#ChPont._Commande._ConsArret - #ChPont._Commande._SeuilPV) AND #ChPont._MemoVit = 2 THEN
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_Extract;
+	            END_IF;
+	            
+	            
+	            
+	            
+	            
+	            
+	            IF NOT "FC_Test_Niv_AmontAval"(Num_Zone := #ChPont._ChargCommun._CommunGeneral._NumZone, Lst_Taches := #ChPont._ListeTaPositCamionOK) THEN
+	                #ChPont._ChargCommun._DemVibrCel := FALSE;
+	                "ArretVibreur"(#ChPont._Commande._PtcelOrig);
+	                "Arret_Ext"(ConsQte := #ChPont._Commande._ConsQteTot,
+	                            Commande := #ChPont._Commande,
+	                            ChargCommun := #ChPont._ChargCommun,
+	                            Ptcel := #ChPont._Commande._PtcelOrig);
+	                #ChPont._ChargCommun._PtAff._ExtEc := 0;
+	                #ChPont._SuspCircuit := TRUE;
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_SuspChargement;
+	                RETURN;
+	            END_IF;
+	            
+	            // verification action sur bouton
+	            #ChPont._Bouton := "LireActionBoutonChPont"(#ChPont);
+	            
+	            IF #ChPont._ActionPendantChargement THEN
+	                "ActionPendantChargement"();
+	            END_IF;
+	            
+	            //Mise a jour de l'affichage des cases
+	            //#ChPont._ChargCommun._PtAff.Cases := #ChPont._Commande._Cases;
+	            #ChPont._ChargCommun._PtAff._NumCaseEc := #ChPont._Commande._Case;
+	            
+	            
+	            //cycle d'ouv de la trappe
+	            IF #ChPont._FgTypeLancColChute = 3 AND NOT #ChPont._Commande._FgaVider AND NOT #ChPont._GestQteCaseAuto AND NOT #ChPont._ChargDebit AND #ChPont._ChargCycle THEN
+	                IF #ChPont._FgCycleOuverture > 0 THEN
+	                    IF "Test_Pos_Mobile"(Index_Mobile := #ChPont._Commande._PtcelOrig._Extrac[0]._IndexMob, Pos := "_FERM") = 0 THEN
+	                        #Ret_RD_Sys_T := RD_SYS_T(#ChPont._Debut);
+	                    END_IF;
+	                    #ChPont._ChargCommun._DemVibrCel := FALSE;
+	                    "ArretVibreur"(#ChPont._Commande._PtcelOrig);
+	                    // #ChPont._ChargCommun._Simul._ValBascInc := FALSE;
+	                    "Arret_Ext"(ConsQte := #ChPont._Commande._ConsQteTot,
+	                                Commande := #ChPont._Commande,
+	                                ChargCommun := #ChPont._ChargCommun,
+	                                Ptcel := #ChPont._Commande._PtcelOrig);
+	                    #ChPont._ChargCommun._PtAff._ExtEc := 0;
+	                    IF #ChPont._ExtReel = 0 OR #ChPont._ExtReel = #ChPont._ExtCons - 2 THEN
+	                        IF #ChPont._FgCycleOuverture = 2 THEN
+	                            #ChPont._PoidsCycle := #ChPont._ChargCommun._Vbasc - #ChPont._PoidsPrec;
+	                            #ChPont._PoidsPrec := #ChPont._ChargCommun._Vbasc;
+	                            #ChPont._ExtReel := #ChPont._ExtReel + 1;
+	                            IF #ChPont._ExtCons = 0 THEN
+	                                #ChPont._ExtCons := #ChPont._Commande._ConsQteTot / #ChPont._PoidsCycle;
+	                            ELSE
+	                                #ChPont.CycleOF._TpCycleOuv := DINT_TO_TIME(REAL_TO_DINT((#ChPont._Commande._ConsQteTot - #ChPont._Commande._QteNet) / (#ChPont._Commande._QteNet / (#ChPont._ExtReel * TIME_TO_DINT(#ChPont._TpCycleOuverture)))));
+	                                //_tpCycleOuv = (pt_zs->ConsQte - pt_zs->QteNet) / (pt_zs->QteNet / (LireExtReel() * LireTpCycleOuverture()));
+	                            END_IF;
+	                            #ChPont._FgCycleOuverture := 0;
+	                            #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_Extract; //  #Etape_Surveillance;
+	                            RETURN;
+	                        END_IF;
+	                    ELSE
+	                        #Ret_Bool := "Tempo"(Duree := #ChPont._TpCycleFermeture, Tps_Picke := #ChPont._TpsPicke, Anticip := FALSE, Tps_Passe => #Tps_Passe);
+	                        IF #Ret_Bool THEN
+	                            #Ret_RD_Sys_T := RD_SYS_T(#ChPont._TpsPicke);
+	                            #ChPont._PoidsCycle := #ChPont._ChargCommun._Vbasc - #ChPont._PoidsPrec;
+	                            #ChPont._PoidsPrec := #ChPont._ChargCommun._Vbasc;
+	                            #ChPont._ExtReel := #ChPont._ExtReel + 1;
+	                            #ChPont._FgCycleOuverture := 0;
+	                            IF #ChPont._ExtReel = #ChPont._ExtCons THEN
+	                                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_ConfFinChargement;
+	                                RETURN;
+	                            ELSE
+	                                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_Extract; //  #Etape_Surveillance;
+	                                RETURN;
+	                            END_IF;
+	                        END_IF;
+	                    END_IF;
+	                    // ELSE
+	                    //     //Gestion de la vitesse du chargement
+	                    //     IF NOT #ChPont._Ptzs._HorsPont OR (#ChPont._Fpv = 0 AND #ChPont._MemoVit = 0) THEN
+	                    //         IF ((#ChPont._Commande._QteNet >= (#ChPont._Commande._ConsArret - #ChPont._Commande._SeuilPV) OR #ChPont._Fpv > 0)
+	                    //             AND #ChPont._MemoVit <> 1 AND NOT #ChPont._Commande._FgaVider) THEN
+	                    //             //Demmarage extracteur PV
+	                    //             "Dem_Ext_PV"(PtCompo:=#ChPont._Commande,
+	                    //                          ChargCommun:=#ChPont._ChargCommun,
+	                    //                          Ptcel := #ChPont._Commande._PtcelOrig);
+	                    //             #ChPont._Fpv := 1; //* memorisation passage en PV */
+	                    //             #ChPont._MemoVit := 1;
+	                    //         END_IF;
+	                    //         IF (#ChPont._Fpv = 0 OR NOT #ChPont._Commande._FgaVider) AND #ChPont._MemoVit <> 2 AND NOT #ChPont._MemoRajout THEN
+	                    //             //Demmarage extracteur GV
+	                    //             "Dem_Ext_GV"(PtCompo:=#ChPont._Commande,
+	                    //                          ChargCommun:=#ChPont._ChargCommun,
+	                    //                          Ptcel := #ChPont._Commande._PtcelOrig);
+	                    //             #ChPont._MemoVit := 2;
+	                    //         END_IF;
+	                    //     END_IF;
+	                END_IF;
+	            END_IF;
+	            
+	            
+	            
+	            // Gestion de l'ajout produit
+	            IF #ChPont._MemoRajout THEN
+	                #ChPont._MemoAppuiBP := 0;
+	                IF #ChPont._Bouton = "BTAJOUT" THEN
+	                    RETURN;
+	                ELSE
+	                    "ArretVibreur"(#ChPont._Commande._PtcelOrig);
+	                    IF #ChPont._Ptzs._TypeArret = "ARRET_IMM" THEN
+	                        #ChPont._SuspCircuit := TRUE;
+	                    END_IF;
+	                    
+	                    #ChPont._ChargCommun._PtAff._ExtEc := 0;
+	                    #ChPont._AutorMAJColChute := FALSE;
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_ConfFinChargement;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	            
+	            
+	            
+	            //Demande suspension chargement 
+	            IF #ChPont._Bouton = "BTSUSP" THEN
+	                #ChPont._BtSusp := 0;
+	                "ArretVibreur"(#ChPont._Commande._PtcelOrig);
+	                #ChPont._SuspCircuit := TRUE;
+	                
+	                "Arret_Ext"(ConsQte := #ChPont._Commande._ConsQteTot,
+	                            Commande := #ChPont._Commande,
+	                            ChargCommun := #ChPont._ChargCommun,
+	                            Ptcel := #ChPont._Commande._PtcelOrig);
+	                #ChPont._ChargCommun._PtAff._ExtEc := 0;
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_SuspChargement;
+	                RETURN;
+	            END_IF;
+	            
+	            
+	            // Demande arret chargement
+	            IF #ChPont._Bouton = "ABANDONCHARG" THEN
+	                #ChPont._ChargCommun._BtFinChar := 0;
+	                #ChPont._Ptzs._Abandon := TRUE;
+	                IF #ChPont._ArrImmMemeProd AND #ChPont._Ptzs._FgDemArrImm THEN
+	                    #ChPont._Ptzs._TypeArret := "ARRET_IMM";
+	                ELSE
+	                    #ChPont._Ptzs._TypeArret := "ARRET_OPER";
+	                END_IF;
+	                #ChPont._Ptzs._FgStopMiPesee := FALSE;
+	                #ChPont._ChargCommun._PtAff._ExtEc := 0;
+	                IF #ChPont._Ptzs._HorsPont THEN
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_ConfFinChargement;
+	                    RETURN;
+	                ELSE
+	                    "ArretVibreur"(#ChPont._Commande._PtcelOrig);
+	                    "Arret_Ext"(ConsQte := #ChPont._Commande._ConsQteTot,
+	                                Commande := #ChPont._Commande,
+	                                ChargCommun := #ChPont._ChargCommun,
+	                                Ptcel := #ChPont._Commande._PtcelOrig);
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_VidCircuit;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	            
+	            
+	            
+	            
+	            
+	            IF #ChPont._ArrImmMemeProd AND #ChPont._Ptzs._FgDemArrImm THEN
+	                // arret extracteur avant l'arret immdiat si chute superieur a la quantite de la commande suivante
+	                IF #ChPont._Commande._QteNet >= #ChPont._Commande._ConsQteTot - #ChPont._ChuteArrImm THEN
+	                    #ChPont._SuspCircuit := TRUE;
+	                    #ChPont._Ptzs._TypeArret := "ARRET_IMM";
+	                    #ChPont._AutorMAJColChute := FALSE;
+	                    #ChPont._Ptzs._FgStopMiPesee := FALSE;
+	                    #ChPont._ChargCommun._PtAff._ExtEc := 0;
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_ConfFinChargement;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	            
+	            
+	            // Arret sur consigne de chargement
+	            IF (
+	                (#ChPont._Commande._QteNet >= #ChPont._Commande._ConsArret AND NOT #ChPont._ChargDebit AND NOT #ChPont._ChargCycle) OR
+	                (#ChPont._Commande._QteNet >= #ChPont._Commande._ConsQteTot - #ChPont._Ptzs._TolInf AND NOT #ChPont._ChargDebit AND #ChPont._ChargCycle) OR
+	                #ChPont._Commande._QteNet >= #ChPont._Commande._ConsQteTot OR
+	                (#ChPont._Commande._QteNet + #ChPont._ChargCommun._CommunGeneral._ParCal._QteTrans >= #ChPont._Commande._ConsQteTot AND #ChPont._ChargDebit)
+	                )
+	                AND
+	                (NOT #ChPont._Commande._FgaVider OR (#ChPont._Commande._NbCase > 1 AND #ChPont._GestQteCaseAuto AND #ChPont._Ptzs._FgStopMiPesee)) AND
+	                (NOT #ChPont._Ptzs._HorsPont OR #ChPont._CtrlPoidsHorsPont) AND #ChPont._ChargCommun._FgPresPont
+	            THEN
+	                #ChPont._Ptzs._TypeArret := "ARRET_QTE";
+	                #ChPont._AutorMAJColChute := TRUE;
+	                #ChPont._ChargCommun._PtAff._ExtEc := 0;
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_ConfFinChargement;
+	                RETURN;
+	            END_IF;
+	            
+	            
+	            // cellule a vider
+	            IF #ChPont._Commande._FgaVider THEN
+	                
+	                IF #ChPont._ChargCommun._BpVide THEN
+	                    #ChPont._Ptzs._TypeArret := "ARRET_VIDE";
+	                    #ChPont._AutorMAJColChute := FALSE;
+	                    #ChPont._Ptzs._FgStopMiPesee := FALSE;
+	                    #ChPont._ChargCommun._PtAff._ExtEc := 0;
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_ConfFinChargement;
+	                    RETURN;
+	                END_IF;
+	                //Arret surcharge
+	                IF #ChPont._Commande._QteNet >= #ChPont._Commande._ConsQteTot + #ChPont._TolVideCel AND (NOT #ChPont._Ptzs._HorsPont OR NOT #ChPont._CtrlPoidsHorsPont) THEN
+	                    #ChPont._ChargCommun._DemVibrCel := FALSE;
+	                    "ArretVibreur"(#ChPont._Commande._PtcelOrig);
+	                    #ChPont._SuspCircuit := TRUE;
+	                    "Arret_Ext"(ConsQte := #ChPont._Commande._ConsQteTot,
+	                                Commande := #ChPont._Commande,
+	                                ChargCommun := #ChPont._ChargCommun,
+	                                Ptcel := #ChPont._Commande._PtcelOrig);
+	                    #ChPont._ChargCommun._PtAff._ExtEc := 0;
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_DefVidCellule;
+	                    RETURN;
+	                END_IF;
+	                //Arrect consigne
+	                IF #ChPont._ChargCommun._DefEvol < -1 AND #ChPont._Commande._ConsQteTot - #ChPont._Commande._QteNet < #ChPont._Ptzs._TolInf AND NOT #ChPont._Ptzs._HorsPont THEN
+	                    IF #ChPont._NbRelDefArrProd >= 1 OR #ChPont._Commande._PtcelOrig._Vibreur <> -1 THEN
+	                        #ChPont._Ptzs._TypeArret := "ARRET_VIDE";
+	                        #ChPont._AutorMAJColChute := FALSE;
+	                        #ChPont._Ptzs._FgStopMiPesee := FALSE;
+	                        #ChPont._ChargCommun._PtAff._ExtEc := 0;
+	                        IF #ChPont._ConfFinDefEvol THEN
+	                            #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_ConfFinChargement;
+	                            RETURN;
+	                        ELSE
+	                            #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_VidCircuit;
+	                            RETURN;
+	                        END_IF;
+	                    ELSE
+	                        "DemVibreur"(#ChPont._Commande._PtcelOrig);
+	                        #ChPont._ChargCommun._DefEvol := 2;
+	                        #ChPont._NbRelDefArrProd := #ChPont._NbRelDefArrProd + 1;
+	                    END_IF;
+	                END_IF;
+	            END_IF;
+	            
+	            // RAZ defaut evolution poids si pas de controle evolution
+	            IF NOT #ChPont._ValidPasArriveeProduit AND #ChPont._ChargCommun._DefEvol <= -1 THEN
+	                #ChPont._ChargCommun._DefEvol := 1;
+	            END_IF;
+	            
+	            //Traitement def evol
+	            IF #ChPont._ChargCommun._DefEvol = -1 AND #ChPont._ValidPasArriveeProduit AND NOT #ChPont._Ptzs._HorsPont THEN
+	                // Pas d'arrivee de produit
+	                IF #ChPont._NbRelDefArrProd >= 1 THEN
+	                    "ArretVibreur"(#ChPont._Commande._PtcelOrig);
+	                    "Arret_Ext"(ConsQte := #ChPont._Commande._ConsQteTot,
+	                                Commande := #ChPont._Commande,
+	                                ChargCommun := #ChPont._ChargCommun,
+	                                Ptcel := #ChPont._Commande._PtcelOrig);
+	                    #ChPont._SuspCircuit := TRUE;
+	                    #ChPont._ChargCommun._PtAff._ExtEc := 0;
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_DefArrProd;
+	                    RETURN;
+	                ELSE
+	                    "DemVibreur"(#ChPont._Commande._PtcelOrig);
+	                    #ChPont._ChargCommun._DefEvol := 2;
+	                    #ChPont._NbRelDefArrProd := #ChPont._NbRelDefArrProd + 1;
+	                END_IF;
+	            END_IF;
+	            
+	            IF #ChPont._Bouton = "BTCHGCEL" THEN
+	                #ChPont._BtChgCellule := 0;
+	                "ArretVibreur"(#ChPont._Commande._PtcelOrig);
+	                #ChPont._SuspCircuit := TRUE;
+	                "Arret_Ext"(ConsQte := #ChPont._Commande._ConsQteTot,
+	                            Commande := #ChPont._Commande,
+	                            ChargCommun := #ChPont._ChargCommun,
+	                            Ptcel := #ChPont._Commande._PtcelOrig);
+	                #ChPont._ChargCommun._PtAff._ExtEc := 0;
+	                #ChPont._MemoDemChgCel := TRUE;
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_DefArrProd;
+	                RETURN;
+	            END_IF;
+	            
+	            
+	            IF #ChPont._ChargCommun._DemVibrCel THEN
+	                IF "Cond_Vib"(Commande := #ChPont._Commande) THEN
+	                    #ChPont._DemVib := TRUE;
+	                    "DemVibreur"(#ChPont._Commande._PtcelOrig);
+	                END_IF;
+	                IF #ChPont._DemVib AND #ChPont._Commande._PtcelOrig._FgVibreur AND #ChPont._DemVib = TRUE THEN
+	                    #ChPont._DemVib := FALSE;
+	                    "ArretVibreur"(#ChPont._Commande._PtcelOrig);
+	                END_IF;
+	            END_IF;
+	            
+	            
+	            //Gestion des cases ,changement des cases automatique
+	            IF #ChPont._GestQteCaseAuto AND NOT #ChPont._Ptzs._Cases[#ChPont._Commande._Case]._FgRelCharge AND #ChPont._Commande._NbCase > 1 THEN
+	                IF #ChPont._Commande._PtcelOrig._FgColChuteChgtCase = 1 THEN
+	                    #ChPont._ChargCommun._QteCase := #ChPont._Ptzs._Cases[#ChPont._Commande._Case]._QteDejaChargee + #ChPont._ChargCommun._Vbasc - #ChPont._Ptzs._Cases[#ChPont._Commande._Case]._Tare + #ChPont._Commande._ChuteCel;
+	                    
+	                ELSIF #ChPont._Commande._PtcelOrig._FgColChuteChgtCase = 2 THEN
+	                    #ChPont._ChargCommun._QteCase := #ChPont._Ptzs._Cases[#ChPont._Commande._Case]._QteDejaChargee + #ChPont._ChargCommun._Vbasc - #ChPont._Ptzs._Cases[#ChPont._Commande._Case]._Tare + #ChPont._ChuteArrImm;
+	                ELSE
+	                    #ChPont._ChargCommun._QteCase := #ChPont._Ptzs._Cases[#ChPont._Commande._Case]._QteDejaChargee + #ChPont._ChargCommun._Vbasc - #ChPont._Ptzs._Cases[#ChPont._Commande._Case]._Tare;
+	                END_IF;
+	                
+	                IF #ChPont._Ptzs._Cases[#ChPont._Commande._Case]._ConsQte > 0 AND ((#ChPont._ChargCommun._QteCase > #ChPont._Ptzs._Cases[#ChPont._Commande._Case]._ConsQte + #ChPont._TolDernCase AND #ChPont._Commande._Case = #ChPont._Commande._NbCase - 1)
+	                    OR (#ChPont._ChargCommun._QteCase > #ChPont._Ptzs._Cases[#ChPont._Commande._Case]._ConsQte AND #ChPont._Commande._Case <> #ChPont._Commande._NbCase - 1)) THEN
+	                    
+	                    #ChPont._ChargCommun._DemVibrCel := FALSE;
+	                    "ArretVibreur"(#ChPont._Commande._PtcelOrig);
+	                    #ChPont._SuspCircuit := TRUE;
+	                    "Arret_Ext"(ConsQte := #ChPont._Commande._ConsQteTot,
+	                                Commande := #ChPont._Commande,
+	                                ChargCommun := #ChPont._ChargCommun,
+	                                Ptcel := #ChPont._Commande._PtcelOrig);
+	                    #ChPont._Ptzs._Cases[#ChPont._Commande._Case]._FgRelCharge := TRUE;
+	                    #ChPont._ChargCommun._PtAff._ExtEc := 0;
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_SuspChgtCase;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	            
+	            // Demande de changement de case
+	            IF #ChPont._DemChgtCase <> 0 THEN
+	                #ChPont._ChargCommun._DemVibrCel := FALSE;
+	                "ArretVibreur"(#ChPont._Commande._PtcelOrig);
+	                #ChPont._SuspCircuit := TRUE;
+	                "Arret_Ext"(ConsQte := #ChPont._Commande._ConsQteTot,
+	                            Commande := #ChPont._Commande,
+	                            ChargCommun := #ChPont._ChargCommun,
+	                            Ptcel := #ChPont._Commande._PtcelOrig);
+	                #ChPont._ChargCommun._PtAff._ExtEc := 0;
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_SuspChgtCase;
+	                RETURN;
+	            END_IF;
+	            
+	            
+	            
+	            IF #ChPont._HorsGamme OR #ChPont._DefLiaison THEN
+	                #ChPont._SuspCircuit := TRUE;
+	                "Arret_Ext"(ConsQte := #ChPont._Commande._ConsQteTot,
+	                            Commande := #ChPont._Commande,
+	                            ChargCommun := #ChPont._ChargCommun,
+	                            Ptcel := #ChPont._Commande._PtcelOrig);
+	                IF #ChPont._DefLiaison THEN
+	                    // Mssg Defaut : Defaut liaison indicateur poids
+	                    ;
+	                ELSE
+	                    //Mssg Defaut : Deafut Hors Gamme benne
+	                    ;
+	                END_IF;
+	                
+	                
+	            END_IF;
+	        END_REGION Traitement cyclique "Surveillance"
+	    (*      
+	    *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                        ╔════════════════════════════════════╗
+	                                                        ║          Etape DefVidCellule       ║
+	                                                        ╚════════════════════════════════════╝
+	    *************************************** *************************************** *************************************** *************************************** ***************************************
+	    *)
+	    #Etape_DefVidCellule:
+	        REGION Traitement preliminaire "DefVidCellule"
+	            IF (#ChPont._ChargCommun._CommunGeneral._Etp <> #ChPont._ChargCommun._CommunGeneral._EtpPrec) THEN
+	                #ChPont._ChargCommun._CommunGeneral._EtpPrec := #ChPont._ChargCommun._CommunGeneral._Etp;
+	                #ChPont._ChargCommun._CommunGeneral._DescEtp := 'Etape DefVidCellules';
+	                #ChPont._ChargCommun._PtAff._ExtEc := 0;
+	                #ChPont._ChargCommun._PtAff._MessOper := 'Defaut chargement hors tolerance,Attente appui sur BP DepCycle';
+	                #ChPont._MemoPoids := #ChPont._ChargCommun._Vbasc;
+	                #Ret_RD_Sys_T := RD_SYS_T(#ChPont._DebStable);
+	                #Ret_RD_Sys_T := RD_SYS_T(#ChPont._TpsPicke);
+	                #Ret_RD_Sys_T := RD_SYS_T(#ChPont._TpsPicke);
+	                IF #ChPont.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #ChPont.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO DefVidCellule_DEF1;
+	                    END_CASE;
+	                END_IF;
+	            END_IF;
+	        END_REGION Traitement preliminaire    
+	        REGION Traitement cyclique "DefVidCellule" 
+	            
+	            // si pas de circuit pas de defaut vide cellule
+	            IF #ChPont._Commande._PtcelOrig._Moborg = -1 THEN
+	                #ChPont._Ptzs._TypeArret := "ARRET_QTE";
+	                #ChPont._AutorMAJColChute := FALSE;
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_VidCircuit;
+	                RETURN;
+	            END_IF;
+	            
+	            IF #ChPont._Commande._QteNet >= #ChPont._Commande._ConsQteTot + #ChPont._TolVideCel AND #ChPont._Commande._FgaVider THEN
+	                #ChPont.Dial_Def.Num_Def_Etape := 1;
+	                #ChPont.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #FgBase, Msg_Defaut := 'Souhaitez-vous vider le circuit dans le camion',
+	                                                                 Type_Defaut := 2,
+	                                                                 Automatisme := #ChPont._ChargCommun._CommunGeneral._Autom,
+	                                                                 Num_Lot := #ChPont._Commande._NoLot,
+	                                                                 Origine_Defaut := 'Vid Circuit',
+	                                                                 Libelle_Origine := 'Vid Circuit',
+	                                                                 Acq1 := 'Oui',
+	                                                                 Acq2 := '',
+	                                                                 Acq3 := '',
+	                                                                 Acq4 := '',
+	                                                                 Acq5 := '',
+	                                                                 Acq6 := '',
+	                                                                 Acq7 := '',
+	                                                                 Acq8 := '',
+	                                                                 Acq_Choisi := -1,
+	                                                                 Date_Arrivee := #ChPont._TpsPicke);
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                RETURN;
+	            END_IF;
+	            
+	            
+	        DefVidCellule_DEF1:
+	            //Mess Def :Souhaitez-vous vider le circuit dans le camion
+	            //============ Traitement des reponses pour le defaut  Etape repos  ====================================//
+	            IF #ChPont.Dial_Def.Reponse_Def = 'Oui' THEN
+	                #ChPont._Ptzs._TypeArret := "ARRET_QTE";
+	                #ChPont._AutorMAJColChute := FALSE;
+	                #ChPont._SuspCircuit := FALSE;
+	                // #Ret_Bool := "AttentePoidsStable"(#ChPont);
+	                // IF #Ret_Bool THEN
+	                //     #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_VidCircuit;
+	                //     #ChPont.Dial_Def.Reponse_Def := '';
+	                //     RETURN;
+	                // END_IF;
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_VidCircuit;
+	                #ChPont.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	                // ELSE
+	                //     ;
+	                //     #Ret_Bool := "Poids_DSD"(Simul := "Simul", Cas := "BRUT", ChPont := #ChPont);
+	                // ATT(Poids_DSD(pt_zs, BRUT));
+	                // Recup_2Lib_Prog(LIB_MET_PONT10, L"%s:Attente Acquit fin calcul densit", Pt_Lib, Pt_Lib_Ref,
+	                //                 FIC_CHARG, &_libelle, &LibelleRef);
+	                // Wsprintf(_wTxt, _libelle, _lib);
+	                // Wsprintf(_wTxtRef, LibelleRef, _lib);
+	                // wAff_2Mess(_wTxt, _wTxtRef, _met, MAINT);
+	                
+	                // IF (LireVfgBase())
+	                //     {
+	                //     pt_zs->EtatChar = 'O';
+	                //     MajHist();
+	                //     MajStoExp(pt_compo->pt_celOrig->cel, 0, pt_zs->QteBrut - pt_compo->tareCel, 'N',
+	                //               pt_compo, 'N');
+	                //     FinExpVrac(pt_zs);
+	                //     }
+	                //     IF (Recup_Lib_Prog(LIB_MESS_PONT22, Pt_Lib, FIC_CHARG, &_libelle, NULL, NULL))
+	                //         {
+	                //         Wsprintf(_ptAff->messOper, _libelle);
+	                //         }
+	                //     ELSE
+	                //         {
+	                //         Wsprintf(_ptAff->messOper,
+	                //                  L"Fin Chargement Pris en Compte, Attente DCY vidange circuit en SAC");
+	                //         }
+	                //         }
+	            END_IF;
+	            //============================================  Fin traitement  ====================================================================//
+	            (* #Ret_RD_Sys_T := RD_SYS_T(#ChPont._DebStable);
+	    #ChPont._MemoPoids :=#ChPont._ChargCommun._Vbasc; *)
+	            
+	            
+	            
+	            
+	            #ChPont._Bouton := "LireActionBoutonChPont"(#ChPont);
+	            IF #ChPont._SuspCircuit OR (#ChPont._ChargCommun._Vbasc - #ChPont._MemoPoids > #ChPont._EcartPoidsStab AND #ChPont._EcartPoidsStab > 0) THEN
+	                #ChPont._MemoPoids := #ChPont._ChargCommun._Vbasc;
+	                #Ret_RD_Sys_T := RD_SYS_T(#ChPont._DebStable);
+	            END_IF;
+	            
+	            // Demande de tare avant dmarrage
+	            IF #ChPont._Bouton = "DEBCYCLE" THEN
+	                #ChPont._BtDepCycle := 1;
+	                #ChPont._MemoAppuiBP := 0;
+	                #ChPont._SuspCircuit := FALSE;
+	                #ChPont._ChargCommun._PtAff._MessOper := 'Attente afin de vidange circuit';
+	            END_IF;
+	            
+	            IF #ChPont._Bouton = "ABANDONCHARG" THEN
+	                #ChPont._ChargCommun._BtFinChar := 1;
+	                #ChPont._MemoAppuiBP := 0;
+	                #ChPont._SuspCircuit := FALSE;
+	            END_IF;
+	            
+	    (* IF  THEN //(!pt_compo->pt_celOrig->mob_org || NCircuit_Vide(&_circuit, pt_compo->pt_celOrig->mob_org))
+	    //test circuit vide 
+	    //Libere_Circuit_Sil
+	    //Fin_Lot_Circuit(&_circuit, _circuit.Origine.Mobile, _circuit.Destination.Mobile, 0);
+	    //// extinction voyant bouche IF (pt_compo->pt_celOrig && pt_compo->pt_celOrig->voyant_bouche)  *pt_compo->pt_celOrig->voyant_bouche = 0;
+	    #ChPont._ChargCommun.CommunGeneral._Etp := #Etape_Repos;
+	    RETURN;
+	    END_IF; *)
+	            
+	            
+	            
+	            
+	            
+	        END_REGION Traitement cyclique "DefVidCellule"   
+	    (*      
+	    *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                        ╔════════════════════════════════════╗
+	                                                        ║          Etape "DefArrProd"        ║
+	                                                        ╚════════════════════════════════════╝
+	    *************************************** *************************************** *************************************** *************************************** ***************************************
+	    *)
+	    #Etape_DefArrProd:
+	        REGION Traitement preliminaire "DefArrProd"
+	            IF (#ChPont._ChargCommun._CommunGeneral._Etp <> #ChPont._ChargCommun._CommunGeneral._EtpPrec) THEN
+	                #ChPont._ChargCommun._CommunGeneral._EtpPrec := #ChPont._ChargCommun._CommunGeneral._Etp;
+	                #ChPont._ChargCommun._CommunGeneral._DescEtp := 'Etape DefArrProd';
+	                
+	                IF NOT #ChPont._MemoDemChgCel THEN
+	                    #ChPont._ChargCommun._PtAff._MessOper := 'Attente relance sur defaut pas d arrive de produit';
+	                ELSE
+	                    #ChPont._ChargCommun._PtAff._MessOper := 'Attente relance sur defaut changement de cellule';
+	                END_IF;
+	                #Ret_RD_Sys_T := RD_SYS_T(#ChPont._TpsPicke);
+	                IF #ChPont._ChargCommun._CommunGeneral._EtpMemo = #Etape_ControleDest THEN
+	                    #ChPont._ChargCommun._CommunGeneral._EtpMemo := -1;
+	                    GOTO CtrlDestEtpDefArrProd;
+	                END_IF;
+	                #ChPont._Bouton := "LireActionBoutonChPont"(#ChPont);
+	                IF #ChPont.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #ChPont.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO DefArrProd_DEF1;
+	                        2:
+	                            GOTO DefArrProd_DEF2;
+	                        3:
+	                            GOTO DefProcChngOrig;
+	                    END_CASE;
+	                END_IF;
+	                
+	                IF NOT #ChPont._ChgtCelAuto THEN
+	                    #ChPont.Dial_Def.Num_Def_Etape := 1;
+	                    IF NOT #ChPont._MemoDemChgCel THEN
+	                        #Text_Def := CONCAT(IN1 := 'PB arrivee de produit cellule: ', IN2 := #ChPont._Commande._PtcelOrig._Cel);
+	                    ELSE
+	                        #Text_Def := 'Changement de cellule,  Veuillez saisir la nouvelle cellule';
+	                    END_IF;
+	                    #ChPont.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #FgBase,
+	                                                                     Msg_Defaut := #Text_Def,
+	                                                                     Type_Defaut := 2,
+	                                                                     Automatisme := #ChPont._ChargCommun._CommunGeneral._Autom,
+	                                                                     Num_Lot := #ChPont._Commande._NoLot,
+	                                                                     Origine_Defaut := #Text_Def,
+	                                                                     Libelle_Origine := #Text_Def,
+	                                                                     Acq1 := 'Relance',
+	                                                                     Acq2 := 'Abandon',
+	                                                                     Acq3 := 'Cellule',
+	                                                                     Acq4 := 'Completer',
+	                                                                     Acq5 := '',
+	                                                                     Acq6 := '',
+	                                                                     Acq7 := '',
+	                                                                     Acq8 := '',
+	                                                                     Acq_Choisi := -1,
+	                                                                     Date_Arrivee := #ChPont._TpsPicke);
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                    RETURN;
+	                END_IF;
+	                
+	                
+	            END_IF;
+	        END_REGION Traitement preliminaire    
+	        REGION Traitement cyclique "DefArrProd" 
+	            
+	            // Changement de cellule automatique sur pas d'arrive produit
+	            IF #ChPont._ChgtCelAuto THEN
+	                IF NOT #ChPont._Commande._PtcelOrig._Remp THEN
+	                    // test tolrance cellule vide pour changement de cellule automatique
+	                    // Appel procedure (CtrlAcquitVide(pt_compo->pt_celOrig->cel, pt_zs->QteNet - pt_compo->tareCel, _wTxt) 
+	                    IF #Ret_Sint = 1 THEN
+	                        //Appel ChgtcellAuto
+	                        #Ret_Bool := "ChgtCellAuto"(#ChPont);
+	                        IF NOT #Ret_Bool THEN
+	                            #ChPont.Dial_Def.Num_Def_Etape := 1;
+	                            #ChPont.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #FgBase,
+	                                                                             Msg_Defaut := 'Pas de nouvelle cellule en auto',
+	                                                                             Type_Defaut := 2,
+	                                                                             Automatisme := #ChPont._ChargCommun._CommunGeneral._Autom,
+	                                                                             Num_Lot := #ChPont._Commande._NoLot,
+	                                                                             Origine_Defaut := 'Pas de nouvelle cellule en auto',
+	                                                                             Libelle_Origine := 'Pas de nouvelle cellule en auto',
+	                                                                             Acq1 := 'Relance',
+	                                                                             Acq2 := 'Abandon',
+	                                                                             Acq3 := 'Cellule',
+	                                                                             Acq4 := '',
+	                                                                             Acq5 := '',
+	                                                                             Acq6 := '',
+	                                                                             Acq7 := '',
+	                                                                             Acq8 := '',
+	                                                                             Acq_Choisi := -1,
+	                                                                             Date_Arrivee := #ChPont._TpsPicke);
+	                            #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                            RETURN;
+	                        ELSE
+	                            ///ajoute la cellule a controler
+	                            #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_ControleDest;
+	                            // #CelVid := 'N';
+	                            RETURN;
+	                        END_IF;
+	                    END_IF;
+	                END_IF;
+	            END_IF;
+	            
+	        DefArrProd_DEF1:
+	            //============ Traitement des reponses pour le defaut  ====================================//
+	            
+	            IF #ChPont.Dial_Def.Reponse_Def = 'Relance' THEN //Relance
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_Extract;
+	                #ChPont._SuspCircuit := FALSE;
+	                #ChPont.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            IF #ChPont.Dial_Def.Reponse_Def = 'Completer' THEN //Relance
+	                #ChPont._Ptzs._EtatChar := "A_COMPLETER";
+	                #ChPont._Ptzs._TypeArret := "ARRET_EVOL";
+	                #ChPont._Ptzs._FgStopMiPesee := FALSE;
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_VidCircuit;
+	                #ChPont._SuspCircuit := FALSE;
+	                #ChPont.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            IF #ChPont.Dial_Def.Reponse_Def = 'Abandon' THEN
+	                #ChPont._Ptzs._EtatChar := "FIN_CHARG";
+	                #ChPont._Ptzs._TypeArret := "ARRET_EVOL";
+	                #ChPont._Ptzs._FgStopMiPesee := FALSE;
+	                #ChPont._SuspCircuit := FALSE;
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_VidCircuit;
+	                #ChPont.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            IF #ChPont.Dial_Def.Reponse_Def = 'Cellule' THEN //cellule
+	                #Ret_int := "Index_Mobile"(#ChPont.Dial_Def.Text_Reponse);
+	                #ChPont.Dial_Def.Reponse_Def := '';
+	                IF #Ret_int = -1 THEN
+	                    #ChPont.Dial_Def.Num_Def_Etape := 2;
+	                    #Text_Def := CONCAT(IN1 := 'Cellule ', IN2 := #ChPont.Dial_Def.Text_Reponse, IN3 := ' Inexistante');
+	                    #ChPont.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #FgBase, Msg_Defaut := #Text_Def,
+	                                                                     Type_Defaut := 2,
+	                                                                     Automatisme := #ChPont._ChargCommun._CommunGeneral._Autom,
+	                                                                     Num_Lot := #ChPont._Commande._NoLot,
+	                                                                     Origine_Defaut := 'Changement cellule',
+	                                                                     Libelle_Origine := 'Cellule choisie inexistante',
+	                                                                     Acq1 := 'Relance',
+	                                                                     Acq2 := 'Cellule',
+	                                                                     Acq3 := '',
+	                                                                     Acq4 := '',
+	                                                                     Acq5 := '',
+	                                                                     Acq6 := '',
+	                                                                     Acq7 := '',
+	                                                                     Acq8 := '',
+	                                                                     Acq_Choisi := -1,
+	                                                                     Date_Arrivee := #ChPont._TpsPicke);
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                    RETURN;
+	                ELSE
+	                    IF #ChPont.Dial_Def.Text_Reponse = #ChPont._Commande._PtcelOrig._Cel THEN
+	                        #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_Extract;
+	                        #ChPont._SuspCircuit := FALSE;
+	                        #ChPont.Dial_Def.Reponse_Def := '';
+	                        RETURN;
+	                    END_IF;
+	                    #ChPont._ChargCommun.CntlDest.Dest := #ChPont.Dial_Def.Text_Reponse;
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_ControleDest;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	            //============================================  Fin traitement  ====================================================================//
+	            
+	            
+	            
+	        DefArrProd_DEF2:
+	            //============ Traitement des reponses pour le defaut  ====================================//
+	            
+	            IF #ChPont.Dial_Def.Reponse_Def = 'Relance' THEN //Relance
+	                "CtrlDest"(fgbase := #FgBase,
+	                           ChComm := #ChPont._ChargCommun,
+	                           Dial_Def := #ChPont.Dial_Def,
+	                           Commande := #ChPont._Commande,
+	                           CdMat := #ChPont._Commande._CdMat,
+	                           Cel := "DB_Mod_Cellule",
+	                           CelVid := #CelVid);
+	                #ChPont.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            
+	            IF #ChPont.Dial_Def.Reponse_Def = 'Cellule' THEN //cellule
+	                #Ret_int := "Index_Mobile"(#ChPont.Dial_Def.Text_Reponse);
+	                #ChPont.Dial_Def.Reponse_Def := '';
+	                IF #Ret_int = -1 THEN
+	                    #ChPont.Dial_Def.Num_Def_Etape := 2;
+	                    #Text_Def := CONCAT(IN1 := 'Cellule ', IN2 := #ChPont.Dial_Def.Text_Reponse, IN3 := ' Inexistante');
+	                    #ChPont.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #FgBase, Msg_Defaut := #Text_Def,
+	                                                                     Type_Defaut := 2,
+	                                                                     Automatisme := #ChPont._ChargCommun._CommunGeneral._Autom,
+	                                                                     Num_Lot := #ChPont._Commande._NoLot,
+	                                                                     Origine_Defaut := 'Changement cellule',
+	                                                                     Libelle_Origine := 'Cellule choisie inexistante',
+	                                                                     Acq1 := 'Relance',
+	                                                                     Acq2 := 'Cellule',
+	                                                                     Acq3 := '',
+	                                                                     Acq4 := '',
+	                                                                     Acq5 := '',
+	                                                                     Acq6 := '',
+	                                                                     Acq7 := '',
+	                                                                     Acq8 := '',
+	                                                                     Acq_Choisi := -1,
+	                                                                     Date_Arrivee := #ChPont._TpsPicke);
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                    RETURN;
+	                ELSE
+	                    IF #ChPont.Dial_Def.Text_Reponse = #ChPont._Commande._PtcelOrig._Cel THEN
+	                        IF #FgBase THEN
+	                            #ChPont._Commande._QteChOrig := #ChPont._ChargCommun._Vbasc - #ChPont._Commande._QteTare - #ChPont._Commande._QteChOrig;
+	                            IF  #ChPont._Commande._TareCel > 0 THEN
+	                                #ret_string := "Proc_MajStock"(ChPont := #ChPont,
+	                                                               Typemouvement := '010',
+	                                                               Err_Sql => #Err_Sql,
+	                                                               Msg_Def => #Mess_Def);
+	                                #Commande._TareCel := #ChPont._ChargCommun._Vbasc;
+	                            END_IF;
+	                            #ret_string := "Proc_ChangOrig"(NumPoste := "Num_Poste",
+	                                                            IdComLign := #ChPont._Commande._IdComLig,
+	                                                            IdLigOrig := #ChPont._Commande._IdLigOrig,
+	                                                            NvOrig := #ChPont._ChargCommun.CntlDest.Dest,
+	                                                            ChgAuto := 'N',
+	                                                            Msg_Def => #Mess_Def, ComLign := #ChPont._Commande);
+	                        END_IF;
+	                        #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_Extract;
+	                        #ChPont._SuspCircuit := FALSE;
+	                        #ChPont.Dial_Def.Reponse_Def := '';
+	                        RETURN;
+	                    END_IF;
+	                    #ChPont._ChargCommun.CntlDest.Dest := #ChPont.Dial_Def.Text_Reponse;
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_ControleDest;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	            //============================================  Fin traitement  ====================================================================//
+	            
+	            
+	      
+	            
+	            
+	            
+	            
+	            
+	            
+	            
+	            
+	        CtrlDestEtpDefArrProd:
+	            IF #ChPont._ChargCommun.CntlDest.TestComplet THEN
+	                #ChPont._Commande._ChuteCel := 0;
+	                IF #ChPont._ChargCommun.CntlDest.Controle = #AutrePont THEN
+	                    #Ret_int := "RechIndexCel"(#ChPont._ChargCommun.CntlDest.Dest);
+	                    #ChPont._Commande._PtcelOrig := "DB_Mod_Cellule"._TabCel[#Ret_int];
+	                    #ChPont._Ptzs._EtatChar := "A_COMPLETER";
+	                    #ChPont._Ptzs._AutrePont := TRUE;
+	                    #ChPont._Ptzs._TypeArret := "ARRET_EVOL";
+	                    #ChPont._Ptzs._FgStopMiPesee := FALSE;
+	                    #ChPont._SuspCircuit := FALSE;
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_VidCircuit;
+	                    RETURN;
+	                END_IF;
+	                IF #ChPont._ChargCommun.CntlDest.Controle = #Abandon THEN
+	                    #ChPont._Ptzs._EtatChar := "A_COMPLETER";
+	                    #ChPont._Ptzs._TypeArret := "ARRET_EVOL";
+	                    #ChPont._Ptzs._FgStopMiPesee := FALSE;
+	                    #ChPont._SuspCircuit := FALSE;
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_VidCircuit;
+	                    RETURN;
+	                END_IF;
+	                IF #ChPont._ChargCommun.CntlDest.Controle = #TestValide THEN
+	                   (* IF  #ChPont._Commande._QteChOrig >0 THEN
+	                        #ChPont._Commande._TareCel := #ChPont._ChargCommun._Vbasc - (#ChPont._Commande._QteChOrig + #ChPont._Commande._QteNet);
+	                    END_IF; *)
+	                    
+	                    #ChPont._Commande._QteChOrig := #ChPont._ChargCommun._Vbasc - #ChPont._Commande._QteTare - #ChPont._Commande._QteChOrig;
+	                    IF #FgBase THEN
+	                        IF #ChPont._Commande._TareCel > 0 THEN
+	                            #ret_string := "Proc_MajStock"(ChPont := #ChPont,
+	                                                           Typemouvement := '010',
+	                                                           Err_Sql => #Err_Sql,
+	                                                           Msg_Def => #Mess_Def);
+	                            #ChPont._Commande._TareCel := #ChPont._ChargCommun._Vbasc;
+	                        END_IF;
+	                        #ret_string := "Proc_ChangOrig"(NumPoste := "Num_Poste",
+	                                                        IdComLign := #ChPont._Commande._IdComLig,
+	                                                        IdLigOrig := #ChPont._Commande._IdLigOrig,
+	                                                        NvOrig := #ChPont._ChargCommun.CntlDest.Dest,
+	                                                        ChgAuto := 'N',
+	                                                        Msg_Def => #Mess_Def, ComLign := #ChPont._Commande);
+	                        IF #ret_string = 'NOK' THEN
+	                            #Text_Def := #Mess_Def;
+	                            #ChPont._ParamTrouve := FALSE;
+	                            #ChPont.Dial_Def.Num_Def_Etape := 3;
+	                            #ChPont.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #FgBase,
+	                                                                             Msg_Defaut := #Text_Def,
+	                                                                             Type_Defaut := 2,
+	                                                                             Automatisme := #ChPont._ChargCommun._CommunGeneral._Autom,
+	                                                                             Num_Lot := #ChPont._ChargCommun._CommunGeneral._NumLot,
+	                                                                             Origine_Defaut := 'Proc Chngm Orig',
+	                                                                             Libelle_Origine := 'Changement Origine',
+	                                                                             Acq1 := 'ABANDON',
+	                                                                             Acq2 := 'RELANCE',
+	                                                                             Acq3 := '',
+	                                                                             Acq4 := '',
+	                                                                             Acq5 := '',
+	                                                                             Acq6 := '',
+	                                                                             Acq7 := '',
+	                                                                             Acq8 := '',
+	                                                                             Acq_Choisi := -1,
+	                                                                             Date_Arrivee := #ChPont._TpsPicke);
+	                            #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                            RETURN;
+	                        END_IF;
+	                    END_IF;
+	                    IF #ChPont._Commande._PtcelOrig._Moborg <> -1 AND #ChPont._Commande._PtcelOrig._Moborg <> "Index_Mobile"(#ChPont._ChargCommun.CntlDest.Dest) THEN
+	                        #ChPont._ChargCommun._VidCirChgCell := TRUE;
+	                    END_IF;
+	                    #Ret_int := "RechIndexCel"(#ChPont._ChargCommun.CntlDest.Dest);
+	                    #ChPont._Commande._PtcelOrig := "DB_Mod_Cellule"._TabCel[#Ret_int];
+	                    IF #ChPont._ChargCommun._VidCirChgCell THEN
+	                        #ChPont._SuspCircuit := FALSE;
+	                        #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_VidCircuit;
+	                        RETURN;
+	                    ELSE
+	                        #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_CtrlColChute;
+	                        RETURN;
+	                    END_IF;
+	                END_IF;
+	            END_IF;
+	            
+	            
+	            
+	        DefProcChngOrig:
+	            //================================== Traitement des reponses pour le defaut1  =============================================================//
+	            IF #ChPont.Dial_Def.Reponse_Def = 'ABANDON' THEN
+	                #ChPont.Dial_Def.Reponse_Def := '';
+	                IF #ChPont._Commande._PtcelOrig._Moborg <> -1 AND #ChPont._Commande._PtcelOrig._Moborg <> "Index_Mobile"(#ChPont._ChargCommun.CntlDest.Dest) THEN
+	                    #ChPont._ChargCommun._VidCirChgCell := TRUE;
+	                END_IF;
+	                #Ret_int := "RechIndexCel"(#ChPont._ChargCommun.CntlDest.Dest);
+	                #ChPont._Commande._PtcelOrig := "DB_Mod_Cellule"._TabCel[#Ret_int];
+	                IF #ChPont._ChargCommun._VidCirChgCell THEN
+	                    #ChPont._SuspCircuit := FALSE;
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_VidCircuit;
+	                    RETURN;
+	                ELSE
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_CtrlColChute;
+	                    RETURN;
+	                END_IF;
+	                RETURN;
+	            END_IF;
+	            IF #ChPont.Dial_Def.Reponse_Def = 'RELANCE' THEN
+	                #ret_string := "Proc_ChangOrig"(NumPoste := "Num_Poste",
+	                                                IdComLign := #ChPont._Commande._IdComLig,
+	                                                IdLigOrig := #ChPont._Commande._IdLigOrig,
+	                                                NvOrig := #ChPont._ChargCommun.CntlDest.Dest,
+	                                                ChgAuto := 'N',
+	                                                Msg_Def => #Mess_Def, ComLign := #ChPont._Commande);
+	                IF #ret_string = 'NOK' THEN
+	                    #ChPont.Dial_Def.Reponse_Def := '';
+	                    #Text_Def := #Mess_Def;
+	                    #ChPont._ParamTrouve := FALSE;
+	                    #ChPont.Dial_Def.Num_Def_Etape := 3;
+	                    #ChPont.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #FgBase,
+	                                                                     Msg_Defaut := #Text_Def,
+	                                                                     Type_Defaut := 2,
+	                                                                     Automatisme := #ChPont._ChargCommun._CommunGeneral._Autom,
+	                                                                     Num_Lot := #ChPont._ChargCommun._CommunGeneral._NumLot,
+	                                                                     Origine_Defaut := 'Proc Chngm Orig',
+	                                                                     Libelle_Origine := 'Changement Origine',
+	                                                                     Acq1 := 'ABANDON',
+	                                                                     Acq2 := 'RELANCE',
+	                                                                     Acq3 := '',
+	                                                                     Acq4 := '',
+	                                                                     Acq5 := '',
+	                                                                     Acq6 := '',
+	                                                                     Acq7 := '',
+	                                                                     Acq8 := '',
+	                                                                     Acq_Choisi := -1,
+	                                                                     Date_Arrivee := #ChPont._TpsPicke);
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                    RETURN;
+	                ELSE
+	                    IF #ChPont._Commande._PtcelOrig._Moborg <> -1 AND #ChPont._Commande._PtcelOrig._Moborg <> "Index_Mobile"(#ChPont._ChargCommun.CntlDest.Dest) THEN
+	                        #ChPont._ChargCommun._VidCirChgCell := TRUE;
+	                    END_IF;
+	                    #Ret_int := "RechIndexCel"(#ChPont._ChargCommun.CntlDest.Dest);
+	                    #ChPont._Commande._PtcelOrig := "DB_Mod_Cellule"._TabCel[#Ret_int];
+	                    IF #ChPont._ChargCommun._VidCirChgCell THEN
+	                        #ChPont._SuspCircuit := FALSE;
+	                        #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_VidCircuit;
+	                        RETURN;
+	                    ELSE
+	                        #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_CtrlColChute;
+	                        RETURN;
+	                    END_IF;
+	                END_IF;
+	            END_IF;
+	            //============================================  Fin traitement  ====================================================================//  
+	            
+	            
+	            
+	            
+	            
+	            
+	            
+	        END_REGION Traitement cyclique "DefArrProd"        
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                        ╔════════════════════════════════════╗
+	                                                        ║          Etape "SuspChgtCase"      ║
+	                                                        ╚════════════════════════════════════╝
+	*************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	    #Etape_SuspChgtCase:
+	        REGION Traitement preliminaire "SuspChgtCase"
+	            IF (#ChPont._ChargCommun._CommunGeneral._Etp <> #ChPont._ChargCommun._CommunGeneral._EtpPrec) THEN
+	                #ChPont._ChargCommun._CommunGeneral._EtpPrec := #ChPont._ChargCommun._CommunGeneral._Etp;
+	                #ChPont._ChargCommun._CommunGeneral._DescEtp := 'Etape SuspChgtCase';
+	                "MajBtSupervChPont"(Type := 3,
+	                                    ChPont := #ChPont);
+	                #ChPont._MemoAppuiBP := 0;
+	            END_IF;
+	        END_REGION Traitement preliminaire    
+	        REGION Traitement cyclique "SuspChgtCase" 
+	            
+	            IF #ChPont._ChargDebit THEN
+	                "SuspCalculDebit"(Type := "BTSUSP",
+	                                  ParCal := #ChPont._ChargCommun._CommunGeneral._ParCal);
+	            END_IF;
+	            IF #ChPont._Commande._Case < #ChPont._Commande._NbCase - 1 AND #ChPont._DemChgtCase = 0 THEN
+	                #ChPont._IndexTemp := #ChPont._Commande._Case + 1;
+	                "MemoPoidsCase"(IndexNouvCase := #ChPont._IndexTemp,
+	                                Chpont := #ChPont);
+	                
+	            ELSIF #ChPont._DemChgtCase <> 0 THEN
+	                #ChPont._IndexTemp := #ChPont._DemChgtCase;
+	                "MemoPoidsCase"(IndexNouvCase := #ChPont._IndexTemp,
+	                                Chpont := #ChPont);
+	                #ChPont._DemChgtCase := 0;
+	                
+	            ELSE
+	                //Affiche mssg def: Quantite case camion atteinte, veuillez choisir une nouvelle case
+	                //Selection parmi  pt_zs->Cases[i].noCase
+	                ;
+	            END_IF;
+	            #ChPont._ChargCommun._PtAff._MessOper := 'Attente positionnement camion et DepCycle ou FinChar pour vidanger';
+	            #ChPont._ChargCommun._PtAff._NumCaseEc := #ChPont._Commande._Case;
+	            #ChPont._DemChgtCase := 0;
+	            #ChPont._Bouton := "LireActionBoutonChPont"(#ChPont);
+	            IF #ChPont._Bouton = "DEBCYCLE" THEN
+	                #ChPont._BtDepCycle := 1;
+	                #ChPont._MemoAppuiBP := 0;
+	                IF "CondChargement"(#ChPont) AND "FC_Test_Niv_AmontAval"(Num_Zone := #ChPont._ChargCommun._CommunGeneral._NumZone, Lst_Taches := #ChPont._ListeTaAttAutDemarrage) THEN
+	                    #ChPont._SuspCircuit := FALSE;
+	                    IF #ChPont._ChargDebit THEN
+	                        "SuspCalculDebit"(Type := "DEBCYCLE",
+	                                          ParCal := #ChPont._ChargCommun._CommunGeneral._ParCal);
+	                    END_IF;
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_Extract;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	            
+	            IF #ChPont._Bouton = "ABANDONCHARG" THEN
+	                #ChPont._SuspCircuit := FALSE;
+	                #ChPont._Ptzs._FgStopMiPesee := FALSE;
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_VidCircuit;
+	                RETURN;
+	            END_IF;
+	            "ControleChgtCase"(#ChPont);
+	            
+	            
+	            
+	        END_REGION Traitement cyclique "SuspChgtCase" 
+	    (*      
+	    *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                        ╔════════════════════════════════════╗
+	                                                        ║          Etape "SuspChargement"    ║
+	                                                        ╚════════════════════════════════════╝
+	    *************************************** *************************************** *************************************** *************************************** ***************************************
+	    *)
+	    #Etape_SuspChargement:
+	        REGION Traitement preliminaire "SuspChargement"
+	            IF (#ChPont._ChargCommun._CommunGeneral._Etp <> #ChPont._ChargCommun._CommunGeneral._EtpPrec) THEN
+	                #ChPont._ChargCommun._CommunGeneral._EtpPrec := #ChPont._ChargCommun._CommunGeneral._Etp;
+	                #ChPont._ChargCommun._CommunGeneral._DescEtp := 'Etape SuspChargement';
+	                //Suspension calcul debit
+	                IF #ChPont._ChargDebit THEN
+	                    "SuspCalculDebit"(Type := "BTSUSP",
+	                                      ParCal := #ChPont._ChargCommun._CommunGeneral._ParCal);
+	                END_IF;
+	                "MajBtSupervChPont"(Type := 3,
+	                                    ChPont := #ChPont);
+	                #ChPont._ChargCommun._PtAff._MessOper := 'Suspension chargement';
+	            END_IF;
+	        END_REGION Traitement preliminaire    
+	        REGION Traitement cyclique "SuspChargement" 
+	            #ChPont._Bouton := "LireActionBoutonChPont"(#ChPont);
+	            IF #ChPont._Commande._FgaVider THEN
+	                IF #ChPont._ChargCommun._BpVide THEN
+	                    #ChPont._Ptzs._TypeArret := "ARRET_VIDE";
+	                    #ChPont._AutorMAJColChute := FALSE;
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_VidCircuit;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	            IF "CondChargement"(#ChPont) AND #ChPont._Bouton = "DEBCYCLE" THEN
+	                #ChPont._SuspCircuit := FALSE;
+	                IF #ChPont._ChargDebit THEN
+	                    "SuspCalculDebit"(Type := "DEBCYCLE",
+	                                      ParCal := #ChPont._ChargCommun._CommunGeneral._ParCal);
+	                END_IF;
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_Extract;
+	                RETURN;
+	            END_IF;
+	            IF #ChPont._Bouton = "ABANDONCHARG" THEN
+	                IF #ChPont._ArrImmMemeProd AND #ChPont._Ptzs._FgDemArrImm THEN
+	                    #ChPont._SuspCircuit := FALSE;
+	                    #ChPont._Ptzs._TypeArret := "ARRET_IMM";
+	                ELSE
+	                    #ChPont._SuspCircuit := FALSE;
+	                END_IF;
+	                #ChPont._Ptzs._FgStopMiPesee := FALSE;
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_VidCircuit;
+	                RETURN;
+	            END_IF;
+	            
+	            // Demande de changement de case
+	            IF #ChPont._DemChgtCase <> 0 THEN
+	                #ChPont._DemVib := FALSE;
+	                "ArretVibreur"(#ChPont._Commande._PtcelOrig);
+	                #ChPont._SuspCircuit := TRUE;
+	                "Arret_Ext"(ConsQte := #ChPont._Commande._ConsQteTot,
+	                            Commande := #ChPont._Commande,
+	                            ChargCommun := #ChPont._ChargCommun,
+	                            Ptcel := #ChPont._Commande._PtcelOrig);
+	                #ChPont._ChargCommun._PtAff._ExtEc := 0;
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_SuspChgtCase;
+	                RETURN;
+	            END_IF;
+	            
+	            
+	        END_REGION Traitement cyclique "SuspChargement"   
+	    (*      
+	    *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                        ╔════════════════════════════════════╗
+	                                                        ║      Etape "ConfFinChargement"     ║
+	                                                        ╚════════════════════════════════════╝
+	    *************************************** *************************************** *************************************** *************************************** ***************************************
+	    *)
+	    #Etape_ConfFinChargement:
+	        REGION Traitement preliminaire "ConfFinChargement"
+	            IF (#ChPont._ChargCommun._CommunGeneral._Etp <> #ChPont._ChargCommun._CommunGeneral._EtpPrec) THEN
+	                #ChPont._ChargCommun._CommunGeneral._EtpPrec := #ChPont._ChargCommun._CommunGeneral._Etp;
+	                #ChPont._ChargCommun._CommunGeneral._DescEtp := 'Etape ConfFinChargement';
+	                #MajNiv := "Maj_Niv"(Num_Zone := #ChPont._ChargCommun._CommunGeneral._NumZone, Num_Tache := #ChPont._ChargCommun._CommunGeneral._Tache, Niveau := "NIV_SURPONT_CONF_FIN_CHAR");
+	                #ChPont._ChargCommun._DemVibrCel := FALSE;
+	                "ArretVibreur"(#ChPont._Commande._PtcelOrig);
+	                #ChPont._SuspCircuit := TRUE;
+	                "Arret_Ext"(ConsQte := #ChPont._Commande._ConsQteTot,
+	                            Commande := #ChPont._Commande,
+	                            ChargCommun := #ChPont._ChargCommun,
+	                            Ptcel := #ChPont._Commande._PtcelOrig);
+	                
+	                
+	                
+	                
+	                
+	                // si stop mi pesee pas de confirmation fin
+	                IF #ChPont._Ptzs._FgStopMiPesee THEN
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_VidCircuit;
+	                    RETURN;
+	                END_IF;
+	                "ArretCalculDebit"(#ChPont._ChargCommun._CommunGeneral._ParCal);
+	                "MajBtSupervChPont"(Type := 4,
+	                                    ChPont := #ChPont);
+	                IF NOT #ChPont._Ptzs._HorsPont THEN
+	                    #ChPont._ChargCommun._PtAff._MessOper := 'Attente Confirmation Fin Chargement ou Ajout';
+	                ELSE
+	                    #ChPont._ChargCommun._PtAff._MessOper := 'Attente Camion sur pont et Confirmation Fin Chargement ou Ajout';
+	                END_IF;
+	                
+	                #ChPont._MemoRajout := FALSE;
+	                
+	                
+	            END_IF;
+	        END_REGION Traitement preliminaire    
+	        REGION Traitement cyclique "ConfFinChargement" 
+	            // On controle le changement de case dans le cas o on utilisait le bouton AJOUT
+	            IF #ChPont._GestQteCaseAuto AND NOT #ChPont._Ptzs._Cases[#ChPont._Commande._Case]._FgRelCharge AND #ChPont._Commande._NbCase > 1 THEN
+	                
+	                IF #ChPont._Commande._PtcelOrig._FgColChuteChgtCase = 1 THEN
+	                    #ChPont._ChargCommun._QteCase := #ChPont._Ptzs._Cases[#ChPont._Commande._Case]._QteDejaChargee + #ChPont._ChargCommun._Vbasc - #ChPont._Ptzs._Cases[#ChPont._Commande._Case]._Tare + #ChPont._Commande._ChuteCel;
+	                ELSIF #ChPont._Commande._PtcelOrig._FgColChuteChgtCase = 2 THEN
+	                    #ChPont._ChargCommun._QteCase := #ChPont._Ptzs._Cases[#ChPont._Commande._Case]._QteDejaChargee + #ChPont._ChargCommun._Vbasc - #ChPont._Ptzs._Cases[#ChPont._Commande._Case]._Tare + #ChPont._ChuteArrImm;
+	                ELSE
+	                    #ChPont._ChargCommun._QteCase := #ChPont._Ptzs._Cases[#ChPont._Commande._Case]._QteDejaChargee + #ChPont._ChargCommun._Vbasc - #ChPont._Ptzs._Cases[#ChPont._Commande._Case]._Tare;
+	                END_IF;
+	                
+	                IF #ChPont._Ptzs._Cases[#ChPont._Commande._Case]._ConsQte > 0 AND ((#ChPont._ChargCommun._QteCase > #ChPont._Ptzs._Cases[#ChPont._Commande._Case]._ConsQte + #ChPont._TolDernCase AND #ChPont._Commande._Case = #ChPont._Commande._NbCase - 1) OR
+	                    (#ChPont._ChargCommun._QteCase > #ChPont._Ptzs._Cases[#ChPont._Commande._Case]._ConsQte AND #ChPont._Commande._Case <> #ChPont._Commande._NbCase - 1)) THEN
+	                    
+	                    #ChPont._ChargCommun._DemVibrCel := FALSE;
+	                    "ArretVibreur"(#ChPont._Commande._PtcelOrig);
+	                    #ChPont._SuspCircuit := TRUE;
+	                    "Arret_Ext"(ConsQte := #ChPont._Commande._ConsQteTot,
+	                                Commande := #ChPont._Commande,
+	                                ChargCommun := #ChPont._ChargCommun,
+	                                Ptcel := #ChPont._Commande._PtcelOrig);
+	                    #ChPont._Ptzs._Cases[#ChPont._Commande._Case]._FgRelCharge := TRUE;
+	                    #ChPont._ChargCommun._PtAff._ExtEc := 0;
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_SuspChgtCase;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	            
+	            #ChPont._Bouton := "LireActionBoutonChPont"(#ChPont);
+	            IF #ChPont._Bouton = "BTAJOUT" THEN
+	                #ChPont._SuspCircuit := FALSE;
+	                #ChPont._MemoRajout := TRUE;
+	                #ChPont._AutorMAJColChute := FALSE;
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_Extract;         // #Etape_Surveillance;
+	                RETURN;
+	            END_IF;
+	            IF #ChPont._Bouton = "ABANDONCHARG" OR #ChPont._VidAuto THEN
+	                // Redemarrage circuit si pas arret immdiat
+	                IF #ChPont._Ptzs._TypeArret <> "ARRET_IMM" THEN
+	                    #ChPont._SuspCircuit := FALSE;
+	                END_IF;
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_VidCircuit;
+	                RETURN;
+	            END_IF;
+	            IF #ChPont._Bouton = "BTSUSP" THEN
+	                #ChPont._BtSusp := 1;
+	                #ChPont._MemoAppuiBP := 0;
+	                #ChPont._SuspCircuit := TRUE;
+	                #Ret_RD_Sys_T := RD_SYS_T(#ChPont._DebFermExt);
+	            END_IF;
+	        END_REGION Traitement cyclique "ConfFinChargement"   
+	    (*      
+	    *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                        ╔════════════════════════════════════╗
+	                                                        ║          Etape "VidCircuit"        ║
+	                                                        ╚════════════════════════════════════╝
+	    *************************************** *************************************** *************************************** *************************************** ***************************************
+	    *)
+	    #Etape_VidCircuit:
+	        REGION Traitement preliminaire "VidCircuit"
+	            IF (#ChPont._ChargCommun._CommunGeneral._Etp <> #ChPont._ChargCommun._CommunGeneral._EtpPrec) THEN
+	                #ChPont._ChargCommun._CommunGeneral._EtpPrec := #ChPont._ChargCommun._CommunGeneral._Etp;
+	                #ChPont._ChargCommun._CommunGeneral._DescEtp := 'Etape VidCircuit';
+	                #MajNiv := "Maj_Niv"(Num_Zone := #ChPont._ChargCommun._CommunGeneral._NumZone, Num_Tache := #ChPont._ChargCommun._CommunGeneral._Tache, Niveau := "NIV_SURPONT_VID_CIR");
+	                #ChPont._ChargCommun._PtAff._MessOper := 'Vidange circuit';
+	                "ArretCalculDebit"(#ChPont._ChargCommun._CommunGeneral._ParCal);
+	                "Arret_Ext"(ConsQte := #ChPont._Commande._ConsQteTot,
+	                            Commande := #ChPont._Commande,
+	                            ChargCommun := #ChPont._ChargCommun,
+	                            Ptcel := #ChPont._Commande._PtcelOrig);
+	                // fonction utilisateur avant vidange circuit
+	                IF #ChPont._ActionAvantVidangeCircuit THEN
+	                    "ActionAvantVidangeCircuit"();
+	                END_IF;
+	                // Vidange cellule sur changement de cellule
+	                (*  IF #ChPont._ChargCommun._VidCirChgCell THEN
+	    #ChPont._ChargCommun._DefEvol := 0;
+	    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_CtrlColChute;
+	    #ChPont._ChargCommun._VidCirChgCell := FALSE;
+	    RETURN;
+	    END_IF; *)
+	            END_IF;
+	        END_REGION Traitement preliminaire    
+	        REGION Traitement cyclique "VidCircuit" 
+	            #ChPont._Bouton := "LireActionBoutonChPont"(#ChPont);
+	            IF #ChPont._Bouton = "BTSUSP" THEN
+	                #ChPont._BtSusp := 1;
+	                #ChPont._MemoAppuiBP := 0;
+	                #ChPont._SuspCircuit := TRUE;
+	                #Ret_RD_Sys_T := RD_SYS_T(#ChPont._DebFermExt);
+	            END_IF;
+	            
+	            IF #ChPont._Bouton = "DEBCYCLE" THEN
+	                #ChPont._BtDepCycle := 1;
+	                #ChPont._MemoAppuiBP := 0;
+	                #ChPont._SuspCircuit := FALSE;
+	                #Ret_RD_Sys_T := RD_SYS_T(#ChPont._DebFermExt);
+	            END_IF;
+	            
+	            
+	            // Vidange cellule sur changement de cellule
+	            IF #ChPont._ChargCommun._VidCirChgCell THEN
+	                #ChPont._ChargCommun._DefEvol := 0;
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_AttFinVidCircuit;
+	                RETURN;
+	            END_IF;
+	            
+	            
+	            
+	            // Arret produit suivant identique
+	            IF #ChPont._Ptzs._TypeArret = "ARRET_IMM" AND NOT #ChPont._Ptzs._FgStopMiPesee THEN
+	                #ChPont._SuspCircuit := TRUE;
+	                #PtSuivCharg.ArrCirPlein := TRUE;
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_AttFinVidCompo;
+	                RETURN;
+	            ELSIF (#ChPont._Ptzs._TypeArret = "ARRET_EVOL" OR #ChPont._Ptzs._TypeArret = "ARRET_VIDE") AND NOT #ChPont._Ptzs._FgStopMiPesee THEN
+	                #PtSuivCharg.ArrCirPlein := FALSE;
+	                #Ret_Sint := "Arr_Imm_Circuit"(#ChPont._Circuit);
+	                #Ret_Sint := "Libere_Circuit"(#ChPont._Circuit);
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_AttFinVidCompo;
+	                RETURN;
+	            ELSE
+	                #PtSuivCharg.ArrCirPlein := FALSE;
+	                #ChPont._ChargCommun._DefEvol := 0;
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_AttFinVidCircuit;
+	                RETURN;
+	            END_IF;
+	            
+	            
+	            
+	        END_REGION Traitement cyclique "VidCircuit"  
+	    (*      
+	    *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                        ╔════════════════════════════════════╗
+	                                                        ║       Etape "AttFinVidCircuit"     ║
+	                                                        ╚════════════════════════════════════╝
+	    *************************************** *************************************** *************************************** *************************************** ***************************************
+	    *)
+	    #Etape_AttFinVidCircuit:
+	        REGION Traitement preliminaire "AttFinVidCircuit"
+	            IF (#ChPont._ChargCommun._CommunGeneral._Etp <> #ChPont._ChargCommun._CommunGeneral._EtpPrec) THEN
+	                #ChPont._ChargCommun._CommunGeneral._EtpPrec := #ChPont._ChargCommun._CommunGeneral._Etp;
+	                #ChPont._ChargCommun._CommunGeneral._DescEtp := 'Etape AttFinVidCircuit';
+	                #ChPont._ChargCommun._PtAff._MessOper := 'Attente fin vidange Circuit';
+	                "MajBtSupervChPont"(Type := 0,
+	                                    ChPont := #ChPont);
+	                //#Ret_Sint := "Fin_Pos_Circuit"(#ChPont._Circuit);
+	            END_IF;
+	        END_REGION Traitement preliminaire    
+	        REGION Traitement cyclique "AttFinVidCompo" 
+	            #Ret_Bool := "Vid_Circuit_Cycl"(#ChPont._Circuit);
+	            "AffichePoids1"(
+	                            ChargCommun := #ChPont._ChargCommun,
+	                            Ptzs := #ChPont._Ptzs,
+	                            Commande := #ChPont._Commande);
+	            // IF "Test_Etat_Circuit"(Etat := "Enc_Fin_Pos", Debut := 0, CIRCUIT := #ChPont._Circuit) THEN
+	            
+	            IF #Ret_Bool AND "Test_Etat_Circuit"(Etat := "Libre", Debut := 0, CIRCUIT := #ChPont._Circuit) THEN
+	                #Ret_Sint := "Libere_Circuit"(#ChPont._Circuit);
+	                IF #ChPont._ChargCommun._VidCirChgCell THEN
+	                #Ret_int := "RechIndexCel"(#ChPont._ChargCommun.CntlDest.Dest);
+	                #ChPont._Commande._PtcelOrig := "DB_Mod_Cellule"._TabCel[#Ret_int];
+	                    #ChPont._ChargCommun._VidCirChgCell := FALSE;
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_CtrlColChute;
+	                    RETURN;
+	                END_IF;
+	                
+	                //  #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_CtrlColChute;
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_AttFinVidCompo;
+	                RETURN;
+	            END_IF;
+	        END_REGION Traitement cyclique "AttFinVidCompo"              
+	    (*      
+	    *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                        ╔════════════════════════════════════╗
+	                                                        ║       Etape "AttFinVidCompo"       ║
+	                                                        ╚════════════════════════════════════╝
+	    *************************************** *************************************** *************************************** *************************************** ***************************************
+	    *)
+	    #Etape_AttFinVidCompo:
+	        REGION Traitement preliminaire "AttFinVidCompo"
+	            IF (#ChPont._ChargCommun._CommunGeneral._Etp <> #ChPont._ChargCommun._CommunGeneral._EtpPrec) THEN
+	                #ChPont._ChargCommun._CommunGeneral._EtpPrec := #ChPont._ChargCommun._CommunGeneral._Etp;
+	                #ChPont._ChargCommun._CommunGeneral._DescEtp := 'Etape AttFinVidCompo';
+	                #ChPont._ChargCommun._PtAff._MessOper := 'Attente fin chargement autre composant';
+	                "MajBtSupervChPont"(Type := 0,
+	                                    ChPont := #ChPont);
+	            END_IF;
+	        END_REGION Traitement preliminaire    
+	        REGION Traitement cyclique "AttFinVidCompo" 
+	            "AffichePoids1"(
+	                            ChargCommun := #ChPont._ChargCommun,
+	                            Ptzs := #ChPont._Ptzs,
+	                            Commande := #ChPont._Commande);
+	            IF "FC_Test_Niv_AmontAval"(Num_Zone := #ChPont._ChargCommun._CommunGeneral._NumZone, Lst_Taches := #ChPont._ListeTaAttFinVidCompo) THEN
+	                IF #ChPont._ChargCommun._FgPresPont THEN
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_AttPoidsStable;
+	                ELSE
+	                    
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_TestTolerance;
+	                END_IF;
+	                
+	                RETURN;
+	            END_IF;
+	        END_REGION Traitement cyclique "AttFinVidCompo"   
+	    (*      
+	    *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                        ╔════════════════════════════════════╗
+	                                                        ║          Etape "AttPoidsStable"    ║
+	                                                        ╚════════════════════════════════════╝
+	    *************************************** *************************************** *************************************** *************************************** ***************************************
+	    *)
+	    #Etape_AttPoidsStable:
+	        REGION Traitement preliminaire "AttPoidsStable"
+	            IF (#ChPont._ChargCommun._CommunGeneral._Etp <> #ChPont._ChargCommun._CommunGeneral._EtpPrec) THEN
+	                #ChPont._ChargCommun._CommunGeneral._EtpPrec := #ChPont._ChargCommun._CommunGeneral._Etp;
+	                #ChPont._ChargCommun._CommunGeneral._DescEtp := 'Etape AttPoidsStable';
+	                #ChPont._ChargCommun._PtAff._MessOper := 'Attente poids stable';
+	                #Ret_RD_Sys_T := RD_SYS_T(#ChPont._DebStable);
+	                #ChPont._MemoPoids := #ChPont._ChargCommun._Vbasc;
+	                "MajBtSupervChPont"(Type := 0,
+	                                    ChPont := #ChPont);
+	            END_IF;
+	        END_REGION Traitement preliminaire    
+	        REGION Traitement cyclique "AttPoidsStable" 
+	            "AffichePoids1"(
+	                            ChargCommun := #ChPont._ChargCommun,
+	                            Ptzs := #ChPont._Ptzs,
+	                            Commande := #ChPont._Commande);
+	            #Ret_Bool := "Tempo"(Duree := #ChPont._TpPoidsStab, Tps_Picke := #ChPont._DebStable, Anticip := FALSE, Tps_Passe => #Tps_Passe);
+	            IF #Ret_Bool THEN
+	                IF #ChPont._ChargCommun._Vbasc - #ChPont._MemoPoids > #ChPont._EcartPoidsStab THEN
+	                    #Ret_RD_Sys_T := RD_SYS_T(#ChPont._DebStable);
+	                    #ChPont._MemoPoids := #ChPont._ChargCommun._Vbasc;
+	                ELSE
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_TestTolerance;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	            
+	        END_REGION Traitement cyclique "AttPoidsStable"   
+	    (*      
+	    *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                        ╔════════════════════════════════════╗
+	                                                        ║          Etape "TestTolerance"     ║
+	                                                        ╚════════════════════════════════════╝
+	    *************************************** *************************************** *************************************** *************************************** ***************************************
+	    *)
+	    #Etape_TestTolerance:
+	        REGION Traitement preliminaire "TestTolerance"
+	            IF (#ChPont._ChargCommun._CommunGeneral._Etp <> #ChPont._ChargCommun._CommunGeneral._EtpPrec) THEN
+	                #ChPont._ChargCommun._CommunGeneral._EtpPrec := #ChPont._ChargCommun._CommunGeneral._Etp;
+	                #ChPont._ChargCommun._CommunGeneral._DescEtp := 'Etape TestTolerance';
+	                #ChPont._ChargCommun._PtAff._MessOper := 'Test Tolerance';
+	                #MajNiv := "Maj_Niv"(Num_Zone := #ChPont._ChargCommun._CommunGeneral._NumZone, Num_Tache := #ChPont._ChargCommun._CommunGeneral._Tache, Niveau := "NIV_SURPONT_FVID_CIR");
+	                #ChPont._Commande._QteBrut := #ChPont._ChargCommun._Vbasc;
+	                #ChPont._Commande._QteNet := #ChPont._Commande._QteBrut - #ChPont._Commande._QteTare;
+	                
+	                
+	                IF #ChPont._ChargCommun._CommunGeneral._EtpMemo = #Etape_ControleDest THEN
+	                    #ChPont._ChargCommun._CommunGeneral._EtpMemo := -1;
+	                    GOTO CtrlDestEtpTolerance;
+	                END_IF;
+	                
+	                #Ret_RD_Sys_T := RD_SYS_T(#ChPont._TpsPicke);
+	                IF #ChPont.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #ChPont.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO TESTTOL_DEF1;
+	                        2:
+	                            GOTO TESTTOL_DEF2;
+	                        3:
+	                            GOTO TESTTOL_DEF3;
+	                    END_CASE;
+	                END_IF;
+	                //Si demande a completer deja effectuer pas de test tolerance
+	                IF #ChPont._Ptzs._EtatChar = "A_COMPLETER" THEN
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_FinLot;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	            
+	        END_REGION Traitement preliminaire    
+	        REGION Traitement cyclique "TestTolerance" 
+	            "AffichePoids1"(
+	                            ChargCommun := #ChPont._ChargCommun,
+	                            Ptzs := #ChPont._Ptzs,
+	                            Commande := #ChPont._Commande);
+	            //Arret mi pesee pour calcul colonne de chute
+	            IF #ChPont._Ptzs._FgStopMiPesee AND NOT #ChPont._Ptzs._Abandon THEN
+	                #ChPont._Commande._ChuteCel := #ChPont._Commande._QteNet - #ChPont._Commande._ConsArret;
+	                #ChPont._Ptzs._FgStopMiPesee := FALSE;
+	                #ChPont._Ptzs._FgRelSansConf := TRUE;
+	    (* "Min_Max"(Min := #ChPont._MinChute,
+	         Max := #ChPont._MaxChute,
+	         Val_Calc:=#ChPont._Commande._ChuteCel,
+	         Sort_Ana:=#ChPont._Commande._ChuteCel); *)
+	                IF #FgBase THEN
+	                    //MajColChute(pt_compo, UnicodeString(WLireNomCharg()).c_str());  
+	                    ;
+	                END_IF;
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_CtrlColChute;
+	                RETURN;
+	            ELSIF #ChPont._Commande._QteNet > (#ChPont._Commande._ConsQteTot + #ChPont._Ptzs._TolSup) AND #ChPont._ChargCommun._FgPresPont THEN
+	                // Hors tolerance superieure
+	                #ChPont.Dial_Def.Num_Def_Etape := 1;
+	                // #reel := #ChPont._Commande._QteDejaChargee + #ChPont._Commande._QteNet;
+	                // #Ecart := #ChPont._Commande._QteNet - #ChPont._Commande._ConsQte;
+	                "Real_Strg"("Real" := #ChPont._Commande._ConsQteTot,
+	                            Size := 5,
+	                            NmbDecimal := 0,
+	                            "String" => #tempConsQte);
+	                "Real_Strg"("Real" := #ChPont._Commande._QteDejaCharg + #ChPont._Commande._QteNet,
+	                            Size := 5,
+	                            NmbDecimal := 0,
+	                            "String" => #tempqtereel);
+	                "Real_Strg"("Real" := #ChPont._Commande._QteNet - #ChPont._Commande._ConsQteTot,
+	                            Size := 5,
+	                            NmbDecimal := 0,
+	                            "String" => #tempecart);
+	                "Real_Strg"("Real" := #ChPont._Ptzs._TolSup,
+	                            Size := 5,
+	                            NmbDecimal := 0,
+	                            "String" => #tolsup);
+	                
+	                #Text_Def := CONCAT(IN1 := 'Defaut hors tolerance superieur ', IN2 := #ChPont._Commande._PtcelOrig._Cel, IN3 := ' Prevu:', IN4 := #tempConsQte, IN5 := ' , reel:', IN6 := #tempqtereel, IN7 := ' , Ecart:', IN8 := #tempecart, IN9 := ' , Ecart Tolere:', IN10 := #tolsup);
+	                #ChPont.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #FgBase, Msg_Defaut := #Text_Def,
+	                                                                 Type_Defaut := 2,
+	                                                                 Automatisme := #ChPont._ChargCommun._CommunGeneral._Autom,
+	                                                                 Num_Lot := #ChPont._Commande._NoLot,
+	                                                                 Origine_Defaut := 'Hors Tolerance',
+	                                                                 Libelle_Origine := 'Hors Tolerance',
+	                                                                 Acq1 := 'Abandon',
+	                                                                 Acq2 := '',
+	                                                                 Acq3 := '',
+	                                                                 Acq4 := '',
+	                                                                 Acq5 := '',
+	                                                                 Acq6 := '',
+	                                                                 Acq7 := '',
+	                                                                 Acq8 := '',
+	                                                                 Acq_Choisi := -1,
+	                                                                 Date_Arrivee := #ChPont._TpsPicke);
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                RETURN;
+	                
+	            ELSIF #ChPont._Commande._QteNet < (#ChPont._Commande._ConsQteTot - #ChPont._Ptzs._TolInf) AND #ChPont._ChargCommun._FgPresPont THEN
+	                // Hors tolerance inferieur
+	                IF #ChPont._Ptzs._EtatChar = "A_COMPLETER" THEN
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_FinLot;
+	                    RETURN;
+	                END_IF;
+	                // Si relance auto paramtr et arret sur quantit on fait une relance automatique du circuit
+	                IF #ChPont._NbRelAuto > #ChPont._NbRelAutoExp AND #ChPont._Ptzs._TypeArret = "ARRET_QTE" THEN
+	                    #ChPont._NbRelAuto := 0;
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_RechCirc;
+	                    RETURN;
+	                END_IF;
+	                #ChPont.Dial_Def.Num_Def_Etape := 2;
+	                "Real_Strg"("Real" := #ChPont._Commande._ConsQteTot,
+	                            Size := 5,
+	                            NmbDecimal := 0,
+	                            "String" => #tempConsQte);
+	                "Real_Strg"("Real" := #ChPont._Commande._QteDejaCharg + #ChPont._Commande._QteNet,
+	                            Size := 5,
+	                            NmbDecimal := 0,
+	                            "String" => #tempqtereel);
+	                "Real_Strg"("Real" := #ChPont._Commande._ConsQteTot - #ChPont._Commande._QteNet,
+	                            Size := 5,
+	                            NmbDecimal := 0,
+	                            "String" => #tempecart);
+	                "Real_Strg"("Real" := #ChPont._Ptzs._TolInf,
+	                            Size := 5,
+	                            NmbDecimal := 0,
+	                            "String" => #tolinf);
+	                #Text_Def := CONCAT(IN1 := 'Defaut hors tolerance inferieure ', IN2 := #ChPont._Commande._PtcelOrig._Cel, IN3 := ' Prevu:', IN4 := #tempConsQte, IN5 := ' , reel:', IN6 := #tempqtereel, IN7 := ' , Ecart:', IN8 := #tempecart, IN9 := ' , Ecart Tolere:', IN10 := #tolinf);
+	                #ChPont.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #FgBase, Msg_Defaut := #Text_Def,
+	                                                                 Type_Defaut := 2,
+	                                                                 Automatisme := #ChPont._ChargCommun._CommunGeneral._Autom,
+	                                                                 Num_Lot := #ChPont._Commande._NoLot,
+	                                                                 Origine_Defaut := 'Hors Tolerance',
+	                                                                 Libelle_Origine := 'Hors Tolerance',
+	                                                                 Acq1 := 'Relance',
+	                                                                 Acq2 := 'Abandon',
+	                                                                 Acq3 := 'Cellule',
+	                                                                 Acq4 := 'Completer',
+	                                                                 Acq5 := '',
+	                                                                 Acq6 := '',
+	                                                                 Acq7 := '',
+	                                                                 Acq8 := '',
+	                                                                 Acq_Choisi := -1,
+	                                                                 Date_Arrivee := #ChPont._TpsPicke);
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                RETURN;
+	            ELSE
+	                #ChPont._Ptzs._EtatChar := "FIN_CHARG";
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_FinLot;
+	                RETURN;
+	            END_IF;
+	        TESTTOL_DEF1:
+	            //============ Traitement des reponses pour le defaut Hors tolerance superieur  ====================================//
+	            IF #ChPont.Dial_Def.Reponse_Def = 'Abandon' THEN
+	                #ChPont.Dial_Def.Reponse_Def := '';
+	                #ChPont._Ptzs._Abandon := TRUE;
+	                #ChPont._Ptzs._EtatChar := "FIN_CHARG";
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_FinLot;
+	                RETURN;
+	            END_IF;
+	            //============ Fin Traitement des reponses pour le defaut Hors tolerance superieur  ====================================//
+	            
+	            
+	        TESTTOL_DEF2:
+	            //============ Traitement des reponses pour le defaut Hors tolerance inferieur  ====================================//
+	            IF #ChPont.Dial_Def.Reponse_Def = 'Relance' THEN
+	                #ChPont._Ptzs._Abandon := FALSE;
+	                #ChPont._Ptzs._FgRelSansConf := TRUE;
+	                #ChPont.Dial_Def.Reponse_Def := '';
+	                IF #ChPont._Commande._ChuteCel > #ChPont._Commande._QteNet - #ChPont._Commande._ConsQteTot THEN
+	                    // Calc_Temps_Relance(Comm_Ec,Pont);
+	                    ;
+	                END_IF;
+	                IF #ChPont._Ptzs._HorsPont AND #ChPont._ChargTelem THEN
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_AttCond;
+	                    RETURN;
+	                ELSE
+	                    #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_CtrlColChute;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	            IF #ChPont.Dial_Def.Reponse_Def = 'Abandon' THEN
+	                #ChPont.Dial_Def.Num_Def_Etape := 3;
+	                #ChPont.Dial_Def.Reponse_Def := '';
+	                #ChPont.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #FgBase,
+	                                                                 Msg_Defaut := 'Voulez vous reellement cloturer la commande',
+	                                                                 Type_Defaut := 2,
+	                                                                 Automatisme := #ChPont._ChargCommun._CommunGeneral._Autom,
+	                                                                 Num_Lot := #ChPont._Commande._NoLot,
+	                                                                 Origine_Defaut := 'Abandon de la commande',
+	                                                                 Libelle_Origine := 'Abandon de la commande',
+	                                                                 Acq1 := 'Oui',
+	                                                                 Acq2 := 'Non',
+	                                                                 Acq3 := '',
+	                                                                 Acq4 := '',
+	                                                                 Acq5 := '',
+	                                                                 Acq6 := '',
+	                                                                 Acq7 := '',
+	                                                                 Acq8 := '',
+	                                                                 Acq_Choisi := -1,
+	                                                                 Date_Arrivee := #ChPont._TpsPicke);
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                RETURN;
+	            END_IF;
+	            IF #ChPont.Dial_Def.Reponse_Def = 'Completer' THEN
+	                #ChPont.Dial_Def.Reponse_Def := '';
+	                #ChPont._Ptzs._EtatChar := "A_COMPLETER";
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_FinLot;
+	                RETURN;
+	            END_IF;
+	            IF #ChPont.Dial_Def.Reponse_Def = 'Cellule' THEN
+	                #ChPont.Dial_Def.Reponse_Def := '';
+	                #ChPont._ChargCommun.CntlDest.Dest := #ChPont.Dial_Def.Text_Reponse;
+	                #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_ControleDest;
+	                RETURN;
+	            END_IF;
+	    (* #CelVid := '?';
+	    "CtrlDest_1"(fgbase := #FgBase,
+	         ChComm := #ChPont._ChargCommun,
+	         Dial_Def := #ChPont.Dial_Def,
+	         PtComp := #ChPont._Commande,
+	         CdMat := #ChPont._Commande._CdMat,
+	         Cel := "DB_Mod_Cellule",
+	         CelVid := #CelVid); *)
+	         //============ Fin  Traitement des reponses pour le defaut Hors tolerance inferieur  ====================================//
+	         
+	         
+	         
+	         
+	         
+	         
+	         
+	     TESTTOL_DEF3:
+	         //============ Traitement des reponses pour le defaut Confirmation d'abandon ====================================//
+	         IF #ChPont.Dial_Def.Reponse_Def = 'Oui' THEN
+	             #ChPont.Dial_Def.Reponse_Def := '';
+	             #ChPont._Ptzs._EtatChar := "FIN_CHARG";
+	             #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_FinLot;
+	             RETURN;
+	         END_IF;
+	         IF #ChPont.Dial_Def.Reponse_Def = 'Non' THEN
+	             #ChPont.Dial_Def.Reponse_Def := '';
+	             #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_TestTolerance;
+	             RETURN;
+	         END_IF;
+	         
+	         
+	     CtrlDestEtpTolerance:
+	         IF #ChPont._ChargCommun.CntlDest.TestComplet THEN
+	             IF #ChPont._ChargCommun.CntlDest.Controle = #Abandon OR #ChPont._ChargCommun.CntlDest.Controle = #AutrePont THEN
+	                 IF #ChPont._ChargCommun.CntlDest.Controle = #AutrePont THEN
+	                     #ChPont._Ptzs._AutrePont := TRUE;
+	                 END_IF;
+	                 #ChPont._Ptzs._EtatChar := "A_COMPLETER"; //A completer
+	                 #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_FinLot;
+	                 #ChPont.Dial_Def.Reponse_Def := '';
+	                 #ChPont._Ptzs._Abandon := TRUE;
+	                 RETURN;
+	             END_IF;
+	             
+	             IF #ChPont._ChargCommun.CntlDest.Controle = #TestValide THEN
+	                 
+	                 #ChPont.Dial_Def.Reponse_Def := '';
+	                 IF #ChPont._Commande._PtcelOrig._Moborg <> -1 AND #ChPont._Commande._PtcelOrig._Moborg <> "Index_Mobile"(#ChPont._ChargCommun.CntlDest.Dest) THEN
+	                     #ChPont._ChargCommun._VidCirChgCell := TRUE;
+	                 END_IF;
+	                 #Ret_int := "RechIndexCel"(#ChPont._ChargCommun.CntlDest.Dest);
+	                 #ChPont._Commande._PtcelOrig := "DB_Mod_Cellule"._TabCel[#Ret_int];
+	                 
+	                 IF #ChPont._ChargCommun._VidCirChgCell THEN
+	                     #ChPont._SuspCircuit := FALSE;
+	                     #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_VidCircuit;
+	                     RETURN;
+	                 ELSE
+	                     #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_CtrlColChute;
+	                     RETURN;
+	                 END_IF;
+	             END_IF;
+	         END_IF;
+	         
+	         
+	         
+	     END_REGION Traitement cyclique "TestTolerance"   
+	     (*      
+	     *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                     ╔════════════════════════════════════╗
+	                                                                     ║          Etape "FinLot"            ║
+	                                                                     ╚════════════════════════════════════╝
+	     *************************************** *************************************** *************************************** *************************************** ***************************************
+	     *)
+	    #Etape_FinLot:
+	     REGION Traitement preliminaire "FinLot"
+	         IF (#ChPont._ChargCommun._CommunGeneral._Etp <> #ChPont._ChargCommun._CommunGeneral._EtpPrec) THEN
+	             #ChPont._ChargCommun._CommunGeneral._EtpPrec := #ChPont._ChargCommun._CommunGeneral._Etp;
+	             #ChPont._ChargCommun._CommunGeneral._DescEtp := 'Etape FinLot';
+	             #ChPont._ChargCommun._PtAff._MessOper := 'Controle poids';
+	             #MajNiv := "Maj_Niv"(Num_Zone := #ChPont._ChargCommun._CommunGeneral._NumZone, Num_Tache := #ChPont._ChargCommun._CommunGeneral._Tache, Niveau := "NIV_SURPONT_ATT_FINLOT");
+	             "SuspCalculDebit"(Type := "BTSUSP",
+	                               ParCal := #ChPont._ChargCommun._CommunGeneral._ParCal);
+	             #ChPont._ChargCommun._PtAff.CompoComEc[#ChPont._ChargCommun._PtAff._NumCompoEc]._FgChrgEnc := 2;
+	             #Ret_RD_Sys_T := RD_SYS_T(#ChPont._TpsPicke);
+	             IF #ChPont.Dial_Def.Reponse_Def <> '' THEN
+	                 CASE #ChPont.Dial_Def.Num_Def_Etape OF
+	                     1:
+	                         GOTO Def_UpdateStock;
+	                     2:
+	                         GOTO Def_FinLigCom;
+	                     3:
+	                         GOTO Def_FinTour;
+	                     
+	                 END_CASE;
+	             END_IF;
+	             
+	         END_IF;
+	     END_REGION Traitement preliminaire    
+	     REGION Traitement cyclique "FinLot" 
+	         IF NOT "FC_Test_Niv_AmontAval"(Num_Zone := #ChPont._ChargCommun._CommunGeneral._NumZone, Lst_Taches := #ChPont._ListeTaAttFinCharg) THEN
+	             RETURN;
+	         END_IF;
+	             IF NOT #ChPont._Ptzs._Abandon THEN
+	                 // Prise poids brut
+	                 IF #ChPont._Ptzs._HorsPont = FALSE THEN
+	                     ;
+	                     (* IF NOT  (!Poids_DSD(pt_zs, BRUT) THEN
+	                          RETURN ;
+	                      END_IF; *)
+	                 END_IF;
+	                 // Mise a jour colonne de chute
+	                 IF #ChPont._ChargCommun._ValidCorColChute AND #ChPont._AutorMAJColChute THEN
+	                     // Controle de la correction maximum de la colonne de chute
+	                     #TempDbl := #ChPont._Commande._QteBrut - #ChPont._Commande._QteTare - #ChPont._Commande._ConsArret;
+	                     IF #TempDbl > #ChPont._Commande._ChuteCel + #ChPont._ChargCommun._CorMaxColChute THEN
+	                         #ChPont._Commande._ChuteCel := #ChPont._Commande._ChuteCel + #ChPont._ChargCommun._CorMaxColChute;
+	                     ELSIF #TempDbl < #ChPont._Commande._ChuteCel - #ChPont._ChargCommun._CorMaxColChute THEN
+	                         #ChPont._Commande._ChuteCel := #ChPont._Commande._ChuteCel - #ChPont._ChargCommun._CorMaxColChute;
+	                     ELSE
+	                         #ChPont._Commande._ChuteCel := #TempDbl;
+	                     END_IF;
+	                     "Min_Max"(Min := #ChPont._MinChute,
+	                               Max := #ChPont._MaxChute,
+	                               Val_Calc := #ChPont._Commande._ChuteCel,
+	                               Sort_Ana := #ChPont._Commande._ChuteCel);
+	                     IF #FgBase THEN
+	                         ;
+	                         //MajColChute(pt_compo, UnicodeString(WLireNomCharg()).c_str());;
+	                     END_IF;
+	                 ELSE
+	                     IF #FgBase THEN
+	                         ;
+	                         
+	                         
+	                         
+	                         
+	                     END_IF;
+	                 END_IF;
+	                 
+	             END_IF;
+	             #ChPont._ChargCommun._PtAff.CompoComEc[#ChPont._Ptzs._NumCommande]._FgChrgEnc := 2;
+	             
+	             // Appel Proc Update Stock
+	         AppelProcUpdate:
+	             #ChPont._Commande._QteChOrig := #ChPont._ChargCommun._Vbasc - #ChPont._Commande._QteTare - #ChPont._Commande._QteChOrig;
+	             IF #FgBase THEN
+	                 (* IF #ChPont._Commande._QteChOrig > 0 THEN
+	                     #ChPont._Commande._TareCel := #ChPont._ChargCommun._Vbasc - (#ChPont._Commande._QteChOrig + #ChPont._Commande._QteNet);
+	                 END_IF; *)
+	                 IF #ChPont._Commande._TareCel > 0 THEN
+	                     #ret_string := "Proc_MajStock"(ChPont := #ChPont,
+	                                                    Typemouvement := '010',
+	                                                    Err_Sql => #Err_Sql,
+	                                                    Msg_Def => #Mess_Def);
+	                     #Commande._TareCel := #ChPont._ChargCommun._Vbasc;
+	                 END_IF;
+	                 IF #ret_string = 'NOK' THEN
+	                     #Text_Def := #Mess_Def;
+	                     #ChPont._ParamTrouve := FALSE;
+	                     #ChPont.Dial_Def.Num_Def_Etape := 1;
+	                     #ChPont.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #FgBase,
+	                                                                      Msg_Defaut := #Text_Def,
+	                                                                      Type_Defaut := 2,
+	                                                                      Automatisme := #ChPont._ChargCommun._CommunGeneral._Autom,
+	                                                                      Num_Lot := #ChPont._ChargCommun._CommunGeneral._NumLot,
+	                                                                      Origine_Defaut := 'Update Stock',
+	                                                                      Libelle_Origine := 'BD FinLot',
+	                                                                      Acq1 := 'ABANDON',
+	                                                                      Acq2 := 'RELANCE',
+	                                                                      Acq3 := '',
+	                                                                      Acq4 := '',
+	                                                                      Acq5 := '',
+	                                                                      Acq6 := '',
+	                                                                      Acq7 := '',
+	                                                                      Acq8 := '',
+	                                                                      Acq_Choisi := -1,
+	                                                                      Date_Arrivee := #ChPont._TpsPicke);
+	                     #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                     RETURN;
+	                 END_IF;
+	             END_IF;
+	             
+	             AppelProcFinLigCom:
+	             IF #FgBase THEN
+	                 IF #ChPont._Ptzs._EtatChar = "A_COMPLETER" THEN
+	                     #Etat := "A_COMPLETER";//c
+	                 ELSE
+	                     #Etat := 'T';
+	                 END_IF;
+	                 #ret_string := "Proc_FinComm"(NumPoste := "Num_Poste",
+	                                               IdComLign := #ChPont._Commande._IdComLig,
+	                                               Etat := #Etat,
+	                                               Msg_Def => #Mess_Def);
+	                 IF #ret_string = 'NOK' THEN
+	                     #Text_Def := #Mess_Def;
+	                     #ChPont._ParamTrouve := FALSE;
+	                     #ChPont.Dial_Def.Num_Def_Etape := 2;
+	                     #ChPont.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #FgBase,
+	                                                                      Msg_Defaut := #Text_Def,
+	                                                                      Type_Defaut := 2,
+	                                                                      Automatisme := #ChPont._ChargCommun._CommunGeneral._Autom,
+	                                                                      Num_Lot := #ChPont._ChargCommun._CommunGeneral._NumLot,
+	                                                                      Origine_Defaut := 'Fin LigComm',
+	                                                                      Libelle_Origine := 'BD FinLot',
+	                                                                      Acq1 := 'ABANDON',
+	                                                                      Acq2 := 'RELANCE',
+	                                                                      Acq3 := '',
+	                                                                      Acq4 := '',
+	                                                                      Acq5 := '',
+	                                                                      Acq6 := '',
+	                                                                      Acq7 := '',
+	                                                                      Acq8 := '',
+	                                                                      Acq_Choisi := -1,
+	                                                                      Date_Arrivee := #ChPont._TpsPicke);
+	                     #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                     RETURN;
+	                 END_IF;
+	             END_IF;
+	             
+	             AppelProcFinTour:
+	             #ChPont._Commande := #Commande;
+	             #ChPont._ChargCommun._CommunGeneral._ParCal := #ParCal;
+	             #ChPont._Ptzs._TareOk := 0;
+	             #ChPont._Ptzs._FgStopMiPesee := FALSE;
+	             #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_Repos;
+	             #ChPont._Ptzs._NumCommande := #ChPont._Ptzs._NumCommande + 1;
+	             IF #ChPont._Ptzs._NumCommande >= #ChPont._Ptzs._NbCommande THEN
+	                 #ChPont._ChargCommun._PtAff._MessOper := CONCAT(IN1 := 'Fin des commandes de la tournee', IN2 := #ChPont._ChargCommun._PtAff.Tournee._CdTour);
+	                 IF #ChPont.Dial_Def.Reponse_Def <> 'ABANDON' THEN
+	                     #ret_string := "Proc_FinTour"(NumPoste := "Num_Poste",
+	                                                   IdTourn := #ChPont._Ptzs._InfoTour._IdTourn,
+	                                                   Msg_Def => #Mess_Def);
+	                 END_IF;
+	
+	               IF #ret_string = 'NOK' THEN
+	                   #Text_Def := #Mess_Def;
+	                   #ChPont._ParamTrouve := FALSE;
+	                   #ChPont.Dial_Def.Num_Def_Etape := 3;
+	                   #ChPont.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #FgBase,
+	                                                                    Msg_Defaut := #Text_Def,
+	                                                                    Type_Defaut := 2,
+	                                                                    Automatisme := #ChPont._ChargCommun._CommunGeneral._Autom,
+	                                                                    Num_Lot := #ChPont._ChargCommun._CommunGeneral._NumLot,
+	                                                                    Origine_Defaut := 'Update Stock',
+	                                                                    Libelle_Origine := 'BD FinLot',
+	                                                                    Acq1 := 'ABANDON',
+	                                                                    Acq2 := 'RELANCE',
+	                                                                    Acq3 := '',
+	                                                                    Acq4 := '',
+	                                                                    Acq5 := '',
+	                                                                    Acq6 := '',
+	                                                                    Acq7 := '',
+	                                                                    Acq8 := '',
+	                                                                    Acq_Choisi := -1,
+	                                                                    Date_Arrivee := #ChPont._TpsPicke);
+	                   #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                   RETURN;
+	               END_IF;
+	               #ChPont.Dial_Def.Reponse_Def := '';
+	                 #MajNiv := "Maj_Niv"(Num_Zone := #ChPont._ChargCommun._CommunGeneral._NumZone, Num_Tache := #ChPont._ChargCommun._CommunGeneral._Tache, Niveau := "N_FINLOT");
+	                 #Ret_Sint := "Libere_Zone_Suiv_Lot"(#ChPont._ChargCommun._CommunGeneral._NumZone);
+	                 FOR #i := 0 TO #ChPont._Ptzs._NbCommande DO
+	                     #ChPont._ChargCommun._PtAff.CompoComEc[#i]._FgChrgEnc := 0;
+	                 END_FOR;
+	                 
+	                 #ChPont._Commande := #Commande;
+	                 #ChPont._Ptzs := #Ptzs;
+	                 (* "AffichePoids_1"(ChargCommun := #ChPont._ChargCommun,
+	                                  Ptzs := #ChPont._Ptzs,
+	                                  PtCompo := #ChPont._Commande); *)
+	                 "InitTableComp"(ChargCommun := #ChPont._ChargCommun,
+	                                 Ptzs := #ChPont._Ptzs,
+	                                 Commande := #ChPont._Commande);
+	                 #ChPont._ChargCommun._CommunGeneral._Etp := #Etape_Repos;
+	                 
+	                 RETURN;
+	             END_IF;
+	             RETURN;
+	        
+	         
+	     Def_UpdateStock:
+	         //================================== Traitement des reponses pour le defaut1  =============================================================//
+	         IF #ChPont.Dial_Def.Reponse_Def = 'ABANDON' THEN
+	             #ChPont.Dial_Def.Reponse_Def := '';
+	             GOTO AppelProcFinLigCom;
+	         END_IF;
+	         IF #ChPont.Dial_Def.Reponse_Def = 'RELANCE' THEN
+	             #ChPont.Dial_Def.Reponse_Def := '';
+	             GOTO AppelProcUpdate;
+	         END_IF;
+	         //============================================  Fin traitement  ====================================================================//
+	         
+	         Def_FinLigCom:
+	         //================================== Traitement des reponses pour le defaut1  =============================================================//
+	         IF #ChPont.Dial_Def.Reponse_Def = 'ABANDON' THEN
+	             #ChPont.Dial_Def.Reponse_Def := '';
+	             GOTO AppelProcFinTour;
+	         END_IF;
+	         IF #ChPont.Dial_Def.Reponse_Def = 'RELANCE' THEN
+	             #ChPont.Dial_Def.Reponse_Def := '';
+	             GOTO AppelProcFinLigCom;
+	         END_IF;
+	         //============================================  Fin traitement  ====================================================================//
+	         
+	         
+	     Def_FinTour:
+	         //================================== Traitement des reponses pour le defaut1  =============================================================//
+	         IF #ChPont.Dial_Def.Reponse_Def = 'ABANDON' THEN
+	             #ChPont._Ptzs._NumCommande := #ChPont._Ptzs._NumCommande - 1;
+	             GOTO AppelProcFinTour;
+	         END_IF;
+	         IF #ChPont.Dial_Def.Reponse_Def = 'RELANCE' THEN
+	             #ChPont.Dial_Def.Reponse_Def := '';
+	             #ChPont._Ptzs._NumCommande := #ChPont._Ptzs._NumCommande - 1;
+	             GOTO AppelProcFinTour;
+	         END_IF;
+	         //============================================  Fin traitement  ====================================================================//
+	         
+	         
+	     END_REGION Traitement cyclique "FinLot"  
+	     
+	     (*      
+	     *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║ Etape "Attente Reponse Dialogue"   ║
+	                                                                                 ╚════════════════════════════════════╝
+	     *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                    
+	     *)
+	    #Etape_Attente_RepDial:
+	     REGION Preliminaire Attente Acquuitement
+	         IF #ChPont._ChargCommun._CommunGeneral._Etp <> #ChPont._ChargCommun._CommunGeneral._EtpPrec THEN
+	             //Memorisation de l'etape encours
+	             #ChPont._ChargCommun._CommunGeneral._EtpMemo := #ChPont._ChargCommun._CommunGeneral._EtpPrec;
+	             
+	             #ChPont._ChargCommun._CommunGeneral._DescEtp := 'Etape_Attente_RepDial';
+	             #ChPont._ChargCommun._CommunGeneral._EtpPrec := #ChPont._ChargCommun._CommunGeneral._Etp;
+	             
+	         END_IF;
+	     END_REGION Preliminaire Attente Acquuitement
+	     REGION Cyclique Attente Acquitement
+	         #ChPont.Dial_Def.Reponse_Def := "FC_Recup_Rep_Def"(Index_Def := #ChPont.Dial_Def.Index_Defaut, Reponse_Ecrit => #ChPont.Dial_Def.Text_Reponse);
+	         IF #ChPont.Dial_Def.Reponse_Def <> '' THEN
+	             "FC_Raz_Def"(#ChPont.Dial_Def.Index_Defaut);
+	             #ChPont._ChargCommun._CommunGeneral._Etp := #ChPont._ChargCommun._CommunGeneral._EtpMemo;
+	             RETURN;
+	         END_IF;
+	     END_REGION Cyclique Attente Acquitement  
+	     
+	    (*      
+	    *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                           ╔════════════════════════════════════╗
+	                                                                           ║         Etape "ControleDest"       ║
+	                                                                           ╚════════════════════════════════════╝
+	    *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                    
+	    *)
+	    #Etape_ControleDest:
+	     REGION Preliminaire 
+	         IF #ChPont._ChargCommun._CommunGeneral._Etp <> #ChPont._ChargCommun._CommunGeneral._EtpPrec THEN
+	             //Memorisation de l'etape encours
+	             #ChPont._ChargCommun._CommunGeneral._EtpMemo := #ChPont._ChargCommun._CommunGeneral._EtpPrec;
+	             
+	             #ChPont._ChargCommun._CommunGeneral._DescEtp := 'Etape_ControleDest';
+	             #ChPont._ChargCommun._CommunGeneral._EtpPrec := #ChPont._ChargCommun._CommunGeneral._Etp;
+	             
+	         END_IF;
+	     END_REGION Preliminaire 
+	     REGION Cyclique Attente Acquitement
+	         "AffichePoids1"(
+	                         ChargCommun := #ChPont._ChargCommun,
+	                         Ptzs := #ChPont._Ptzs,
+	                         Commande := #ChPont._Commande);
+	         "CtrlDest"(fgbase := #FgBase,
+	                    ChComm := #ChPont._ChargCommun,
+	                    Dial_Def := #ChPont.Dial_Def,
+	                    Commande := #ChPont._Commande,
+	                    CdMat := #ChPont._Commande._CdMat,
+	                    Cel := "DB_Mod_Cellule",
+	                    CelVid := #CelVid);
+	         
+	         
+	         IF #ChPont._ChargCommun.CntlDest.TestComplet THEN
+	             
+	             #ChPont._ChargCommun._CommunGeneral._Etp := #ChPont._ChargCommun._CommunGeneral._EtpMemo;
+	             #ChPont._ChargCommun._CommunGeneral._EtpMemo := #ChPont._ChargCommun._CommunGeneral._EtpPrec;
+	         END_IF;
+	         
+	     END_REGION Cyclique Attente Acquitement 
+	     
+	     
+	    END_CASE;
+END_FUNCTION
+

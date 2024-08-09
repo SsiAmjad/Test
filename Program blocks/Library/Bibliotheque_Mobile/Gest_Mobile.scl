@@ -1,0 +1,1275 @@
+﻿FUNCTION "Gest_Mobile" : Void
+TITLE = Fonction de la gestion des mobiles
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : 'I.Daoudi'
+FAMILY : Mobile
+VERSION : 1.0
+//Grafcet de gestion mobile
+   VAR_INPUT 
+      Fg_Base : Bool;
+   END_VAR
+
+   VAR_IN_OUT 
+      Mobile : "S_Mobile";
+   END_VAR
+
+   VAR_TEMP 
+      Ret_RD_SYS_T : Int;   // Retour de la fonction RD_SYS_T
+      Mess_Defaut : String;   // Message de defaut
+      Tpspassé : Time;
+      i : SInt;
+      ret : Bool;
+      Ret_Test_Etat_Mobile : SInt;
+      Etat_Suivant : USInt;
+      Ret_Bool : Bool;
+      MobActive : Bool;
+      Ret_Proc : String;
+   END_VAR
+
+   VAR CONSTANT 
+      Douzeheures : UInt := 43200;
+      Heure : UInt := 3600;
+   END_VAR
+
+
+BEGIN
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | Version | Date       | Autheur     | Ajouts/Modifications                                                   |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | V_1     | 05.07.2023 | I.DAOUDI    | Creation du block                                                      |
+	// | V_1     | 12.02.2024 | I.DAOUDI    | Sortir de l'etape repos avec un ordre de vidange                       |
+	// | V_1     | 23.02.2024 | I.DAOUDI    | Monter le flage Tjr_Desasservi si #Mobile.Mob_Suiv[0]= -1              |
+	// | V_1     | 14.05.2024 | A.SAS       | Etape Vidange : Ajout de la condition Mob asservi pour repicker la tempo
+	//                                                        pour passer a l'etape march_Forc                       |
+	// | V_1     | 15.05.2024 | A.SAS       | Ajout totalisateur pour calculer les temps (Fonctionnement_Defaut)
+	// | V_1     | 09.07.2024 | A.SAS       | Integrer la boucle de calcul de la qte passe et le Tp de marche avec PM|
+	// | V_1     | 10.07.2024 | A.SAS       | Ajout calcul d'energie                                                 |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	
+	
+	
+	
+	
+	
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                        ╔════════════════════════════════════╗
+	                                                                        ║            TOTALISATEUR            ║
+	                                                                        ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	//Generateur des impulsions
+	"Impulsion"(Signal := "Clock_1Hz",
+	            Declencheur => #Ret_Bool,
+	            AncSignal := #Mobile.AncSignal);
+	
+	#MobActive:=#Mobile.Etat ="Vid"  OR  #Mobile.Etat ="Pret" OR #Mobile.Etat ="Mar_Force";
+	IF #MobActive THEN
+	    IF #Ret_Bool THEN
+	        #Mobile.TpMarcheNet := #Mobile.TpMarcheNet + 1;
+	        IF #Mobile.Manuel THEN
+	            #Mobile.TpMarcheMan := #Mobile.TpMarcheMan + 1;
+	        END_IF;
+	    END_IF;
+	END_IF;
+	IF #Mobile.Etp = "Etp_Att_Ack_Def" THEN
+	    IF #Ret_Bool THEN
+	        #Mobile.TpDefaut := #Mobile.TpDefaut + 1;
+	    END_IF;
+	END_IF;
+	//Renitialisation
+	IF #Mobile.TpMarcheMan >= #Douzeheures + #Mobile.ValRelance OR  #Mobile.TpDefaut >= #Douzeheures + #Mobile.ValRelance OR  #Mobile.TpMarcheNet >= #Douzeheures + #Mobile.ValRelance THEN
+	    //Appel Proc Maj Tps 
+	    IF #Ret_Proc='OK' THEN
+	        #Mobile.TpMarcheMan := 0;
+	        #Mobile.ValRelance := 0;
+	        #Mobile.TpMarcheNet := 0;
+	        #Mobile.TpDefaut := 0;
+	    ELSE
+	        #Mobile.ValRelance := #Mobile.ValRelance + #Heure;
+	   END_IF;
+	END_IF;
+	
+	
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                        ╔════════════════════════════════════╗
+	                                                                        ║   Calcul Quantite/Temps/Energie    ║
+	                                                                        ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	CASE #Mobile.ModCalc OF
+	    "CalcQteSeul":
+	        #Mobile.ParCal._FgCalFar := TRUE;
+	        #Mobile.ParCal._FgCalTps := TRUE;
+	        "Calcul_Quantité_1"(Mobile := #Mobile);
+	        "Calcul_Temps_1"(Mobile := #Mobile);
+	    "LireEnrjSeul":
+	        #Mobile.ParCal.Energie._Energie:= #Mobile.EA_Energie;
+	    "CalcQteLireEnr":
+	        #Mobile.ParCal._FgCalFar := TRUE;
+	        #Mobile.ParCal._FgCalTps := TRUE;
+	        "Calcul_Quantité_1"(Mobile := #Mobile);
+	        "Calcul_Temps_1"(Mobile := #Mobile);
+	        #Mobile.ParCal.Energie._Energie := #Mobile.EA_Energie;
+	    "CalcEnrjSeul":
+	        "CalcEnergie"(Mobile:=#Mobile);
+	    "CalcEnrjQte":
+	        #Mobile.ParCal._FgCalFar := TRUE;
+	        #Mobile.ParCal._FgCalTps := TRUE;
+	        "Calcul_Quantité_1"(Mobile := #Mobile);
+	        "Calcul_Temps_1"(Mobile := #Mobile);
+	        "CalcEnergie"(Mobile := #Mobile);
+	END_CASE;
+	
+	
+	
+	
+	
+	
+	// Pour Affichage
+	IF (NOT #Mobile.Manuel) THEN
+	    #Mobile.Etat_SUP := #Mobile.Etat;
+	ELSE
+	    #Mobile.Etat_SUP := #Mobile.Etat + 7;
+	END_IF;
+	IF #Mobile.HORS_SERVICE THEN
+	    #Mobile.Etat_SUP := #Mobile.Etat;
+	END_IF;
+	
+	// Calcul du nombre de positionss possibles
+	"Calc_Nbr_Pos_Rens"(#Mobile);
+	
+	// Rendre la position 0 la position par defaut
+	IF #Mobile.Nbr_Pos = 0 OR #Mobile.Nbr_Pos = 1 THEN
+	    #Mobile.Pos_Dmd := 0;
+	END_IF;
+	
+	// Activer le desasservisement pour les mobiles stockages
+	IF #Mobile.Fct = "Fct_Stock"  (* OR (#Mobile.Mob_Suiv[0] = -1) *)THEN
+	    #Mobile.Tjr_Desasservi := TRUE;
+	END_IF;
+	
+	// L'asservissement en fonction du mode maintenance
+	IF #Mobile.Maintenance OR #Mobile.Tjr_Desasservi THEN
+	    // Desactiver l'asservissement
+	    #Mobile.Asservi := FALSE;
+	ELSE
+	    // Activer l'asservissement
+	    #Mobile.Asservi := TRUE;
+	END_IF;
+	
+	// Forcer le mode manuel si mode maintenance active
+	IF #Mobile.Maintenance THEN
+	    #Mobile.Manuel := TRUE;
+	END_IF;
+	
+	// Definition etat verrouillage
+	#Mobile.S_Verrou := #Mobile.Manuel OR #Mobile.HORS_SERVICE OR #Mobile.Reserve;
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	CASE #Mobile.Etp OF
+	    "Etp_Inactif":
+	        REGION Traitement preliminaire 
+	            IF #Mobile.Etp <> #Mobile.Etp_Memo THEN
+	                #Mobile.Etp_Memo := #Mobile.Etp;
+	                #Mobile.Etp_Prec := #Mobile.Etp;
+	                #Mobile.Etat := "HS";
+	            END_IF;
+	        END_REGION Traitement preliminaire
+	        REGION Traitement cyclique
+	            IF NOT #Mobile.HORS_SERVICE THEN
+	                // Mobile en service
+	                #Mobile.Ord_Manu := -1;
+	                #Mobile.Etp := "Etp_Repos";
+	                RETURN;
+	            END_IF;
+	        END_REGION Traitement cyclique         
+	    "Etp_Repos":
+	        REGION Traitement preliminaire 
+	            IF #Mobile.Etp <> #Mobile.Etp_Memo THEN
+	                #Mobile.Etp_Memo := #Mobile.Etp;
+	                #Mobile.Etp_Prec := #Mobile.Etp;
+	                #Mobile.Etat := "Libre";
+	                //#Mobile.Vide := TRUE;
+	            END_IF;
+	        END_REGION Traitement preliminaire
+	        REGION Traitement cyclique 
+	            // Si changement de mode Auto/Manu 
+	            IF #Mobile.Manuel_Memo <> #Mobile.Manuel THEN
+	                #Mobile.Etp := "Etp_Chang_Mode";
+	                RETURN;
+	            END_IF;
+	            // Mise hors service
+	            IF #Mobile.HORS_SERVICE THEN
+	                #Mobile.Etp := "Etp_Inactif";
+	                RETURN;
+	            END_IF;
+	            // Attente demande de positionnement
+	            IF (#Mobile.Manuel AND #Mobile.Ord_Manu = "Ord_Pos") OR (NOT #Mobile.Manuel AND #Mobile.Ord = "Ord_Pos") THEN
+	                // Sortir si la position est non renseignee
+	                IF #Mobile.Pos_Dmd < 0 OR #Mobile.Pos_Dmd > #Mobile.Nbr_Pos THEN 
+	                    #Mobile.Ord_Manu := -1;
+	                    RETURN;
+	                END_IF;
+	                // MAJ de la position en cours
+	                #Mobile.Pos_Enc := #Mobile.Pos_Dmd;
+	                // Passer a l'etape suivante
+	                #Mobile.Etp := "Etp_Test_Ent_Av_Pos";
+	                RETURN;
+	            END_IF;
+	            // Si demande de vidange
+	            IF (#Mobile.Manuel AND #Mobile.Ord_Manu = "Ord_Vid_Imm" OR #Mobile.Ord_Manu ="Ord_Fin_Pos" ) OR (NOT #Mobile.Manuel AND( #Mobile.Ord = "Ord_Vid_Imm" OR #Mobile.Ord ="Ord_Fin_Pos") )THEN
+	                // Sortir si la position est non renseignee
+	                IF #Mobile.Pos_Dmd < 0 OR #Mobile.Pos_Dmd > #Mobile.Nbr_Pos THEN
+	                    #Mobile.Ord_Manu := -1;
+	                    RETURN;
+	                END_IF;
+	                // MAJ de la position en cours
+	                #Mobile.Pos_Enc := #Mobile.Pos_Dmd;
+	                // Passer a l'etape suivante
+	                #Mobile.Etp := "Etp_Test_Ent_Av_Pos";
+	                RETURN;
+	            END_IF;
+	        END_REGION Traitement cyclique
+	    "Etp_Test_Ent_Av_Pos":
+	        REGION Traitement preliminaire 
+	            IF #Mobile.Etp <> #Mobile.Etp_Memo THEN
+	                #Mobile.Etp_Prec := #Mobile.Etp;
+	                //=== Traitement cas retour de defaut ===//
+	                IF #Mobile.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #Mobile.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO Test_Ent_Av_Pos_DEF1;
+	                        2:
+	                            GOTO Test_Ent_Av_Pos_DEF2;
+	                    END_CASE;
+	                END_IF;
+	                //=== Traitement cas retour de defaut ===//
+	                #Mobile.Etp_Memo := #Mobile.Etp;
+	                #Mobile.Etat := "Enc_Pos";
+	            END_IF;
+	        END_REGION Traitement preliminaire
+	        REGION Traitement cyclique
+	            //Test des entrees a 0 avant positionnement
+	            #Mobile.Ret_Test_Entr0_Av_Pos := "Test_Etat_Entr_TOR"(Etat_Bool := FALSE,
+	                                                                  Tbl := #Mobile.Pos[#Mobile.Pos_Enc].Entr0_Av_Pos,
+	                                                                  Point_Tbl := #Mobile.Point_Entr0_Av_Pos);
+	            IF #Mobile.Ret_Test_Entr0_Av_Pos = -1 THEN
+	                #Mobile.Dial_Def.Num_Def_Etape := 1;
+	                #Mess_Defaut := CONCAT(IN1 := 'Defaut de l entree ',
+	                                       IN2 :=  "DB_BIBLIOTHEQUE".D_IO[#Mobile.Pos[#Mobile.Pos_Enc].Entr0_Av_Pos[#Mobile.Point_Entr0_Av_Pos]].Mnemonique,
+	                                       IN3 := ' situee au reseau ',
+	                                       IN4 := USINT_TO_STRING( "DB_BIBLIOTHEQUE".D_IO[#Mobile.Pos[#Mobile.Pos_Enc].Entr0_Av_Pos[#Mobile.Point_Entr0_Av_Pos]].Reseau),
+	                                       IN5 := ' sur le rack ',
+	                                       IN6 := USINT_TO_STRING( "DB_BIBLIOTHEQUE".D_IO[#Mobile.Pos[#Mobile.Pos_Enc].Entr0_Av_Pos[#Mobile.Point_Entr0_Av_Pos]].Rack),
+	                                       IN7 := ' dans la carte ',
+	                                       IN8 := USINT_TO_STRING( "DB_BIBLIOTHEQUE".D_IO[#Mobile.Pos[#Mobile.Pos_Enc].Entr0_Av_Pos[#Mobile.Point_Entr0_Av_Pos]].Carte));
+	                #Mobile.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base, Msg_Defaut := #Mess_Defaut,
+	                                                                 Type_Defaut := 0,
+	                                                                 Automatisme := #Mobile.Automatisme,
+	                                                                 Num_Lot := #Mobile.Num_Lot,
+	                                                                 Origine_Defaut := 'Mobile',
+	                                                                 Libelle_Origine := #Mobile.Nom,
+	                                                                 Acq1 := 'Relance',
+	                                                                 Acq2 := 'Abandon',
+	                                                                 Acq3 := '',
+	                                                                 Acq4 := '',
+	                                                                 Acq5 := '',
+	                                                                 Acq6 := '',
+	                                                                 Acq7 := '',
+	                                                                 Acq8 := '',
+	                                                                 Acq_Choisi := -1,
+	                                                                 Date_Arrivee := #Mobile.Tps_Picke);
+	                #Mobile.Etp := "Etp_Att_Ack_Def";
+	                RETURN;
+	            END_IF;
+	        Test_Ent_Av_Pos_DEF1:
+	            //============ Traitement des reponses pour le defaut1 Test Entree Avant Positionnement ============//
+	            IF (#Mobile.Dial_Def.Reponse_Def = 'Relance') THEN
+	                // Vider la reponse defaut
+	                #Mobile.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            IF (#Mobile.Dial_Def.Reponse_Def = 'Abandon') THEN
+	                #Mobile.Etp := "Etp_Test_Verr";
+	                // Vider la reponse defaut
+	                #Mobile.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            //============ Traitement des reponses pour le defaut1 Test Entree Avant Positionnement ============//
+	            //Test des entrees a 1 avant positionnement
+	            #Mobile.Ret_Test_Entr1_Av_Pos := "Test_Etat_Entr_TOR"(Etat_Bool := TRUE,
+	                                                                  Tbl := #Mobile.Pos[#Mobile.Pos_Enc].Entr1_Av_Pos,
+	                                                                  Point_Tbl := #Mobile.Point_Entr1_Av_Pos);
+	            IF #Mobile.Ret_Test_Entr1_Av_Pos = -1 THEN
+	                #Mobile.Dial_Def.Num_Def_Etape := 2;
+	                #Mess_Defaut := CONCAT(IN1 := 'Defaut de l entree ',
+	                                       IN2 :=  "DB_BIBLIOTHEQUE".D_IO[#Mobile.Pos[#Mobile.Pos_Enc].Entr1_Av_Pos[#Mobile.Point_Entr1_Av_Pos]].Mnemonique,
+	                                       IN3 := ' situee au reseau ',
+	                                       IN4 := DELETE(IN := USINT_TO_STRING( "DB_BIBLIOTHEQUE".D_IO[#Mobile.Pos[#Mobile.Pos_Enc].Entr1_Av_Pos[#Mobile.Point_Entr1_Av_Pos]].Reseau), L := 1, P := 1),
+	                                       IN5 := ' sur le rack ',
+	                                       IN6 := DELETE(IN := USINT_TO_STRING( "DB_BIBLIOTHEQUE".D_IO[#Mobile.Pos[#Mobile.Pos_Enc].Entr1_Av_Pos[#Mobile.Point_Entr1_Av_Pos]].Rack), L := 1, P := 1),
+	                                       IN7 := ' dans la carte ',
+	                                       IN8 := DELETE(IN := USINT_TO_STRING( "DB_BIBLIOTHEQUE".D_IO[#Mobile.Pos[#Mobile.Pos_Enc].Entr1_Av_Pos[#Mobile.Point_Entr1_Av_Pos]].Carte), L := 1, P := 1));
+	                #Mobile.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base, Msg_Defaut := #Mess_Defaut,
+	                                                                 Type_Defaut := 0,
+	                                                                 Automatisme := #Mobile.Automatisme,
+	                                                                 Num_Lot := #Mobile.Num_Lot,
+	                                                                 Origine_Defaut := 'Mobile',
+	                                                                 Libelle_Origine := #Mobile.Nom,
+	                                                                 Acq1 := 'Relance',
+	                                                                 Acq2 := '',
+	                                                                 Acq3 := '',
+	                                                                 Acq4 := '',
+	                                                                 Acq5 := '',
+	                                                                 Acq6 := '',
+	                                                                 Acq7 := '',
+	                                                                 Acq8 := '',
+	                                                                 Acq_Choisi := -1,
+	                                                                 Date_Arrivee := #Mobile.Tps_Picke);
+	                #Mobile.Etp := "Etp_Att_Ack_Def";
+	                RETURN;
+	            END_IF;
+	        Test_Ent_Av_Pos_DEF2:
+	            //============ Traitement des reponses pour le defaut2 Test Entrees Apres Positionnement ============//
+	            IF (#Mobile.Dial_Def.Reponse_Def = 'Relance') THEN
+	                // Vider la reponse defaut
+	                #Mobile.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            IF (#Mobile.Dial_Def.Reponse_Def = 'Abandon') THEN
+	                #Mobile.Etp := "Etp_Test_Verr";
+	                // Vider la reponse defaut
+	                #Mobile.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            //============ Traitement des reponses pour le defaut2 Test Entrees Apres Positionnement ============//
+	            #Mobile.Etp := "Etp_Test_Verr";
+	            RETURN;
+	        END_REGION Traitement cyclique
+	    "Etp_Test_Verr":
+	        REGION Traitement preliminaire 
+	            IF #Mobile.Etp <> #Mobile.Etp_Memo THEN
+	                #Mobile.Etp_Prec := #Mobile.Etp;
+	                //=== Traitement cas retour de defaut ===//
+	                IF #Mobile.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #Mobile.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO Test_Verr_DEF1;
+	                    END_CASE;
+	                END_IF;
+	                //=== Traitement cas retour de defaut ===//
+	                #Mobile.Etp_Memo := #Mobile.Etp;
+	                #Mobile.Etat := "Enc_Pos";
+	            END_IF;
+	        END_REGION Traitement preliminaire
+	        REGION Traitement cyclique
+	            //Test du verrouillage du mobile
+	            IF #Mobile.E_Verrou THEN
+	                #Mobile.Dial_Def.Num_Def_Etape := 1;
+	                #Mess_Defaut := CONCAT(IN1 := 'Le mobile ', IN2 := #Mobile.Nom, IN3 := ' est verrouille');
+	                #Mobile.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base, Msg_Defaut := #Mess_Defaut,
+	                                                                 Type_Defaut := 0,
+	                                                                 Automatisme := #Mobile.Automatisme,
+	                                                                 Num_Lot := #Mobile.Num_Lot,
+	                                                                 Origine_Defaut := 'Mobile',
+	                                                                 Libelle_Origine := #Mobile.Nom,
+	                                                                 Acq1 := 'Relance',
+	                                                                 Acq2 := '',
+	                                                                 Acq3 := '',
+	                                                                 Acq4 := '',
+	                                                                 Acq5 := '',
+	                                                                 Acq6 := '',
+	                                                                 Acq7 := '',
+	                                                                 Acq8 := '',
+	                                                                 Acq_Choisi := -1,
+	                                                                 Date_Arrivee := #Mobile.Tps_Picke);
+	                #Mobile.Etp := "Etp_Att_Ack_Def";
+	                RETURN;
+	            END_IF;
+	        Test_Verr_DEF1:
+	            //============ Traitement des reponses pour le defaut1 du Test Verrouillage ============//
+	            IF (#Mobile.Dial_Def.Reponse_Def = 'Relance') THEN
+	                // Vider la reponse defaut
+	                #Mobile.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            //============ Traitement des reponses pour le defaut1 du Test Verrouillage ============//
+	            #Mobile.Etp := "Etp_Att_Suiv_Pret";
+	        END_REGION Traitement cyclique
+	    "Etp_Att_Suiv_Pret":
+	        REGION Traitement preliminaire 
+	            IF #Mobile.Etp <> #Mobile.Etp_Memo THEN
+	                #Mobile.Etp_Memo := #Mobile.Etp;
+	                #Mobile.Etp_Prec := #Mobile.Etp;
+	                #Mobile.Etat := "Enc_Pos";
+	                #Ret_RD_SYS_T := RD_SYS_T(#Mobile.Tps_Picke);
+	            END_IF;
+	        END_REGION Traitement preliminaire
+	        REGION Traitement cyclique
+	            // Si changement de mode Auto/Manu
+	            IF #Mobile.Manuel_Memo <> #Mobile.Manuel THEN
+	                #Mobile.Etp := "Etp_Chang_Mode";
+	                RETURN;
+	            END_IF;
+	            // Si changement de position
+	            IF #Mobile.Pos_Dmd <> #Mobile.Pos_Enc THEN
+	                // Changement de position immediatement
+	                #Mobile.Etp := "Etp_Chang_Pos";
+	                RETURN;
+	            END_IF;
+	            // Mise hors service
+	            IF #Mobile.HORS_SERVICE THEN
+	                #Mobile.Etp := "Etp_Inactif";
+	                RETURN;
+	            END_IF;
+	            // Si demande de fin positionnement quelque soit son type 
+	           (* IF (#Mobile.Manuel AND (#Mobile.Ord_Manu = "Ord_Fin_Pos" OR #Mobile.Ord_Manu = "Ord_Vid_Imm")) OR
+	                #Mobile.Ord_Manu = "Ord_Fin_Pos_Imm" OR
+	                (NOT #Mobile.Manuel AND (#Mobile.Ord >= "Ord_Fin_Pos" AND #Mobile.Ord <= "Ord_Vid_Imm")) THEN
+	                #Mobile.Etp := "Etp_Vidange";
+	                RETURN;
+	            END_IF;*)
+	            IF (#Mobile.Ord_Manu = "Ord_Fin_Pos_Imm" ) THEN
+	                #Mobile.Etp := "Etp_Fin_Pos_Imm";
+	                RETURN;
+	            END_IF;
+	            // Attente suivant pret ou mobile non asservi
+	            IF #Mobile.Asservi THEN
+	                IF "Valid_Index"(#Mobile.Pos[#Mobile.Pos_Enc].Suiv_Enc) THEN
+	                   // #ret := "Test_Etat_Mobile"("Index_Mobile" := #Mobile.Pos[#Mobile.Pos_Enc].Suiv_Enc, Etat := "Pret");
+	                    #ret := NOT "Test_Etat_Mobile"("Index_Mobile" := #Mobile.Pos[#Mobile.Pos_Enc].Suiv_Enc, Etat := "Pret") AND  NOT "Test_Etat_Mobile"("Index_Mobile" := #Mobile.Pos[#Mobile.Pos_Enc].Suiv_Enc, Etat := "Vid");
+	                    IF  #ret THEN
+	                        #Ret_RD_SYS_T := RD_SYS_T(#Mobile.Tps_Picke);
+	                    END_IF;
+	                END_IF;
+	            END_IF;
+	            IF NOT #Mobile.Asservi OR #Mobile.Tjr_Desasservi OR NOT #ret THEN
+	                // Attendre la tempo
+	                IF "Tempo"(Duree := #Mobile.Tps_Asserv, Tps_Picke := #Mobile.Tps_Picke, Anticip := NOT #Mobile.Asservi OR #Mobile.Tjr_Desasservi, Tps_Passe => #Tpspassé) THEN
+	                    #Mobile.Etp := "Etp_Positionnement";
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	        END_REGION Traitement cyclique
+	    "Etp_Positionnement":
+	        REGION Traitement preliminaire 
+	            IF #Mobile.Etp <> #Mobile.Etp_Memo THEN
+	                #Mobile.Etp_Prec := #Mobile.Etp;
+	                //=== Traitement cas retour de defaut ===//
+	                IF #Mobile.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #Mobile.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO Positionnement_DEF1;
+	                        2:
+	                            GOTO Positionnement_DEF2;
+	                    END_CASE;
+	                END_IF;
+	                //=== Traitement cas retour de defaut ===//
+	                //Piloter les sorties a 0 pour positionnement
+	                IF #Mobile.Pos_Enc >= 0 OR #Mobile.Pos_Enc <= #Mobile.Nbr_Pos THEN
+	                    "Pilot_Sort_TOR"(Etat_Bool := FALSE,
+	                                     Point_Tbl := #Mobile.Point_Sort0,
+	                                     Tbl := #Mobile.Pos[#Mobile.Pos_Enc].Sort0);
+	                    //Piloter les sorties a 1 pour positionnement
+	                    "Pilot_Sort_TOR"(Etat_Bool := TRUE,
+	                                     Point_Tbl := #Mobile.Point_Sort1,
+	                                     Tbl := #Mobile.Pos[#Mobile.Pos_Enc].Sort1);
+	                END_IF;
+	
+	                #Ret_RD_SYS_T := RD_SYS_T(#Mobile.Tps_Picke);
+	                #Mobile.Vide := FALSE;
+	                #Mobile.Etat := "Enc_Pos";
+	                #Mobile.Etp_Memo := #Mobile.Etp;
+	            END_IF;
+	        END_REGION Traitement preliminaire
+	        REGION Traitement cyclique
+	            // Si changement de position
+	            IF #Mobile.Pos_Dmd <> #Mobile.Pos_Enc THEN
+	                #Mobile.Etp := "Etp_Chang_Pos";
+	                RETURN;
+	            END_IF;
+	            // Si changement de mode Auto/Manu
+	            IF #Mobile.Manuel_Memo <> #Mobile.Manuel THEN
+	                #Mobile.Etp := "Etp_Chang_Mode";
+	                RETURN;
+	            END_IF;
+	            // Mise hors service
+	            IF #Mobile.HORS_SERVICE THEN
+	                #Mobile.Etp := "Etp_Fin_Pos_Imm";
+	                RETURN;
+	            END_IF;
+	            // Si demande d'arret quelque soit le type d'arret
+	         (*   IF (#Mobile.Manuel AND (#Mobile.Ord_Manu = "Ord_Fin_Pos" OR #Mobile.Ord_Manu = "Ord_Vid_Imm")) OR
+	                (#Mobile.Ord_Manu = "Ord_Fin_Pos_Imm") OR
+	                (NOT #Mobile.Manuel AND (#Mobile.Ord >= "Ord_Fin_Pos" AND #Mobile.Ord <= "Ord_Vid_Imm")) THEN
+	                #Mobile.Etp := "Etp_Fin_Pos_Imm";
+	                RETURN;
+	            END_IF;*)
+	            IF (#Mobile.Ord_Manu = "Ord_Fin_Pos_Imm") THEN
+	                #Mobile.Etp := "Etp_Fin_Pos_Imm";
+	                RETURN;
+	            END_IF;
+	            //Test des entrees a 0 apres positionnement
+	            #Mobile.Ret_Test_Entr0_Ap_Pos := "Test_Etat_Entr_TOR"(Etat_Bool := FALSE,
+	                                                                  Tbl := #Mobile.Pos[#Mobile.Pos_Enc].Entr0_Ap_Pos,
+	                                                                  Point_Tbl := #Mobile.Point_Entr0_Ap_Pos);
+	            // Test des entrees a 1 apres positionnement
+	            #Mobile.Ret_Test_Entr1_Ap_Pos := "Test_Etat_Entr_TOR"(Etat_Bool := TRUE,
+	                                                                  Tbl := #Mobile.Pos[#Mobile.Pos_Enc].Entr1_Ap_Pos,
+	                                                                  Point_Tbl := #Mobile.Point_Entr1_Ap_Pos);
+	            // Attente de la tempo si la condition d'anticipation est encore a FALSE
+	            IF NOT "Tempo"(Duree := #Mobile.Tps_Att, Tps_Picke := #Mobile.Tps_Picke, Anticip := (#Mobile.Ret_Test_Entr0_Ap_Pos = 1 AND #Mobile.Ret_Test_Entr1_Ap_Pos = 1), Tps_Passe => #Tpspassé) THEN
+	                RETURN;
+	            END_IF;
+	            IF #Mobile.Ret_Test_Entr0_Ap_Pos = -1 THEN
+	                #Mobile.Dial_Def.Num_Def_Etape := 1;
+	                #Mess_Defaut := CONCAT(IN1 := 'Defaut de l entree ',
+	                                       IN2 :=  "DB_BIBLIOTHEQUE".D_IO[#Mobile.Pos[#Mobile.Pos_Enc].Entr0_Ap_Pos[#Mobile.Point_Entr0_Ap_Pos]].Mnemonique,
+	                                       IN3 := ' situee au reseau ',
+	                                       IN4 := DELETE(IN := USINT_TO_STRING( "DB_BIBLIOTHEQUE".D_IO[#Mobile.Pos[#Mobile.Pos_Enc].Entr0_Ap_Pos[#Mobile.Point_Entr0_Ap_Pos]].Reseau), L := 1, P := 1),
+	                                       IN5 := ' sur le rack ',
+	                                       IN6 := DELETE(IN := USINT_TO_STRING( "DB_BIBLIOTHEQUE".D_IO[#Mobile.Pos[#Mobile.Pos_Enc].Entr0_Ap_Pos[#Mobile.Point_Entr0_Ap_Pos]].Rack), L := 1, P := 1),
+	                                       IN7 := ' dans la carte ',
+	                                       IN8 := DELETE(IN := USINT_TO_STRING( "DB_BIBLIOTHEQUE".D_IO[#Mobile.Pos[#Mobile.Pos_Enc].Entr0_Ap_Pos[#Mobile.Point_Entr0_Ap_Pos]].Carte), L := 1, P := 1));
+	                #Mobile.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base, Msg_Defaut := #Mess_Defaut,
+	                                                                 Type_Defaut := 0,
+	                                                                 Automatisme := #Mobile.Automatisme,
+	                                                                 Num_Lot := #Mobile.Num_Lot,
+	                                                                 Origine_Defaut := 'Mobile',
+	                                                                 Libelle_Origine := #Mobile.Nom,
+	                                                                 Acq1 := 'Relance',
+	                                                                 Acq2 := '',
+	                                                                 Acq3 := '',
+	                                                                 Acq4 := '',
+	                                                                 Acq5 := '',
+	                                                                 Acq6 := '',
+	                                                                 Acq7 := '',
+	                                                                 Acq8 := '',
+	                                                                 Acq_Choisi := -1,
+	                                                                 Date_Arrivee := #Mobile.Tps_Picke);
+	                #Mobile.Etp := "Etp_Att_Ack_Def";
+	                RETURN;
+	            END_IF;
+	        Positionnement_DEF1:
+	            //============ Traitement des reponses pour le defaut1 du Positionnement ============//
+	            IF (#Mobile.Dial_Def.Reponse_Def = 'Relance') THEN
+	                // Vider la reponse defaut
+	                #Mobile.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            //============ Traitement des reponses pour le defaut1 du Positionnement ============//
+	            IF #Mobile.Ret_Test_Entr1_Ap_Pos = -1 THEN
+	                #Mobile.Dial_Def.Num_Def_Etape := 2;
+	                #Mess_Defaut := CONCAT(IN1 := 'Defaut de l entree ',
+	                                       IN2 :=  "DB_BIBLIOTHEQUE".D_IO[#Mobile.Pos[#Mobile.Pos_Enc].Entr1_Ap_Pos[#Mobile.Point_Entr1_Ap_Pos]].Mnemonique,
+	                                       IN3 := ' situee au reseau ',
+	                                       IN4 := DELETE(IN := USINT_TO_STRING( "DB_BIBLIOTHEQUE".D_IO[#Mobile.Pos[#Mobile.Pos_Enc].Entr1_Ap_Pos[#Mobile.Point_Entr1_Ap_Pos]].Reseau), L := 1, P := 1),
+	                                       IN5 := ' sur le rack ',
+	                                       IN6 := DELETE(IN := USINT_TO_STRING( "DB_BIBLIOTHEQUE".D_IO[#Mobile.Pos[#Mobile.Pos_Enc].Entr1_Ap_Pos[#Mobile.Point_Entr1_Ap_Pos]].Rack), L := 1, P := 1),
+	                                       IN7 := ' dans la carte ',
+	                                       IN8 := DELETE(IN := USINT_TO_STRING( "DB_BIBLIOTHEQUE".D_IO[#Mobile.Pos[#Mobile.Pos_Enc].Entr1_Ap_Pos[#Mobile.Point_Entr1_Ap_Pos]].Carte), L := 1, P := 1));
+	                #Mobile.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base, Msg_Defaut := #Mess_Defaut,
+	                                                                 Type_Defaut := 0,
+	                                                                 Automatisme := #Mobile.Automatisme,
+	                                                                 Num_Lot := #Mobile.Num_Lot,
+	                                                                 Origine_Defaut := 'Mobile',
+	                                                                 Libelle_Origine := #Mobile.Nom,
+	                                                                 Acq1 := 'Relance',
+	                                                                 Acq2 := '',
+	                                                                 Acq3 := '',
+	                                                                 Acq4 := '',
+	                                                                 Acq5 := '',
+	                                                                 Acq6 := '',
+	                                                                 Acq7 := '',
+	                                                                 Acq8 := '',
+	                                                                 Acq_Choisi := - 1,
+	                                                                 Date_Arrivee := #Mobile.Tps_Picke);
+	                #Mobile.Etp := "Etp_Att_Ack_Def";
+	                RETURN;
+	            END_IF;
+	        Positionnement_DEF2:
+	            //============ Traitement des reponses pour le defaut1 du Positionnement ============//
+	            IF (#Mobile.Dial_Def.Reponse_Def = 'Relance') THEN
+	                // Vider la reponse defaut
+	                #Mobile.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            //============ Traitement des reponses pour le defaut1 du Positionnement ============//
+	            // Passer a l'etape suivante
+	            #Mobile.Etp := "Etp_Surveillance";
+	            RETURN;
+	        END_REGION Traitement cyclique
+	    "Etp_Surveillance":
+	        REGION Traitement preliminaire 
+	            IF #Mobile.Etp <> #Mobile.Etp_Memo THEN
+	                #Mobile.Etp_Prec := #Mobile.Etp;
+	                //=== Traitement cas retour de defaut ===//
+	                IF #Mobile.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #Mobile.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO Surveillance_DEF1;
+	                        2:
+	                            GOTO Surveillance_DEF2;
+	                    END_CASE;
+	                END_IF;
+	                //=== Traitement cas retour de defaut ===//
+	                //Piloter les sorties a 0 apres positionnement
+	                IF #Mobile.Pos_Enc >= 0 OR #Mobile.Pos_Enc <= #Mobile.Nbr_Pos THEN
+	                    "Pilot_Sort_TOR"(Etat_Bool := FALSE,
+	                                     Point_Tbl := #Mobile.Point_Sort0,
+	                                     Tbl := #Mobile.Pos[#Mobile.Pos_Enc].Sort0_Ap_Pos);
+	                    //Piloter les sorties a 1 apres positionnement
+	                    "Pilot_Sort_TOR"(Etat_Bool := TRUE,
+	                                     Point_Tbl := #Mobile.Point_Sort1,
+	                                     Tbl := #Mobile.Pos[#Mobile.Pos_Enc].Sort1_Ap_Pos);
+	                END_IF;
+	
+	                #Mobile.Etat := "Pret";
+	                #Mobile.Etp_Memo := #Mobile.Etp;
+	            END_IF;
+	        END_REGION Traitement preliminaire
+	        REGION Traitement cyclique
+	            // Si changement de position
+	            IF #Mobile.Pos_Dmd <> #Mobile.Pos_Enc THEN
+	                #Mobile.Etp := "Etp_Chang_Pos";
+	                RETURN;
+	            END_IF;
+	            // Si changement de mode Auto/Manu
+	            IF #Mobile.Manuel_Memo <> #Mobile.Manuel THEN
+	                #Mobile.Etp := "Etp_Chang_Mode";
+	                RETURN;
+	            END_IF;
+	            // Mise hors service
+	            IF #Mobile.HORS_SERVICE THEN
+	                #Mobile.Etp := "Etp_Fin_Pos_Imm";
+	                RETURN;
+	            END_IF;
+	            IF #Mobile.Asservi THEN
+	                IF "Valid_Index"(#Mobile.Pos[#Mobile.Pos_Enc].Suiv_Enc) THEN
+	                    #ret := NOT "Test_Etat_Mobile"("Index_Mobile" := #Mobile.Pos[#Mobile.Pos_Enc].Suiv_Enc, Etat := "Pret") AND  NOT "Test_Etat_Mobile"("Index_Mobile" := #Mobile.Pos[#Mobile.Pos_Enc].Suiv_Enc, Etat := "Vid");
+	                ELSE
+	                    #Mobile.Etp := "Etp_Fin_Pos_Imm";
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	            IF (#Mobile.Ord_Manu = "Ord_Fin_Pos_Imm") OR
+	                (NOT #Mobile.Manuel AND (#Mobile.Ord = "Ord_Fin_Pos_Imm")) OR #ret THEN
+	                #Mobile.Etp := "Etp_Fin_Pos_Imm";
+	                RETURN;
+	            END_IF;
+	            // Si demande de vidange immediat
+	            IF (NOT #Mobile.Manuel AND (#Mobile.Ord = "Ord_Vid_Imm")) OR
+	                (#Mobile.Manuel AND #Mobile.Ord_Manu = "Ord_Vid_Imm") THEN
+	                #Mobile.Etp := "Etp_Vidange";
+	                RETURN;
+	            END_IF;
+	            // Si demande de fin positionnement
+	            IF (NOT #Mobile.Manuel AND #Mobile.Ord = ("Ord_Fin_Pos")) OR
+	                (#Mobile.Manuel AND #Mobile.Ord_Manu = "Ord_Fin_Pos") THEN
+	                #Mobile.Etp := "Etp_Att_Fin_Pas_Mat";
+	                RETURN;
+	            END_IF;
+	            //Test des entrees a 0 apres positionnement
+	            #Mobile.Ret_Test_Entr0_Ap_Pos := "Test_Etat_Entr_TOR"(Etat_Bool := FALSE,
+	                                                                  Tbl := #Mobile.Pos[#Mobile.Pos_Enc].Entr0_Ap_Pos,
+	                                                                  Point_Tbl := #Mobile.Point_Entr0_Ap_Pos);
+	            //Une ou plusieurs entrees a 0 sont a 1 apres positionnement
+	            IF #Mobile.Ret_Test_Entr0_Ap_Pos = -1 THEN
+	                #Mobile.Dial_Def.Num_Def_Etape := 1;
+	                #Mess_Defaut := CONCAT(IN1 := 'Defaut de l entree ',
+	                                       IN2 :=  "DB_BIBLIOTHEQUE".D_IO[#Mobile.Pos[#Mobile.Pos_Enc].Entr0_Ap_Pos[#Mobile.Point_Entr0_Ap_Pos]].Mnemonique,
+	                                       IN3 := ' situee au reseau ',
+	                                       IN4 := DELETE(IN := USINT_TO_STRING( "DB_BIBLIOTHEQUE".D_IO[#Mobile.Pos[#Mobile.Pos_Enc].Entr0_Ap_Pos[#Mobile.Point_Entr0_Ap_Pos]].Reseau), L := 1, P := 1),
+	                                       IN5 := ' sur le rack ',
+	                                       IN6 := DELETE(IN := USINT_TO_STRING( "DB_BIBLIOTHEQUE".D_IO[#Mobile.Pos[#Mobile.Pos_Enc].Entr0_Ap_Pos[#Mobile.Point_Entr0_Ap_Pos]].Rack), L := 1, P := 1),
+	                                       IN7 := ' dans la carte ',
+	                                       IN8 := DELETE(IN := USINT_TO_STRING( "DB_BIBLIOTHEQUE".D_IO[#Mobile.Pos[#Mobile.Pos_Enc].Entr0_Ap_Pos[#Mobile.Point_Entr0_Ap_Pos]].Carte), L := 1, P := 1));
+	                #Mobile.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base, Msg_Defaut := #Mess_Defaut,
+	                                                                 Type_Defaut := 0,
+	                                                                 Automatisme := #Mobile.Automatisme,
+	                                                                 Num_Lot := #Mobile.Num_Lot,
+	                                                                 Origine_Defaut := 'Mobile',
+	                                                                 Libelle_Origine := #Mobile.Nom,
+	                                                                 Acq1 := 'Relance',
+	                                                                 Acq2 := '',
+	                                                                 Acq3 := '',
+	                                                                 Acq4 := '',
+	                                                                 Acq5 := '',
+	                                                                 Acq6 := '',
+	                                                                 Acq7 := '',
+	                                                                 Acq8 := '',
+	                                                                 Acq_Choisi := -1,
+	                                                                 Date_Arrivee := #Mobile.Tps_Picke);
+	                #Mobile.Etp := "Etp_Att_Ack_Def";
+	                RETURN;
+	            END_IF;
+	        Surveillance_DEF1:
+	            //============ Traitement des reponses pour le defaut1 de la surveillance ============//
+	            IF (#Mobile.Dial_Def.Reponse_Def = 'Relance') THEN
+	                // Vider la reponse defaut
+	                #Mobile.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            //============ Traitement des reponses pour le defaut1 de la surveillance ============//
+	            //Test des entrees a 1 apres positionnement
+	            #Mobile.Ret_Test_Entr1_Ap_Pos := "Test_Etat_Entr_TOR"(Etat_Bool := TRUE,
+	                                                                  Tbl := #Mobile.Pos[#Mobile.Pos_Enc].Entr1_Ap_Pos,
+	                                                                  Point_Tbl := #Mobile.Point_Entr1_Ap_Pos);
+	            //Une ou plusieurs entrees a 1 sont a 0 apres positionnement
+	            IF #Mobile.Ret_Test_Entr1_Ap_Pos = -1 THEN
+	                #Mobile.Dial_Def.Num_Def_Etape := 2;
+	                #Mess_Defaut := CONCAT(IN1 := 'Defaut de l entree ',
+	                                       IN2 :=  "DB_BIBLIOTHEQUE".D_IO[#Mobile.Pos[#Mobile.Pos_Enc].Entr1_Ap_Pos[#Mobile.Point_Entr1_Ap_Pos]].Mnemonique,
+	                                       IN3 := ' situee au reseau ',
+	                                       IN4 := DELETE(IN := USINT_TO_STRING( "DB_BIBLIOTHEQUE".D_IO[#Mobile.Pos[#Mobile.Pos_Enc].Entr1_Ap_Pos[#Mobile.Point_Entr1_Ap_Pos]].Reseau), L := 1, P := 1),
+	                                       IN5 := ' sur le rack ',
+	                                       IN6 := DELETE(IN := USINT_TO_STRING( "DB_BIBLIOTHEQUE".D_IO[#Mobile.Pos[#Mobile.Pos_Enc].Entr1_Ap_Pos[#Mobile.Point_Entr1_Ap_Pos]].Rack), L := 1, P := 1),
+	                                       IN7 := ' dans la carte ',
+	                                       IN8 := DELETE(IN := USINT_TO_STRING( "DB_BIBLIOTHEQUE".D_IO[#Mobile.Pos[#Mobile.Pos_Enc].Entr1_Ap_Pos[#Mobile.Point_Entr1_Ap_Pos]].Carte), L := 1, P := 1));
+	                #Mobile.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base, Msg_Defaut := #Mess_Defaut,
+	                                                                 Type_Defaut := 0,
+	                                                                 Automatisme := #Mobile.Automatisme,
+	                                                                 Num_Lot := #Mobile.Num_Lot,
+	                                                                 Origine_Defaut := 'Mobile',
+	                                                                 Libelle_Origine := #Mobile.Nom,
+	                                                                 Acq1 := 'Relance',
+	                                                                 Acq2 := '',
+	                                                                 Acq3 := '',
+	                                                                 Acq4 := '',
+	                                                                 Acq5 := '',
+	                                                                 Acq6 := '',
+	                                                                 Acq7 := '',
+	                                                                 Acq8 := '',
+	                                                                 Acq_Choisi := - 1,
+	                                                                 Date_Arrivee := #Mobile.Tps_Picke);
+	                #Mobile.Etp := "Etp_Att_Ack_Def";
+	                RETURN;
+	            END_IF;
+	        Surveillance_DEF2:
+	            //============ Traitement des reponses pour le defaut2 de la surveillance ============//
+	            IF (#Mobile.Dial_Def.Reponse_Def = 'Relance') THEN
+	                // Vider la reponse defaut
+	                #Mobile.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            //============ Traitement des reponses pour le defaut2 de la surveillance ============//
+	        END_REGION Traitement cyclique
+	    "Etp_Att_Fin_Pas_Mat":
+	        REGION Traitement preliminaire 
+	            IF #Mobile.Etp <> #Mobile.Etp_Memo THEN
+	                #Mobile.Etp_Prec := #Mobile.Etp;
+	                //=== Traitement cas retour de defaut ===//
+	                IF #Mobile.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #Mobile.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO Att_Fin_Pas_Mat_DEF1;
+	                    END_CASE;
+	                END_IF;
+	                //=== Traitement cas retour de defaut ===//
+	                #Mobile.Etp_Memo := #Mobile.Etp;
+	                #Mobile.Etat := "Vid";
+	                #Ret_RD_SYS_T := RD_SYS_T(#Mobile.Tps_Picke);
+	            END_IF;
+	        END_REGION Traitement preliminaire
+	        REGION Traitement cyclique
+	            // Si changement de position
+	            IF #Mobile.Pos_Dmd <> #Mobile.Pos_Enc THEN
+	                #Mobile.Etp := "Etp_Chang_Pos";
+	                RETURN;
+	            END_IF;
+	            // Si changement de mode Auto/Manu 
+	            IF #Mobile.Manuel_Memo <> #Mobile.Manuel THEN
+	                #Mobile.Etp := "Etp_Chang_Mode";
+	                RETURN;
+	            END_IF;
+	            // Mise hors service
+	            IF #Mobile.HORS_SERVICE THEN
+	                #Mobile.Etp := "Etp_Fin_Pos_Imm";
+	                RETURN;
+	            END_IF;
+	            IF #Mobile.Asservi THEN
+	                IF "Valid_Index"(#Mobile.Pos[#Mobile.Pos_Enc].Suiv_Enc) THEN
+	                    //#ret := NOT "Test_Etat_Mobile"("Index_Mobile" := #Mobile.Pos[#Mobile.Pos_Enc].Suiv_Enc, Etat := "Pret");
+	                    #ret := NOT "Test_Etat_Mobile"("Index_Mobile" := #Mobile.Pos[#Mobile.Pos_Enc].Suiv_Enc, Etat := "Pret") AND  NOT "Test_Etat_Mobile"("Index_Mobile" := #Mobile.Pos[#Mobile.Pos_Enc].Suiv_Enc, Etat := "Vid");
+	                END_IF;
+	            END_IF;
+	            IF (#Mobile.Ord_Manu = "Ord_Fin_Pos_Imm") OR
+	                (NOT #Mobile.Manuel AND (#Mobile.Ord = "Ord_Fin_Pos_Imm")) OR
+	                 #ret THEN
+	                #Mobile.Etp := "Etp_Fin_Pos_Imm";
+	                RETURN;
+	            END_IF;
+	            // Si demande de vidange immediat
+	            IF (NOT #Mobile.Manuel AND (#Mobile.Ord = "Ord_Vid_Imm")) OR
+	                (#Mobile.Manuel AND #Mobile.Ord_Manu = "Ord_Vid_Imm") THEN
+	                #Mobile.Etp := "Etp_Vidange";
+	                RETURN;
+	            END_IF;
+	            FOR #i := 0 TO 4 DO
+	                IF NOT "Test_Mobile_Vide"(#Mobile.Mob_Prec_Ec[#i]) THEN
+	                    #Ret_RD_SYS_T := RD_SYS_T(#Mobile.Tps_Picke);
+	                    EXIT;
+	                END_IF;
+	            END_FOR;
+	            //Lancement de la temporisation maximale pour passage matiere
+	            IF NOT "Tempo"(Duree := #Mobile.Tps_Pass_Mat, Tps_Picke := #Mobile.Tps_Picke, Anticip := NOT #Mobile.Pass_Mat, Tps_Passe => #Tpspassé) THEN
+	                RETURN;
+	            END_IF;
+	            //Test du passage de la matiere
+	            IF #Mobile.Pass_Mat THEN
+	                #Mobile.Dial_Def.Num_Def_Etape := 1;
+	                #Mess_Defaut := 'Presence de la matiere apres la tempo suffisante pour le passage';
+	                #Mobile.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base, Msg_Defaut := #Mess_Defaut,
+	                                                                 Type_Defaut := 0,
+	                                                                 Automatisme := #Mobile.Automatisme,
+	                                                                 Num_Lot := #Mobile.Num_Lot,
+	                                                                 Origine_Defaut := 'Mobile',
+	                                                                 Libelle_Origine := #Mobile.Nom,
+	                                                                 Acq1 := 'Relance',
+	                                                                 Acq2 := 'Abandon',
+	                                                                 Acq3 := '',
+	                                                                 Acq4 := '',
+	                                                                 Acq5 := '',
+	                                                                 Acq6 := '',
+	                                                                 Acq7 := '',
+	                                                                 Acq8 := '',
+	                                                                 Acq_Choisi := -1,
+	                                                                 Date_Arrivee := #Mobile.Tps_Picke);
+	               // #Mobile.Etp_Memo := "Etp_Att_Ack_Def"; // Pour Garder Le Mobile En Marche
+	                #Mobile.Etp := "Etp_Att_Ack_Def";
+	                RETURN;
+	            END_IF;
+	        Att_Fin_Pas_Mat_DEF1:
+	            //============ Traitement des reponses pour le defaut1 Att Fin Passage Matiere ============//
+	            IF (#Mobile.Dial_Def.Reponse_Def = 'Relance') THEN
+	                #Ret_RD_SYS_T := RD_SYS_T(#Mobile.Tps_Picke);
+	                #Mobile.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            IF (#Mobile.Dial_Def.Reponse_Def = 'Abandon') THEN
+	                // Vider la reponse defaut
+	                #Mobile.Dial_Def.Reponse_Def := '';
+	                #Mobile.Etp := "Etp_Vidange";
+	                RETURN;
+	            END_IF;
+	            //============ Traitement des reponses pour le defaut1 Att Fin Passage Matiere ============//
+	            #Mobile.Etp := "Etp_Vidange";
+	            RETURN;
+	        END_REGION Traitement cyclique
+	    "Etp_Vidange":
+	        REGION Traitement preliminaire 
+	            IF #Mobile.Etp <> #Mobile.Etp_Memo THEN
+	                #Mobile.Etp_Memo := #Mobile.Etp;
+	                #Mobile.Etp_Prec := #Mobile.Etp;
+	                #Mobile.Etat := "Vid";
+	                #Ret_RD_SYS_T := RD_SYS_T(#Mobile.Tps_Picke);
+	            END_IF;
+	        END_REGION Traitement preliminaire
+	        REGION Traitement cyclique  
+	(*          IF #Mobile.Asservi THEN
+	                FOR #i := 0 TO 4 DO
+	                    IF NOT "Test_Mobile_Vide"(#Mobile.Mob_Prec_Ec[#i]) THEN
+	                        #Ret_RD_SYS_T := RD_SYS_T(#Mobile.Tps_Picke);
+	                        EXIT;
+	                    END_IF;
+	                END_FOR;
+	            END_IF ; *)
+	            
+	
+	           FOR #i := 0 TO 4 DO
+	                IF NOT "Test_Mobile_Vide"(#Mobile.Mob_Prec_Ec[#i]) THEN
+	                    #Ret_RD_SYS_T := RD_SYS_T(#Mobile.Tps_Picke);
+	                    EXIT;
+	                END_IF;
+	            END_FOR; 
+	            
+	            // Si changement de position
+	            IF #Mobile.Pos_Dmd <> #Mobile.Pos_Enc THEN
+	                #Mobile.Etp := "Etp_Chang_Pos";
+	                RETURN;
+	            END_IF;
+	            // Si changement de mode Auto/Manu 
+	            IF #Mobile.Manuel_Memo <> #Mobile.Manuel THEN
+	                #Mobile.Etp := "Etp_Chang_Mode";
+	                RETURN;
+	            END_IF;
+	            // Mise hors service
+	            IF #Mobile.HORS_SERVICE THEN
+	                #Mobile.Etp := "Etp_Fin_Pos_Imm";
+	                RETURN;
+	            END_IF;
+	            IF #Mobile.Asservi THEN
+	                IF "Valid_Index"(#Mobile.Pos[#Mobile.Pos_Enc].Suiv_Enc) THEN
+	                    //#ret := NOT "Test_Etat_Mobile"("Index_Mobile" := #Mobile.Pos[#Mobile.Pos_Enc].Suiv_Enc, Etat := "Pret");
+	                    #ret := NOT "Test_Etat_Mobile"("Index_Mobile" := #Mobile.Pos[#Mobile.Pos_Enc].Suiv_Enc, Etat := "Pret") AND  NOT "Test_Etat_Mobile"("Index_Mobile" := #Mobile.Pos[#Mobile.Pos_Enc].Suiv_Enc, Etat := "Vid")
+	                    AND  NOT "Test_Etat_Mobile"("Index_Mobile" := #Mobile.Pos[#Mobile.Pos_Enc].Suiv_Enc, Etat := "Mar_Force");
+	                END_IF;
+	            END_IF;
+	            IF (#Mobile.Ord_Manu = "Ord_Fin_Pos_Imm") OR
+	                (NOT #Mobile.Manuel AND (#Mobile.Ord = "Ord_Fin_Pos_Imm"))  OR
+	                #ret  THEN 
+	
+	                    
+	                #Mobile.Etp := "Etp_Fin_Pos_Imm";
+	                RETURN;
+	            END_IF;
+	            // Si un nouveau ordre de marche pour la meme position actuelle
+	            IF ((NOT #Mobile.Manuel AND #Mobile.Ord = "Ord_Pos") OR
+	                (#Mobile.Manuel AND #Mobile.Ord_Manu = "Ord_Pos")) AND
+	                #Mobile.Pos_Dmd = #Mobile.Pos_Enc THEN
+	                #Mobile.Etp := "Etp_Att_Suiv_Pret";
+	                RETURN;
+	            END_IF;
+	            //Lancement de la temporisation de vidange 
+	            IF (NOT #Mobile.Manuel AND (#Mobile.Num_Cir <> 0)) THEN
+	                FOR #i := 0 TO 4 DO
+	                    IF (NOT "Test_Mobile_Vide"(#Mobile.Mob_Prec_Ec[#i])) AND  #Mobile.Asservi THEN
+	                        #Ret_RD_SYS_T := RD_SYS_T(#Mobile.Tps_Picke);
+	                        RETURN;
+	                    END_IF;
+	                END_FOR;
+	            END_IF;
+	            IF "Tempo"(Duree := #Mobile.Tps_Vid + T#100MS, Tps_Picke := #Mobile.Tps_Picke, Anticip := FALSE, Tps_Passe => #Tpspassé) THEN
+	                #Mobile.Etp := "Etp_Mar_For";
+	                RETURN;
+	            END_IF;
+	        END_REGION Traitement cyclique
+	    "Etp_Mar_For":
+	        REGION Traitement preliminaire 
+	            IF #Mobile.Etp <> #Mobile.Etp_Memo THEN
+	                #Mobile.Etp_Memo := #Mobile.Etp;
+	                #Mobile.Etp_Prec := #Mobile.Etp;
+	                #Mobile.Etat := "Mar_Force";
+	                IF NOT #Mobile.Manuel THEN
+	                    #Mobile.Ord := -1;
+	                END_IF;
+	                #Mobile.Vide := TRUE;
+	                #Ret_RD_SYS_T := RD_SYS_T(#Mobile.Tps_Picke);
+	            END_IF;
+	        END_REGION Traitement preliminaire
+	        REGION Traitement cyclique
+	            // Si changement de position
+	            IF #Mobile.Pos_Dmd <> #Mobile.Pos_Enc THEN
+	                #Mobile.Etp := "Etp_Chang_Pos";
+	                RETURN;
+	            END_IF;
+	            // Si changement de mode Auto/Manu 
+	            IF #Mobile.Manuel_Memo <> #Mobile.Manuel THEN
+	                #Mobile.Etp := "Etp_Chang_Mode";
+	                RETURN;
+	            END_IF;
+	            // Mise hors service
+	            IF #Mobile.HORS_SERVICE THEN
+	                #Mobile.Etp := "Etp_Fin_Pos_Imm";
+	                RETURN;
+	            END_IF;
+	            // Si un nouveau ordre de marche pour la meme position actuelle
+	            IF ((NOT #Mobile.Manuel AND #Mobile.Ord = "Ord_Pos") OR
+	                (#Mobile.Manuel AND #Mobile.Ord_Manu = "Ord_Pos")) AND
+	                #Mobile.Pos_Dmd = #Mobile.Pos_Enc THEN
+	                #Mobile.Etp := "Etp_Att_Suiv_Pret";
+	                RETURN;
+	            END_IF;
+	            IF NOT #Mobile.Manuel THEN
+	                FOR #i := 0 TO 4 DO
+	                    #Mobile.Mob_Prec_Ec[#i] := -1;
+	                END_FOR;
+	            END_IF;
+	            
+	            
+	            
+	            
+	            
+	            // Attente fin de la tempo de la marche forcee ou ordre de fin positionnement immediat
+	            IF "Tempo"(Duree := #Mobile.Tps_Max_Mar_Forc, Tps_Picke := #Mobile.Tps_Picke, Anticip := ((NOT #Mobile.Manuel AND (#Mobile.Ord = "Ord_Fin_Pos_Imm")) OR
+	                           (#Mobile.Ord_Manu = "Ord_Fin_Pos_Imm")), Tps_Passe => #Tpspassé)
+	            THEN
+	                #Mobile.Etp := "Etp_Fin_Pos_Imm";
+	                RETURN;
+	            END_IF;
+	        END_REGION Traitement cyclique
+	    "Etp_Fin_Pos_Imm":
+	        REGION Traitement preliminaire 
+	            IF #Mobile.Etp <> #Mobile.Etp_Memo THEN
+	                #Mobile.Etp_Memo := #Mobile.Etp;
+	                #Mobile.Etp_Prec := #Mobile.Etp;
+	                #Mobile.Etat := "Enc_Fin_Pos";
+	            END_IF;
+	        END_REGION Traitement preliminaire
+	        REGION Traitement cyclique
+	            //Piloter les sorties a 0 pour positionnement
+	            IF #Mobile.Pos_Enc >= 0 OR #Mobile.Pos_Enc <= #Mobile.Nbr_Pos THEN
+	                "Pilot_Sort_TOR"(Etat_Bool := FALSE,
+	                                 Point_Tbl := #Mobile.Point_Sort0,
+	                                 Tbl := #Mobile.Pos[#Mobile.Pos_Enc].Sort0);
+	                "Pilot_Sort_TOR"(Etat_Bool := FALSE,
+	                                 Point_Tbl := #Mobile.Point_Sort1,
+	                                 Tbl := #Mobile.Pos[#Mobile.Pos_Enc].Sort1);
+	                //Piloter les sorties a 0 pour fin positionnement
+	                "Pilot_Sort_TOR"(Etat_Bool := FALSE,
+	                                 Point_Tbl := #Mobile.Point_Sort0_Pr_Fin_Pos,
+	                                 Tbl := #Mobile.Pos[#Mobile.Pos_Enc].Sort0_Pr_Fin_Pos);
+	                //Piloter les sorties a 1 pour fin positionnement
+	                "Pilot_Sort_TOR"(Etat_Bool := TRUE,
+	                                 Point_Tbl := #Mobile.Point_Sort1_Pr_Fin_Pos,
+	                                 Tbl := #Mobile.Pos[#Mobile.Pos_Enc].Sort1_Pr_Fin_Pos);
+	            END_IF;
+	            // Mise hors service
+	            IF #Mobile.HORS_SERVICE THEN
+	                #Mobile.Etp := "Etp_Inactif";
+	                RETURN;
+	            END_IF;
+	            // Si changement de position passer la tempo avant changement de position
+	            IF #Mobile.Pos_Dmd <> #Mobile.Pos_Enc THEN
+	                #Mobile.Etp := "Etp_Tps_Av_Chang_Pos";
+	                RETURN;
+	            END_IF;
+	         (*   IF #Mobile.Ord <> -1 THEN
+	                #Mobile.Etp := "Etp_Test_Ent_Av_Pos";
+	                RETURN;
+	            END_IF; *)
+	            #Mobile.Etp := "Etp_Tps_Apr_Fin_Pos";
+	            RETURN;
+	        END_REGION Traitement cyclique     
+	    "Etp_Test_Ent_Apr_Fin_Pos":
+	        REGION Traitement preliminaire 
+	            IF #Mobile.Etp <> #Mobile.Etp_Memo THEN
+	                #Mobile.Etp_Prec := #Mobile.Etp;
+	                //=== Traitement cas retour de defaut ===//
+	                IF #Mobile.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #Mobile.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO Test_Ent_Apr_Fin_Pos_DEF1;
+	                        2:
+	                            GOTO Test_Ent_Apr_Fin_Pos_DEF2;
+	                    END_CASE;
+	                END_IF;
+	                //=== Traitement cas retour de defaut ===//
+	                #Ret_RD_SYS_T := RD_SYS_T(#Mobile.Tps_Picke);
+	                #Mobile.Etp_Memo := #Mobile.Etp;
+	            END_IF;
+	        END_REGION Traitement preliminaire
+	        REGION Traitement cyclique
+	            #Mobile.Ret_Test_Entr0_Ap_Fin_Pos := "Test_Etat_Entr_TOR"(Etat_Bool := FALSE,
+	                                                                      Tbl := #Mobile.Pos[#Mobile.Pos_Enc].Entr0_Ap_Fin_Pos,
+	                                                                      Point_Tbl := #Mobile.Point_Entr0_Ap_Fin_Pos);
+	            #Mobile.Ret_Test_Entr1_Ap_Fin_Pos := "Test_Etat_Entr_TOR"(Etat_Bool := TRUE,
+	                                                                      Tbl := #Mobile.Pos[#Mobile.Pos_Enc].Entr1_Ap_Fin_Pos,
+	                                                                      Point_Tbl := #Mobile.Point_Entr1_Ap_Fin_Pos);
+	            // Attente de la tempo si la condition d'anticipation est encore a FALSE
+	            IF NOT "Tempo"(Duree := #Mobile.Tps_Att, Tps_Picke := #Mobile.Tps_Picke, Anticip := (#Mobile.Point_Entr0_Ap_Fin_Pos = 1 AND #Mobile.Point_Entr1_Ap_Fin_Pos = 1), Tps_Passe => #Tpspassé) THEN
+	                RETURN;
+	            END_IF;
+	           
+	            IF #Mobile.Ret_Test_Entr0_Ap_Fin_Pos = -1 THEN
+	                #Mobile.Dial_Def.Num_Def_Etape := 1;
+	                #Mess_Defaut := CONCAT(IN1 := 'Defaut de l entree ',
+	                                       IN2 :=  "DB_BIBLIOTHEQUE".D_IO[#Mobile.Pos[#Mobile.Pos_Enc].Entr0_Ap_Fin_Pos[#Mobile.Point_Entr0_Ap_Fin_Pos]].Mnemonique,
+	                                       IN3 := ' situee au reseau ',
+	                                       IN4 := DELETE(IN := USINT_TO_STRING( "DB_BIBLIOTHEQUE".D_IO[#Mobile.Pos[#Mobile.Pos_Enc].Entr0_Ap_Fin_Pos[#Mobile.Point_Entr0_Ap_Fin_Pos]].Reseau), L := 1, P := 1),
+	                                       IN5 := ' sur le rack ',
+	                                       IN6 := DELETE(IN := USINT_TO_STRING( "DB_BIBLIOTHEQUE".D_IO[#Mobile.Pos[#Mobile.Pos_Enc].Entr0_Ap_Fin_Pos[#Mobile.Point_Entr0_Ap_Fin_Pos]].Rack), L := 1, P := 1),
+	                                       IN7 := ' dans la carte ',
+	                                       IN8 := DELETE(IN := USINT_TO_STRING( "DB_BIBLIOTHEQUE".D_IO[#Mobile.Pos[#Mobile.Pos_Enc].Entr0_Ap_Fin_Pos[#Mobile.Point_Entr0_Ap_Fin_Pos]].Carte), L := 1, P := 1));
+	                #Mobile.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base, Msg_Defaut := #Mess_Defaut,
+	                                                                 Type_Defaut := 0,
+	                                                                 Automatisme := #Mobile.Automatisme,
+	                                                                 Num_Lot := #Mobile.Num_Lot,
+	                                                                 Origine_Defaut := 'Mobile',
+	                                                                 Libelle_Origine := #Mobile.Nom,
+	                                                                 Acq1 := 'Relance',
+	                                                                 Acq2 := '',
+	                                                                 Acq3 := '',
+	                                                                 Acq4 := '',
+	                                                                 Acq5 := '',
+	                                                                 Acq6 := '',
+	                                                                 Acq7 := '',
+	                                                                 Acq8 := '',
+	                                                                 Acq_Choisi := -1,
+	                                                                 Date_Arrivee := #Mobile.Tps_Picke);
+	                #Mobile.Etp := "Etp_Att_Ack_Def";
+	                RETURN;
+	            END_IF;
+	        Test_Ent_Apr_Fin_Pos_DEF1:
+	            //============ Traitement des reponses pour le defaut1 du Test Entrees Apres Fin Positionnement ============//
+	            IF (#Mobile.Dial_Def.Reponse_Def = 'Relance') THEN
+	                // Vider la reponse defaut
+	                #Mobile.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            //============ Traitement des reponses pour le defaut1 du Test Entrees Apres Fin Positionnement ============//
+	            
+	            IF #Mobile.Ret_Test_Entr1_Ap_Fin_Pos = -1 THEN
+	                #Mobile.Dial_Def.Num_Def_Etape := 2;
+	                #Mess_Defaut := CONCAT(IN1 := 'Defaut de l entree ',
+	                                       IN2 :=  "DB_BIBLIOTHEQUE".D_IO[#Mobile.Pos[#Mobile.Pos_Enc].Entr1_Ap_Fin_Pos[#Mobile.Point_Entr1_Ap_Fin_Pos]].Mnemonique,
+	                                       IN3 := ' situee au reseau ',
+	                                       IN4 := DELETE(IN := USINT_TO_STRING( "DB_BIBLIOTHEQUE".D_IO[#Mobile.Pos[#Mobile.Pos_Enc].Entr1_Ap_Fin_Pos[#Mobile.Point_Entr1_Ap_Fin_Pos]].Reseau), L := 1, P := 1),
+	                                       IN5 := ' sur le rack ',
+	                                       IN6 := DELETE(IN := USINT_TO_STRING( "DB_BIBLIOTHEQUE".D_IO[#Mobile.Pos[#Mobile.Pos_Enc].Entr1_Ap_Fin_Pos[#Mobile.Point_Entr1_Ap_Fin_Pos]].Rack), L := 1, P := 1),
+	                                       IN7 := ' dans la carte ',
+	                                       IN8 := DELETE(IN := USINT_TO_STRING( "DB_BIBLIOTHEQUE".D_IO[#Mobile.Pos[#Mobile.Pos_Enc].Entr1_Ap_Fin_Pos[#Mobile.Point_Entr1_Ap_Fin_Pos]].Carte), L := 1, P := 1));
+	                #Mobile.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base,
+	                                                                 Msg_Defaut := #Mess_Defaut,
+	                                                                 Type_Defaut := 0,
+	                                                                 Automatisme := #Mobile.Automatisme,
+	                                                                 Num_Lot := #Mobile.Num_Lot,
+	                                                                 Origine_Defaut := 'Mobile',
+	                                                                 Libelle_Origine := #Mobile.Nom,
+	                                                                 Acq1 := 'Relance',
+	                                                                 Acq2 := '',
+	                                                                 Acq3 := '',
+	                                                                 Acq4 := '',
+	                                                                 Acq5 := '',
+	                                                                 Acq6 := '',
+	                                                                 Acq7 := '',
+	                                                                 Acq8 := '',
+	                                                                 Acq_Choisi := -1,
+	                                                                 Date_Arrivee := #Mobile.Tps_Picke);
+	                #Mobile.Etp := "Etp_Att_Ack_Def";
+	                RETURN;
+	            END_IF;
+	        Test_Ent_Apr_Fin_Pos_DEF2:
+	            //============ Traitement des reponses pour le defaut2 du Test Entrees Apres Fin Positionnement ============//
+	            IF (#Mobile.Dial_Def.Reponse_Def = 'Relance') THEN
+	                // Vider la reponse defaut
+	                #Mobile.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            //============ Traitement des reponses pour le defaut2 du Test Entrees Apres Fin Positionnement ============//
+	            #Mobile.Etp := "Etp_Inactif";
+	            RETURN;
+	        END_REGION Traitement cyclique
+	    "Etp_Tps_Apr_Fin_Pos":
+	        REGION Traitement preliminaire 
+	            IF #Mobile.Etp <> #Mobile.Etp_Memo THEN
+	                #Mobile.Etp_Memo := #Mobile.Etp;
+	                #Mobile.Etp_Prec := #Mobile.Etp;
+	                #Ret_RD_SYS_T := RD_SYS_T(#Mobile.Tps_Picke);
+	            END_IF;
+	        END_REGION Traitement preliminaire
+	        REGION Traitement cyclique
+	            IF "Tempo"(Duree := #Mobile.Tps_Arr, Tps_Picke := #Mobile.Tps_Picke, Anticip := #Mobile.HORS_SERVICE, Tps_Passe => #Tpspassé)
+	            THEN
+	                #Mobile.Etp := "Etp_Test_Ent_Apr_Fin_Pos";
+	            END_IF;
+	        END_REGION Traitement cyclique
+	    "Etp_Chang_Pos":
+	        REGION Traitement preliminaire 
+	            IF #Mobile.Etp <> #Mobile.Etp_Memo THEN
+	                #Mobile.Etp_Memo := #Mobile.Etp;
+	            END_IF;
+	        END_REGION Traitement preliminaire
+	        REGION Traitement cyclique
+	            // Si le mobile n'est pas encore positionne
+	            IF #Mobile.Etp_Prec >= "Etp_Repos" AND #Mobile.Etp_Prec <= "Etp_Att_Suiv_Pret" THEN
+	                #Mobile.Etp := "Etp_Repos";
+	                RETURN;
+	            END_IF;
+	            // Si le mobile est deja positionne
+	            IF #Mobile.Etp_Prec >= "Etp_Positionnement" AND #Mobile.Etp_Prec <= "Etp_Tps_Apr_Fin_Pos" THEN
+	                #Mobile.Etp := "Etp_Fin_Pos_Imm";
+	                RETURN;
+	            END_IF;
+	        END_REGION Traitement cyclique
+	    "Etp_Tps_Av_Chang_Pos":
+	        REGION Traitement preliminaire 
+	            IF #Mobile.Etp <> #Mobile.Etp_Memo THEN
+	                #Mobile.Etp_Memo := #Mobile.Etp;
+	                #Ret_RD_SYS_T := RD_SYS_T(#Mobile.Tps_Picke);
+	            END_IF;
+	        END_REGION Traitement preliminaire
+	        REGION Traitement cyclique
+	            IF "Tempo"(Duree := #Mobile.Tps_Chang_Pos, Tps_Picke := #Mobile.Tps_Picke, Anticip := #Mobile.HORS_SERVICE, Tps_Passe => #Tpspassé)
+	            THEN
+	                #Mobile.Etp := "Etp_Inactif";
+	                RETURN;
+	            END_IF;
+	        END_REGION Traitement cyclique    
+	    "Etp_Chang_Mode":
+	        REGION Traitement preliminaire 
+	            IF #Mobile.Etp <> #Mobile.Etp_Memo THEN
+	                #Mobile.Etp_Memo := #Mobile.Etp;
+	            END_IF;
+	        END_REGION Traitement preliminaire
+	        REGION Traitement cyclique     
+	            // Si changement d'ordre ou changement de position
+	            IF #Mobile.Ord = #Mobile.Ord_Manu THEN
+	                #Mobile.Etp := #Mobile.Etp_Prec;
+	            ELSE
+	                #Mobile.Etp := "Etp_Fin_Pos_Imm";
+	            END_IF;
+	            // Memorisation du mode
+	            #Mobile.Manuel_Memo := #Mobile.Manuel;
+	            //Reinitialisation de l'ordre manu apres passage manu en auto
+	            IF NOT #Mobile.Manuel_Memo THEN
+	                #Mobile.Ord_Manu := -1;
+	            END_IF;
+	            // Si changement de position
+	            IF #Mobile.Pos_Dmd <> #Mobile.Pos_Enc THEN
+	                #Mobile.Etp := "Etp_Chang_Pos";
+	                RETURN;
+	            END_IF;
+	        END_REGION Traitement cyclique
+	    "Etp_Att_Ack_Def":
+	        REGION Traitement preliminaire 
+	            IF #Mobile.Etp <> #Mobile.Etp_Memo THEN
+	                #Mobile.Etat := "Defaut";
+	                // Arret immediat du mobile
+	                //Piloter les sorties a 0 pour positionnement
+	                IF #Mobile.Pos_Enc >= 0 OR #Mobile.Pos_Enc <= #Mobile.Nbr_Pos THEN
+	                    "Pilot_Sort_TOR"(Etat_Bool := FALSE,
+	                                     Point_Tbl := #Mobile.Point_Sort0,
+	                                     Tbl := #Mobile.Pos[#Mobile.Pos_Enc].Sort0);
+	                    //Piloter les sorties a 1 pour positionnement
+	                    "Pilot_Sort_TOR"(Etat_Bool := FALSE,
+	                                     Point_Tbl := #Mobile.Point_Sort1,
+	                                     Tbl := #Mobile.Pos[#Mobile.Pos_Enc].Sort1);
+	                    //Piloter les sorties a 0 pour fin positionnement
+	                    "Pilot_Sort_TOR"(Etat_Bool := FALSE,
+	                                     Point_Tbl := #Mobile.Point_Sort0_Pr_Fin_Pos,
+	                                     Tbl := #Mobile.Pos[#Mobile.Pos_Enc].Sort0_Pr_Fin_Pos);
+	                    //Piloter les sorties a 1 pour fin positionnement
+	                    "Pilot_Sort_TOR"(Etat_Bool := TRUE,
+	                                     Point_Tbl := #Mobile.Point_Sort1_Pr_Fin_Pos,
+	                                     Tbl := #Mobile.Pos[#Mobile.Pos_Enc].Sort1_Pr_Fin_Pos);
+	                END_IF;
+	
+	                #Mobile.Etp_Memo := #Mobile.Etp;
+	                #Ret_RD_SYS_T := RD_SYS_T(#Mobile.Tps_Picke);
+	            END_IF;
+	        END_REGION Traitement preliminaire
+	        REGION Traitement cyclique
+	            #Mobile.Dial_Def.Reponse_Def := "FC_Recup_Rep_Def"(Index_Def := #Mobile.Dial_Def.Index_Defaut, Reponse_Ecrit => #Mobile.Dial_Def.Text_Reponse);
+	            IF #Mobile.Dial_Def.Reponse_Def <> '' THEN
+	                "FC_Raz_Def"(#Mobile.Dial_Def.Index_Defaut);
+	                #Mobile.Etp := "Etp_Repos";
+	                #Mobile.Ord_Manu := -1;
+	                RETURN;
+	            END_IF;
+	        END_REGION Traitement cyclique
+	END_CASE;
+END_FUNCTION
+

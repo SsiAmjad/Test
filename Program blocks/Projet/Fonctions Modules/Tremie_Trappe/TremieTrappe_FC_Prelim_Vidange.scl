@@ -1,0 +1,28 @@
+﻿FUNCTION "TremieTrappe_FC_Prelim_Vidange" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Trm_Trp : "S_Tremie_Trappe";
+   END_VAR
+
+   VAR CONSTANT 
+      Pos_Gauche : SInt := 0;
+      Pos_Droite : SInt := 1;
+   END_VAR
+
+
+BEGIN
+	// Commade Boite BDE11 en fonction de la melangeuse
+	IF #Trm_Trp.DosCommun.Module_Commun._Tache = "TAC_TREMSS_BP4" THEN
+	    IF #Trm_Trp.Pt_Zs._SuiviCommun._DonneesDiverses.tab_short[0] = 1 THEN
+	        "FC_Posit_Mob"(Index_Mob := #Trm_Trp.Mob_A_Dispo,
+	                       Position := #Pos_Gauche);
+	    END_IF;
+	    IF #Trm_Trp.Pt_Zs._SuiviCommun._DonneesDiverses.tab_short[0] = 2 THEN
+	        "FC_Posit_Mob"(Index_Mob := #Trm_Trp.Mob_A_Dispo,
+	                       Position := #Pos_Droite);
+	    END_IF;
+	END_IF;
+	
+END_FUNCTION
+

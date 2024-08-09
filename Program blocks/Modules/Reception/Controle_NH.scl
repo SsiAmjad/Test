@@ -1,0 +1,63 @@
+﻿FUNCTION "Controle_NH" : SInt
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : SAS
+VERSION : 0.1
+   VAR_INPUT 
+      TempoAffNH : Time;
+   END_VAR
+
+   VAR_IN_OUT 
+      R : "S_REC";
+   END_VAR
+
+   VAR_TEMP 
+      Ret_RD_Sys_T : Int;
+      ret : Bool;
+      tpspasse : Time;
+      retu : SInt;
+      NH : Bool;
+   END_VAR
+
+
+BEGIN
+	//MODIF POUR ARRETER DIRECTEMENT LORIGINE APRES UN NH
+	IF #R._ptDestEc._NivHaut AND #R._FgMaskCtrlNh = FALSE THEN
+	    #retu := "Arr_Imm_Mobile"("DB_BIBLIOTHEQUE".Mobile[#R._PtCir.Origine].Mob_Suiv[0]);
+	END_IF;
+	
+	IF NOT  #R._ptDestEc._NivHaut THEN
+	    #Ret_RD_Sys_T := RD_SYS_T(#R._TpsPicke);
+	END_IF;
+	
+	#ret := "Tempo"(Duree := #TempoAffNH, Tps_Picke :=#R._TpsPicke, Anticip := FALSE, Tps_Passe => #tpspasse);
+	// #ret := "Tempo"(Duree := #R._TpVidCircuit, Tps_Picke :=#R._TpsPicke, Anticip := FALSE, Tps_Passé => #tpspasse);
+	IF #ret AND #R._ptDestEc._NivHaut THEN
+	    #NH := TRUE;
+	ELSE
+	    #NH := FALSE;
+	END_IF;
+	
+	
+	//#R._NiveauHaut := #R._ptTabDest._NivHaut;
+	IF (#NH AND #R._FgMaskCtrlNh = FALSE) OR #R._FgChangDest THEN
+	  
+	    
+	    IF #R._FgChangDest THEN
+	        #R._Ptzs._FgChgDestNh := FALSE;
+	    ELSE
+	        IF #R._FgGestStockNh THEN
+	            #R._Ptzs._FgChgDestNh := FALSE;
+	        ELSE
+	            #R._Ptzs._FgChgDestNh := TRUE;
+	        END_IF;
+	    END_IF;
+	    #Controle_NH := 1;
+	    RETURN;
+	END_IF;
+	#Controle_NH := -1;
+	
+	/// ajouter traitement défaut si pas de cellule trouvé
+	 
+	
+END_FUNCTION
+

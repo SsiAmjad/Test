@@ -1,0 +1,809 @@
+﻿FUNCTION_BLOCK "fbSql4Siemens"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      iIP1 : Int;   // IP-Address part 1 of the SQL4automation-Connector
+      iIP2 : Int;   // IP-Address part 2 of the SQL4automation-Connector
+      iIP3 : Int;   // IP-Address part 3 of the SQL4automation-Connector
+      iIP4 : Int;   // IP-Address part 4 of the SQL4automation-Connector
+      iRemotePort : Int;   // Remote Port-Number of the SQL4automation-Connector
+      iLocalPort : Int;   // Local Port-Number
+      tTimeout : Time := T#30s;   // Timeout, Default 30s
+      iConnectionID : CONN_OUC := 1;   // Connection-ID (must be unique)
+      wHardwareID : HW_ANY := 16#0;   // Hardware identifier (OnBoard: 64, CP1543: See device configuration --> hardware identifier of the interface)
+   END_VAR
+   VAR_INPUT DB_SPECIFIC
+      tFbExecTimeLimit : Time := T#3ms;   // Limit of FB execution time
+   END_VAR
+
+   VAR_OUTPUT 
+      tFbExecTimeMax : Time;
+      tLastRequest : Time;
+   END_VAR
+
+   VAR_IN_OUT 
+      stSql4SiemensInterface : "utSql4SiemensInterface";
+   END_VAR
+
+   VAR DB_SPECIFIC
+      stTcpV4 {InstructionName := 'TCON_IP_v4'; LibVersion := '1.0'} : TCON_IP_v4;
+   END_VAR
+   VAR 
+      inTsendC {InstructionName := 'TSEND_C'; LibVersion := '3.2'} : TSEND_C;
+      inTrcv {InstructionName := 'TRCV'; LibVersion := '4.0'} : TRCV;
+      xTsendReq { ExternalVisible := 'False'} : Bool := FALSE;
+      xTsendCont : Bool := FALSE;
+      xTsendDone { ExternalVisible := 'False'} : Bool := FALSE;
+      xTsendBusy { ExternalVisible := 'False'} : Bool := FALSE;
+      xTsendError { ExternalVisible := 'False'} : Bool := FALSE;
+      wTsendState { ExternalVisible := 'False'} : Word;
+      xTrcvEnR : Bool := FALSE;
+      xTrcvNdr : Bool := FALSE;
+      xTrcvBusy : Bool := FALSE;
+      xTrcvError : Bool := FALSE;
+      wTrcvState { ExternalVisible := 'False'} : Word;
+      udiTrcvLen { ExternalVisible := 'False'} : UDInt;
+      iStep : Int := 0;   // SQL-Request-Step-Number
+      inTimeout {InstructionName := 'TON_TIME'; LibVersion := '1.0'} : TON_TIME;
+      xTimeout { ExternalVisible := 'False'} : Bool := FALSE;
+      inExecuteTimeout {InstructionName := 'TON_TIME'; LibVersion := '1.0'} : TON_TIME;
+      abRcvData { ExternalVisible := 'False'} : Array[0..5999] of Byte;
+      diRow : DInt;
+      diCol : DInt;
+      diPos : DInt;
+      diNewPos : DInt;
+      tRequestStart {InstructionName := 'DTL'; LibVersion := '1.0'} : DTL;
+      xResponseDone : Bool;
+      sValue : WString[300];
+      diResultState_S : DInt;
+      diResultReturnParams_S : DInt;
+      diResultRows_S : DInt;
+      diResultCols_S : DInt;
+      tFbExecTimeMax_S : Time;
+   END_VAR
+
+   VAR_TEMP 
+      diTargetSize : DInt;
+      iRet : Int;
+      tFbEntry {InstructionName := 'DTL'; LibVersion := '1.0'} : DTL;
+      xFbExit : Bool;
+      tCurrentExec : Time;
+      tCurrentTimestamp {InstructionName := 'DTL'; LibVersion := '1.0'} : DTL;
+      xFound : Bool;
+   END_VAR
+
+   VAR CONSTANT 
+      ciStep_Inactive : Int;
+      ciStep_CreateReq00 : Int := 10;
+      ciStep_CreateReq01 : Int := 11;
+      ciStep_ConnectSend : Int := 20;
+      ciStep_ConnectRcv : Int := 21;
+      ciStep_SendReq : Int := 30;
+      ciStep_RcvParse00 : Int := 40;
+      ciStep_RcvParse01 : Int := 41;
+      ciStep_RcvParse02 : Int := 42;
+      ciStep_RcvParse03 : Int := 43;
+      ciStep_RcvParse04 : Int := 44;
+      ciStep_RcvParse05 : Int := 45;
+      ciStep_RcvParse06 : Int := 46;
+      ciStep_RcvParse07 : Int := 47;
+      ciStep_RcvParse08 : Int := 48;
+      ciStep_RcvParse09 : Int := 49;
+      ciStep_RcvParse10 : Int := 50;
+      ciStep_RcvParse11 : Int := 51;
+      ciStep_RcvParse12 : Int := 52;
+      ciStep_RcvParse13 : Int := 53;
+      ciStep_Done : Int := 100;
+      ciStep_Error : Int := 110;
+      ciStep_ErrorIP : Int := 111;
+      ciStep_ErrorPort : Int := 112;
+      ciStep_ErrorReq : Int := 113;
+      ciStep_ErrorMaxRows : Int := 114;
+      ciStep_ErrorMaxCols : Int := 115;
+      ciStep_ErrorMaxStringLen : Int := 116;
+      ciStep_ErrorSend : Int := 117;
+      ciStep_ErrorTimeout : Int := 118;
+      ciStep_ErrorParse : Int := 119;
+      ciStep_Reset00 : Int := 200;
+      ciStep_Reset01 : Int := 201;
+      ciStep_Reset02 : Int := 202;
+      ciStep_Reset03 : Int := 203;
+   END_VAR
+
+
+BEGIN
+	// +------------------------------------------------------------------------------------------------------------------+
+	// | The function block communicates with the SQL4Automation connector via a TCP connection [S7-1200/S7-1500]         |
+	// +------------------------------------------------------------------------------------------------------------------+
+	
+	// +-------------+-------------+-------------+------------------------------------------------------------------------+
+	// | Version     | Date        | Author      | Comment                                                                |
+	// +-------------+-------------+-------------+------------------------------------------------------------------------+
+	// | 4.0.0.0     | 02.08.2019  | BaM         | Initial version                                                        |
+	// +-------------+-------------+-------------+------------------------------------------------------------------------+
+	
+	// Timestamp of FB entry
+	#iRet := RD_LOC_T(#tFbEntry);
+	
+	
+	
+	// Initialize connection parameters
+	IF (#iStep = #ciStep_Inactive) THEN
+	  // TCP connection settings
+	  #stTcpV4.ID := #iConnectionID;                                        // Connection ID. Must be unique for each connection
+	  #stTcpV4.ConnectionType := B#16#11;                                   // Connection TCP
+	  #stTcpV4.ActiveEstablished := TRUE;                                   // This is the active part
+	  #stTcpV4.InterfaceId := #wHardwareID;                                 // Hardware identifer
+	  #stTcpV4.LocalPort := INT_TO_UINT(#iLocalPort);                       // Local port
+	  #stTcpV4.RemoteAddress.ADDR[1] := INT_TO_USINT(#iIP1);                // IP address part 1
+	  #stTcpV4.RemoteAddress.ADDR[2] := INT_TO_USINT(#iIP2);                // IP address part 2
+	  #stTcpV4.RemoteAddress.ADDR[3] := INT_TO_USINT(#iIP3);                // IP address part 3
+	  #stTcpV4.RemoteAddress.ADDR[4] := INT_TO_USINT(#iIP4);                // IP address part 4
+	  #stTcpV4.RemotePort := INT_TO_UINT(#iRemotePort);                     // Remote port    
+	END_IF;
+	
+	
+	
+	// Send and receive FBs
+	#inTsendC(REQ := (#xTsendReq = TRUE),
+	          CONT := (#xTsendCont = TRUE),
+	          LEN := DINT_TO_UINT(#stSql4SiemensInterface.diRequestDataSize),
+	          DONE => #xTsendDone,
+	          BUSY => #xTsendBusy,
+	          ERROR => #xTsendError,
+	          STATUS => #wTsendState,
+	          CONNECT := #stTcpV4,
+	          DATA := #stSql4SiemensInterface.abRequestData);
+	
+	#inTrcv(EN_R := (#xTrcvEnR = TRUE),
+	        ID := #stTcpV4.ID,
+	        LEN := 0,
+	        ADHOC := true,
+	        NDR => #xTrcvNdr,
+	        BUSY => #xTrcvBusy,
+	        ERROR => #xTrcvError,
+	        STATUS => #wTrcvState,
+	        RCVD_LEN => #udiTrcvLen,
+	        DATA := #abRcvData);
+	
+	// Write data to the response buffer
+	IF (#xTrcvNdr = true) AND (#udiTrcvLen > 0) THEN
+	    
+	  // Set target
+	  #diTargetSize := "fcGetArrayElementCount"(#stSql4SiemensInterface.abResponseData) - #stSql4SiemensInterface.diResponseDataSize;
+	  IF (#udiTrcvLen < #diTargetSize) THEN
+	    #diTargetSize := UDINT_TO_DINT(#udiTrcvLen);
+	  END_IF;
+	  IF (#diTargetSize < 0) THEN
+	    #diTargetSize := 0;
+	  END_IF;
+	  // Append data  
+	  #iRet := MOVE_BLK_VARIANT(SRC := #abRcvData, COUNT := DINT_TO_UINT(#diTargetSize), SRC_INDEX := 0, DEST_INDEX := #stSql4SiemensInterface.diResponseDataSize, DEST => #stSql4SiemensInterface.abResponseData);
+	  // Calculate data size
+	  #stSql4SiemensInterface.diResponseDataSize := #stSql4SiemensInterface.diResponseDataSize + #diTargetSize;
+	END_IF;
+	
+	
+	
+	// Timeout
+	#inTimeout(IN := (#iStep > #ciStep_Inactive) AND (#iStep < #ciStep_Done),
+	           PT := #tTimeout);
+	#xTimeout := #inTimeout.Q;
+	(* #stSql4SiemensInterface.Observer.xTimeout := #xTimeout; *)
+	
+	
+	// Execute timeout
+	#inExecuteTimeout(IN := (#stSql4SiemensInterface.xExecute = true) AND (#tTimeout > T#0ms), PT := 2 * #tTimeout);
+	IF (#inExecuteTimeout.Q = true) THEN
+	  #stSql4SiemensInterface.xExecute := false;
+	END_IF;
+	
+	
+	
+	// General errors
+	IF (#iStep = #ciStep_Inactive) THEN
+	  IF (#iIP1 = 0) THEN
+	    #iStep := #ciStep_ErrorIP;
+	  ELSIF (#iRemotePort = 0) THEN
+	    #iStep := #ciStep_ErrorPort;
+	  ELSIF (#stSql4SiemensInterface.cdiResponseColumnSize <= 0) THEN
+	    #iStep := #ciStep_ErrorMaxCols;
+	  ELSIF (#stSql4SiemensInterface.cdiResponseRowSize <= 0) THEN
+	    #iStep := #ciStep_ErrorMaxRows;
+	  ELSIF (#stSql4SiemensInterface.cdiResponseMaxStringSize <= 0) THEN
+	    #iStep := #ciStep_ErrorMaxStringLen;
+	  END_IF;
+	END_IF;
+	
+	// State machine
+	#xFbExit := FALSE;
+	WHILE (#xFbExit = FALSE) DO
+	  CASE (#iStep) OF
+	    #ciStep_Inactive:
+	      // Actions
+	      #stSql4SiemensInterface.xReady := TRUE;
+	      #stSql4SiemensInterface.xBusy := FALSE;
+	      #stSql4SiemensInterface.xDone := FALSE;
+	      #stSql4SiemensInterface.xError := FALSE;
+	      #diResultReturnParams_S := 0;
+	      #diResultCols_S := 0;
+	      #diResultRows_S := 0;
+	      #diResultState_S := 0;
+	      
+	      // Transitions
+	      IF (#stSql4SiemensInterface.xExecute = TRUE) THEN
+	        #tRequestStart := #tFbEntry;
+	        #tLastRequest := T#0ms;
+	        #stSql4SiemensInterface.xReady := FALSE;
+	        #stSql4SiemensInterface.xBusy := TRUE;
+	        #diRow := 0;
+	        #iStep := #ciStep_CreateReq00;
+	      ELSE
+	        #xFbExit := TRUE;
+	      END_IF;
+	      
+	    #ciStep_CreateReq00:
+	      // Check the request length
+	      IF (#stSql4SiemensInterface.diRequestDataSize > 0) THEN
+	        #iStep := #ciStep_CreateReq01;
+	      ELSE
+	        #iStep := #ciStep_ErrorReq;
+	      END_IF;
+	      
+	    #ciStep_CreateReq01:
+	      // - Add <NUL>
+	      "fcSql4Siemens_AddString"(sValue := '',
+	                             xAddNul := TRUE,
+	                             stSql4SiemensInterface := #stSql4SiemensInterface);
+	      // - Add T<NUL>
+	      "fcSql4Siemens_AddString"(sValue := 'T',
+	                             xAddNul := TRUE,
+	                             stSql4SiemensInterface := #stSql4SiemensInterface);
+	      // Check request buffer overflow
+	      IF (#stSql4SiemensInterface.diRequestDataSize >= "fcGetArrayElementCount"(#stSql4SiemensInterface.abRequestData)) THEN
+	        #iStep := #ciStep_ErrorSend;
+	      ELSE
+	        #iStep := #ciStep_ConnectSend;
+	      END_IF;
+	      
+	    #ciStep_ConnectSend:
+	      // Actions
+	      #xTsendCont := TRUE;
+	      
+	      // Transitions
+	      #xFbExit := TRUE;
+	      IF (#stSql4SiemensInterface.xExecute = FALSE) THEN
+	        #iStep := #ciStep_Reset00;
+	      ELSIF (#xTimeout = TRUE) THEN
+	        #iStep := #ciStep_ErrorTimeout;
+	      ELSIF (#wTsendState = W#16#7004) THEN
+	        #iStep := #ciStep_ConnectRcv;
+	      END_IF;
+	      
+	    #ciStep_ConnectRcv:
+	      // Actions
+	      #xTrcvEnR := TRUE;
+	      
+	      // Transitions
+	      #xFbExit := TRUE;
+	      IF (#stSql4SiemensInterface.#xExecute = FALSE) THEN
+	        #iStep := #ciStep_Reset00;
+	      ELSIF (#xTimeout = TRUE) THEN
+	        #iStep := #ciStep_ErrorTimeout;
+	      ELSIF (#wTrcvState = W#16#7002) THEN
+	        #iStep := #ciStep_SendReq;
+	      END_IF;
+	      
+	    #ciStep_SendReq:
+	      // Actions
+	      #xTsendReq := TRUE;
+	      
+	      // Transitions
+	      #xFbExit := TRUE;
+	      IF (#stSql4SiemensInterface.xExecute = FALSE) THEN
+	        #iStep := #ciStep_Reset00;
+	      ELSIF (#xTimeout = TRUE) THEN
+	        #iStep := #ciStep_ErrorTimeout;
+	      ELSIF (#xTsendError = TRUE) THEN
+	        #iStep := #ciStep_ErrorSend;
+	      ELSIF (#xTsendDone = TRUE) THEN
+	        #diRow := 0;
+	        #diCol := 0;
+	        #diPos := 0;
+	        #iStep := #ciStep_RcvParse00;
+	      END_IF;
+	      
+	    #ciStep_RcvParse00:
+	      // Actions
+	      #xFound := "fcSql4Siemens_ParseString"(diOffset := #diPos, diNewOffset => #diPos, sValue => #sValue, stSql4SiemensInterface := #stSql4SiemensInterface);
+	      
+	      // Transitions
+	      IF (#stSql4SiemensInterface.xExecute = FALSE) THEN
+	        #iStep := #ciStep_Reset00;
+	      ELSIF (#xTimeout = TRUE) THEN
+	        #iStep := #ciStep_ErrorTimeout;
+	      ELSIF (#xFound = TRUE) THEN
+	          IF (#sValue = STRING_TO_WSTRING('RS')) THEN
+	          #iStep := #ciStep_RcvParse01;
+	        ELSE
+	          #iStep := #ciStep_ErrorParse;
+	        END_IF;
+	      ELSE
+	        #xFbExit := TRUE;
+	      END_IF;
+	      
+	    #ciStep_RcvParse01:
+	      // Actions
+	      #xFound := "fcSql4Siemens_ParseString"(diOffset := #diPos, diNewOffset => #diPos, sValue => #sValue, stSql4SiemensInterface := #stSql4SiemensInterface);
+	      
+	      // Transitions
+	      IF (#stSql4SiemensInterface.xExecute = FALSE) THEN
+	        #iStep := #ciStep_Reset00;
+	      ELSIF (#xTimeout = TRUE) THEN
+	        #iStep := #ciStep_ErrorTimeout;
+	    ELSIF (#xFound = TRUE) THEN
+	
+	        IF (WSTRING_TO_INT(#sValue) = 0) THEN
+	          IF (#stSql4SiemensInterface.xUseMrpParameter = TRUE) THEN
+	            #iStep := #ciStep_RcvParse02;
+	          ELSE
+	            #iStep := #ciStep_RcvParse04;
+	          END_IF;
+	        ELSE
+	          #diResultState_S := WSTRING_TO_INT(#sValue);
+	          #iStep := #ciStep_Error;
+	        END_IF;
+	      ELSE
+	        #xFbExit := TRUE;
+	      END_IF;
+	      
+	    #ciStep_RcvParse02:
+	      // Actions
+	      #xFound := "fcSql4Siemens_ParseString"(diOffset := #diPos, diNewOffset => #diPos, sValue => #sValue, stSql4SiemensInterface := #stSql4SiemensInterface);
+	      
+	      // Transitions
+	      IF (#stSql4SiemensInterface.xExecute = FALSE) THEN
+	        #iStep := #ciStep_Reset00;
+	      ELSIF (#xTimeout = TRUE) THEN
+	        #iStep := #ciStep_ErrorTimeout;
+	      ELSIF (#xFound = TRUE) THEN
+	          IF (#sValue = STRING_TO_WSTRING('RP')) THEN
+	          #iStep := #ciStep_RcvParse03;
+	        ELSE
+	          #iStep := #ciStep_ErrorParse;
+	        END_IF;
+	      ELSE
+	        #xFbExit := TRUE;
+	      END_IF;
+	      
+	    #ciStep_RcvParse03:
+	      // Actions
+	      #xFound := "fcSql4Siemens_ParseString"(diOffset := #diPos, diNewOffset => #diPos, sValue => #sValue, stSql4SiemensInterface := #stSql4SiemensInterface);
+	      
+	      // Transitions
+	      IF (#stSql4SiemensInterface.xExecute = FALSE) THEN
+	        #iStep := #ciStep_Reset00;
+	      ELSIF (#xTimeout = TRUE) THEN
+	          #iStep := #ciStep_ErrorTimeout;
+	      ELSIF (#xFound = TRUE) THEN
+	        #diResultReturnParams_S := WSTRING_TO_DINT(#sValue);
+	        #iStep := #ciStep_RcvParse04;
+	      ELSE
+	        #xFbExit := TRUE;
+	      END_IF;
+	      
+	    #ciStep_RcvParse04:
+	      // Actions
+	      #xFound := "fcSql4Siemens_ParseString"(diOffset := #diPos, diNewOffset => #diPos, sValue => #sValue, stSql4SiemensInterface := #stSql4SiemensInterface);
+	      
+	      // Transitions
+	      IF (#stSql4SiemensInterface.xExecute = FALSE) THEN
+	        #iStep := #ciStep_Reset00;
+	      ELSIF (#xTimeout = TRUE) THEN
+	        #iStep := #ciStep_ErrorTimeout;
+	      ELSIF (#xFound = TRUE) THEN
+	          IF (#sValue = STRING_TO_WSTRING('RR')) THEN
+	          #iStep := #ciStep_RcvParse05;
+	        ELSE
+	          #iStep := #ciStep_ErrorParse;
+	        END_IF;
+	      ELSE
+	        #xFbExit := TRUE;
+	      END_IF;
+	      
+	    #ciStep_RcvParse05:
+	      // Actions
+	      #xFound := "fcSql4Siemens_ParseString"(diOffset := #diPos, diNewOffset => #diPos, sValue => #sValue, stSql4SiemensInterface := #stSql4SiemensInterface);
+	      
+	      // Transitions
+	      IF (#stSql4SiemensInterface.xExecute = FALSE) THEN
+	          #iStep := #ciStep_Reset00;
+	      ELSIF (#xTimeout = TRUE) THEN
+	          #iStep := #ciStep_ErrorTimeout;
+	      ELSIF (#xFound = TRUE) THEN
+	          #diResultRows_S := WSTRING_TO_DINT(#sValue);
+	          #iStep := #ciStep_RcvParse06;
+	      ELSE
+	          #xFbExit := TRUE;
+	      END_IF;
+	      
+	    #ciStep_RcvParse06:
+	      // Actions
+	      #xFound := "fcSql4Siemens_ParseString"(diOffset := #diPos, diNewOffset => #diPos, sValue => #sValue, stSql4SiemensInterface := #stSql4SiemensInterface);
+	      
+	      // Transitions
+	      IF (#stSql4SiemensInterface.xExecute = FALSE) THEN
+	        #iStep := #ciStep_Reset00;
+	      ELSIF (#xTimeout = TRUE) THEN
+	        #iStep := #ciStep_ErrorTimeout;
+	      ELSIF (#xFound = TRUE) THEN
+	          IF (#sValue = STRING_TO_WSTRING('RC')) THEN
+	          #iStep := #ciStep_RcvParse07;
+	        ELSE
+	          #iStep := #ciStep_ErrorParse;
+	        END_IF;
+	      ELSE
+	          #xFbExit := TRUE;
+	      END_IF;
+	      
+	    #ciStep_RcvParse07:
+	      // Actions
+	      #xFound := "fcSql4Siemens_ParseString"(diOffset := #diPos, diNewOffset => #diPos, sValue => #sValue, stSql4SiemensInterface := #stSql4SiemensInterface);
+	      
+	      // Transitions
+	      IF (#stSql4SiemensInterface.xExecute = FALSE) THEN
+	        #iStep := #ciStep_Reset00;
+	      ELSIF (#xTimeout = TRUE) THEN
+	        #iStep := #ciStep_ErrorTimeout;
+	      ELSIF (#xFound = TRUE) THEN
+	        #diResultCols_S := WSTRING_TO_DINT(#sValue);
+	        IF (#diResultReturnParams_S > 0) THEN
+	          #iStep := #ciStep_RcvParse08;
+	        ELSIF (#diResultCols_S > 0) THEN
+	          #iStep := #ciStep_RcvParse10;
+	        ELSE
+	          #tLastRequest := T_DIFF(IN1 := #tFbEntry, IN2 := #tRequestStart);
+	          #iStep := #ciStep_Done;
+	        END_IF;
+	      ELSE
+	        #xFbExit := TRUE;
+	      END_IF;
+	      
+	    #ciStep_RcvParse08:
+	      // Actions
+	      #xFound := "fcSql4Siemens_ParseString"(diOffset := #diPos, diNewOffset => #diPos, sValue => #sValue, stSql4SiemensInterface := #stSql4SiemensInterface);
+	      
+	      // Transitions
+	      IF (#stSql4SiemensInterface.xExecute = FALSE) THEN
+	        #iStep := #ciStep_Reset00;
+	      ELSIF (#xTimeout = TRUE) THEN
+	        #iStep := #ciStep_ErrorTimeout;
+	      ELSIF (#xFound = TRUE) THEN
+	          IF (#sValue = STRING_TO_WSTRING('RPD')) THEN
+	          #diCol := 0;
+	          #iStep := #ciStep_RcvParse09;
+	        ELSE
+	          #iStep := #ciStep_ErrorParse;
+	        END_IF;
+	      ELSE
+	        #xFbExit := TRUE;
+	      END_IF;
+	      
+	    #ciStep_RcvParse09:
+	      // Actions
+	      #xFound := "fcSql4Siemens_ParseString"(diOffset := #diPos, diNewOffset => #diNewPos, sValue => #sValue, stSql4SiemensInterface := #stSql4SiemensInterface);
+	      
+	      // Transitions
+	      IF (#stSql4SiemensInterface.xExecute = FALSE) THEN
+	        #iStep := #ciStep_Reset00;
+	      ELSIF (#xTimeout = TRUE) THEN
+	        #iStep := #ciStep_ErrorTimeout;
+	      ELSIF (#xFound = TRUE) THEN
+	        #stSql4SiemensInterface.adiResponseReturnParam[#diCol].diOffset := #diPos;
+	        #stSql4SiemensInterface.adiResponseReturnParam[#diCol].iLength := DINT_TO_INT(#diNewPos - #diPos - 1);
+	        #diPos := #diNewPos;
+	        #diCol := #diCol + 1;
+	        IF (#diCol >= #diResultReturnParams_S) THEN
+	          IF (#diResultCols_S > 0) THEN
+	            #iStep := #ciStep_RcvParse10;
+	          ELSE
+	            #tLastRequest := T_DIFF(IN1 := #tFbEntry, IN2 := #tRequestStart);
+	            #iStep := #ciStep_Done;
+	          END_IF;
+	        END_IF;
+	      ELSE
+	        #xFbExit := TRUE;
+	      END_IF;
+	      
+	    #ciStep_RcvParse10:
+	      // Actions
+	      #xFound := "fcSql4Siemens_ParseString"(diOffset := #diPos, diNewOffset => #diPos, sValue => #sValue, stSql4SiemensInterface := #stSql4SiemensInterface);
+	      
+	      // Transitions
+	      IF (#stSql4SiemensInterface.xExecute = FALSE) THEN
+	        #iStep := #ciStep_Reset00;
+	      ELSIF (#xTimeout = TRUE) THEN
+	        #iStep := #ciStep_ErrorTimeout;
+	      ELSIF (#xFound = TRUE) THEN
+	          IF (#sValue = STRING_TO_WSTRING('RN')) THEN
+	          #diCol := 0;
+	          #iStep := #ciStep_RcvParse11;
+	        ELSE
+	          #iStep := #ciStep_ErrorParse;
+	        END_IF;
+	      ELSE
+	        #xFbExit := TRUE;
+	      END_IF;
+	      
+	    #ciStep_RcvParse11:
+	      // Actions
+	      #xFound := "fcSql4Siemens_ParseString"(diOffset := #diPos, diNewOffset => #diNewPos, sValue => #sValue, stSql4SiemensInterface := #stSql4SiemensInterface);
+	      
+	      // Transitions
+	      IF (#stSql4SiemensInterface.xExecute = FALSE) THEN
+	        #iStep := #ciStep_Reset00;
+	      ELSIF (#xTimeout = TRUE) THEN
+	        #iStep := #ciStep_ErrorTimeout;
+	      ELSIF (#xFound = TRUE) THEN
+	        #stSql4SiemensInterface.adiResponseColumnName[#diCol].diOffset := #diPos;
+	        #stSql4SiemensInterface.adiResponseColumnName[#diCol].iLength := DINT_TO_INT(#diNewPos - #diPos - 1);
+	        #diPos := #diNewPos;
+	        #diCol := #diCol + 1;
+	        IF (#diCol >= #diResultCols_S) THEN
+	          #iStep := #ciStep_RcvParse12;
+	        END_IF;
+	      ELSE
+	        #xFbExit := TRUE;
+	      END_IF;
+	      
+	    #ciStep_RcvParse12:
+	      // Actions
+	      #xFound := "fcSql4Siemens_ParseString"(diOffset := #diPos, diNewOffset => #diPos, sValue => #sValue, stSql4SiemensInterface := #stSql4SiemensInterface);
+	      
+	      // Transitions
+	      IF (#stSql4SiemensInterface.xExecute = FALSE) THEN
+	        #iStep := #ciStep_Reset00;
+	      ELSIF (#xTimeout = TRUE) THEN
+	        #iStep := #ciStep_ErrorTimeout;
+	      ELSIF (#xFound = TRUE) THEN
+	          IF (#sValue = STRING_TO_WSTRING('RD')) THEN
+	          #diCol := 0;
+	          #diRow := 0;
+	          #iStep := #ciStep_RcvParse13;
+	        ELSE
+	          #iStep := #ciStep_ErrorParse;
+	        END_IF;
+	      ELSE
+	        #xFbExit := TRUE;
+	      END_IF;
+	      
+	    #ciStep_RcvParse13:
+	      // Actions
+	        #xFound := "fcSql4Siemens_ParseString"(diOffset := #diPos, diNewOffset => #diNewPos, sValue => #sValue, stSql4SiemensInterface := #stSql4SiemensInterface);
+	        
+	      // Transitions
+	      IF (#stSql4SiemensInterface.xExecute = FALSE) THEN
+	        #iStep := #ciStep_Reset00;
+	      ELSIF (#xTimeout = TRUE) THEN
+	        #iStep := #ciStep_ErrorTimeout;
+	      ELSIF (#xFound = TRUE) THEN
+	        #stSql4SiemensInterface.adiResponseData[#diRow, #diCol].diOffset := #diPos;
+	        #stSql4SiemensInterface.adiResponseData[#diRow, #diCol].iLength := DINT_TO_INT(#diNewPos - #diPos - 1);
+	        #diPos := #diNewPos;
+	        #diCol := #diCol + 1;
+	        IF (#diCol >= #diResultCols_S) THEN
+	          #diCol := 0;
+	          #diRow := #diRow + 1;
+	          IF (#diRow >= #diResultRows_S) THEN
+	            #tLastRequest := T_DIFF(IN1 := #tFbEntry, IN2 := #tRequestStart);
+	            #iStep := #ciStep_Done;
+	          END_IF;
+	        END_IF;
+	      ELSE
+	        #xFbExit := TRUE;
+	      END_IF;
+	      
+	    #ciStep_Done:
+	      // Actions
+	      #xTsendReq := FALSE;
+	      IF (#stSql4SiemensInterface.xHoldConnection = FALSE) THEN
+	        #xTsendCont := FALSE;
+	        #xTrcvEnR := FALSE;
+	      END_IF;
+	      #stSql4SiemensInterface.xBusy := FALSE;
+	      #stSql4SiemensInterface.xDone := TRUE;
+	      
+	      // Transitions
+	      #xFbExit := TRUE;
+	      IF (#stSql4SiemensInterface.xExecute = FALSE) THEN
+	        #iStep := #ciStep_Reset00;
+	      END_IF;
+	      
+	    #ciStep_Error:
+	      // Actions
+	      #stSql4SiemensInterface.xBusy := FALSE;
+	      #stSql4SiemensInterface.xError := TRUE;
+	      
+	      // Transitions
+	      #xFbExit := TRUE;
+	      IF (#stSql4SiemensInterface.xExecute = FALSE) THEN
+	        #iStep := #ciStep_Reset00;
+	      END_IF;
+	      
+	    #ciStep_ErrorIP:
+	      // Actions
+	      #stSql4SiemensInterface.xBusy := FALSE;
+	      #stSql4SiemensInterface.xError := TRUE;
+	      #diResultState_S := 21;
+	      
+	      // Transitions
+	      #xFbExit := TRUE;
+	      IF (#stSql4SiemensInterface.xExecute = FALSE) THEN
+	        #iStep := #ciStep_Reset00;
+	      END_IF;
+	      
+	    #ciStep_ErrorPort:
+	      // Actions
+	      #stSql4SiemensInterface.xBusy := FALSE;
+	      #stSql4SiemensInterface.xError := TRUE;
+	      #diResultState_S := 22;
+	      
+	      // Transitions
+	      #xFbExit := TRUE;
+	      IF (#stSql4SiemensInterface.xExecute = FALSE) THEN
+	        #iStep := #ciStep_Reset00;
+	      END_IF;
+	      
+	    #ciStep_ErrorReq:
+	      // Actions
+	      #stSql4SiemensInterface.xBusy := FALSE;
+	      #stSql4SiemensInterface.xError := TRUE;
+	      #diResultState_S := 23;
+	      
+	      // Transitions
+	      #xFbExit := TRUE;
+	      IF (#stSql4SiemensInterface.xExecute = FALSE) THEN
+	        #iStep := #ciStep_Reset00;
+	      END_IF;
+	      
+	    #ciStep_ErrorMaxRows:
+	      // Actions
+	      #stSql4SiemensInterface.xBusy := FALSE;
+	      #stSql4SiemensInterface.xError := TRUE;
+	      #diResultState_S := 24;
+	      
+	      // Transitions
+	      #xFbExit := TRUE;
+	      IF (#stSql4SiemensInterface.xExecute = FALSE) THEN
+	        #iStep := #ciStep_Reset00;
+	      END_IF;
+	      
+	    #ciStep_ErrorMaxCols:
+	      // Actions
+	      #stSql4SiemensInterface.xBusy := FALSE;
+	      #stSql4SiemensInterface.xError := TRUE;
+	      #diResultState_S := 25;
+	      
+	      // Transitions
+	      #xFbExit := TRUE;
+	      IF (#stSql4SiemensInterface.xExecute = FALSE) THEN
+	        #iStep := #ciStep_Reset00;
+	      END_IF;
+	      
+	    #ciStep_ErrorMaxStringLen:
+	      // Actions
+	      #stSql4SiemensInterface.xBusy := FALSE;
+	      #stSql4SiemensInterface.xError := TRUE;
+	      #diResultState_S := 29;
+	      
+	      // Transitions
+	      #xFbExit := TRUE;
+	      IF (#stSql4SiemensInterface.xExecute = FALSE) THEN
+	        #iStep := #ciStep_Reset00;
+	      END_IF;
+	      
+	    #ciStep_ErrorSend:
+	      // Actions
+	      #stSql4SiemensInterface.xBusy := FALSE;
+	      #stSql4SiemensInterface.xError := TRUE;
+	      #diResultState_S := 51;
+	      
+	      // Transitions
+	      #xFbExit := TRUE;
+	      IF (#stSql4SiemensInterface.xExecute = FALSE) THEN
+	        #iStep := #ciStep_Reset00;
+	      END_IF;
+	      
+	    #ciStep_ErrorTimeout:
+	      // Actions
+	      #stSql4SiemensInterface.xBusy := FALSE;
+	      #stSql4SiemensInterface.xError := TRUE;
+	      #diResultState_S := 91;
+	      
+	      // Transitions
+	      #xFbExit := TRUE;
+	      IF (#stSql4SiemensInterface.xExecute = FALSE) THEN
+	        #iStep := #ciStep_Reset00;
+	      END_IF;
+	      
+	    #ciStep_ErrorParse:
+	      // Actions
+	      #stSql4SiemensInterface.xBusy := FALSE;
+	      #stSql4SiemensInterface.xError := TRUE;
+	      #diResultState_S := 95;
+	      
+	      // Transitions
+	      #xFbExit := TRUE;
+	      IF (#stSql4SiemensInterface.xExecute = FALSE) THEN
+	        #iStep := #ciStep_Reset00;
+	      END_IF;
+	      
+	    #ciStep_Reset00:
+	      // Reset signals
+	      #xTsendReq := FALSE;
+	      IF (#stSql4SiemensInterface.xHoldConnection = FALSE) THEN
+	        #xTsendCont := FALSE;
+	        #xTrcvEnR := FALSE;
+	      END_IF;
+	      #diRow := 0;
+	      #iStep := #ciStep_Reset01;
+	      
+	    #ciStep_Reset01:
+	      // Reset return parameters
+	      IF (#diRow < #stSql4SiemensInterface.cdiResponseReturnParamSize) THEN
+	        #stSql4SiemensInterface.adiResponseReturnParam[#diRow].diOffset := 0;
+	        #stSql4SiemensInterface.adiResponseReturnParam[#diRow].iLength := 0;
+	        #diRow := #diRow + 1;
+	      ELSE
+	        #diRow := 0;
+	        #iStep := #ciStep_Reset02;
+	      END_IF;
+	      
+	    #ciStep_Reset02:
+	      // Reset column names
+	      IF (#diRow < #stSql4SiemensInterface.cdiResponseColumnSize) THEN
+	        #stSql4SiemensInterface.adiResponseColumnName[#diRow].diOffset := 0;
+	        #stSql4SiemensInterface.adiResponseColumnName[#diRow].iLength := 0;
+	        #diRow := #diRow + 1;
+	      ELSE
+	        #diRow := 0;
+	        #iStep := #ciStep_Reset03;
+	      END_IF;
+	      
+	    #ciStep_Reset03:
+	      // Reset data fields
+	      IF (#diRow < #stSql4SiemensInterface.cdiResponseRowSize) THEN
+	        #stSql4SiemensInterface.adiResponseData[#diRow, #diCol].diOffset := 0;
+	        #stSql4SiemensInterface.adiResponseData[#diRow, #diCol].iLength := 0;
+	        #diCol := #diCol + 1;
+	        IF (#diCol >= #stSql4SiemensInterface.cdiResponseColumnSize) THEN
+	          #diCol := 0;
+	          #diRow := #diRow + 1;
+	        END_IF;
+	      ELSE
+	        #iStep := #ciStep_Inactive;
+	      END_IF;
+	  END_CASE;
+	  
+	  // Check exit condition
+	  #iRet := RD_LOC_T(#tCurrentTimestamp);
+	  #tCurrentExec := T_DIFF(IN1 := #tCurrentTimestamp, IN2 := #tFbEntry);
+	  IF (#tCurrentExec >= #tFbExecTimeLimit) THEN
+	    #xFbExit := TRUE;
+	  END_IF;
+	END_WHILE;
+	
+	// Store the maximum execution time
+	IF (#tCurrentExec > #tFbExecTimeMax_S) THEN
+	  #tFbExecTimeMax_S := #tCurrentExec;
+	END_IF;
+	
+	// Write output values
+	#stSql4SiemensInterface.diResultState := #diResultState_S;
+	#stSql4SiemensInterface.diResultReturnParams := #diResultReturnParams_S;
+	#stSql4SiemensInterface.diResultRows := #diResultRows_S;
+	#stSql4SiemensInterface.diResultColumns := #diResultCols_S;
+	#tFbExecTimeMax := #tFbExecTimeMax_S;
+	
+END_FUNCTION_BLOCK
+

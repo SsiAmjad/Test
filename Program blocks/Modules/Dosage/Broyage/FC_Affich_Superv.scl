@@ -1,0 +1,62 @@
+﻿FUNCTION "FC_Affich_Superv" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Broyeur : "S_Broyage";
+   END_VAR
+
+   VAR_TEMP 
+      var_real : Real;
+   END_VAR
+
+
+BEGIN
+	// #Broyeur.Affich_Superv.Attaque_Ar
+	// #Broyeur.Affich_Superv.Attaque_Av
+	// #Broyeur.Affich_Superv.Degagement_Ar
+	// #Broyeur.Affich_Superv.Degagement_Av
+	#Broyeur.Affich_Superv.Charge := (#Broyeur.EAI_Broy/#Broyeur.Intens_Nominale)*100;
+	// #Broyeur.Affich_Superv.Consigne := #Broyeur.Cons_Charge;
+	#Broyeur.Cons_Charge := #Broyeur.Affich_Superv.Consigne;
+	
+	#Broyeur.Affich_Superv.Consigne_I := (#Broyeur.Cons_Charge * #Broyeur.Intens_Nominale)/100;
+	#Broyeur.Affich_Superv.Consigne_Vit_Broy := #Broyeur.Cons_Vit_Br;
+	// #Broyeur.Affich_Superv.Cumul:=;
+	//#Broyeur.Affich_Superv.E_Vit_Broy := #Broyeur.SAV_Broy;
+	#Broyeur.Affich_Superv.Energie := #Broyeur.Energie;
+	#Broyeur.Affich_Superv.Intensité := #Broyeur.EAI_Broy;
+	// #Broyeur.Affich_Superv.Profil:=;
+	// #Broyeur.Affich_Superv.Puissance:=;
+	// #Broyeur.Affich_Superv.Qte_Br:=#Broyeur.;
+	// #Broyeur.Affich_Superv.Qte_Marteaux:=;
+	// #Broyeur.Affich_Superv.Qte_Marteaux_Sens_Ar:=;
+	// #Broyeur.Affich_Superv.Qte_Marteaux_Sens_Av:=;
+	// #Broyeur.Affich_Superv.Qte_Sens_Ar:=;
+	// #Broyeur.Affich_Superv.Qte_Sens_Av:=;
+	#Broyeur.Affich_Superv.Regul := #Broyeur.Regul_Alim.Desc_Etape;
+	#Broyeur.Affich_Superv.Sens_Ar := #Broyeur.E_Sens_AR;
+	#Broyeur.Affich_Superv.Sens_Av := #Broyeur.E_Sens_AV;
+	// #Broyeur.Affich_Superv.Tps_Br:=;
+	// #Broyeur.Affich_Superv.Tps_Br_Lot:=;
+	// #Broyeur.Affich_Superv.Tps_Marteaux:=;
+	// #Broyeur.Affich_Superv.Tps_Marteaux_Sens_Ar:=;
+	// #Broyeur.Affich_Superv.Tps_Marteaux_Sens_Av:=;
+	// #Broyeur.Affich_Superv.Tps_Sens_Ar:=;
+	// #Broyeur.Affich_Superv.Tps_Sens_Av:=;
+	// #Broyeur.Affich_Superv.Qte_Sens_Ar:=;
+	// #Broyeur.Affich_Superv.Qte_Sens_Av:=;
+	IF #Broyeur.Regul_Alim.Mode_Manu THEN
+	    #Broyeur.Regul_Alim.SA := #Broyeur.Affich_Superv.E_Vit_Alim;
+	    #Broyeur.SAV_Broy := #Broyeur.Affich_Superv.E_Vit_Broy;
+	ELSE
+	    #Broyeur.Affich_Superv.E_Vit_Alim := #Broyeur.Regul_Alim.SA ;
+	    #Broyeur.SAV_Broy := REAL_TO_USINT(100 * UINT_TO_REAL(#Broyeur.Affich_Superv.Consigne_Vit_Broy) / #Broyeur.Vit_Max_Broy);
+	    #Broyeur.Affich_Superv.E_Vit_Broy := #Broyeur.SAV_Broy;
+	END_IF;
+	#Broyeur.Affich_Superv.Vit_Broy := #Broyeur.EAV_Broy;
+	#Broyeur.Affich_Superv.HS:= #Broyeur.HS;
+	#Broyeur.Affich_Superv.HS_Diff:= #Broyeur.HS_Diff;
+	#Broyeur.Regul_Alim.Mode_Manu := #Broyeur.Affich_Superv.Manu;
+	// #Broyeur.Affich_Superv.Arret:=;
+END_FUNCTION
+

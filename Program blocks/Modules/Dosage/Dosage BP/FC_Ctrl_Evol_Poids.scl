@@ -1,0 +1,27 @@
+﻿FUNCTION "FC_Ctrl_Evol_Poids" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Benne : "S_Benne";
+   END_VAR
+
+   VAR_TEMP 
+      Ret_RD_SYS_T : Int;
+   END_VAR
+
+
+BEGIN
+	IF (#Benne.Poids_Net - #Benne.Poids_Memo) <= #Benne.Pas_Min THEN
+	    #FC_Ctrl_Evol_Poids := FALSE;
+	    RETURN;
+	END_IF;
+	// Reprise du poids memo pour le prochain controle
+	#Benne.Poids_Memo := #Benne.Poids_Net;
+	// Reprise du temps picke pour le prochain controle
+	#Ret_RD_SYS_T := RD_SYS_T(#Benne.Tps_Picke);
+	// RAZ du nombre de relances en cours 
+	#Benne.Nbr_Relance_Enc := 0;
+	#FC_Ctrl_Evol_Poids := TRUE;
+	RETURN;
+END_FUNCTION
+

@@ -1,0 +1,70 @@
+﻿FUNCTION "TRAIT_Ensachage" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Fg_Base : Bool;
+   END_VAR
+
+   VAR_IN_OUT 
+      TraitEnsa : Struct
+         Etape : SInt;
+         EtapeMemo : SInt;
+         EtpPrec : SInt;
+         TpsPicke : Date_And_Time;
+      END_STRUCT;
+   END_VAR
+
+   VAR_TEMP 
+      Ret_Sint : SInt;
+   END_VAR
+
+
+BEGIN
+	(*
+	CASE #TraitEnsa.Etape OF
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                        ╔════════════════════════════════════╗
+	                                                                        ║               REPOS                ║
+	                                                                        ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	    0:
+	        REGION traitement preliminaire 'Repos'
+	            IF (#TraitEnsa.Etape <> #TraitEnsa.EtpPrec) THEN
+	                #TraitEnsa.EtpPrec := #TraitEnsa.Etape;
+	            END_IF;
+	        END_REGION traitement preliminaire 'Repos'
+	        REGION traitement cyclique 'Repos'
+	            //Recherche zone de suivi lot
+	            
+	            #Ret_Sint := "Rech_Zone_Suivi_Libre"(zone);
+	            IF #Ret_Sint = 1 THEN
+	                #TraitEnsa.Etape := 1;
+	            END_IF;
+	            
+	            
+	        END_REGION traitement cyclique 'Repos'
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                             ╔════════════════════════════════════╗
+	                                                                             ║               REPOS                ║
+	                                                                             ╚════════════════════════════════════╝
+	*************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	    0:
+	        REGION traitement preliminaire 'Repos'
+	            IF (#TraitEnsa.Etape <> #TraitEnsa.EtpPrec) THEN
+	                #TraitEnsa.EtpPrec := #TraitEnsa.Etape;
+	            END_IF;
+	        END_REGION traitement preliminaire 'Repos'
+	        REGION traitement cyclique 'Repos'
+	            //Recherche zone de suivi lot
+	            
+	            pt_zs = &Pt_Suiv_Ens->Tab_Lots[_ni];
+	            
+	            
+	        END_REGION traitement cyclique 'Repos'     
+	        *)
+END_FUNCTION
+

@@ -1,0 +1,2919 @@
+﻿FUNCTION "TempoMobiles" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_TEMP 
+      index : USInt;
+   END_VAR
+
+
+BEGIN
+	(*      
+	           ╔═══════════╗
+	           ║    T01    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++00++++++++++++++++++++++++++++++\\
+	//
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'T01';
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#10s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    T02    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++01++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'T02';"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#10s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    T03    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++02++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'T03';
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#10s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	
+	(*      
+	           ╔═══════════╗
+	           ║    T04    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++03++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'T04';"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#10s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    T06    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++04++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'T06';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#10s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    T07    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++05++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'T07';"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#10s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    T09    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++06++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'T09';"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#10s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    T10    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++07++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'T10';"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#10s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    T11    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++08++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'T11';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#10s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    T12    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++09++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'T12';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#10s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    T13    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++10++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'T13';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#10s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    T63    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++11++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'T63';"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#10s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║     E1    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++12++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'E1';
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#10s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    T08    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++13++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'T08';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#10s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║     E4    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++14++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'E4';
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#10s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║     E5    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++15++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'E5';
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#10s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    DR01   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++16++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'DR01';                                  //NOEUD
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#5s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    DR02   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++17++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'DR02';                                  //NOEUD
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#5s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    S01    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++18++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'S01';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    S02    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++19++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'S02';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    S03    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++20++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'S03';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    S04    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++21++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'S04';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    S05    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++22++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'S05';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    S06    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++23++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'S06';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	
+	(*      
+	           ╔═══════════╗
+	           ║    S11    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++24++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'S11';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    S12    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++25++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'S12';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    S13    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++26++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'S13';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    S14    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++27++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'S14';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    S15    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++28++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'S15';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    S16    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++29++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'S16';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    S17    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++30++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'S17';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    S18    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++31++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'S18';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    S19    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++32++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'S19';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    S20    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++33++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'S20';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    S30    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++34++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'S30';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    S31    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++35++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'S31';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    S32    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++36++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'S32';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    S33    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++37++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'S33';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    S34    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++38++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'S34';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    S35    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++39++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'S35';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    S36    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++40++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'S36';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    S37    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++41++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'S37';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    S38    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++42++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'S38';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    S39    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++43++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'S39';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    S40    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++44++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'S40';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    S41    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++45++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'S41';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  Fosse01  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++46++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'Fosse01';
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  Fosse03  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++47++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'Fosse03';
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  Fosse04  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++48++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'Fosse04';"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	
+	(*      
+	           ╔═══════════╗
+	           ║   B2DE1   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++49++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'B2DE1';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;//Entrées
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TR4T09  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++50++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TR4T09';
+	//
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   B2DE4   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++51++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'B2DE4';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;//Entrées
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   BD2E4   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++52++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BD2E4';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;//Entrées
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TR1T02  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++53++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TR1T02';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TR2T02  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++54++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TR2T02';
+	//
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TR1T03  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++55++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TR1T03';
+	
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TR2T03  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++56++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TR2T03';
+	
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TR3T03  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++57++++++++++++++++++++++++++++++\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TR3T03';
+	
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TR1T04  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++58++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TR1T04';
+	//
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TR2T04  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++59++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TR2T04';
+	//
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TR3T04  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++60++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TR3T04';
+	//
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TR2T63  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++61++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TR2T63';
+	//
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TR1T13  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++62++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TR1T13';
+	//
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TR2T13  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++63++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TR2T13';
+	//
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TR1T07  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++64++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TR1T07';
+	//
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TR1T08  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++65++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TR1T08';
+	//
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TR2T08  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++66++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TR2T08';
+	//
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TR3T08  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++67++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TR3T08';
+	//
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TR1T10  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++68++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TR1T10';
+	//
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TR2T10  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++69++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TR2T10';
+	//
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TR1T09  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++70++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TR1T09';
+	//
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TR2T09  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++71++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TR2T09';
+	//
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TR3T09  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++72++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TR3T09';
+	//
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    S21    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++73++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'S21';
+	//(* "DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	
+	(*      
+	           ╔═══════════╗
+	           ║    S22    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++74++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'S22';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    S23    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++75++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'S23';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    S24    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++76++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'S24';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    B01    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++77++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'B01';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    B02    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++78++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'B02';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  Fosse02  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++79++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'Fosse02';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    TR10   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++80++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TR10';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#10s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    ER10   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++81++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'ER10';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#10s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    EVS10  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++82++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'EVS10';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#10s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  BD1ER10  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++83++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BD1ER10';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;//Entrées
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  BD2ER10  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++84++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BD2ER10';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;//Entrées
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  BD1EVS10 ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++85++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BD1EVS10';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;//Entrées
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  BD2EVS10 ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++86++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BD2EVS10';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;//Entrées
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    TR11   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++87++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TR11';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#10s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TR1TR11 ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++88++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TR1TR11';
+	//
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TR2TR11 ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++89++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TR2TR11';
+	//
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  BD1TR11  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++90++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BD1TR11';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;//Entrées
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  BD2TR11  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++91++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BD2TR11';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;//Entrées
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    TR12   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++92++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TR12';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#10s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    TR13   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++93++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TR13';"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#10s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   VAS21   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++94++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'VAS21';
+	//
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	
+	(*      
+	           ╔═══════════╗
+	           ║   VAS22   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++95++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'VAS22';
+	//
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   VAS23   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++96++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'VAS23';
+	//
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   VAS24   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++97++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'VAS24';
+	//
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TVS22   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++98++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TVS22';"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#10s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TVS24   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++99++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TVS24';"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#10s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TVS212  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++100++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TVS212';"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#10s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TVS20   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++101++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TVS20';"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#10s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  TR1TVS20 ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++102++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TR1TVS20';
+	//
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  TR2TVS20 ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++103++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TR2TVS20';
+	//
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  TR1T63   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++104++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TR1T63';
+	//
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  VisS21   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++105++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'VisS21';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;// Entrées avant pos
+	
+	#index := #index + 1;
+	(*
+	           ╔═══════════╗
+	           ║  VisS22   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++106++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'VisS22';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  VisS23   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++107++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'VisS23';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  VisS24   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++108++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'VisS24';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    BV01   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++109++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BV01';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TRBV01  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++110++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TRBV01';
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Asservi := FALSE;"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    BV02   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++111++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BV02';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TRBV02  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++112++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TRBV02';
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Asservi := FALSE;"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    BV03   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++113++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BV03';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TRBV03  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++114++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TRBV03';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Asservi := FALSE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    BV04   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++115++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BV04';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TRBV04  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++116++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TRBV04';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Asservi := FALSE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    BV05   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++117++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BV05';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TRBV05  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++118++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TRBV05';
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Asservi := FALSE;"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    BV06   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++119++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BV06';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TRBV06  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++120++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TRBV06';
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Asservi := FALSE;"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    BV07   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++121++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BV07';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TRBV07  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++122++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TRBV07';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Asservi := FALSE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    BV08   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++123++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BV08';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TRBV08  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++124++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TRBV08';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Asservi := FALSE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    BV09   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++125++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BV09';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TRBV09  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++126++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TRBV09';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Asservi := FALSE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    BV10   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++127++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BV10';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TRBV10  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++128++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TRBV10';
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Asservi := FALSE;"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	
+	(*      
+	           ╔═══════════╗
+	           ║    BV11   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++129++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BV11';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TRBV11  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++130++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TRBV11';
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Asservi := FALSE;"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    BV12   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++131++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BV12';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   TRBV12  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++132++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TRBV12';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Asservi := FALSE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    MG1    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++133++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'MG1';"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	(*      
+	           ╔═══════════╗
+	           ║    BT01   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++134++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BT01';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	(*      
+	           ╔═══════════╗
+	           ║    BT02   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++135++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BT02';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	(*      
+	           ╔═══════════╗
+	           ║    BT03   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++136++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BT03';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	(*      
+	           ╔═══════════╗
+	           ║    BT04   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++137++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BT04';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	(*      
+	           ╔═══════════╗
+	           ║    BT06   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++138++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BT06';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	(*      
+	           ╔═══════════╗
+	           ║    BT07   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++139++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BT07';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	(*      
+	           ╔═══════════╗
+	           ║    BT08   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++140++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BT08';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	(*      
+	           ╔═══════════╗
+	           ║    BT09   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++141++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BT09';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	(*      
+	           ╔═══════════╗
+	           ║    BT10   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++142++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BT10';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	(*      
+	           ╔═══════════╗
+	           ║    BT11   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++143++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BT11';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	(*      
+	           ╔═══════════╗
+	           ║    BT12   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++144++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BT12';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	(*      
+	           ╔═══════════╗
+	           ║    BT13   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++145++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BT13';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	(*      
+	           ╔═══════════╗
+	           ║    BT14   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++146++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BT14';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	(*      
+	           ╔═══════════╗
+	           ║    BT15   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++147++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BT15';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	(*      
+	           ╔═══════════╗
+	           ║    BT16   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++148++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BT16';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	(*      
+	           ╔═══════════╗
+	           ║    BT17   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++149++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BT17';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	(*      
+	           ╔═══════════╗
+	           ║    BT18   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++150++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BT18';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	(*      
+	           ╔═══════════╗
+	           ║    BT19   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++151++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BT19';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	(*      
+	           ╔═══════════╗
+	           ║    BT20   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++152++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BT20';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	(*      
+	           ╔═══════════╗
+	           ║    BT21   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++153++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BT21';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	(*      
+	           ╔═══════════╗
+	           ║  TRPBT01  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++154++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TRPBT01';
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Asservi := FALSE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  TRPBT02  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++155++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TRPBT02';
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Asservi := FALSE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  TRPBT03  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++156++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TRPBT03';
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Asservi := FALSE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  TRPBT04  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++157++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TRPBT04';
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Asservi := FALSE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  TRPBT06  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++158++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TRPBT06';
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Asservi := FALSE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  TRPBT07  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++159++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TRPBT07';
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Asservi := FALSE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  TRPBT08  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++160++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TRPBT08';
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Asservi := FALSE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  TRPBT09  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++161++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TRPBT09';
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Asservi := FALSE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  TRPBT10  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++162++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TRPBT10';
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Asservi := FALSE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  TRPBT11  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++163++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TRPBT11';
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Asservi := FALSE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  TRPBT12  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++164++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TRPBT12';
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Asservi := FALSE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  TRPBT13  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++165++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TRPBT13';
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Asservi := FALSE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  TRPBT14  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++166++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TRPBT14';
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Asservi := FALSE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  TRPBT15  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++167++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TRPBT15';
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Asservi := FALSE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  TRPBT16  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++168++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TRPBT16';
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Asservi := FALSE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  TRPBT17  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++169++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TRPBT17';
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Asservi := FALSE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  TRPBT18  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++170++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TRPBT18';
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Asservi := FALSE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  TRPBT19  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++171++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TRPBT19';
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Asservi := FALSE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  TRPBT20  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++172++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TRPBT20';
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Asservi := FALSE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  TRPBT21  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++173++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TRPBT21';
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tjr_Desasservi := TRUE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Asservi := FALSE;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  TRP1T51  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++174++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TRP1T51';
+	
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  TRP1T47  ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++175++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TRP1T47';
+	
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    E23    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++176++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'E23';
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#10s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    E25    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++177++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'E25';
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#10s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   BDE23   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++178++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'BDE23';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;//Entrées
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║   B1E25   ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++179++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'B1E25';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;//Entrées
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    T45    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++180++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'T45';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#10s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    T46    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++181++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'T46';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#10s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    T47    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++182++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'T47';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#10s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    T50    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++183++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'T50';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#10s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    T51    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++184++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'T51';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#10s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║    T53    ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++185++++++++++++++++++++++++++++++\\
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'T53';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#4s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#10s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  TRM_ENS1 ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++186++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TRM_ENS1';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	(*      
+	           ╔═══════════╗
+	           ║  TRM_ENS2 ║
+	           ╚═══════════╝
+	*)
+	//++++++++++++++++++++++187++++++++++++++++++++++++++++++\\
+	
+	"DB_BIBLIOTHEQUE".Mobile[#index].Nom := 'TRM_ENS2';
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Asserv := t#1s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Att := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Arr := t#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Vid := T#0s;
+	"DB_BIBLIOTHEQUE".Mobile[#index].Tps_Chang_Pos := T#0s;
+	
+	#index := #index + 1;
+	
+	
+	
+	
+	
+	
+	//Renseingnement Deport de Bande et intensite  
+	(* "DB_DeportBande"."THIS"[0]._DBBD := "E1_DBBD";
+	"DB_DeportBande"."THIS"[0]._DBBG := "E1_DBBG";
+	"DB_DeportBande"."THIS"[0]._DBHD := "E1_DBHD";
+	"DB_DeportBande"."THIS"[0]._DBHG := "E1_DBHG"; *)
+	// "DB_CntrlInt"."THIS"[0]._Amperage := "E1_I";(* "DB_DeportBande"."THIS"[2]._DBBD := "E4_DBBD";
+	// "DB_DeportBande"."THIS"[2]._DBBG := "E4_DBBG";
+	// "DB_DeportBande"."THIS"[2]._DBHD := "E4_DBHD";
+	// "DB_DeportBande"."THIS"[2]._DBHG := "E4_DBHG";
+	// "DB_CntrlInt"."THIS"[0]._Amperage := "E4_I";
+	
+	(* "DB_DeportBande"."THIS"[3]._DBBD := "E5_DBBD";
+	"DB_DeportBande"."THIS"[3]._DBBG := "E5_DBBG";
+	"DB_DeportBande"."THIS"[3]._DBHD := "E5_DBHD";
+	"DB_DeportBande"."THIS"[3]._DBHG := "E5_DBHG"; *)
+	// "DB_CntrlInt"."THIS"[0]._Amperage := "E5_I";(* "DB_BIBLIOTHEQUE".Mobile[#index].Tps_Max_Mar_Forc := T#50s;//fosse01
+	 
+END_FUNCTION
+

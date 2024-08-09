@@ -1,0 +1,67 @@
+﻿FUNCTION "Proc_MajStock" : String
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      ChPont : "S_ChargPont";
+      Typemouvement : String;
+   END_VAR
+
+   VAR_OUTPUT 
+      Err_Sql : String;
+      Msg_Def : String;
+   END_VAR
+
+   VAR_TEMP 
+      parameters_value : Array[0..20] of String;
+      Resultat_Decode : WString[4000];
+      status : Int;
+      Temp_Reel : Real;
+   END_VAR
+
+
+BEGIN
+	//Insertion des parametres 
+	#parameters_value[0] := UINT_TO_STRING("Num_Poste");
+	#parameters_value[1] := ULINT_TO_STRING(#ChPont._Commande._IdComLig);
+	#parameters_value[2] := ULINT_TO_STRING(#ChPont._Commande._IdLigOrig);
+	//#Temp_Reel := #ChPont._ChargCommun._Vbasc - #ChPont._Commande._QteTare - #ChPont._Commande._QteChOrig;
+	#parameters_value[3] :=REAL_TO_STRING(#ChPont._Commande._QteChOrig);
+	#parameters_value[4] := REAL_TO_STRING(#ChPont._Commande._TareCel);
+	//#parameters_value[4] :=  REAL_TO_STRING(#ChPont._Commande._QteTare);
+	#parameters_value[5] := REAL_TO_STRING(#ChPont._Commande._QteBrut);
+	#parameters_value[6] := ULINT_TO_STRING(TIME_TO_ULINT(T#1m));
+	#parameters_value[7] := REAL_TO_STRING(#ChPont._Commande._ChuteCel);
+	#parameters_value[8] :=#ChPont._Commande._NoLot;
+	#parameters_value[9] := #Typemouvement;
+	
+	
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	
+	#Resultat_Decode := "COMBASE"(procedure_name := '"EXP".sp_exp_updstock',
+	                              values_of_record := #parameters_value,
+	                              parameters_number := 10,
+	                              ERROR_MESSAGE => #Err_Sql);
+	
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := 'REPONSE:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Proc_MajStock);
+	
+	IF #Proc_MajStock = 'NOK' THEN
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := 'MESS:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Msg_Def);
+	    RETURN;
+	ELSIF #Proc_MajStock = 'OK' THEN
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := 'MESS:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Msg_Def);
+	    IF #Msg_Def = 'VIDE' THEN
+	        RETURN;
+	    END_IF;
+	ELSE
+	    RETURN;
+	END_IF;
+END_FUNCTION
+

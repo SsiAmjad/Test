@@ -1,0 +1,51 @@
+﻿FUNCTION "ArretExt" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Origine : Int;
+   END_VAR
+
+   VAR_TEMP 
+      Ret_String : String;
+      Ret_Int : Int;
+      Cellule : Bool;
+      i : USInt;
+      j : USInt;
+      k : USInt;
+      Extract : Int;
+      NmbPos : USInt;
+      PosActuel : USInt;
+      Ret_Sint : SInt;
+   END_VAR
+
+
+BEGIN
+	//Origine : cellule d'origine  ou bien le mobile extracteur
+	
+	//Je cherche si l'origine est de type cellule 
+	#Ret_String := "Nom_Mobile"(#Origine);
+	IF #Ret_String <> '' THEN
+	    #Ret_Int := "RechIndexCel"(#Ret_String);
+	END_IF;
+	//Je teste si le mobile est de type cellule pour lancer le dmarrage sur les extracteurs de la cellule sinon je demarre le mobile 
+	IF #Ret_Int > -1 AND #Ret_Int <= "NB_CEL_MAX" THEN
+	    #Cellule := TRUE;
+	ELSE
+	    #Cellule := FALSE;
+	END_IF;
+	//Cas d'une cellule
+	IF #Cellule THEN
+	    FOR #i := 0 TO "NB_MOB_EXT" DO
+	        #Extract := "DB_Mod_Cellule"._TabCel[#Ret_Int]._Extrac[#i]._IndexMob;
+	        IF NOT "Valid_Index"(#Extract) THEN
+	            EXIT;
+	        ELSE
+	            #Ret_Sint :="Arr_Imm_Mobile"(#Extract);
+	        END_IF;
+	    END_FOR;
+	ELSE
+	    #Ret_Sint := "Arr_Imm_Mobile"(#Origine);
+	END_IF;
+	
+END_FUNCTION
+

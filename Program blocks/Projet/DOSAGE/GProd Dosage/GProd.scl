@@ -1,0 +1,1165 @@
+﻿FUNCTION_BLOCK "GProd"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Fg_Base { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+   END_VAR
+
+   VAR RETAIN
+      Gprod { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'; S7_SetPoint := 'False'} : "Gproduct";
+   END_VAR
+   VAR 
+      index_Compo { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : SInt;
+      Qte_SBP5 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Real;
+      Qte_SBP4 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Real;
+      Qte_SBP3 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Real;
+      Qte_SBP2 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Real;
+      Qte_SBP1 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Real;
+   END_VAR
+
+   VAR_TEMP 
+      Ret_RD_SYS_T : Int;
+      Tps_Act : Date_And_Time;
+      Ret : SInt;
+      Ret_Maj_Activ : SInt;
+      i : USInt;
+      Text_Def : String;
+      Tol_Inf : String;
+      Tol_Sup : String;
+      Tps_Passe : Time;
+      Niv_Fin_Lot : USInt;
+      Msg_Def : String;
+      Ret_Proc_Rech_Dos : String;
+      Ret_Proc_Param_Auto : String;
+      Ret_Proc_Lanc_Fab : String;
+      Ret_Proc_Annul_Fab : String;
+      Err_Sql : String;
+      Mess_Def : String;
+      Aff_Def : Bool;
+      Qte_Tot : Real;
+      S_Poids_Lot : String;
+      S_Qte_Tot : String;
+      Num_Zone : SInt;
+      Niv_Tac : USInt;
+   END_VAR
+
+   VAR CONSTANT 
+      Rech_Zone_Libre : SInt := 0;
+      Controle_Donnees : SInt := 1;
+      Lanc_Boucles : SInt := 2;
+      Annul_Lot : SInt := 3;
+      Att_Fin_Lot_BP : SInt := 4;
+      Att_Acquitement : SInt := 5;
+   END_VAR
+
+
+BEGIN
+	#Ret_RD_SYS_T := RD_SYS_T(#Tps_Act);
+	//******************************************************************************************************//
+	IF ("Test_Lot_Att_Tache"(Num_Tache := "TAC_BR1", Num_Zone => #Num_Zone) = 1) OR ("Test_Niv"(Num_Tache := "TAC_BR1", Num_Zone := #Gprod.NumZone, Niveau := "NIV_BR_FIN_LOT", Niveau_Tache => #Niv_Tac) <> 1) THEN
+	    IF "Valid_Index"("DB_Dosage".BR[0].Mob_Broyeur) THEN
+	        "DB_BIBLIOTHEQUE".Mobile["DB_Dosage".BR[0].Mob_Broyeur].HORS_SERVICE := FALSE;
+	    END_IF;
+	    IF "Valid_Index"("DB_Dosage".BR[1].Mob_Broyeur) THEN
+	        "DB_BIBLIOTHEQUE".Mobile["DB_Dosage".BR[1].Mob_Broyeur].HORS_SERVICE := TRUE;
+	    END_IF;
+	END_IF;
+	IF ("Test_Lot_Att_Tache"(Num_Tache := "TAC_BR2", Num_Zone => #Num_Zone) = 1) OR ("Test_Niv"(Num_Tache := "TAC_BR2", Num_Zone := #Gprod.NumZone, Niveau := "NIV_BR_FIN_LOT", Niveau_Tache => #Niv_Tac) <> 1) THEN
+	    IF "Valid_Index"("DB_Dosage".BR[1].Mob_Broyeur) THEN
+	        "DB_BIBLIOTHEQUE".Mobile["DB_Dosage".BR[1].Mob_Broyeur].HORS_SERVICE := FALSE;
+	    END_IF;
+	    IF "Valid_Index"("DB_Dosage".BR[0].Mob_Broyeur) THEN
+	        "DB_BIBLIOTHEQUE".Mobile["DB_Dosage".BR[0].Mob_Broyeur].HORS_SERVICE := TRUE;
+	    END_IF;
+	END_IF;
+	
+	IF ("Test_Lot_Att_Tache"(Num_Tache := "TAC_MELANG1", Num_Zone => #Num_Zone) = 1) OR ("Test_Niv"(Num_Tache := "TAC_MELANG1", Num_Zone := #Gprod.NumZone, Niveau := "NIV_BR_FIN_LOT", Niveau_Tache => #Niv_Tac) <> 1) THEN
+	    IF "Valid_Index"("DB_Dosage".MLG[0].Mob_Melang) THEN
+	        "DB_BIBLIOTHEQUE".Mobile["DB_Dosage".MLG[0].Mob_Melang].HORS_SERVICE := FALSE;
+	    END_IF;
+	    IF "Valid_Index"("DB_Dosage".MLG[1].Mob_Melang) THEN
+	        "DB_BIBLIOTHEQUE".Mobile["DB_Dosage".MLG[1].Mob_Melang].HORS_SERVICE := TRUE;
+	    END_IF;
+	END_IF;
+	IF ("Test_Lot_Att_Tache"(Num_Tache := "TAC_MELANG2", Num_Zone => #Num_Zone) = 1) OR ("Test_Niv"(Num_Tache := "TAC_MELANG2", Num_Zone := #Gprod.NumZone, Niveau := "NIV_BR_FIN_LOT", Niveau_Tache => #Niv_Tac) <> 1) THEN
+	    IF "Valid_Index"("DB_Dosage".MLG[1].Mob_Melang) THEN
+	        "DB_BIBLIOTHEQUE".Mobile["DB_Dosage".MLG[1].Mob_Melang].HORS_SERVICE := FALSE;
+	    END_IF;
+	    IF "Valid_Index"("DB_Dosage".MLG[0].Mob_Melang) THEN
+	        "DB_BIBLIOTHEQUE".Mobile["DB_Dosage".MLG[0].Mob_Melang].HORS_SERVICE := TRUE;
+	    END_IF;
+	END_IF;
+	//******************************************************************************************************//
+	CASE #Gprod.Etp OF
+	    #Rech_Zone_Libre:
+	        REGION Preliminaire Rech Zone Libre
+	            IF #Gprod.Etp <> #Gprod.Etp_Memo THEN
+	                #Gprod.Etp_Prec := #Gprod.Etp;
+	                #Ret_RD_SYS_T := RD_SYS_T(#Gprod.Tps_Picke);
+	                #Gprod.Etp_Memo := #Gprod.Etp;
+	                #Msg_Def := '';
+	            END_IF;
+	        END_REGION Preliminaire Rech Zone Libre
+	        REGION Cyclique Rech Zone Libre
+	            IF NOT "Tempo"(Duree := #Gprod.Tempo_Inter_Rech, Tps_Picke := #Gprod.Tps_Picke, Anticip := FALSE, Tps_Passe => #Tps_Passe) THEN
+	                RETURN;
+	            END_IF;
+	            IF "Rech_Zone_Suivi_Libre"(#Gprod.NumZone) = 1 THEN
+	                IF NOT "dbSql4SiemensInterface".stSql4SiemensInterface.Observer.xTimeout THEN
+	                    #Ret_Proc_Rech_Dos := "Proc_Recherche_Dosage"(Err_Sql => #Err_Sql, Msg_Def => #Msg_Def, Resultat_Decode := "ResultProc".ResulRechInfoZoneREC, Data_Dosage := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]);
+	                ELSE
+	                    "DB_BIBLIOTHEQUE".Zones_Suivi[#Gprod.NumZone].Occupee := FALSE;
+	                    #Ret_RD_SYS_T := RD_SYS_T(#Gprod.Tps_Picke);
+	                    RETURN;
+	                END_IF;
+	                
+	                IF ("dbSql4SiemensInterface".stSql4SiemensInterface.Observer.xTimeout) THEN
+	                    #Mess_Def := 'Connexion avec la base interrompue';
+	                    #Aff_Def := True;
+	                    // ELSIF NOT ((#Ret_Proc_Rech_Dos= 'NOK') OR (#Ret_Proc_Rech_Dos = 'OK')) THEN
+	                    //     #Mess_Def := #Err_Sql;
+	                    //     #Aff_Def := True;
+	                ELSIF #Ret_Proc_Rech_Dos = 'NOK' THEN
+	                    #Mess_Def := #Msg_Def;
+	                    #Aff_Def := True;
+	                END_IF;
+	                IF #Aff_Def THEN
+	                    #Aff_Def := FALSE;
+	                    #Gprod.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base,
+	                                                                    Msg_Defaut := #Mess_Def,
+	                                                                    Type_Defaut := 0,
+	                                                                    Automatisme := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._CdProc,
+	                                                                    Num_Lot := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._NoLot,
+	                                                                    Origine_Defaut := 'GProd',
+	                                                                    Libelle_Origine := 'Proc_Rech_Dos',
+	                                                                    Acq1 := 'Relance',
+	                                                                    Acq2 := '',
+	                                                                    Acq3 := '',
+	                                                                    Acq4 := '',
+	                                                                    Acq5 := '',
+	                                                                    Acq6 := '',
+	                                                                    Acq7 := '',
+	                                                                    Acq8 := '',
+	                                                                    Acq_Choisi := -1,
+	                                                                    Date_Arrivee := #Tps_Act);
+	                    "DB_BIBLIOTHEQUE".Zones_Suivi[#Gprod.NumZone].Occupee := FALSE;
+	                    #Gprod.Etp := #Att_Acquitement;
+	                    RETURN;
+	                END_IF;
+	                IF #Ret_Proc_Rech_Dos = 'OK' THEN
+	                    IF #Msg_Def = 'VIDE' THEN
+	                        "DB_BIBLIOTHEQUE".Zones_Suivi[#Gprod.NumZone].Occupee := FALSE;
+	                        #Ret_RD_SYS_T := RD_SYS_T(#Gprod.Tps_Picke);
+	                        RETURN;
+	                    END_IF;
+	                    #index_Compo := 0;
+	                    #Qte_SBP1 := 0;
+	                    #Qte_SBP2 := 0;
+	                    #Qte_SBP3 := 0;
+	                    #Qte_SBP4 := 0;
+	                    #Qte_SBP5 := 0;
+	                    #Gprod.Etp := #Controle_Donnees;
+	                    RETURN;
+	                END_IF;
+	                "DB_BIBLIOTHEQUE".Zones_Suivi[#Gprod.NumZone].Occupee := FALSE;
+	                #Ret_RD_SYS_T := RD_SYS_T(#Gprod.Tps_Picke);
+	                RETURN;
+	            END_IF;
+	        END_REGION Cyclique Rech Zone Libre
+	    #Controle_Donnees:
+	        REGION Preliminaire Controle Donnees
+	            IF #Gprod.Etp <> #Gprod.Etp_Memo THEN
+	                //=== Traitement cas retour de defaut ===//
+	                IF #Gprod.Dial_Def.Reponse_Def <> '' THEN
+	                    #Gprod.Etp_Prec := #Gprod.Etp;
+	                    #Gprod.Etp_Memo := #Gprod.Etp;
+	                    CASE #Gprod.Dial_Def.Num_Def_Etape OF
+	                        0:
+	                            GOTO Controle_Donnees_DEF0;
+	                        1:
+	                            GOTO Controle_Donnees_DEF1;
+	                        2:
+	                            GOTO Controle_Donnees_DEF2;
+	                        3:
+	                            GOTO Controle_Donnees_DEF3;
+	                        4:
+	                            GOTO Controle_Donnees_DEF4;
+	                        5:
+	                            GOTO Controle_Donnees_DEF5;
+	                        6:
+	                            GOTO Controle_Donnees_DEF6;
+	                        7:
+	                            GOTO Controle_Donnees_DEF7;
+	                        8:
+	                            GOTO Controle_Donnees_DEF8;
+	                        9:
+	                            GOTO Controle_Donnees_DEF9;
+	                        10:
+	                            GOTO Controle_Donnees_DEF10;
+	                        11:
+	                            GOTO Controle_Donnees_DEF11;
+	                        12:
+	                            GOTO Controle_Donnees_DEF12;
+	                        13:
+	                            GOTO Controle_Donnees_DEF13;
+	                    END_CASE;
+	                END_IF;
+	                //=== Traitement cas retour de defaut ===//
+	                #Gprod.Etp_Prec := #Gprod.Etp;
+	                #Gprod.Etp_Memo := #Gprod.Etp;
+	            END_IF;
+	        END_REGION Preliminaire Controle Donnees
+	        REGION Cyclique Controle Donnees
+	            IF "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Incorpo = '' OR #index_Compo > "Nbr_Max_Compo_Pt_Zs" THEN
+	                FOR #i := 0 TO "Nbr_Max_Compo_Pt_Zs" DO
+	                    #Qte_Tot := #Qte_Tot + "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Poids;
+	                END_FOR;
+	                IF #Qte_Tot < "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Poids_Lot THEN
+	                    #Gprod.Dial_Def.Num_Def_Etape := 13;
+	                    VAL_STRG(IN := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Poids_Lot,
+	                             SIZE := 6,
+	                             PREC := 2,
+	                             FORMAT := 0,
+	                             P := 1,
+	                             OUT => #S_Poids_Lot);
+	                    VAL_STRG(IN := #Qte_Tot,
+	                             SIZE := 6,
+	                             PREC := 2,
+	                             FORMAT := 0,
+	                             P := 1,
+	                             OUT => #S_Qte_Tot);
+	                    #Text_Def := CONCAT(IN1 := 'Qte Lot ', IN2 := #S_Poids_Lot, IN3 := ' incoherente avec la somme des poids composants', IN4 := #S_Qte_Tot);
+	                    #Gprod.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base,
+	                                                                    Msg_Defaut := #Text_Def,
+	                                                                    Type_Defaut := 0,
+	                                                                    Automatisme := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._CdProc,
+	                                                                    Num_Lot := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._NoLot,
+	                                                                    Origine_Defaut := 'Gprod',
+	                                                                    Libelle_Origine := 'Qte incoherente',
+	                                                                    Acq1 := 'Annuler Lot',
+	                                                                    Acq2 := '',
+	                                                                    Acq3 := '',
+	                                                                    Acq4 := '',
+	                                                                    Acq5 := '',
+	                                                                    Acq6 := '',
+	                                                                    Acq7 := '',
+	                                                                    Acq8 := '',
+	                                                                    Acq_Choisi := -1,
+	                                                                    Date_Arrivee := #Tps_Act);
+	                    #Gprod.Etp := #Att_Acquitement;
+	                    RETURN;
+	                END_IF;
+	                #Gprod.Etp := #Lanc_Boucles;
+	                RETURN;
+	            END_IF;
+	        Controle_Donnees_DEF13:
+	            //========================== Traitement des reponses defaut ==========================//
+	            IF (#Gprod.Dial_Def.Reponse_Def = 'Annuler Lot') THEN
+	                // RAZ message defaut
+	                #Gprod.Dial_Def.Reponse_Def := '';
+	                #Gprod.Etp := #Annul_Lot;
+	                RETURN;
+	            END_IF;
+	            //========================== Traitement des reponses defaut ==========================//
+	            // Test existance Cellule Destination
+	            FOR #i := 0 TO "NB_CEL_MAX" DO
+	                IF "DB_Mod_Cellule"._TabCel[#i]._Cel = "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Cel_Dest THEN
+	                    EXIT;
+	                END_IF;
+	                IF #i = "NB_CEL_MAX" THEN
+	                    #Gprod.Dial_Def.Num_Def_Etape := 0;
+	                    #Text_Def := CONCAT(IN1 := 'La cellule ', IN2 := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Cel_Dest, IN3 := ' invalide en tand que destination de dosage!');
+	                    #Gprod.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base,
+	                                                                    Msg_Defaut := #Text_Def,
+	                                                                    Type_Defaut := 0,
+	                                                                    Automatisme := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._CdProc,
+	                                                                    Num_Lot := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._NoLot,
+	                                                                    Origine_Defaut := 'Gprod',
+	                                                                    Libelle_Origine := 'Cel. Invalid.',
+	                                                                    Acq1 := 'Annuler Lot',
+	                                                                    Acq2 := '',
+	                                                                    Acq3 := '',
+	                                                                    Acq4 := '',
+	                                                                    Acq5 := '',
+	                                                                    Acq6 := '',
+	                                                                    Acq7 := '',
+	                                                                    Acq8 := '',
+	                                                                    Acq_Choisi := -1,
+	                                                                    Date_Arrivee := #Tps_Act);
+	                    #Gprod.Etp := #Att_Acquitement;
+	                    RETURN;
+	                END_IF;
+	            END_FOR;
+	        Controle_Donnees_DEF0:
+	            //========================== Traitement des reponses defaut ==========================//
+	            IF (#Gprod.Dial_Def.Reponse_Def = 'Annuler Lot') THEN
+	                // RAZ message defaut
+	                #Gprod.Dial_Def.Reponse_Def := '';
+	                #Gprod.Etp := #Annul_Lot;
+	                RETURN;
+	            END_IF;
+	            //========================== Traitement des reponses defaut ==========================//
+	            //Controle de la GV
+	            IF "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Vit_GV <= 0 THEN
+	                "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Vit_GV := 100;
+	            END_IF;
+	            //Controle de la PV
+	            IF "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Vit_PV <= 0 THEN
+	                "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Vit_PV := 100;
+	            END_IF;
+	            //Controle de la tolerance sup
+	            IF "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Tol_Sup <= 0 THEN
+	                #Gprod.Dial_Def.Num_Def_Etape := 1;
+	                VAL_STRG(IN := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Tol_Sup,
+	                         SIZE := 6,
+	                         PREC := 2,
+	                         FORMAT := 0,
+	                         P := 1,
+	                         OUT => #Tol_Sup);
+	                #Text_Def := CONCAT(IN1 := 'Attention la tolerance superieure de ', IN2 := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Code_MP, IN3 := ' est: ', IN4 := #Tol_Sup);
+	                #Gprod.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base,
+	                                                                Msg_Defaut := #Text_Def,
+	                                                                Type_Defaut := 0,
+	                                                                Automatisme := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._CdProc,
+	                                                                Num_Lot := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._NoLot,
+	                                                                Origine_Defaut := 'Gprod',
+	                                                                Libelle_Origine := 'Tol. Sup.',
+	                                                                Acq1 := 'Continuer',
+	                                                                Acq2 := 'Annuler Lot',
+	                                                                Acq3 := '',
+	                                                                Acq4 := '',
+	                                                                Acq5 := '',
+	                                                                Acq6 := '',
+	                                                                Acq7 := '',
+	                                                                Acq8 := '',
+	                                                                Acq_Choisi := -1,
+	                                                                Date_Arrivee := #Tps_Act);
+	                #Gprod.Etp := #Att_Acquitement;
+	                RETURN;
+	            END_IF;
+	        Controle_Donnees_DEF1:
+	            //========================== Traitement des reponses defaut ==========================//
+	            IF (#Gprod.Dial_Def.Reponse_Def = 'Continuer') THEN
+	                // RAZ message defaut
+	                #Gprod.Dial_Def.Reponse_Def := '';
+	            END_IF;
+	            IF (#Gprod.Dial_Def.Reponse_Def = 'Annuler Lot') THEN
+	                // RAZ message defaut
+	                #Gprod.Dial_Def.Reponse_Def := '';
+	                #Gprod.Etp := #Annul_Lot;
+	                RETURN;
+	            END_IF;
+	            //========================== Traitement des reponses defaut ==========================//
+	            //Controle de la tolerance inf
+	            IF "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Tol_Inf <= 0 THEN
+	                #Gprod.Dial_Def.Num_Def_Etape := 2;
+	                VAL_STRG(IN := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Tol_Inf,
+	                         SIZE := 6,
+	                         PREC := 2,
+	                         FORMAT := 0,
+	                         P := 1,
+	                         OUT => #Tol_Inf);
+	                #Text_Def := CONCAT(IN1 := 'Attention la tolerance inferieure de ', IN2 := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Code_MP, IN3 := ' est: ', IN4 := #Tol_Inf);
+	                #Gprod.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base,
+	                                                                Msg_Defaut := #Text_Def,
+	                                                                Type_Defaut := 0,
+	                                                                Automatisme := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._CdProc,
+	                                                                Num_Lot := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._NoLot,
+	                                                                Origine_Defaut := 'Gprod',
+	                                                                Libelle_Origine := 'Tol. Inf.',
+	                                                                Acq1 := 'Continuer',
+	                                                                Acq2 := 'Annuler Lot',
+	                                                                Acq3 := '',
+	                                                                Acq4 := '',
+	                                                                Acq5 := '',
+	                                                                Acq6 := '',
+	                                                                Acq7 := '',
+	                                                                Acq8 := '',
+	                                                                Acq_Choisi := -1,
+	                                                                Date_Arrivee := #Tps_Act);
+	                #Gprod.Etp := #Att_Acquitement;
+	                RETURN;
+	            END_IF;
+	        Controle_Donnees_DEF2:
+	            //========================== Traitement des reponses defaut ==========================//
+	            IF (#Gprod.Dial_Def.Reponse_Def = 'Continuer') THEN
+	                // RAZ message defaut
+	                #Gprod.Dial_Def.Reponse_Def := '';
+	            END_IF;
+	            IF (#Gprod.Dial_Def.Reponse_Def = 'Annuler Lot') THEN
+	                // RAZ message defaut
+	                #Gprod.Dial_Def.Reponse_Def := '';
+	                #Gprod.Etp := #Annul_Lot;
+	                RETURN;
+	            END_IF;
+	            //========================== Traitement des reponses defaut ==========================//
+	            //Controle de la tolerance sup de conformite
+	            IF "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Tol_Confor_Sup < "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Tol_Sup THEN
+	                "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Tol_Confor_Sup := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Tol_Sup;
+	            END_IF;
+	            //Controle de la tolerance inf de conformite
+	            IF "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Tol_Confor_Inf < "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Tol_Inf THEN
+	                "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Tol_Confor_Inf := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Tol_Inf;
+	            END_IF;
+	            //Controle de la quantite par rapport a la capacite du lieux d incorporation
+	            IF "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Incorpo = 'SBP1' THEN
+	                #Qte_SBP1 := #Qte_SBP1 + "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Poids;
+	                //Controle de la zone par rapport au lieux d incorporation 
+	                IF NOT "Valid_Cellule"(Cellule := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Code_Cel, TabCel := "DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel) THEN
+	                    #Gprod.Dial_Def.Num_Def_Etape := 3;
+	                    #Text_Def := CONCAT(IN1 := 'Impossible d extraire ', IN2 := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Code_MP, IN3 := ' de ', IN4 := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Code_Cel, IN5 := ' vers ', IN6 := "DB_Dosage".BP[0].Benne.Nom);
+	                    #Gprod.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base,
+	                                                                    Msg_Defaut := #Text_Def,
+	                                                                    Type_Defaut := 0,
+	                                                                    Automatisme := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._CdProc,
+	                                                                    Num_Lot := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._NoLot,
+	                                                                    Origine_Defaut := 'Gprod',
+	                                                                    Libelle_Origine := 'Extraction',
+	                                                                    Acq1 := 'Annuler Lot',
+	                                                                    Acq2 := '',
+	                                                                    Acq3 := '',
+	                                                                    Acq4 := '',
+	                                                                    Acq5 := '',
+	                                                                    Acq6 := '',
+	                                                                    Acq7 := '',
+	                                                                    Acq8 := '',
+	                                                                    Acq_Choisi := -1,
+	                                                                    Date_Arrivee := #Tps_Act);
+	                    #Gprod.Etp := #Att_Acquitement;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	        Controle_Donnees_DEF3:
+	            //========================== Traitement des reponses defaut ==========================//
+	            IF (#Gprod.Dial_Def.Reponse_Def = 'Annuler Lot') THEN
+	                // RAZ message defaut
+	                #Gprod.Dial_Def.Reponse_Def := '';
+	                #Gprod.Etp := #Annul_Lot;
+	                RETURN;
+	            END_IF;
+	            //========================== Traitement des reponses defaut ==========================//
+	            IF "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Incorpo = 'SBP2' THEN
+	                #Qte_SBP2 := #Qte_SBP2 + "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Poids;
+	                //Controle de la zone par rapport au lieux d incorporation 
+	                IF NOT "Valid_Cellule"(Cellule := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Code_Cel, TabCel := "DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel) THEN
+	                    #Gprod.Dial_Def.Num_Def_Etape := 4;
+	                    #Text_Def := CONCAT(IN1 := 'Impossible d extraire ', IN2 := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Code_MP, IN3 := ' de ', IN4 := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Code_Cel, IN5 := ' vers ', IN6 := "DB_Dosage".BP[1].Benne.Nom);
+	                    #Gprod.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base,
+	                                                                    Msg_Defaut := #Text_Def,
+	                                                                    Type_Defaut := 0,
+	                                                                    Automatisme := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._CdProc,
+	                                                                    Num_Lot := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._NoLot,
+	                                                                    Origine_Defaut := 'Gprod',
+	                                                                    Libelle_Origine := 'Capacite BP',
+	                                                                    Acq1 := 'Annuler Lot',
+	                                                                    Acq2 := '',
+	                                                                    Acq3 := '',
+	                                                                    Acq4 := '',
+	                                                                    Acq5 := '',
+	                                                                    Acq6 := '',
+	                                                                    Acq7 := '',
+	                                                                    Acq8 := '',
+	                                                                    Acq_Choisi := -1,
+	                                                                    Date_Arrivee := #Tps_Act);
+	                    #Gprod.Etp := #Att_Acquitement;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	        Controle_Donnees_DEF4:
+	            //========================== Traitement des reponses defaut ==========================//
+	            IF (#Gprod.Dial_Def.Reponse_Def = 'Annuler Lot') THEN
+	                // RAZ message defaut
+	                #Gprod.Dial_Def.Reponse_Def := '';
+	                #Gprod.Etp := #Annul_Lot;
+	                RETURN;
+	            END_IF;
+	            //========================== Traitement des reponses defaut ==========================//
+	            IF "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Incorpo = 'SBP3' THEN
+	                #Qte_SBP3 := #Qte_SBP3 + "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Poids;
+	                //Controle de la zone par rapport au lieux d incorporation 
+	                IF NOT "Valid_Cellule"(Cellule := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Code_Cel, TabCel := "DB_Dosage".BP[2].Dos_Commun.Module_Commun._PtCel._TabCel) THEN
+	                    #Gprod.Dial_Def.Num_Def_Etape := 5;
+	                    #Text_Def := CONCAT(IN1 := 'Impossible d extraire ', IN2 := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Code_MP, IN3 := ' de ', IN4 := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Code_Cel, IN5 := ' vers ', IN6 := "DB_Dosage".BP[2].Benne.Nom);
+	                    #Gprod.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base,
+	                                                                    Msg_Defaut := #Text_Def,
+	                                                                    Type_Defaut := 0,
+	                                                                    Automatisme := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._CdProc,
+	                                                                    Num_Lot := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._NoLot,
+	                                                                    Origine_Defaut := 'Gprod',
+	                                                                    Libelle_Origine := 'Capacite BP',
+	                                                                    Acq1 := 'Annuler Lot',
+	                                                                    Acq2 := '',
+	                                                                    Acq3 := '',
+	                                                                    Acq4 := '',
+	                                                                    Acq5 := '',
+	                                                                    Acq6 := '',
+	                                                                    Acq7 := '',
+	                                                                    Acq8 := '',
+	                                                                    Acq_Choisi := -1,
+	                                                                    Date_Arrivee := #Tps_Act);
+	                    #Gprod.Etp := #Att_Acquitement;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	        Controle_Donnees_DEF5:
+	            //========================== Traitement des reponses defaut ==========================//
+	            IF (#Gprod.Dial_Def.Reponse_Def = 'Annuler Lot') THEN
+	                // RAZ message defaut
+	                #Gprod.Dial_Def.Reponse_Def := '';
+	                #Gprod.Etp := #Annul_Lot;
+	                RETURN;
+	            END_IF;
+	            //========================== Traitement des reponses defaut ==========================//
+	            IF "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Incorpo = 'SBP4' THEN
+	                #Qte_SBP4 := #Qte_SBP4 + "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Poids;
+	                //Controle de la zone par rapport au lieux d incorporation 
+	                IF NOT "Valid_Cellule"(Cellule := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Code_Cel, TabCel := "DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel) THEN
+	                    #Gprod.Dial_Def.Num_Def_Etape := 6;
+	                    #Text_Def := CONCAT(IN1 := 'Impossible d extraire ', IN2 := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Code_MP, IN3 := ' de ', IN4 := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Code_Cel, IN5 := ' vers ', IN6 := "DB_Dosage".BP[3].Benne.Nom);
+	                    #Gprod.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base,
+	                                                                    Msg_Defaut := #Text_Def,
+	                                                                    Type_Defaut := 0,
+	                                                                    Automatisme := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._CdProc,
+	                                                                    Num_Lot := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._NoLot,
+	                                                                    Origine_Defaut := 'Gprod',
+	                                                                    Libelle_Origine := 'Capacite BP',
+	                                                                    Acq1 := 'Annuler Lot',
+	                                                                    Acq2 := '',
+	                                                                    Acq3 := '',
+	                                                                    Acq4 := '',
+	                                                                    Acq5 := '',
+	                                                                    Acq6 := '',
+	                                                                    Acq7 := '',
+	                                                                    Acq8 := '',
+	                                                                    Acq_Choisi := -1,
+	                                                                    Date_Arrivee := #Tps_Act);
+	                    #Gprod.Etp := #Att_Acquitement;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	        Controle_Donnees_DEF6:
+	            //========================== Traitement des reponses defaut ==========================//
+	            IF (#Gprod.Dial_Def.Reponse_Def = 'Annuler Lot') THEN
+	                // RAZ message defaut
+	                #Gprod.Dial_Def.Reponse_Def := '';
+	                #Gprod.Etp := #Annul_Lot;
+	                RETURN;
+	            END_IF;
+	            //========================== Traitement des reponses defaut ==========================//
+	            IF "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Incorpo = 'SBP5' THEN
+	                #Qte_SBP5 := #Qte_SBP5 + "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Poids;
+	                //Controle de la zone par rapport au lieux d incorporation 
+	                IF NOT "Valid_Cellule"(Cellule := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Code_Cel, TabCel := "DB_Dosage".BP[4].Dos_Commun.Module_Commun._PtCel._TabCel) THEN
+	                    #Gprod.Dial_Def.Num_Def_Etape := 7;
+	                    #Text_Def := CONCAT(IN1 := 'Impossible d extraire ', IN2 := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Code_MP, IN3 := ' de ', IN4 := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#index_Compo].Code_Cel, IN5 := ' vers ', IN6 := "DB_Dosage".BP[4].Benne.Nom);
+	                    #Gprod.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base,
+	                                                                    Msg_Defaut := #Text_Def,
+	                                                                    Type_Defaut := 0,
+	                                                                    Automatisme := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._CdProc,
+	                                                                    Num_Lot := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._NoLot,
+	                                                                    Origine_Defaut := 'Gprod',
+	                                                                    Libelle_Origine := 'Capacite BP',
+	                                                                    Acq1 := 'Annuler Lot',
+	                                                                    Acq2 := '',
+	                                                                    Acq3 := '',
+	                                                                    Acq4 := '',
+	                                                                    Acq5 := '',
+	                                                                    Acq6 := '',
+	                                                                    Acq7 := '',
+	                                                                    Acq8 := '',
+	                                                                    Acq_Choisi := -1,
+	                                                                    Date_Arrivee := #Tps_Act);
+	                    #Gprod.Etp := #Att_Acquitement;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	        Controle_Donnees_DEF7:
+	            //========================== Traitement des reponses defaut ==========================//
+	            IF (#Gprod.Dial_Def.Reponse_Def = 'Annuler Lot') THEN
+	                // RAZ message defaut
+	                #Gprod.Dial_Def.Reponse_Def := '';
+	                #Gprod.Etp := #Annul_Lot;
+	                RETURN;
+	            END_IF;
+	            //========================== Traitement des reponses defaut ==========================//
+	            //Controle de la quantite par rapport a la capacite du lieux d incorporation
+	            IF "DB_Dosage".BP[0].Benne.Capacite < #Qte_SBP1 THEN
+	                #Gprod.Dial_Def.Num_Def_Etape := 8;
+	                #Text_Def := CONCAT(IN1 := 'Capacite de la benne ', IN2 := "DB_Dosage".BP[0].Benne.Nom, IN3 := ' ', IN4 := UINT_TO_STRING("DB_Dosage".BP[0].Benne.Capacite), IN5 := ' inferieure au poids total des composants dans ce lieu de dosage', IN6 := REAL_TO_STRING(#Qte_SBP1));
+	                #Gprod.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base,
+	                                                                Msg_Defaut := #Text_Def,
+	                                                                Type_Defaut := 0,
+	                                                                Automatisme := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._CdProc,
+	                                                                Num_Lot := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._NoLot,
+	                                                                Origine_Defaut := 'Gprod',
+	                                                                Libelle_Origine := 'Capacite BP',
+	                                                                Acq1 := 'Annuler Lot',
+	                                                                Acq2 := '',
+	                                                                Acq3 := '',
+	                                                                Acq4 := '',
+	                                                                Acq5 := '',
+	                                                                Acq6 := '',
+	                                                                Acq7 := '',
+	                                                                Acq8 := '',
+	                                                                Acq_Choisi := -1,
+	                                                                Date_Arrivee := #Tps_Act);
+	                #Gprod.Etp := #Att_Acquitement;
+	                RETURN;
+	            END_IF;
+	        Controle_Donnees_DEF8:
+	            //========================== Traitement des reponses defaut ==========================//
+	            IF (#Gprod.Dial_Def.Reponse_Def = 'Annuler Lot') THEN
+	                // RAZ message defaut
+	                #Gprod.Dial_Def.Reponse_Def := '';
+	                #Gprod.Etp := #Annul_Lot;
+	                RETURN;
+	            END_IF;
+	            //========================== Traitement des reponses defaut ==========================//
+	            IF "DB_Dosage".BP[1].Benne.Capacite < #Qte_SBP2 THEN
+	                #Gprod.Dial_Def.Num_Def_Etape := 9;
+	                #Text_Def := CONCAT(IN1 := 'Capacite de la benne ', IN2 := "DB_Dosage".BP[1].Benne.Nom, IN3 := ' ', IN4 := UINT_TO_STRING("DB_Dosage".BP[1].Benne.Capacite), IN5 := ' inferieure au poids total des composants dans ce lieu de dosage', IN6 := REAL_TO_STRING(#Qte_SBP2));
+	                #Gprod.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base,
+	                                                                Msg_Defaut := #Text_Def,
+	                                                                Type_Defaut := 0,
+	                                                                Automatisme := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._CdProc,
+	                                                                Num_Lot := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._NoLot,
+	                                                                Origine_Defaut := 'Gprod',
+	                                                                Libelle_Origine := 'Capacite BP',
+	                                                                Acq1 := 'Annuler Lot',
+	                                                                Acq2 := '',
+	                                                                Acq3 := '',
+	                                                                Acq4 := '',
+	                                                                Acq5 := '',
+	                                                                Acq6 := '',
+	                                                                Acq7 := '',
+	                                                                Acq8 := '',
+	                                                                Acq_Choisi := -1,
+	                                                                Date_Arrivee := #Tps_Act);
+	                #Gprod.Etp := #Att_Acquitement;
+	                RETURN;
+	            END_IF;
+	        Controle_Donnees_DEF9:
+	            //========================== Traitement des reponses defaut ==========================//
+	            IF (#Gprod.Dial_Def.Reponse_Def = 'Annuler Lot') THEN
+	                // RAZ message defaut
+	                #Gprod.Dial_Def.Reponse_Def := '';
+	                #Gprod.Etp := #Annul_Lot;
+	                RETURN;
+	            END_IF;
+	            //========================== Traitement des reponses defaut ==========================//
+	            IF "DB_Dosage".BP[2].Benne.Capacite < #Qte_SBP3 THEN
+	                #Gprod.Dial_Def.Num_Def_Etape := 10;
+	                #Text_Def := CONCAT(IN1 := 'Capacite de la benne ', IN2 := "DB_Dosage".BP[2].Benne.Nom, IN3 := ' ', IN4 := UINT_TO_STRING("DB_Dosage".BP[2].Benne.Capacite), IN5 := ' inferieure au poids total des composants dans ce lieu de dosage', IN6 := REAL_TO_STRING(#Qte_SBP3));
+	                #Gprod.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base,
+	                                                                Msg_Defaut := #Text_Def,
+	                                                                Type_Defaut := 0,
+	                                                                Automatisme := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._CdProc,
+	                                                                Num_Lot := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._NoLot,
+	                                                                Origine_Defaut := 'Gprod',
+	                                                                Libelle_Origine := 'Capacite BP',
+	                                                                Acq1 := 'Annuler Lot',
+	                                                                Acq2 := '',
+	                                                                Acq3 := '',
+	                                                                Acq4 := '',
+	                                                                Acq5 := '',
+	                                                                Acq6 := '',
+	                                                                Acq7 := '',
+	                                                                Acq8 := '',
+	                                                                Acq_Choisi := -1,
+	                                                                Date_Arrivee := #Tps_Act);
+	                #Gprod.Etp := #Att_Acquitement;
+	                RETURN;
+	            END_IF;
+	        Controle_Donnees_DEF10:
+	            //========================== Traitement des reponses defaut ==========================//
+	            IF (#Gprod.Dial_Def.Reponse_Def = 'Annuler Lot') THEN
+	                // RAZ message defaut
+	                #Gprod.Dial_Def.Reponse_Def := '';
+	                #Gprod.Etp := #Annul_Lot;
+	                RETURN;
+	            END_IF;
+	            //========================== Traitement des reponses defaut ==========================//
+	            IF "DB_Dosage".BP[3].Benne.Capacite < #Qte_SBP4 THEN
+	                #Gprod.Dial_Def.Num_Def_Etape := 11;
+	                #Text_Def := CONCAT(IN1 := 'Capacite de la benne ', IN2 := "DB_Dosage".BP[3].Benne.Nom, IN3 := ' ', IN4 := UINT_TO_STRING("DB_Dosage".BP[3].Benne.Capacite), IN5 := ' inferieure au poids total des composants dans ce lieu de dosage', IN6 := REAL_TO_STRING(#Qte_SBP4));
+	                #Gprod.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base,
+	                                                                Msg_Defaut := #Text_Def,
+	                                                                Type_Defaut := 0,
+	                                                                Automatisme := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._CdProc,
+	                                                                Num_Lot := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._NoLot,
+	                                                                Origine_Defaut := 'Gprod',
+	                                                                Libelle_Origine := 'Capacite BP',
+	                                                                Acq1 := 'Annuler Lot',
+	                                                                Acq2 := '',
+	                                                                Acq3 := '',
+	                                                                Acq4 := '',
+	                                                                Acq5 := '',
+	                                                                Acq6 := '',
+	                                                                Acq7 := '',
+	                                                                Acq8 := '',
+	                                                                Acq_Choisi := -1,
+	                                                                Date_Arrivee := #Tps_Act);
+	                #Gprod.Etp := #Att_Acquitement;
+	                RETURN;
+	            END_IF;
+	        Controle_Donnees_DEF11:
+	            //========================== Traitement des reponses defaut ==========================//
+	            IF (#Gprod.Dial_Def.Reponse_Def = 'Annuler Lot') THEN
+	                // RAZ message defaut
+	                #Gprod.Dial_Def.Reponse_Def := '';
+	                #Gprod.Etp := #Annul_Lot;
+	                RETURN;
+	            END_IF;
+	            //========================== Traitement des reponses defaut ==========================//
+	            IF "DB_Dosage".BP[4].Benne.Capacite < #Qte_SBP5 THEN
+	                #Gprod.Dial_Def.Num_Def_Etape := 12;
+	                #Text_Def := CONCAT(IN1 := 'Capacite de la benne ', IN2 := "DB_Dosage".BP[4].Benne.Nom, IN3 := ' ', IN4 := UINT_TO_STRING("DB_Dosage".BP[4].Benne.Capacite), IN5 := ' inferieure au poids total des composants dans ce lieu de dosage', IN6 := REAL_TO_STRING(#Qte_SBP5));
+	                #Gprod.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base,
+	                                                                Msg_Defaut := #Text_Def,
+	                                                                Type_Defaut := 0,
+	                                                                Automatisme := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._CdProc,
+	                                                                Num_Lot := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._NoLot,
+	                                                                Origine_Defaut := 'Gprod',
+	                                                                Libelle_Origine := 'Capacite BP',
+	                                                                Acq1 := 'Annuler Lot',
+	                                                                Acq2 := '',
+	                                                                Acq3 := '',
+	                                                                Acq4 := '',
+	                                                                Acq5 := '',
+	                                                                Acq6 := '',
+	                                                                Acq7 := '',
+	                                                                Acq8 := '',
+	                                                                Acq_Choisi := -1,
+	                                                                Date_Arrivee := #Tps_Act);
+	                #Gprod.Etp := #Att_Acquitement;
+	                RETURN;
+	            END_IF;
+	        Controle_Donnees_DEF12:
+	            //========================== Traitement des reponses defaut ==========================//
+	            IF (#Gprod.Dial_Def.Reponse_Def = 'Annuler Lot') THEN
+	                // RAZ message defaut
+	                #Gprod.Dial_Def.Reponse_Def := '';
+	                #Gprod.Etp := #Annul_Lot;
+	                RETURN;
+	            END_IF;
+	            //========================== Traitement des reponses defaut ==========================//
+	            #index_Compo := #index_Compo + 1;
+	            RETURN;
+	            //#Gprod.Etp := #Lanc_Boucles;
+	        END_REGION Cyclique Controle Donnees
+	    #Lanc_Boucles:
+	        REGION Preliminaire Lanc Boucles
+	            IF #Gprod.Etp <> #Gprod.Etp_Memo THEN
+	                //=== Traitement cas retour de defaut ===//
+	                IF #Gprod.Dial_Def.Reponse_Def <> '' THEN
+	                    #Gprod.Etp_Prec := #Gprod.Etp;
+	                    #Gprod.Etp_Memo := #Gprod.Etp;
+	                    CASE #Gprod.Dial_Def.Num_Def_Etape OF
+	                        0:
+	                            GOTO Lanc_Boucles_DEF0;
+	                        1:
+	                            GOTO Lanc_Boucles_DEF1;
+	                        2:
+	                            GOTO Lanc_Boucles_DEF2;
+	                    END_CASE;
+	                END_IF;
+	                //=== Traitement cas retour de defaut ===//
+	                #Gprod.Etp_Memo := #Gprod.Etp;
+	            END_IF;
+	        END_REGION Preliminaire Lanc Boucles
+	        REGION Cyclique Lanc Boucles            
+	            // Verification Mise en service d un seul BR
+	            IF (NOT ("Test_HS"("DB_Dosage".BR[0].Mob_Broyeur)) AND NOT ("Test_HS"("DB_Dosage".BR[1].Mob_Broyeur))) OR ("Test_HS"("DB_Dosage".BR[0].Mob_Broyeur) AND "Test_HS"("DB_Dosage".BR[1].Mob_Broyeur)) THEN
+	                #Gprod.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base,
+	                                                                Msg_Defaut := 'Veuillez mettre un broyeur HORS SERVICE',
+	                                                                Type_Defaut := 0,
+	                                                                Automatisme := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._CdProc,
+	                                                                Num_Lot := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._NoLot,
+	                                                                Origine_Defaut := 'Gprod',
+	                                                                Libelle_Origine := 'Verrou. BR',
+	                                                                Acq1 := 'Relance',
+	                                                                Acq2 := '',
+	                                                                Acq3 := '',
+	                                                                Acq4 := '',
+	                                                                Acq5 := '',
+	                                                                Acq6 := '',
+	                                                                Acq7 := '',
+	                                                                Acq8 := '',
+	                                                                Acq_Choisi := -1,
+	                                                                Date_Arrivee := #Tps_Act);
+	                #Gprod.Etp := #Att_Acquitement;
+	                RETURN;
+	            END_IF;
+	            // Verification Mise en service d une seule MLG
+	            IF (NOT ("Test_HS"("DB_Dosage".MLG[0].Mob_Melang)) AND NOT ("Test_HS"("DB_Dosage".MLG[1].Mob_Melang))) OR ("Test_HS"("DB_Dosage".MLG[0].Mob_Melang) AND "Test_HS"("DB_Dosage".MLG[1].Mob_Melang)) THEN
+	                #Gprod.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base,
+	                                                                Msg_Defaut := 'Veuillez mettre une melangeuse HORS SERVICE',
+	                                                                Type_Defaut := 0,
+	                                                                Automatisme := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._CdProc,
+	                                                                Num_Lot := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._NoLot,
+	                                                                Origine_Defaut := 'Gprod',
+	                                                                Libelle_Origine := 'Verrou. MLG',
+	                                                                Acq1 := 'Relance',
+	                                                                Acq2 := '',
+	                                                                Acq3 := '',
+	                                                                Acq4 := '',
+	                                                                Acq5 := '',
+	                                                                Acq6 := '',
+	                                                                Acq7 := '',
+	                                                                Acq8 := '',
+	                                                                Acq_Choisi := -1,
+	                                                                Date_Arrivee := #Tps_Act);
+	                #Gprod.Etp := #Att_Acquitement;
+	                RETURN;
+	            END_IF;
+	            //Recuperation des parametres Broyeur
+	            #Msg_Def := '';
+	            #Ret_Proc_Param_Auto := "Proc_Recherche_Params_Auto_BR"(Resultat_Decode := "ResultProc".ResulRechInfoZoneREC, Err_Sql := #Err_Sql, Msg_Def := #Msg_Def, Data_Dosage := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]);
+	            IF ("dbSql4SiemensInterface".stSql4SiemensInterface.Observer.xTimeout) THEN
+	                #Mess_Def := 'Connexion avec la base interrompue';
+	                #Aff_Def := TRUE;
+	                // ELSIF NOT ((#Ret_Proc_Param_Auto = 'NOK') OR (#Ret_Proc_Param_Auto = 'OK')) THEN
+	                //     #Mess_Def := #Err_Sql;
+	                //     #Aff_Def := TRUE;
+	            ELSIF NOT (#Msg_Def = '' OR #Msg_Def = 'VIDE') THEN
+	                #Msg_Def := CONCAT(IN1 := 'Rech Param echouee, veuillez verifier: ', IN2 := #Msg_Def);
+	                #Mess_Def := #Msg_Def;
+	                #Aff_Def := TRUE;
+	            END_IF;
+	            IF #Aff_Def THEN
+	                #Aff_Def := FALSE;
+	                #Gprod.Dial_Def.Num_Def_Etape := 0;
+	                #Gprod.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base,
+	                                                                Msg_Defaut := #Mess_Def,
+	                                                                Type_Defaut := 0,
+	                                                                Automatisme := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._CdProc,
+	                                                                Num_Lot := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._NoLot,
+	                                                                Origine_Defaut := 'GProd',
+	                                                                Libelle_Origine := 'Proc_Rech_Param',
+	                                                                Acq1 := 'Annuler Lot',
+	                                                                Acq2 := '',
+	                                                                Acq3 := '',
+	                                                                Acq4 := '',
+	                                                                Acq5 := '',
+	                                                                Acq6 := '',
+	                                                                Acq7 := '',
+	                                                                Acq8 := '',
+	                                                                Acq_Choisi := -1,
+	                                                                Date_Arrivee := #Tps_Act);
+	                #Gprod.Etp := #Att_Acquitement;
+	                RETURN;
+	            END_IF;
+	        Lanc_Boucles_DEF0:
+	            //========================== Traitement des reponses defaut ==========================//
+	            IF (#Gprod.Dial_Def.Reponse_Def = 'Annuler Lot') THEN
+	                // RAZ message defaut
+	                #Gprod.Dial_Def.Reponse_Def := '';
+	                #Gprod.Etp := #Annul_Lot;
+	                RETURN;
+	            END_IF;
+	            //========================== Traitement des reponses defaut ==========================//
+	            //Recuperation des parametres Melangeuse
+	            #Msg_Def := '';
+	            #Ret_Proc_Param_Auto := "Proc_Recherche_Params_Auto_MLG"(Err_Sql => #Err_Sql, Msg_Def => #Msg_Def, Data_Dosage := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]);
+	            IF ("dbSql4SiemensInterface".stSql4SiemensInterface.Observer.xTimeout) THEN
+	                #Mess_Def := 'Connexion avec la base interrompue';
+	                #Aff_Def := TRUE;
+	                // ELSIF NOT ((#Ret_Proc_Param_Auto = 'NOK') OR (#Ret_Proc_Param_Auto = 'OK')) THEN
+	                //     #Mess_Def := #Err_Sql;
+	                //     #Aff_Def := TRUE;
+	            ELSIF (#Ret_Proc_Param_Auto = 'NOK') THEN
+	                #Mess_Def := #Msg_Def;
+	                #Aff_Def := TRUE;
+	            END_IF;
+	            IF #Aff_Def THEN
+	                #Aff_Def := FALSE;
+	                #Gprod.Dial_Def.Num_Def_Etape := 1;
+	                #Gprod.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base,
+	                                                                Msg_Defaut := #Mess_Def,
+	                                                                Type_Defaut := 0,
+	                                                                Automatisme := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._CdProc,
+	                                                                Num_Lot := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._NoLot,
+	                                                                Origine_Defaut := 'Com. Base',
+	                                                                Libelle_Origine := 'Proc_Rech_Params_Auto_MLG',
+	                                                                Acq1 := 'Annuler Lot',
+	                                                                Acq2 := '',
+	                                                                Acq3 := '',
+	                                                                Acq4 := '',
+	                                                                Acq5 := '',
+	                                                                Acq6 := '',
+	                                                                Acq7 := '',
+	                                                                Acq8 := '',
+	                                                                Acq_Choisi := -1,
+	                                                                Date_Arrivee := #Tps_Act);
+	                #Gprod.Etp := #Att_Acquitement;
+	                RETURN;
+	            END_IF;
+	            
+	        Lanc_Boucles_DEF1:
+	            //========================== Traitement des reponses defaut ==========================//
+	            IF (#Gprod.Dial_Def.Reponse_Def = 'Annuler Lot') THEN
+	                // RAZ message defaut
+	                #Gprod.Dial_Def.Reponse_Def := '';
+	            END_IF;
+	            //========================== Traitement des reponses defaut ==========================//
+	            //============================= Taches Lieux Incorporation  Et Tremie En Dessous =============================//
+	            FOR #i := 0 TO "Nbr_Max_Compo_Pt_Zs" DO
+	                IF "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Incorpo = 'SBP1' THEN
+	                    #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_BP1", Num_Zone := #Gprod.NumZone);
+	                    #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_CIRSS_BP1", Num_Zone := #Gprod.NumZone);
+	                    #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_TREMSS_BP1", Num_Zone := #Gprod.NumZone);
+	                    EXIT;
+	                END_IF;
+	            END_FOR;
+	            FOR #i := 0 TO "Nbr_Max_Compo_Pt_Zs" DO
+	                IF "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Incorpo = 'SBP2' THEN
+	                    #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_BP2", Num_Zone := #Gprod.NumZone);
+	                    #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_TREMSS_BP2", Num_Zone := #Gprod.NumZone);
+	                    EXIT;
+	                END_IF;
+	            END_FOR;
+	            FOR #i := 0 TO "Nbr_Max_Compo_Pt_Zs" DO
+	                IF "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Incorpo = 'SBP3' THEN
+	                    #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_BP3", Num_Zone := #Gprod.NumZone);
+	                    #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_TREMSS_BP3", Num_Zone := #Gprod.NumZone);
+	                    EXIT;
+	                END_IF;
+	            END_FOR;
+	            FOR #i := 0 TO "Nbr_Max_Compo_Pt_Zs" DO
+	                IF "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Incorpo = 'SBP4' THEN
+	                    #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_BP4", Num_Zone := #Gprod.NumZone);
+	                    #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_TREMSS_BP4", Num_Zone := #Gprod.NumZone);
+	                    EXIT;
+	                END_IF;
+	            END_FOR;
+	            FOR #i := 0 TO "Nbr_Max_Compo_Pt_Zs" DO
+	                IF "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Incorpo = 'SBP5' THEN
+	                    #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_BP5", Num_Zone := #Gprod.NumZone);
+	                    #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_TREMSS_BP5", Num_Zone := #Gprod.NumZone);
+	                    EXIT;
+	                END_IF;
+	            END_FOR;
+	            //============================= Taches Lieux Incorporation  Et Tremie En Dessous =============================//
+	            IF NOT "Test_HS"("DB_Dosage".BR[0].Mob_Broyeur) THEN
+	                #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_CIRREMP_BR1", Num_Zone := #Gprod.NumZone);
+	                #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_TREMSR_BR1", Num_Zone := #Gprod.NumZone);
+	                #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_BR1", Num_Zone := #Gprod.NumZone);
+	                #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_TREMSS_BR1", Num_Zone := #Gprod.NumZone);
+	            END_IF;
+	            IF NOT "Test_HS"("DB_Dosage".BR[1].Mob_Broyeur) THEN
+	                #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_CIRREMP_BR2", Num_Zone := #Gprod.NumZone);
+	                #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_TREMSR_BR2", Num_Zone := #Gprod.NumZone);
+	                #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_BR2", Num_Zone := #Gprod.NumZone);
+	                #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_TREMSS_BR2", Num_Zone := #Gprod.NumZone);
+	            END_IF;
+	            IF NOT "Test_HS"("DB_Dosage".MLG[0].Mob_Melang) THEN
+	                IF "Valid_Index"("Index_Mobile"('BDVS')) THEN
+	                    "FC_Posit_Mob"(Index_Mob := "Index_Mobile"('BDVS'),
+	                                   Position := 1);
+	                END_IF;
+	                FOR #i := 0 TO "Nbr_Max_Compo_Pt_Zs" DO
+	                    IF "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Incorpo = 'VS' THEN
+	                        "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Incorpo_Reel := 'VS';
+	                    END_IF;
+	                END_FOR;
+	                #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_CIRREMP_MLG1", Num_Zone := #Gprod.NumZone);
+	                "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._DonneesDiverses.tab_short[0] := 1;
+	                #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_VS_MLG1", Num_Zone := #Gprod.NumZone);
+	                #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_TREMSR_MLG1", Num_Zone := #Gprod.NumZone);
+	                #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_MELANG1", Num_Zone := #Gprod.NumZone);
+	                #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_TREMSS_MLG1", Num_Zone := #Gprod.NumZone);
+	                FOR #i := 0 TO "Nbr_Max_Compo_Pt_Zs" DO
+	                    IF "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Code_Cel <> '' AND "Valid_Cellule"(Cellule := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Code_Cel, TabCel := "DB_Dosage".LIQUIDES_MLG[0].CommunDos.Module_Commun._PtCel._TabCel) THEN
+	                        "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Incorpo := 'MLG1';
+	                        "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Incorpo_Reel := 'MLG';
+	                        "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Num_Liq_Mlg := 1;
+	                        #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_LIQ1_MLG1", Num_Zone := #Gprod.NumZone);
+	                        EXIT;
+	                    END_IF;
+	                END_FOR;
+	                FOR #i := 0 TO "Nbr_Max_Compo_Pt_Zs" DO
+	                    IF "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Code_Cel <> '' AND "Valid_Cellule"(Cellule := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Code_Cel, TabCel := "DB_Dosage".LIQUIDES_MLG[1].CommunDos.Module_Commun._PtCel._TabCel) THEN
+	                        "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Incorpo := 'MLG1';
+	                        "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Incorpo_Reel := 'MLG';
+	                        "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Num_Liq_Mlg := 2;
+	                        #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_LIQ2_MLG1", Num_Zone := #Gprod.NumZone);
+	                        EXIT;
+	                    END_IF;
+	                END_FOR;
+	                FOR #i := 0 TO "Nbr_Max_Compo_Pt_Zs" DO
+	                    IF "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Code_Cel <> '' AND "Valid_Cellule"(Cellule := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Code_Cel, TabCel := "DB_Dosage".LIQUIDES_MLG[2].CommunDos.Module_Commun._PtCel._TabCel) THEN
+	                        "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Incorpo := 'MLG1';
+	                        "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Incorpo_Reel := 'MLG';
+	                        "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Num_Liq_Mlg := 3;
+	                        #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_LIQ3_MLG1", Num_Zone := #Gprod.NumZone);
+	                        EXIT;
+	                    END_IF;
+	                END_FOR;
+	                FOR #i := 0 TO "Nbr_Max_Compo_Pt_Zs" DO
+	                    IF "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Code_Cel <> '' AND "Valid_Cellule"(Cellule := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Code_Cel, TabCel := "DB_Dosage".LIQUIDES_MLG[3].CommunDos.Module_Commun._PtCel._TabCel) THEN
+	                        "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Incorpo := 'MLG1';
+	                        "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Incorpo_Reel := 'MLG';
+	                        "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Num_Liq_Mlg := 4;
+	                        #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_LIQ4_MLG1", Num_Zone := #Gprod.NumZone);
+	                        EXIT;
+	                    END_IF;
+	                END_FOR;
+	                FOR #i := 0 TO "Nbr_Max_Compo_Pt_Zs" DO
+	                    IF "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Code_Cel <> '' AND "Valid_Cellule"(Cellule := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Code_Cel, TabCel := "DB_Dosage".LIQUIDES_MLG[4].CommunDos.Module_Commun._PtCel._TabCel) THEN
+	                        "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Incorpo := 'MLG1';
+	                        "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Incorpo_Reel := 'MLG';
+	                        "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Num_Liq_Mlg := 5;
+	                        #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_LIQ5_MLG1", Num_Zone := #Gprod.NumZone);
+	                        EXIT;
+	                    END_IF;
+	                END_FOR;
+	            END_IF;
+	            IF NOT "Test_HS"("DB_Dosage".MLG[1].Mob_Melang) THEN
+	                IF "Valid_Index"("Index_Mobile"('BDVS')) THEN
+	                    "FC_Posit_Mob"(Index_Mob := "Index_Mobile"('BDVS'),
+	                                   Position := 0);
+	                END_IF;
+	                FOR #i := 0 TO "Nbr_Max_Compo_Pt_Zs" DO
+	                    IF "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Incorpo = 'VS' THEN
+	                        "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Incorpo_Reel := 'VS';
+	                    END_IF;
+	                END_FOR;
+	                #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_CIRREMP_MLG2", Num_Zone := #Gprod.NumZone);
+	                "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._DonneesDiverses.tab_short[0] := 2;
+	                #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_VS_MLG1", Num_Zone := #Gprod.NumZone);
+	                #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_TREMSR_MLG2", Num_Zone := #Gprod.NumZone);
+	                #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_MELANG2", Num_Zone := #Gprod.NumZone);
+	                #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_TREMSS_MLG2", Num_Zone := #Gprod.NumZone);
+	                FOR #i := 0 TO "Nbr_Max_Compo_Pt_Zs" DO
+	                    IF "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Code_Cel <> '' AND "Valid_Cellule"(Cellule := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Code_Cel, TabCel := "DB_Dosage".LIQUIDES_MLG[5].CommunDos.Module_Commun._PtCel._TabCel) THEN
+	                        "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Incorpo := 'MLG2';
+	                        "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Incorpo_Reel := 'MLG';
+	                        "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Num_Liq_Mlg := 1;
+	                        #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_LIQ1_MLG2", Num_Zone := #Gprod.NumZone);
+	                        EXIT;
+	                    END_IF;
+	                END_FOR;
+	                FOR #i := 0 TO "Nbr_Max_Compo_Pt_Zs" DO
+	                    IF "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Code_Cel <> '' AND "Valid_Cellule"(Cellule := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Code_Cel, TabCel := "DB_Dosage".LIQUIDES_MLG[6].CommunDos.Module_Commun._PtCel._TabCel) THEN
+	                        "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Incorpo := 'MLG2';
+	                        "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Incorpo_Reel := 'MLG';
+	                        "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Num_Liq_Mlg := 2;
+	                        #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_LIQ2_MLG2", Num_Zone := #Gprod.NumZone);
+	                        EXIT;
+	                    END_IF;
+	                END_FOR;
+	                FOR #i := 0 TO "Nbr_Max_Compo_Pt_Zs" DO
+	                    IF "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Code_Cel <> '' AND "Valid_Cellule"(Cellule := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Code_Cel, TabCel := "DB_Dosage".LIQUIDES_MLG[7].CommunDos.Module_Commun._PtCel._TabCel) THEN
+	                        "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Incorpo := 'MLG2';
+	                        "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Incorpo_Reel := 'MLG';
+	                        "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Num_Liq_Mlg := 3;
+	                        #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_LIQ3_MLG2", Num_Zone := #Gprod.NumZone);
+	                        EXIT;
+	                    END_IF;
+	                END_FOR;
+	                FOR #i := 0 TO "Nbr_Max_Compo_Pt_Zs" DO
+	                    IF "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Code_Cel <> '' AND "Valid_Cellule"(Cellule := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Code_Cel, TabCel := "DB_Dosage".LIQUIDES_MLG[8].CommunDos.Module_Commun._PtCel._TabCel) THEN
+	                        "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Incorpo := 'MLG2';
+	                        "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Incorpo_Reel := 'MLG';
+	                        "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Num_Liq_Mlg := 4;
+	                        #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_LIQ4_MLG2", Num_Zone := #Gprod.NumZone);
+	                        EXIT;
+	                    END_IF;
+	                END_FOR;
+	                FOR #i := 0 TO "Nbr_Max_Compo_Pt_Zs" DO
+	                    IF "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Code_Cel <> '' AND "Valid_Cellule"(Cellule := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Code_Cel, TabCel := "DB_Dosage".LIQUIDES_MLG[9].CommunDos.Module_Commun._PtCel._TabCel) THEN
+	                        "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Incorpo := 'MLG2';
+	                        "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Incorpo_Reel := 'MLG';
+	                        "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._Lst_Compos[#i].Num_Liq_Mlg := 5;
+	                        #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_LIQ5_MLG2", Num_Zone := #Gprod.NumZone);
+	                        EXIT;
+	                    END_IF;
+	                END_FOR;
+	            END_IF;
+	            #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_DEROUT_EXP", Num_Zone := #Gprod.NumZone);
+	            #Ret_Maj_Activ := "Maj_Activ"(Num_Tache := "TAC_LANC_EXP", Num_Zone := #Gprod.NumZone);
+	            #Ret_Proc_Lanc_Fab := "Proc_Lanc_Fab"(Msg_Def => #Msg_Def, Err_Sql => #Err_Sql, Data_Dosage := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]);
+	            IF ("dbSql4SiemensInterface".stSql4SiemensInterface.Observer.xTimeout) THEN
+	                #Aff_Def := TRUE;
+	                #Mess_Def := 'Connexion avec la base interrompue';
+	                // ELSIF NOT ((#Ret_Proc_Lanc_Fab = 'NOK') OR (#Ret_Proc_Lanc_Fab = 'OK')) THEN
+	                //     #Aff_Def := TRUE;
+	                //     #Mess_Def := #Err_Sql;
+	            ELSIF #Ret_Proc_Lanc_Fab = 'NOK' OR (#Ret_Proc_Lanc_Fab = 'OK' AND #Msg_Def <> 'VIDE') THEN
+	                #Aff_Def := TRUE;
+	                #Mess_Def := #Msg_Def;
+	            END_IF;
+	            IF #Aff_Def THEN
+	                #Aff_Def := FALSE;
+	                #Gprod.Dial_Def.Num_Def_Etape := 2;
+	                #Gprod.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base,
+	                                                                Msg_Defaut := #Mess_Def,
+	                                                                Type_Defaut := 0,
+	                                                                Automatisme := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._CdProc,
+	                                                                Num_Lot := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]._SuiviCommun._NoLot,
+	                                                                Origine_Defaut := 'Com. Base',
+	                                                                Libelle_Origine := 'Proc_Lanc_Fab',
+	                                                                Acq1 := 'Relance',
+	                                                                Acq2 := '',
+	                                                                Acq3 := '',
+	                                                                Acq4 := '',
+	                                                                Acq5 := '',
+	                                                                Acq6 := '',
+	                                                                Acq7 := '',
+	                                                                Acq8 := '',
+	                                                                Acq_Choisi := -1,
+	                                                                Date_Arrivee := #Tps_Act);
+	                #Gprod.Etp := #Att_Acquitement;
+	                RETURN;
+	            END_IF;
+	        Lanc_Boucles_DEF2:
+	            //============ Traitement des reponses pour le defaut Proc_MAJ_Stock ============//
+	            IF (#Gprod.Dial_Def.Reponse_Def = 'Relance') THEN
+	                // Vider la reponse defaut
+	                #Gprod.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            //============Traitement des reponses pour le defaut Proc_MAJ_Stock ============//
+	            #Gprod.Etp := #Att_Fin_Lot_BP;
+	        END_REGION Cyclique Lanc Boucles
+	    #Annul_Lot:
+	        REGION Preliminaire Annul Lot
+	            #Ret_Proc_Annul_Fab := "Proc_Annul_Fab"(Msg_Def => #Msg_Def, Err_Sql => #Err_Sql, Data_Dosage := "DB_Data_Dosage"."THIS"[#Gprod.NumZone]);
+	            "DB_BIBLIOTHEQUE".Zones_Suivi[#Gprod.NumZone].Occupee := FALSE;
+	            #Gprod.Etp := #Rech_Zone_Libre;
+	            RETURN;
+	        END_REGION Preliminaire Annul Lot
+	    #Att_Fin_Lot_BP:
+	        REGION Preliminaire Att Fin Lot BP
+	            IF #Gprod.Etp <> #Gprod.Etp_Memo THEN
+	                #Gprod.Etp_Memo := #Gprod.Etp;
+	            END_IF;
+	        END_REGION Preliminaire Att Fin Lot BP 
+	        REGION Cyclique Att Fin Lot BP
+	            IF "Test_Niv"(Num_Zone := #Gprod.NumZone, Num_Tache := "TAC_BP1", Niveau := "NIV_SURDOS_FIN_LOT", Niveau_Tache => #Niv_Fin_Lot) = 1 THEN
+	                #Gprod.Etp := #Rech_Zone_Libre;
+	                RETURN;
+	            END_IF;
+	            IF "Test_Niv"(Num_Zone := #Gprod.NumZone, Num_Tache := "TAC_BP2", Niveau := "NIV_SURDOS_FIN_LOT", Niveau_Tache => #Niv_Fin_Lot) = 1 THEN
+	                #Gprod.Etp := #Rech_Zone_Libre;
+	                RETURN;
+	            END_IF;
+	        END_REGION Cyclique Att Fin Lot BP  
+	    #Att_Acquitement:
+	        REGION Preliminaire Att Acquitement
+	            IF #Gprod.Etp <> #Gprod.Etp_Memo THEN
+	                #Gprod.Etp_Memo := #Gprod.Etp;
+	            END_IF;
+	        END_REGION Preliminaire Att Acquitement   
+	        REGION Cyclique Att Acquitement
+	            #Gprod.Dial_Def.Reponse_Def := "FC_Recup_Rep_Def"(Index_Def := #Gprod.Dial_Def.Index_Defaut, Reponse_Ecrit => #Gprod.Dial_Def.Text_Reponse);
+	            IF #Gprod.Dial_Def.Reponse_Def <> '' THEN
+	                "FC_Raz_Def"(#Gprod.Dial_Def.Index_Defaut);
+	                #Gprod.Etp := #Gprod.Etp_Prec;
+	                RETURN;
+	            END_IF;
+	        END_REGION Cyclique Att Acquitement      
+	END_CASE;
+	
+END_FUNCTION_BLOCK
+

@@ -1,0 +1,26 @@
+﻿FUNCTION "Recup_Poids_Pesage_Compo" : Real
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Verse_Sac : "S_Verse_Sac";
+   END_VAR
+
+
+BEGIN
+	CASE #Verse_Sac.Choix_Pesage_Compo OF
+	    0:  
+	        #Recup_Poids_Pesage_Compo := #Verse_Sac.Poids_Benne;
+	        RETURN;
+	    1: 
+	        #Recup_Poids_Pesage_Compo := #Verse_Sac.Poids_Grand_Plat;
+	        RETURN;
+	    2:  
+	        #Recup_Poids_Pesage_Compo := #Verse_Sac.Poids_Petit_Plat;
+	        RETURN;
+	    ELSE
+	        #Recup_Poids_Pesage_Compo := #Verse_Sac.Poids_Benne;
+	        RETURN;
+	END_CASE; 
+	
+END_FUNCTION
+

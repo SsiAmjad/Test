@@ -1,0 +1,92 @@
+﻿FUNCTION "Proc_Recherche_Params_Auto_MLG" : String[254]
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_OUTPUT 
+      Err_Sql : String;
+      Msg_Def : String;
+   END_VAR
+
+   VAR_IN_OUT 
+      Data_Dosage : "S_Suivi_Dosage";
+   END_VAR
+
+   VAR_TEMP 
+      parameters_value : Array[0..20] of String;
+      Resultat_Decode : WString[4000];
+      status : Int;
+      Rep_temp : String;
+      i : SInt;
+      POSITION_CLE : Int;
+   END_VAR
+
+
+BEGIN
+	//Insertion des parametres 
+	#parameters_value[0] := UINT_TO_STRING("Num_Poste");
+	#parameters_value[1] := #Data_Dosage._SuiviCommun._CdMat;
+	#parameters_value[2] := #Data_Dosage._SuiviCommun._CdProc;
+	#parameters_value[3] := 'MELANGE';
+	
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	
+	#Resultat_Decode := "COMBASE"(procedure_name := 'SP_PARAUTO_RECHPARAM',
+	                              values_of_record := #parameters_value,
+	                              parameters_number := 4,
+	                              ERROR_MESSAGE => #Err_Sql);
+	
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := 'REPONSE:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Proc_Recherche_Params_Auto_MLG);
+	
+	IF #Proc_Recherche_Params_Auto_MLG = 'NOK' THEN
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := 'MESS:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Msg_Def);
+	    RETURN;
+	ELSIF #Proc_Recherche_Params_Auto_MLG = 'OK' THEN
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := 'MESS:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Msg_Def);
+	    IF #Msg_Def = 'VIDE' THEN
+	        RETURN;
+	    END_IF;
+	ELSE
+	    RETURN;
+	END_IF;
+	
+	//================ Decode des parametres Mlangeuse ================//
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|TPSINJMAX:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	#Data_Dosage._ParamMelang._Tps_Inj_Max := UINT_TO_TIME(STRING_TO_UINT(#Rep_temp)) * 1000;
+	IF #Data_Dosage._ParamMelang._Tps_Inj_Max <= T#0MS THEN
+	    #Msg_Def := 'TPSINJMAX, ';
+	END_IF;
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|TPSMLGAPINJ:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	#Data_Dosage._ParamMelang._Tps_Mlg_Ap_Inj := UINT_TO_TIME(STRING_TO_UINT(#Rep_temp)) * 1000;
+	IF #Data_Dosage._ParamMelang._Tps_Mlg_Ap_Inj <= T#0MS THEN
+	    #Msg_Def := CONCAT(IN1 := #Msg_Def, IN2 := 'TPSMLGAPINJ, ');
+	END_IF;
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|TPSPREMLG:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	#Data_Dosage._ParamMelang._Tps_Pre_Mlg := UINT_TO_TIME(STRING_TO_UINT(#Rep_temp)) * 1000;
+	IF #Data_Dosage._ParamMelang._Tps_Pre_Mlg <= T#0MS THEN
+	    #Msg_Def := CONCAT(IN1 := #Msg_Def, IN2 := 'TPSPREMLG, ');
+	END_IF;
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|TPSMLGMAX:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	#Data_Dosage._ParamMelang._Tps_Mlg_Max := UINT_TO_TIME(STRING_TO_UINT(#Rep_temp)) * 1000;
+	IF #Data_Dosage._ParamMelang._Tps_Mlg_Max <= T#0MS THEN
+	    #Msg_Def := CONCAT(IN1 := #Msg_Def, IN2 := 'TPSMLGMAX, ');
+	END_IF;
+END_FUNCTION
+

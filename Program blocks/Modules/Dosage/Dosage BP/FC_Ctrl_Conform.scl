@@ -1,0 +1,20 @@
+﻿FUNCTION "FC_Ctrl_Conform" : SInt
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Benne : "S_Benne";
+   END_VAR
+
+
+BEGIN
+	IF (#Benne.Composant.Poids - #Benne.Composant.Net) >= #Benne.Composant.Tol_Confor_Inf THEN
+	    #FC_Ctrl_Conform := -1;
+	    RETURN;
+	END_IF;
+	IF (#Benne.Composant.Net - #Benne.Composant.Poids) > #Benne.Composant.Tol_Confor_Sup THEN
+	    #FC_Ctrl_Conform := -2;
+	    RETURN;
+	END_IF;
+	#FC_Ctrl_Conform := 1;
+END_FUNCTION
+

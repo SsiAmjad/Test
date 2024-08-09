@@ -1,0 +1,42 @@
+﻿FUNCTION "FC_Decal_Compos" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      SurvDosBenne : "S_DOSBENNE";
+   END_VAR
+
+   VAR_TEMP 
+      i : SInt;
+   END_VAR
+
+
+BEGIN
+	FOR #i := 0 TO 19 DO
+	    IF #SurvDosBenne.Lst_Compos[#i].Code_MP = '' THEN
+	        #SurvDosBenne.Lst_Compos[#i] := #SurvDosBenne.Benne.Composant;
+	        EXIT;
+	    END_IF;
+	END_FOR;
+	FOR #i := 0 TO 18 DO
+	    IF NOT #SurvDosBenne.Lst_Compos[#i].Fin_Dos THEN
+	        #SurvDosBenne.Lst_Compos[#i] := #SurvDosBenne.Lst_Compos[#i + 1];
+	    END_IF;
+	END_FOR;
+	//============  Recherche Composant Pour Relance ============//
+	FOR #i := 0 TO 19 DO
+	    IF #SurvDosBenne.Pt_Zs._Lst_Compos[#i].Code_MP = '' THEN
+	        CONTINUE;
+	    END_IF;
+	    IF NOT #SurvDosBenne.Lst_Compos[#i].Fin_Dos  THEN
+	        #SurvDosBenne.Benne.Composant := #SurvDosBenne.Lst_Compos[#i];
+	        //============ RENSEIGNEMENT DU COMPOSANT ============//
+	        #SurvDosBenne.Benne.Composant.Incorpo_Reel := #SurvDosBenne.Benne.Nom;
+	        //============ RENSEIGNEMENT DU COMPOSANT ============//
+	        #SurvDosBenne.Benne.Index_Compo_Enc := #i;
+	        "FC_Rech_Cir_Ext"(#SurvDosBenne);
+	        RETURN;
+	    END_IF;
+	END_FOR;
+	//============  Recherche Composant Pour Relance ============//
+END_FUNCTION
+

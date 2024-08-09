@@ -1,0 +1,49 @@
+﻿FUNCTION "Demar_BR" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Broyeur : "S_Broyage";
+   END_VAR
+
+   VAR_TEMP 
+      Ret_Dem_Mobile : SInt;
+   END_VAR
+
+   VAR CONSTANT 
+      Sens_Avant : SInt := 0;
+      Sens_Arriere : SInt := 1;
+      Grande_Vitesse : SInt := 0;
+      Petite_Vitesse : SInt := 1;
+   END_VAR
+
+
+BEGIN
+	
+	IF #Broyeur.Fg_Chg_Auto_Sens THEN
+	    IF #Broyeur.E_Sens_AV THEN
+	        "FC_Posit_Mob"(Index_Mob := #Broyeur.Mob_Broyeur,
+	                       Position := #Sens_Avant);
+	        RETURN;
+	    END_IF;
+	    IF #Broyeur.E_Sens_AR THEN
+	        "FC_Posit_Mob"(Index_Mob := #Broyeur.Mob_Broyeur,
+	                       Position := #Sens_Arriere);
+	        RETURN;
+	    END_IF;
+	END_IF;
+	IF #Broyeur.Fg_Valid_PVGV THEN
+	    IF #Broyeur.Pt_Zs._ParamBro._Vit_Bro >= #Broyeur.Seuil_PVGV THEN
+	        "FC_Posit_Mob"(Index_Mob := #Broyeur.Mob_Broyeur,
+	                       Position := #Grande_Vitesse);
+	    ELSE
+	        "FC_Posit_Mob"(Index_Mob := #Broyeur.Mob_Broyeur,
+	                       Position := #Petite_Vitesse);
+	    END_IF;
+	    RETURN;
+	END_IF;
+	// #Ret_Dem_Mobile := "Dem_Mobile"(#Broyeur.Mob_Broyeur);
+	"FC_Posit_Mob"(Index_Mob := #Broyeur.Mob_Broyeur,
+	               Position := 0);
+	RETURN;
+END_FUNCTION
+

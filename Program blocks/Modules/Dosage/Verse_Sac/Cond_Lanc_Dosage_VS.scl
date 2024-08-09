@@ -1,0 +1,8 @@
+﻿FUNCTION "Cond_Lanc_Dosage_VS" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+BEGIN
+	#Cond_Lanc_Dosage_VS := TRUE;
+END_FUNCTION
+

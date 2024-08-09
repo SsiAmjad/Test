@@ -1,0 +1,1035 @@
+﻿FUNCTION "Gest_Exp_Dos" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Fg_Base : Bool;
+   END_VAR
+
+   VAR_IN_OUT 
+      Exp_Dos : "S_Exp_Dos";
+   END_VAR
+
+   VAR_TEMP 
+      Ret_Test_Lot_Att_Tache : SInt;
+      Ret_Maj_Niv : SInt;
+      Ret_Rech_Cir : SInt;
+      Ret_Vid_Circuit : SInt;
+      Tps_Passe : Time;
+      Ret_RD_SYS_T : Int;
+      Ret_Test_Etat_Mobile : SInt;
+      Etat_Orig_Cir : USInt;
+      Ret_Libere_Circuit : SInt;
+      Ret_Libere_Zone_Suiv_Lot : SInt;
+      i : SInt;
+      Msg_Def : String;
+      Tps_Act : Date_And_Time;
+      Ret_Dem_Circuit : SInt;
+      RAZ_Circuit : "S_Circuit";
+      ReturnChngDest : SInt;
+      Ret : Int;
+      Text_Def : String;
+      Ret_Int : Int;
+      Anc_Dest : String;
+      CdZoneDest : String;
+      Ret_Dem_Mobile : SInt;
+      ResultProcChangmtdesttransf : String;
+      Ret_Vid_Circuit_1 : Bool;
+      _Fg_Test_NH : Bool;
+      Ret_Proc_MAJ_Stock_Exp : String;
+      Ret_Proc_Fin_Fab : String;
+      Ret_Proc_ControleAffectation : String;
+      Err_Sql : String;
+      Ret_AffecT : String;
+      Aff_Def : Bool;
+      Mess_Def : String;
+   END_VAR
+
+   VAR CONSTANT 
+      Etp_Repos : SInt := 0;
+      Etp_Att_Fin_Mel : SInt := 1;
+      Etp_Controles : SInt := 2;
+      Etp_Avant_Recherche_Circuit : SInt := 3;
+      Etp_Recherche_Circuit : SInt := 4;
+      Etp_Prepositionnement : SInt := 5;
+      Etp_Att_Circuit_Pret : SInt := 6;
+      Etp_Surveillance : SInt := 7;
+      Etp_Changement_Destination : SInt := 8;
+      Etp_Changement_Noeud : SInt := 9;
+      Etp_Fin_NH : SInt := 10;
+      Etp_Vidange_NH : SInt := 11;
+      Etp_Apres_Vidange_NH : SInt := 12;
+      Etp_Vidange : SInt := 13;
+      Etp_Apres_Vidange : SInt := 14;
+      Etp_Maj_Base : SInt := 15;
+      Etp_Fin_Lot : SInt := 16;
+      Etp_Att_Acq : SInt := 17;
+      ListeDestParcourue : SInt := 30;   // Constante pour lire prochainement a partir de texte reponse
+   END_VAR
+
+
+BEGIN
+	//============= Affichage Etiquette =============//
+	"FC_Affich_Etiquette"(Couleur := #Exp_Dos.Pt_Zs._SuiviCommun._Couleur,
+	                      Cel_Dest := #Exp_Dos.Pt_Zs._Cel_Dest,
+	                      CdMat := #Exp_Dos.Pt_Zs._SuiviCommun._CdMat,
+	                      NoLot := #Exp_Dos.Pt_Zs._SuiviCommun._NoLot,
+	                      QteLot := #Exp_Dos.Pt_Zs._SuiviCommun._QteLot,
+	                      Desc_Etp := #Exp_Dos.CommunDos.Module_Commun._DescEtp,
+	                      Etiquette := #Exp_Dos.CommunDos);
+	//============= Affichage Etiquette =============//
+	
+	"Masquage_Cntrl_NH"(Duree:=#Exp_Dos.Tps_Masque_NH,
+	                    TpsPicke:=#Exp_Dos.Tps_Picke_NH,
+	                    FgMaskCtrlNh:=#Exp_Dos.Fg_Masq_NH);
+	
+	#Ret_RD_SYS_T := RD_SYS_T(#Tps_Act);
+	CASE #Exp_Dos.CommunDos.Module_Commun._Etp OF
+	    #Etp_Repos:
+	        REGION Preliminaire Repos
+	            IF #Exp_Dos.CommunDos.Module_Commun._Etp <> #Exp_Dos.CommunDos.Module_Commun._EtpMemo THEN
+	                #Exp_Dos.CommunDos.Module_Commun._DescEtp := 'REPOS';
+	                #Exp_Dos.Pt_Zs._SuiviCommun._CdMat := '';
+	                #Exp_Dos.Pt_Zs._SuiviCommun._NoLot := '';
+	                #Exp_Dos.Fg_Arret_Amont := FALSE;
+	                #Exp_Dos.CommunDos.Module_Commun._EtpMemo := #Exp_Dos.CommunDos.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Preliminaire Repos
+	        REGION Cyclique Repos
+	            #Ret_Test_Lot_Att_Tache := "Test_Lot_Att_Tache"(Num_Tache := #Exp_Dos.CommunDos.Module_Commun._Tache, Num_Zone => #Exp_Dos.CommunDos.Module_Commun._NumZone);
+	            IF #Ret_Test_Lot_Att_Tache = 1 THEN
+	                #Exp_Dos.Fg_Cir_Enc := TRUE;
+	                #Exp_Dos.Pt_Zs := "DB_Data_Dosage"."THIS"[#Exp_Dos.CommunDos.Module_Commun._NumZone];
+	                #Ret_Maj_Niv := "Maj_Niv"(Num_Zone := #Exp_Dos.CommunDos.Module_Commun._NumZone,
+	                                          Num_Tache := #Exp_Dos.CommunDos.Module_Commun._Tache,
+	                                          Niveau := "NIV_CIR_EXP_DEBUT_LOT");
+	                #Exp_Dos.CommunDos.Module_Commun._Etp := #Etp_Att_Fin_Mel;
+	            END_IF;
+	        END_REGION Cyclique Repos
+	    #Etp_Att_Fin_Mel:
+	        REGION Preliminaire Att Fin Mel
+	            IF #Exp_Dos.CommunDos.Module_Commun._Etp <> #Exp_Dos.CommunDos.Module_Commun._EtpMemo THEN
+	                #Exp_Dos.CommunDos.Module_Commun._DescEtp := 'FIN MELANGEUSE';
+	                #Exp_Dos.CommunDos.Module_Commun._EtpPrec := #Exp_Dos.CommunDos.Module_Commun._Etp;
+	                #Exp_Dos.CommunDos.Module_Commun._EtpMemo := #Exp_Dos.CommunDos.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Preliminaire Att Fin Mel
+	        REGION Cyclique Att Fin Mel
+	            IF NOT "FC_Test_Niv_AmontAval"(Num_Zone := #Exp_Dos.CommunDos.Module_Commun._NumZone, Lst_Taches := #Exp_Dos.Lst_Taches_Aut_Dem) THEN
+	                RETURN;
+	            END_IF;
+	            #Exp_Dos.CommunDos.Module_Commun._Etp := #Etp_Controles;
+	        END_REGION Cyclique Att Fin Mel
+	    #Etp_Controles:
+	        REGION Preliminaire Controles
+	            IF #Exp_Dos.CommunDos.Module_Commun._Etp <> #Exp_Dos.CommunDos.Module_Commun._EtpMemo THEN
+	                #Exp_Dos.CommunDos.Module_Commun._DescEtp := 'CONTROLES';
+	                #Exp_Dos.CommunDos.Module_Commun._EtpPrec := #Exp_Dos.CommunDos.Module_Commun._Etp;
+	                #Exp_Dos.CommunDos.Module_Commun._EtpMemo := #Exp_Dos.CommunDos.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Preliminaire Controles
+	        REGION Cyclique Controles
+	
+	            #Exp_Dos.CommunDos.Module_Commun._Etp := #Etp_Avant_Recherche_Circuit;
+	        END_REGION Cyclique Controles
+	    #Etp_Avant_Recherche_Circuit:
+	        REGION Preliminaire Avant Recherche Circuit
+	            IF #Exp_Dos.CommunDos.Module_Commun._Etp <> #Exp_Dos.CommunDos.Module_Commun._EtpMemo THEN
+	                #Exp_Dos.CommunDos.Module_Commun._DescEtp := 'AVANT RECH CIR';
+	                #Exp_Dos.CommunDos.Module_Commun._EtpPrec := #Exp_Dos.CommunDos.Module_Commun._Etp;
+	                //=== Traitement cas retour de defaut ===//
+	                IF #Exp_Dos.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #Exp_Dos.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO Avant_Recherche_Circuit_Def1;
+	                        2:
+	                            GOTO Avant_Recherche_Circuit_Def2;
+	                    END_CASE;
+	                END_IF;
+	                //=== Traitement cas retour de defaut ===//
+	                #Exp_Dos.CommunDos.Module_Commun._EtpMemo := #Exp_Dos.CommunDos.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Preliminaire Avant Recherche Circuit
+	        REGION Cyclique Avant Recherche Circuit
+	            #Ret_Proc_ControleAffectation := "Proc_ControleAffectation"(NumPoste := "Num_Poste",
+	                                                                        zone := #Exp_Dos.Pt_Zs._Cel_Dest,
+	                                                                        CodeMat := #Exp_Dos.Pt_Zs._SuiviCommun._CdMat,
+	                                                                        Formule := #Exp_Dos.Pt_Zs._SuiviCommun._CdForm,
+	                                                                        NoLot := #Exp_Dos.Pt_Zs._SuiviCommun._NoLot,
+	                                                                        ModeMasquage := 'N',
+	                                                                        ModeBloc := 'N',
+	                                                                        Cveriflot := 'O',
+	                                                                        Typezone := 'D',
+	                                                                        Procede := 'DOSAGE',
+	                                                                        Msg_Def => #Msg_Def);
+	            IF #Ret_Proc_ControleAffectation = 'NOK' OR (#Ret_Proc_ControleAffectation = 'OK' AND #Msg_Def <> 'VIDE') THEN
+	                #Exp_Dos.Dial_Def.Num_Def_Etape := 1;
+	                #Exp_Dos.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base, Msg_Defaut := #Msg_Def,
+	                                                                  Type_Defaut := 0,
+	                                                                  Automatisme := #Exp_Dos.Pt_Zs._SuiviCommun._CdProc,
+	                                                                  Num_Lot := #Exp_Dos.Pt_Zs._SuiviCommun._NoLot,
+	                                                                  Origine_Defaut := 'Exp Dos',
+	                                                                  Libelle_Origine := 'Proc_ControleAffectation',
+	                                                                  Acq1 := 'Relance',
+	                                                                  Acq2 := 'Cellule',
+	                                                                  Acq3 := '',
+	                                                                  Acq4 := '',
+	                                                                  Acq5 := '',
+	                                                                  Acq6 := '',
+	                                                                  Acq7 := '',
+	                                                                  Acq8 := '',
+	                                                                  Acq_Choisi := -1,
+	                                                                  Date_Arrivee := #Tps_Act);
+	                #Exp_Dos.CommunDos.Module_Commun._Etp := #Etp_Att_Acq;
+	                RETURN;
+	            END_IF;
+	        Avant_Recherche_Circuit_Def1:
+	            //============ Traitement des reponses pour le defaut Proc_ControleAffectation ============//
+	            IF (#Exp_Dos.Dial_Def.Reponse_Def = 'Relance') THEN
+	                // Vider la reponse defaut
+	                #Exp_Dos.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            IF (#Exp_Dos.Dial_Def.Reponse_Def = 'Cellule') THEN
+	                #Exp_Dos.Pt_Zs._Cel_Dest := #Exp_Dos.Dial_Def.Text_Reponse;
+	                // Vider la reponse defaut
+	                #Exp_Dos.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            //============Traitement des reponses pour le defaut Proc_ControleAffectation ============//
+	            #Ret_AffecT := "Proc_AffecT"(NumPoste := "Num_Poste",
+	                                         zone := #Exp_Dos.Pt_Zs._Cel_Dest,
+	                                         CodeMat := #Exp_Dos.Pt_Zs._SuiviCommun._CdMat,
+	                                         Formule := #Exp_Dos.Pt_Zs._SuiviCommun._CdForm,
+	                                         LieuDos := '',
+	                                         Qte := #Exp_Dos.Pt_Zs._SuiviCommun._QteLot,
+	                                         TypeMvmnt := '040',
+	                                         Procede := 'DOSAGE',
+	                                         NoLotOrig := '',
+	                                         NoLotDest := #Exp_Dos.Pt_Zs._SuiviCommun._NoLot,
+	                                         Utilisateur := 'DAOUDI',
+	                                         SCb := ' ',
+	                                         Sof := '',
+	                                         Msg_Def => #Msg_Def);
+	            IF #Ret_AffecT = 'NOK' OR (#Ret_AffecT = 'OK' AND #Msg_Def <> 'VIDE') THEN
+	                #Exp_Dos.Dial_Def.Num_Def_Etape := 2;
+	                #Exp_Dos.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base, Msg_Defaut := #Msg_Def,
+	                                                                  Type_Defaut := 0,
+	                                                                  Automatisme := #Exp_Dos.Pt_Zs._SuiviCommun._CdProc,
+	                                                                  Num_Lot := #Exp_Dos.Pt_Zs._SuiviCommun._NoLot,
+	                                                                  Origine_Defaut := 'Exp Dos',
+	                                                                  Libelle_Origine := 'Proc_AffecT',
+	                                                                  Acq1 := 'Relance',
+	                                                                  Acq2 := 'Cellule',
+	                                                                  Acq3 := '',
+	                                                                  Acq4 := '',
+	                                                                  Acq5 := '',
+	                                                                  Acq6 := '',
+	                                                                  Acq7 := '',
+	                                                                  Acq8 := '',
+	                                                                  Acq_Choisi := -1,
+	                                                                  Date_Arrivee := #Tps_Act);
+	                #Exp_Dos.CommunDos.Module_Commun._Etp := #Etp_Att_Acq;
+	                RETURN;
+	            END_IF;
+	        Avant_Recherche_Circuit_Def2:
+	            //============ Traitement des reponses pour le defaut Proc_ControleAffectation ============//
+	            IF (#Exp_Dos.Dial_Def.Reponse_Def = 'Relance') THEN
+	                // Vider la reponse defaut
+	                #Exp_Dos.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            IF (#Exp_Dos.Dial_Def.Reponse_Def = 'Cellule') THEN
+	                #Exp_Dos.Pt_Zs._Cel_Dest := #Exp_Dos.Dial_Def.Text_Reponse;
+	                // Vider la reponse defaut
+	                #Exp_Dos.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            //============Traitement des reponses pour le defaut Proc_ControleAffectation ============//
+	            #Exp_Dos.CommunDos.Module_Commun._Etp := #Etp_Recherche_Circuit;
+	        END_REGION Cyclique Avant Recherche Circuit
+	    #Etp_Recherche_Circuit:
+	        REGION Preliminaire Recherche Circuit
+	            IF #Exp_Dos.CommunDos.Module_Commun._Etp <> #Exp_Dos.CommunDos.Module_Commun._EtpMemo THEN
+	                #Exp_Dos.CommunDos.Module_Commun._DescEtp := 'RECH CIRCUIT';
+	                #Exp_Dos.CommunDos.Module_Commun._EtpPrec := #Exp_Dos.CommunDos.Module_Commun._Etp;
+	                //=== Traitement cas retour de defaut ===//
+	                IF #Exp_Dos.Dial_Def.Reponse_Def <> '' THEN
+	                    #Exp_Dos.CommunDos.Module_Commun._EtpMemo := #Exp_Dos.CommunDos.Module_Commun._Etp;
+	                    CASE #Exp_Dos.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO RECHERCHE_CIRCUIT_DEF1;
+	                    END_CASE;
+	                END_IF;
+	                //=== Traitement cas retour de defaut ===//
+	                #Ret_RD_SYS_T := RD_SYS_T(#Exp_Dos.CommunDos.Module_Commun._TpsPicke);
+	                
+	                #Exp_Dos.Mob_Prec := -1;
+	                #Exp_Dos.CommunDos.Module_Commun._EtpMemo := #Exp_Dos.CommunDos.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Preliminaire Recherche Circuit
+	        REGION Cyclique Recherche Circuit
+	            #Exp_Dos.Cir.Num_Circuit := #Exp_Dos.Num_Circuit;
+	            IF #Exp_Dos.Fg_Melas THEN
+	                IF NOT "Valid_Index"("Index_Mobile"(#Exp_Dos.Orig_Avec_Mls)) THEN
+	                    RETURN;
+	                END_IF;
+	                #Exp_Dos.Cir.Origine := "Index_Mobile"(#Exp_Dos.Orig_Avec_Mls);
+	            ELSE
+	                IF NOT "Valid_Index"("Index_Mobile"(#Exp_Dos.Orig_Sans_Mls)) THEN
+	                    RETURN;
+	                END_IF;
+	                #Exp_Dos.Cir.Origine := "Index_Mobile"(#Exp_Dos.Orig_Sans_Mls);
+	            END_IF;
+	            IF NOT "Valid_Index"("Index_Mobile"(#Exp_Dos.Pt_Zs._Cel_Dest)) THEN
+	                RETURN;
+	            END_IF;
+	            #Exp_Dos.Cir.Destination := "Index_Mobile"(#Exp_Dos.Pt_Zs._Cel_Dest);
+	            #Exp_Dos.CommunDos.Module_Commun._Ptdest := #Exp_Dos.Cir.Destination;
+	            
+	            IF #Exp_Dos.CommunDos.Cir_Exp[#Exp_Dos.Cir.Num_Circuit].Cir_Enc.Origine > -1 THEN
+	                #Exp_Dos.Cir := #Exp_Dos.CommunDos.Cir_Exp[#Exp_Dos.Cir.Num_Circuit].Cir_Enc;
+	            ELSE
+	                #Ret_Rech_Cir := "Rech_Cir"(#Exp_Dos.Cir);
+	            END_IF;
+	            IF #Ret_Rech_Cir >= 0 THEN
+	                #Exp_Dos.CommunDos.Module_Commun._Etp := #Etp_Prepositionnement;
+	                
+	                RETURN;
+	            ELSE
+	                #Exp_Dos.Dial_Def.Num_Def_Etape := 1;
+	                #Msg_Def := 'Circuit Impossible !';
+	                #Exp_Dos.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base:=#Fg_Base, Msg_Defaut := #Msg_Def,
+	                                                                  Type_Defaut := 0,
+	                                                                  Automatisme := #Exp_Dos.Pt_Zs._SuiviCommun._CdProc,
+	                                                                  Num_Lot := #Exp_Dos.Pt_Zs._SuiviCommun._NoLot,
+	                                                                  Origine_Defaut := '',
+	                                                                  Libelle_Origine := #Exp_Dos.CommunDos.Module_Commun._NomTache,
+	                                                                  Acq1 := 'Relance',
+	                                                                  Acq2 := 'Cellule',
+	                                                                  Acq3 := '',
+	                                                                  Acq4 := '',
+	                                                                  Acq5 := '',
+	                                                                  Acq6 := '',
+	                                                                  Acq7 := '',
+	                                                                  Acq8 := '',
+	                                                                  Acq_Choisi := -1,
+	                                                                  Date_Arrivee := #Tps_Act);
+	                #Exp_Dos.CommunDos.Module_Commun._Etp := #Etp_Att_Acq;
+	                RETURN;
+	            END_IF;
+	        RECHERCHE_CIRCUIT_DEF1:
+	            //========================== Traitement des reponses defaut ==========================//
+	            IF (#Exp_Dos.Dial_Def.Reponse_Def = 'Relance') THEN
+	                IF NOT "Tempo"(Duree := #Exp_Dos.Tps_Entre_Rech_Cir, Tps_Picke := #Exp_Dos.CommunDos.Module_Commun._TpsPicke, Anticip := FALSE, Tps_Passe => #Tps_Passe) THEN
+	                    RETURN;
+	                END_IF;
+	                // RAZ message defaut
+	                #Exp_Dos.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            IF (#Exp_Dos.Dial_Def.Reponse_Def = 'Cellule') THEN
+	                #Exp_Dos.Pt_Zs._Cel_Dest := #Exp_Dos.Dial_Def.Text_Reponse;
+	                IF (#Exp_Dos.Pt_Zs._Fg_Hop AND #Exp_Dos.Fg_Ctrl_Hopital) OR NOT (#Exp_Dos.Pt_Zs._Fg_Hop) THEN
+	                    IF (#Exp_Dos.Pt_Zs._Fg_Hop AND #Exp_Dos.Fg_Ctrl_Hopital) THEN
+	                        //Communication avec la base
+	                        ;
+	                    ELSE
+	                        //Communication avec la base
+	                        ;
+	                    END_IF;
+	                END_IF;
+	                // RAZ message defaut
+	                #Exp_Dos.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            //========================== Traitement des reponses defaut ==========================//
+	        END_REGION Cyclique Recherche Circuit
+	    #Etp_Prepositionnement:
+	        REGION Preliminaire Prepositionnement
+	            IF #Exp_Dos.CommunDos.Module_Commun._Etp <> #Exp_Dos.CommunDos.Module_Commun._EtpMemo THEN
+	                #Exp_Dos.CommunDos.Module_Commun._DescEtp := 'PREPOSITIONNEMENT';
+	                #Exp_Dos.CommunDos.Module_Commun._EtpPrec := #Exp_Dos.CommunDos.Module_Commun._Etp;
+	                #Exp_Dos.CommunDos.Module_Commun._EtpMemo := #Exp_Dos.CommunDos.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Preliminaire Prepositionnement
+	        REGION Cyclique Prepositionnement
+	            #Exp_Dos._IndexDestEc:="RechIndexCel"("Nom_Mobile"(#Exp_Dos.CommunDos.Module_Commun._Ptdest));
+	            //#Exp_Dos.Pt_Cel := "RechIndexCel"(#Exp_Dos.Pt_Zs._Cel_Dest);
+	            #Exp_Dos.CommunDos.Module_Commun._Etp := #Etp_Att_Circuit_Pret;
+	        END_REGION Cyclique Prepositionnement
+	    #Etp_Att_Circuit_Pret:
+	        REGION Preliminaire Att Circuit Pret
+	            IF #Exp_Dos.CommunDos.Module_Commun._Etp <> #Exp_Dos.CommunDos.Module_Commun._EtpMemo THEN
+	                #Exp_Dos.CommunDos.Module_Commun._DescEtp := 'ATT CIRCUIT PRET';
+	                #Exp_Dos.CommunDos.Module_Commun._EtpPrec := #Exp_Dos.CommunDos.Module_Commun._Etp;
+	                //=== Traitement cas retour de defaut ===//
+	                IF #Exp_Dos.Dial_Def.Reponse_Def <> '' THEN
+	                    #Exp_Dos.CommunDos.Module_Commun._EtpMemo := #Exp_Dos.CommunDos.Module_Commun._Etp;
+	                    CASE #Exp_Dos.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO ATT_CIRCUIT_PRET_DEF1;
+	                    END_CASE;
+	                END_IF;
+	                //=== Traitement cas retour de defaut ===//
+	                #Ret_Dem_Circuit := "Dem_Circuit"(#Exp_Dos.Cir);
+	                #Exp_Dos.CommunDos.Module_Commun._EtpMemo := #Exp_Dos.CommunDos.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Preliminaire Att Circuit Pret
+	        REGION Cyclique Att Circuit Pret
+	            IF "Test_Etat_Circuit"(Etat := "Pret", Debut := 0, CIRCUIT := #Exp_Dos.Cir) THEN
+	                IF #Exp_Dos.Pt_Zs._Cel_Dest <> #Exp_Dos.Pt_Zs._Cel_Desti THEN
+	                    #Exp_Dos.Pt_Zs._Cel_Desti := #Exp_Dos.Pt_Zs._Cel_Dest;
+	                    // Communication avec la base
+	                    IF #Exp_Dos.Fg_Chg_Dest_Serie_Dem THEN
+	                        IF "FC_Lot_Id"(Pt_Zs_Enc := #Exp_Dos.Pt_Zs, Num_Zone_Enc := #Exp_Dos.CommunDos.Module_Commun._NumZone) THEN
+	                            #Exp_Dos.Dial_Def.Num_Def_Etape := 1;
+	                            #Msg_Def := 'Confirmez vous le changement de la destination pour tous les lots ?';
+	                            #Exp_Dos.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base:=#Fg_Base, Msg_Defaut := #Msg_Def,
+	                                                                              Type_Defaut := 0,
+	                                                                              Automatisme := #Exp_Dos.Pt_Zs._SuiviCommun._CdProc,
+	                                                                              Num_Lot := #Exp_Dos.Pt_Zs._SuiviCommun._NoLot,
+	                                                                              Origine_Defaut := '',
+	                                                                              Libelle_Origine := #Exp_Dos.CommunDos.Module_Commun._NomTache,
+	                                                                              Acq1 := 'Oui',
+	                                                                              Acq2 := 'Non',
+	                                                                              Acq3 := '',
+	                                                                              Acq4 := '',
+	                                                                              Acq5 := '',
+	                                                                              Acq6 := '',
+	                                                                              Acq7 := '',
+	                                                                              Acq8 := '',
+	                                                                              Acq_Choisi := -1,
+	                                                                              Date_Arrivee := #Tps_Act);
+	                            #Exp_Dos.CommunDos.Module_Commun._Etp := #Etp_Att_Acq;
+	                            RETURN;
+	                        END_IF;
+	                    END_IF;
+	                END_IF;
+	                #Ret_Maj_Niv := "Maj_Niv"(Num_Zone := #Exp_Dos.CommunDos.Module_Commun._NumZone,
+	                                          Num_Tache := #Exp_Dos.CommunDos.Module_Commun._Tache,
+	                                          Niveau := "NIV_CIR_EXP_PRET");
+	                #Exp_Dos.CommunDos.Module_Commun._Etp := #Etp_Surveillance;
+	                RETURN;
+	            END_IF;
+	        ATT_CIRCUIT_PRET_DEF1:
+	            //========================== Traitement des reponses defaut ==========================//
+	            IF (#Exp_Dos.Dial_Def.Reponse_Def = 'Oui') THEN
+	                "MAJ_Chg_Cell_Serie"(Pt_Zs_Enc := #Exp_Dos.Pt_Zs,
+	                                     Num_Zone_Enc := #Exp_Dos.CommunDos.Module_Commun._NumZone);
+	                // RAZ message defaut
+	                #Exp_Dos.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            IF (#Exp_Dos.Dial_Def.Reponse_Def = 'Non') THEN
+	                // RAZ message defaut
+	                #Exp_Dos.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            //========================== Traitement des reponses defaut ==========================//
+	        END_REGION Cyclique Att Circuit Pret
+	    #Etp_Surveillance:
+	        REGION Preliminaire Surveillance
+	            IF #Exp_Dos.CommunDos.Module_Commun._Etp <> #Exp_Dos.CommunDos.Module_Commun._EtpMemo THEN
+	                #Exp_Dos.CommunDos.Module_Commun._DescEtp := 'SURVEILLANCE';
+	                #Exp_Dos.Fg_Arret_Amont := FALSE;
+	                #_Fg_Test_NH := TRUE;
+	                #Exp_Dos.CommunDos.Module_Commun._EtpPrec := #Exp_Dos.CommunDos.Module_Commun._Etp;
+	                #Exp_Dos.CommunDos.Module_Commun._EtpMemo := #Exp_Dos.CommunDos.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Preliminaire Surveillance
+	        REGION Cyclique Surveillance
+	            IF #Exp_Dos._IndexDestEc > -1 THEN
+	                #Exp_Dos._DestEc := "DB_Mod_Cellule"._TabCel[#Exp_Dos._IndexDestEc];
+	            END_IF;
+	            IF "FC_Test_Niv_AmontAval"(Num_Zone := #Exp_Dos.CommunDos.Module_Commun._NumZone, Lst_Taches := #Exp_Dos.Lst_Taches_Arret_Test_NH) THEN
+	                #_Fg_Test_NH := FALSE;
+	            END_IF;
+	            IF "FC_Test_Niv_AmontAval"(Num_Zone := #Exp_Dos.CommunDos.Module_Commun._NumZone, Lst_Taches := #Exp_Dos.Lst_Taches_Att_Fin_Amont) THEN
+	                IF NOT #Exp_Dos.Pt_Zs._Fg_Enchain THEN
+	                    #Exp_Dos.CommunDos.Cir_Exp[#Exp_Dos.Num_Circuit].Cir_Enc := #RAZ_Circuit;
+	                    #Exp_Dos.CommunDos.Module_Commun._Etp := #Etp_Vidange;
+	                ELSE
+	                    #Exp_Dos.CommunDos.Cir_Exp[#Exp_Dos.Num_Circuit].Cir_Enc := #Exp_Dos.Cir;
+	                    #Exp_Dos.CommunDos.Module_Commun._Etp := #Etp_Maj_Base;
+	                END_IF;
+	            // Calcul de la quantite : cumul de la quantite
+	            // Communication avec la base
+	            END_IF;
+	            IF (* #_Fg_Test_NH AND *) #Exp_Dos._DestEc._NivHaut AND NOT (#Exp_Dos.Fg_Masq_NH) OR #Exp_Dos.Fg_Chg_Dest_Enc THEN
+	                #Exp_Dos.Fg_Arret_Amont := TRUE;
+	                #Exp_Dos.Fg_NH_Dest := TRUE;
+	                // Affichage
+	                #Exp_Dos.Fg_Chg_Dest_Enc := FALSE;
+	                //Communication avec la base pour MAJ stock
+	                #Exp_Dos.Pt_Zs._Cel_Desti := #Exp_Dos.Pt_Zs._Cel_Dest;
+	                // IF #Exp_Dos.Fg_Chg_Dest_Noeud THEN
+	                //     #Exp_Dos.CommunDos.Module_Commun._Etp := #Etp_Changement_Destination;
+	                //     RETURN;
+	                // ELSE
+	                //     #Exp_Dos.CommunDos.Module_Commun._Etp := #Etp_Vidange_NH;
+	                //     RETURN;
+	                // END_IF;
+	                #Exp_Dos.CommunDos.Module_Commun._Etp := #Etp_Changement_Destination;
+	                RETURN;
+	            END_IF;
+	        END_REGION Cyclique Surveillance 
+	    #Etp_Changement_Destination:
+	        REGION Preliminaire Changement Destination
+	            IF #Exp_Dos.CommunDos.Module_Commun._Etp <> #Exp_Dos.CommunDos.Module_Commun._EtpMemo THEN
+	                #Exp_Dos.CommunDos.Module_Commun._DescEtp := 'CHANGEMENT DEST';
+	                #Exp_Dos.CommunDos.Module_Commun._EtpPrec := #Exp_Dos.CommunDos.Module_Commun._Etp;
+	                #Exp_Dos.CommunDos.Module_Commun._EtpMemo := #Exp_Dos.CommunDos.Module_Commun._Etp;
+	                #Exp_Dos.ChNoeud._Etp := 0; //Initialiser le grafcet changement sur noeud
+	                "Recup_Noeud"(Circuit := #Exp_Dos.Cir,
+	                              ListeNoeuds => #Exp_Dos.ChNoeud._ListeNoeaudAnc);
+	                IF #Exp_Dos.Fg_Chg_Dest_Enc = FALSE THEN
+	                    #Exp_Dos.Pt_Zs._Dest._Liste[#Exp_Dos.Pt_Zs._Dest._Index]._Nh := TRUE;
+	                END_IF;
+	                IF #Exp_Dos.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #Exp_Dos.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO CHANGEMENT_DEST_DEF1;
+	                        2:
+	                            GOTO CHANGEMENT_DEST_DEF2;
+	                    END_CASE;
+	                ELSE
+	                    #Exp_Dos.Dial_Def.Num_Def_Etape := 0;
+	                END_IF;
+	                IF #Exp_Dos.CommunDos.Module_Commun._IndxDest > "NB_MAX_DEST" THEN
+	                    IF #Exp_Dos._Cellule_Trouve <> 3 THEN
+	                        #Exp_Dos._Cellule_Trouve := -1;
+	                    END_IF;
+	                ELSE
+	                    IF #Exp_Dos._Cellule_Trouve <> 3 THEN
+	                        #Exp_Dos._Cellule_Trouve := 0;
+	                    END_IF;
+	                END_IF;
+	                #Ret_RD_SYS_T := RD_SYS_T(#Exp_Dos.CommunDos.Module_Commun._TpsPicke);
+	                // Arreter l'origine
+	                #Ret := "Arr_Imm_Mobile"(#Exp_Dos.Cir.Origine);
+	                //memorisation ancienne destination 
+	                #Exp_Dos.CommunDos.Module_Commun._AncDest := #Exp_Dos.CommunDos.Module_Commun._Ptdest;
+	                //MAJ CUMUL
+	                "MAJ_Cumul_Dest"(Dest := "Nom_Mobile"(#Exp_Dos.CommunDos.Module_Commun._AncDest),
+	                                 Increment := TRUE,
+	                                 DestR := #Exp_Dos.Pt_Zs._Dest,
+	                                 PARCAL := #Exp_Dos.CommunDos.Module_Commun._ParCal);
+	            END_IF;
+	        END_REGION Preliminaire Changement Destination
+	        REGION Cyclique Changement Destination
+	            IF #Exp_Dos.CommunDos.Module_Commun._IndxDest < 0 THEN
+	                #Exp_Dos.CommunDos.Module_Commun._IndxDest := 0;
+	            END_IF;
+	            IF #Exp_Dos._Cellule_Trouve = 0 THEN
+	                //Boucle for qui parcoure la liste des destinations recuperes depuis la Base
+	                FOR #i := #Exp_Dos.CommunDos.Module_Commun._IndxDest TO "NB_MAX_DEST" DO
+	                    IF #i >= "NB_MAX_DEST" THEN
+	                        #Exp_Dos._Cellule_Trouve := -1;
+	                        #Exp_Dos.CommunDos.Module_Commun._IndxDest := #ListeDestParcourue;
+	                        EXIT;
+	                    END_IF;
+	                    IF (#Exp_Dos.CommunDos.Module_Commun._Dest[#i + 1] > -1) THEN
+	                        #Exp_Dos._Cellule_Trouve := "Controle_Cellule"(FgMaskNh := #Exp_Dos.Fg_Masq_NH,
+	                                                                       NvCellule := "Nom_Mobile"(#Exp_Dos.CommunDos.Module_Commun._Dest[#i + 1]),
+	                                                                       TypeCelDest := #Exp_Dos._TypeCelDest,
+	                                                                       Cel := "DB_Mod_Cellule",
+	                                                                       NiveauHautDestNh => #Exp_Dos.Pt_Zs._NH);
+	                        IF (#Exp_Dos._Cellule_Trouve = 2) THEN //controle valide
+	                            #Exp_Dos.CommunDos.Module_Commun._IndxDest := #i + 1;
+	                            EXIT;
+	                        END_IF;
+	                    END_IF;
+	                END_FOR;
+	            END_IF;
+	            // Test invalide de la destination recuperee de la Base cellule n'existe pas
+	            IF #Exp_Dos._Cellule_Trouve= -1 THEN
+	                #Exp_Dos.Dial_Def.Num_Def_Etape := 1;
+	                #Exp_Dos.Dial_Def.Reponse_Def := '';
+	                #Exp_Dos.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base, Msg_Defaut := 'Veuillez saisir la nouvelle destination',
+	                                                              Type_Defaut := 2,
+	                                                              Automatisme := #Exp_Dos.Pt_Zs._SuiviCommun._CdProc,
+	                                                              Num_Lot := #Exp_Dos.Pt_Zs._SuiviCommun._NoLot,
+	                                                              Origine_Defaut := 'Circuit Impossible ',
+	                                                              Libelle_Origine := 'Circuit Impossible ',
+	                                                              Acq1 := 'Relance',
+	                                                              Acq2 := 'Cellule',
+	                                                              Acq3 := '',
+	                                                              Acq4 := '',
+	                                                              Acq5 := '',
+	                                                              Acq6 := '',
+	                                                              Acq7 := '',
+	                                                              Acq8 := '',
+	                                                              Acq_Choisi := -1,
+	                                                              Date_Arrivee := #Tps_Act);
+	            #Exp_Dos.CommunDos.Module_Commun._Etp := #Etp_Att_Acq;
+	                RETURN;
+	            END_IF;
+	        CHANGEMENT_DEST_DEF1:
+	            //============ Traitement des reponses pour le defaut1 Etape CHANGEMENT DE DESTINATION cellule introuvable  ====================================//
+	            IF "Index_Mobile"(#Exp_Dos.Dial_Def.Text_Reponse) = #Exp_Dos.CommunDos.Module_Commun._Ptdest THEN
+	                //#Exp_Dos.Pt_Cel := "RechIndexCel"("Nom_Mobile"(#Exp_Dos.CommunDos.Module_Commun._Ptdest));
+	                #Ret_Dem_Mobile := "Dem_Mobile"("Index_Mobile"(#Exp_Dos.Orig_Sans_Mls));
+	                #Exp_Dos.CommunDos.Module_Commun._Etp := #Etp_Surveillance;
+	                RETURN;
+	            END_IF; 
+	            IF #Exp_Dos.Dial_Def.Reponse_Def = 'Relance' AND #Exp_Dos.Dial_Def.Num_Def_Etape = 1 THEN //relance
+	                #Exp_Dos.Fg_Chg_Dest_Enc := FALSE;
+	                #Exp_Dos._Cellule_Trouve := 2;
+	                #Exp_Dos.Dial_Def.Reponse_Def := '';
+	                #Exp_Dos.CommunDos.Module_Commun._Etp := #Etp_Changement_Destination;
+	                RETURN;
+	            END_IF;
+	            IF #Exp_Dos.Dial_Def.Reponse_Def = 'Cellule' AND #Exp_Dos.Dial_Def.Num_Def_Etape = 1 THEN // cellule
+	                #Ret := "Index_Mobile"(#Exp_Dos.Dial_Def.Text_Reponse);
+	                #Exp_Dos.Dial_Def.Reponse_Def := '';
+	                IF #Ret <= -1 THEN
+	                    #Text_Def := CONCAT(IN1 := 'Cellule ', IN2 := #Exp_Dos.Dial_Def.Text_Reponse, IN3 := ' Inexistante');
+	                    #Exp_Dos.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base, Msg_Defaut := #Text_Def,
+	                                                                      Type_Defaut := 2,
+	                                                                      Automatisme := #Exp_Dos.Pt_Zs._SuiviCommun._CdProc,
+	                                                                      Num_Lot := #Exp_Dos.Pt_Zs._SuiviCommun._NoLot,
+	                                                                      Origine_Defaut := #Text_Def,
+	                                                                      Libelle_Origine := 'Cellule inexistante',
+	                                                                      Acq1 := 'Relance',
+	                                                                      Acq2 := 'Cellule',
+	                                                                      Acq3 := '',
+	                                                                      Acq4 := '',
+	                                                                      Acq5 := '',
+	                                                                      Acq6 := '',
+	                                                                      Acq7 := '',
+	                                                                      Acq8 := '',
+	                                                                      Acq_Choisi := -1,
+	                                                                      Date_Arrivee := #Tps_Act);
+	                    #Exp_Dos.CommunDos.Module_Commun._Etp := #Etp_Att_Acq;
+	                    #Exp_Dos.Dial_Def.Text_Reponse := '';
+	                    RETURN;
+	                ELSE
+	                    #Exp_Dos._Cellule_Trouve := "Controle_Cellule"(FgMaskNh := #Exp_Dos.Fg_Masq_NH,
+	                                                                   NvCellule := #Exp_Dos.Dial_Def.Text_Reponse,
+	                                                                   TypeCelDest := #Exp_Dos._TypeCelDest,
+	                                                                   Cel := "DB_Mod_Cellule",
+	                                                                   NiveauHautDestNh => #Exp_Dos.Fg_NH_Dest);
+	                END_IF;
+	            END_IF;
+	            //============ Fin Traitement des reponses pour le defaut1 Etape CHANGEMENT DE DESTINATION cellule introuvable  ===============================//    
+	            // Test invalide de la destination recuperee de la Base, cellule est en nh
+	            IF #Exp_Dos._Cellule_Trouve = 1 THEN
+	                #Exp_Dos.Dial_Def.Num_Def_Etape := 2;
+	                #Text_Def := CONCAT(IN1 := 'Cellule ', IN2 := #Exp_Dos.Dial_Def.Text_Reponse, IN3 := '  est en NH');
+	                #Exp_Dos.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base, Msg_Defaut := #Text_Def,
+	                                                              Type_Defaut := 2,
+	                                                              Automatisme := #Exp_Dos.Pt_Zs._SuiviCommun._CdProc,
+	                                                              Num_Lot := #Exp_Dos.Pt_Zs._SuiviCommun._NoLot,
+	                                                              Origine_Defaut := 'Cellule est en NH',
+	                                                              Libelle_Origine := 'Cellule est en NH',
+	                                                              Acq1 := 'Relance',
+	                                                              Acq2 := 'Cellule',
+	                                                              Acq3 := '',
+	                                                              Acq4 := '',
+	                                                              Acq5 := '',
+	                                                              Acq6 := '',
+	                                                              Acq7 := '',
+	                                                              Acq8 := '',
+	                                                              Acq_Choisi := -1,
+	                                                              Date_Arrivee := #Tps_Act);
+	            #Exp_Dos.CommunDos.Module_Commun._Etp := #Etp_Att_Acq;
+	                RETURN;
+	            END_IF;
+	        CHANGEMENT_DEST_DEF2:
+	            //============ Traitement des reponses pour le defaut2 Etape CHANGEMENT DE DESTINATION cellule en nh  ====================================//
+	            IF #Exp_Dos.Dial_Def.Reponse_Def = 'Relance' AND #Exp_Dos.Dial_Def.Num_Def_Etape = 2 THEN
+	                #Exp_Dos._Cellule_Trouve := "Controle_Cellule"(FgMaskNh := #Exp_Dos.Fg_Masq_NH,
+	                                                               NvCellule := #Exp_Dos.Dial_Def.Text_Reponse,
+	                                                               TypeCelDest := #Exp_Dos._TypeCelDest,
+	                                                          Cel := "DB_Mod_Cellule",
+	                                                          NiveauHautDestNh => #Exp_Dos.Fg_NH_Dest);
+	           #Exp_Dos.Dial_Def.Text_Reponse := '';
+	                RETURN;
+	            END_IF;
+	            IF #Exp_Dos.Dial_Def.Reponse_Def = 'Cellule' AND #Exp_Dos.Dial_Def.Num_Def_Etape = 2 THEN // cellule
+	                #Ret := "Index_Mobile"(#Exp_Dos.Dial_Def.Text_Reponse);
+	                #Exp_Dos.Dial_Def.Reponse_Def := '';
+	                IF #Ret <= -1 THEN
+	                    #Exp_Dos._Cellule_Trouve := 0; 
+	                    #Exp_Dos.Dial_Def.Num_Def_Etape := 1;
+	                    #Text_Def := CONCAT(IN1 := 'Cellule ', IN2 := #Exp_Dos.Dial_Def.Text_Reponse, IN3 := '  inexistante');
+	                    #Exp_Dos.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base, Msg_Defaut := #Text_Def,
+	                                                                  Type_Defaut := 2,
+	                                                                  Automatisme := #Exp_Dos.Pt_Zs._SuiviCommun._CdProc,
+	                                                                  Num_Lot := #Exp_Dos.Pt_Zs._SuiviCommun._NoLot,
+	                                                                  Origine_Defaut := 'Cellule inexistante',
+	                                                                  Libelle_Origine := 'Cellule inexistante',
+	                                                                  Acq1 := 'Relance',
+	                                                                  Acq2 := 'Cellule',
+	                                                                  Acq3 := '',
+	                                                                  Acq4 := '',
+	                                                                  Acq5 := '',
+	                                                                  Acq6 := '',
+	                                                                  Acq7 := '',
+	                                                                  Acq8 := '',
+	                                                                  Acq_Choisi := -1,
+	                                                                  Date_Arrivee := #Tps_Act);
+	                #Exp_Dos.CommunDos.Module_Commun._Etp := #Etp_Att_Acq;
+	                    #Exp_Dos.Dial_Def.Text_Reponse := '';
+	                    RETURN;
+	                ELSE
+	                    #Exp_Dos._Cellule_Trouve := "Controle_Cellule"(FgMaskNh := #Exp_Dos.Fg_Masq_NH,
+	                                                                   NvCellule := #Exp_Dos.Dial_Def.Text_Reponse,
+	                                                                   TypeCelDest := #Exp_Dos._TypeCelDest,
+	                                                                   Cel := "DB_Mod_Cellule",
+	                                                                   NiveauHautDestNh => #Exp_Dos.Fg_NH_Dest);
+	                END_IF;
+	            END_IF;
+	            
+	            //============ FIN Traitement des reponses pour le defaut2 Etape CHANGEMENT DE DESTINATION cellule en nh  ====================================// 
+	            
+	            
+	            IF #Exp_Dos._Cellule_Trouve = 3 THEN // CELLULE RECUP VALID MAIS LA RECHERCHE DU NV CIRC RETURN-1
+	                #Exp_Dos.Dial_Def.Num_Def_Etape := 1;
+	                #Text_Def := CONCAT(IN1 := 'Circuit de ', IN2 := "Nom_Mobile"(#Exp_Dos.Cir.Origine), IN3 := ' vers ', IN4 := #Exp_Dos.Dial_Def.Text_Reponse, IN5 := ' introuvable ou reserve ');
+	                #Exp_Dos.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base, Msg_Defaut := #Text_Def,
+	                                                              Type_Defaut := 2,
+	                                                              Automatisme := #Exp_Dos.Pt_Zs._SuiviCommun._CdProc,
+	                                                              Num_Lot := #Exp_Dos.Pt_Zs._SuiviCommun._NoLot,
+	                                                              Origine_Defaut := 'Circuit Introuvable',
+	                                                              Libelle_Origine := 'Circuit Introuvable',
+	                                                              Acq1 := 'Relance',
+	                                                              Acq2 := 'Cellule',
+	                                                              Acq3 := '',
+	                                                              Acq4 := '',
+	                                                              Acq5 := '',
+	                                                              Acq6 := '',
+	                                                              Acq7 := '',
+	                                                              Acq8 := '',
+	                                                              Acq_Choisi := -1,
+	                                                              Date_Arrivee := #Tps_Act);
+	            #Exp_Dos.CommunDos.Module_Commun._Etp := #Etp_Att_Acq;
+	                RETURN;
+	            END_IF;
+	            //Test valide de la destination recuperee 
+	            IF #Exp_Dos._Cellule_Trouve = 2 THEN
+	                IF #Exp_Dos.CommunDos.Module_Commun._IndxDest <> #ListeDestParcourue THEN
+	                    #CdZoneDest := "Nom_Mobile"(#Exp_Dos.CommunDos.Module_Commun._Dest[#Exp_Dos.CommunDos.Module_Commun._IndxDest]);
+	                ELSE
+	                    #CdZoneDest := #Exp_Dos.Dial_Def.Text_Reponse;
+	                END_IF;
+	                #Anc_Dest := "Nom_Mobile"(#Exp_Dos.CommunDos.Module_Commun._AncDest);
+	                "ControleDest"(fgbase := #Fg_Base,
+	                               TypeCelDest := #Exp_Dos._TypeCelDest,
+	                               FgMaskCtrlNh := #Exp_Dos.Fg_Masq_NH,
+	                               "Return" => #Ret_Int,
+	                               FgLanc => #Exp_Dos.Fg_Lanc,
+	                               NiveauHautDestNh => #Exp_Dos.Pt_Zs._NH,
+	                               CntlDest := #Exp_Dos.CntlDest,
+	                               Dial_Def := #Exp_Dos.Dial_Def,
+	                               NoLot := #Exp_Dos.Pt_Zs._SuiviCommun._NoLot,
+	                               CdZoneDest := #CdZoneDest,
+	                               Anc_Dest := #Anc_Dest,
+	                               Nouv_Dest := #CdZoneDest,
+	                               CdMat := #Exp_Dos.Pt_Zs._SuiviCommun._CdMat,
+	                               NomAuto := #Exp_Dos.Pt_Zs._SuiviCommun._CdProc);
+	                IF #Ret_Int = -1 THEN
+	                    #Exp_Dos._Cellule_Trouve := 0;
+	                END_IF;
+	                IF #Ret_Int = 1 THEN
+	                    //#Exp_Dos.Pt_Zs._CumulQteNh := #Exp_Dos.Pt_Zs.Dest._Liste[#Exp_Dos.Pt_Zs.Dest._Index]._CumulQte;
+	                    IF #Exp_Dos.CommunDos.Module_Commun._IndxDest <> #ListeDestParcourue THEN
+	                        #Exp_Dos.CommunDos.Module_Commun._Ptdest := #Exp_Dos.CommunDos.Module_Commun._Dest[#Exp_Dos.CommunDos.Module_Commun._IndxDest];
+	                    ELSE
+	                        #Exp_Dos.CommunDos.Module_Commun._Ptdest := "Index_Mobile"(#Exp_Dos.Dial_Def.Text_Reponse);
+	                    END_IF;
+	                    #Exp_Dos._IndexDestEc := "RechIndexCel"("Nom_Mobile"(#Exp_Dos.CommunDos.Module_Commun._Ptdest));
+	                    
+	                    IF #Exp_Dos._IndexDestEc > -1 THEN
+	                        #Exp_Dos._DestEc := "DB_Mod_Cellule"._TabCel[#Exp_Dos._IndexDestEc];
+	                        //#Exp_Dos.Pt_Cel := #Exp_Dos._IndexDestEc;
+	                    END_IF;
+	                    #Exp_Dos.CommunDos.Module_Commun._Etp  := #Etp_Changement_Noeud;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	        END_REGION Cyclique Changement Destination
+	    #Etp_Changement_Noeud:
+	        REGION Preliminaire Changement Noeud
+	            IF #Exp_Dos.CommunDos.Module_Commun._Etp <> #Exp_Dos.CommunDos.Module_Commun._EtpMemo THEN
+	                #Exp_Dos.CommunDos.Module_Commun._DescEtp := 'CHANGEMENT NOEUD';
+	                #Exp_Dos.CommunDos.Module_Commun._EtpPrec := #Exp_Dos.CommunDos.Module_Commun._Etp;
+	                #Exp_Dos.Mob_Prec := -1;
+	                #Exp_Dos.Mob_Suiv := -1;
+	                #Exp_Dos.Nouv_Circuit := #Exp_Dos.Cir;
+	                #Exp_Dos.CommunDos.Module_Commun._EtpMemo := #Exp_Dos.CommunDos.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Preliminaire Changement Noeud
+	        REGION Cyclique Changement Noeud
+	            #ReturnChngDest := "ChngDest"(NouvDest := #Exp_Dos.CommunDos.Module_Commun._Ptdest,
+	                                          AncDest := #Exp_Dos.CommunDos.Module_Commun._AncDest,
+	                                          IndxDestEncours := #Exp_Dos.CommunDos.Module_Commun._IndxDest,
+	                                          ChNoeud := #Exp_Dos.ChNoeud,
+	                                          AncCircuit := #Exp_Dos.Cir,
+	                                          CelluleTrouve :=  #Exp_Dos._Cellule_Trouve,
+	                                          FgChangementDest := #Exp_Dos.Fg_Chg_Dest_Noeud);
+	            IF #ReturnChngDest = -3 THEN //rech circ return -1 et
+	                #Exp_Dos. _Cellule_Trouve := 3;
+	                #Exp_Dos. CommunDos.Module_Commun._Etp := #Etp_Changement_Destination;
+	                RETURN;
+	            END_IF;
+	            IF #ReturnChngDest = -2 THEN //rech circ return -1
+	                #Exp_Dos. _Cellule_Trouve := 0;
+	                #Exp_Dos. CommunDos.Module_Commun._Etp := #Etp_Changement_Destination;
+	                RETURN;
+	            END_IF;
+	            IF #ReturnChngDest = 1 THEN // valide
+	                #Exp_Dos.Dial_Def.Reponse_Def := '';
+	                #Exp_Dos.Dial_Def.Text_Reponse := '';
+	                #Exp_Dos._Cellule_Trouve := 0;
+	                #Exp_Dos.Fg_Chg_Dest_Enc := FALSE;
+	                //#Exp_Dos.Pt_Cel := "RechIndexCel"(#Exp_Dos.Pt_Zs._Cel_Dest);
+	                #Exp_Dos.CommunDos.Module_Commun._Etp := #Etp_Surveillance;
+	                RETURN;
+	            END_IF;
+	        END_REGION Cyclique Changement Noeud
+	    #Etp_Fin_NH:
+	        REGION Preliminaire Fin NH
+	            IF #Exp_Dos.CommunDos.Module_Commun._Etp <> #Exp_Dos.CommunDos.Module_Commun._EtpMemo THEN
+	                #Exp_Dos.CommunDos.Module_Commun._DescEtp := 'FIN NH';
+	                #Exp_Dos.CommunDos.Module_Commun._EtpPrec := #Exp_Dos.CommunDos.Module_Commun._Etp;
+	                #Exp_Dos.CommunDos.Module_Commun._EtpMemo := #Exp_Dos.CommunDos.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Preliminaire Fin NH
+	        REGION Cyclique Fin NH
+	            IF #Exp_Dos.Pt_Zs._NH THEN
+	                RETURN;
+	            END_IF;
+	            #Exp_Dos.Fg_NH_Dest := FALSE;
+	            #Exp_Dos.Fg_Arret_Amont := FALSE;
+	            #Exp_Dos.CommunDos.Module_Commun._Etp := #Etp_Surveillance;
+	            RETURN;
+	        END_REGION Cyclique Fin NH
+	    #Etp_Vidange_NH:
+	        REGION Preliminaire Vidange NH
+	            IF #Exp_Dos.CommunDos.Module_Commun._Etp <> #Exp_Dos.CommunDos.Module_Commun._EtpMemo THEN
+	                #Exp_Dos.CommunDos.Module_Commun._DescEtp := 'VIDANGE NH';
+	                #Exp_Dos.CommunDos.Module_Commun._EtpPrec := #Exp_Dos.CommunDos.Module_Commun._Etp;
+	                #Ret_Vid_Circuit := "Vid_Circuit"(#Exp_Dos.Cir);
+	                #Ret_RD_SYS_T := RD_SYS_T(#Exp_Dos.CommunDos.Module_Commun._TpsPicke);
+	                #Exp_Dos.CommunDos.Module_Commun._EtpMemo := #Exp_Dos.CommunDos.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Preliminaire Vidange NH
+	        REGION Cyclique Vidange NH
+	            IF "Test_Etat_Circuit"(Etat := "Libre", Debut := 0, CIRCUIT := #Exp_Dos.Cir)  THEN
+	                #Ret_Libere_Circuit := "Libere_Circuit"(#Exp_Dos.Cir);
+	                IF NOT "Tempo"(Tps_Picke := #Exp_Dos.CommunDos.Module_Commun._TpsPicke, Duree := #Exp_Dos.Tps_Avant_Relance_Cir, Anticip := FALSE, Tps_Passe => #Tps_Passe) THEN
+	                    RETURN;
+	                END_IF;
+	                //Communication avec la base pour deblocage de la zone de stockage
+	                #Exp_Dos.CommunDos.Module_Commun._Etp := #Etp_Apres_Vidange_NH;
+	                RETURN;
+	            END_IF;
+	        END_REGION Cyclique Vidange NH
+	    #Etp_Apres_Vidange_NH:
+	        REGION Preliminaire Apres Vidange NH
+	            IF #Exp_Dos.CommunDos.Module_Commun._Etp <> #Exp_Dos.CommunDos.Module_Commun._EtpMemo THEN
+	                #Exp_Dos.CommunDos.Module_Commun._DescEtp := 'APRES VIDANGE NH';
+	                #Exp_Dos.CommunDos.Module_Commun._EtpPrec := #Exp_Dos.CommunDos.Module_Commun._Etp;
+	                #Exp_Dos.CommunDos.Module_Commun._EtpMemo := #Exp_Dos.CommunDos.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Preliminaire Apres Vidange NH
+	        REGION Cyclique Apres Vidange NH
+	            #Exp_Dos.CommunDos.Module_Commun._Etp := #Etp_Vidange;
+	        END_REGION Cyclique Apres Vidange NH
+	    #Etp_Vidange:
+	        REGION Preliminaire Vidange
+	            IF #Exp_Dos.CommunDos.Module_Commun._Etp <> #Exp_Dos.CommunDos.Module_Commun._EtpMemo THEN
+	                #Exp_Dos.CommunDos.Module_Commun._DescEtp := 'VIDANGE';
+	                #Exp_Dos.CommunDos.Module_Commun._EtpPrec := #Exp_Dos.CommunDos.Module_Commun._Etp;
+	                #Ret_Maj_Niv := "Maj_Niv"(Num_Zone := #Exp_Dos.CommunDos.Module_Commun._NumZone,
+	                                          Num_Tache := #Exp_Dos.CommunDos.Module_Commun._Tache,
+	                                          Niveau := "NIV_CIR_EXP_VIDANGE");
+	                #Exp_Dos.Fg_Arret_Amont := TRUE;
+	                //#Ret_Vid_Circuit := "Vid_Circuit"(#Exp_Dos.Cir);
+	                #Exp_Dos.Qte := #Exp_Dos.Pt_Zs._SuiviCommun._QteLot;
+	                #Exp_Dos.CommunDos.Module_Commun._EtpMemo := #Exp_Dos.CommunDos.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Preliminaire Vidange
+	        REGION Cyclique Vidange
+	            IF NOT  "Vid_Circuit_Cycl"(#Exp_Dos.Cir) THEN
+	                RETURN;
+	            END_IF;
+	            IF "Test_Mobile_Vide"(#Exp_Dos.Cir.Destination) THEN
+	                #Ret_Libere_Circuit := "Libere_Circuit"(#Exp_Dos.Cir);
+	                #Exp_Dos.CommunDos.Module_Commun._Etp := #Etp_Apres_Vidange;
+	                RETURN;
+	            END_IF;
+	        END_REGION Cyclique Vidange
+	    #Etp_Apres_Vidange:
+	        REGION Preliminaire Apres Vidange
+	            IF #Exp_Dos.CommunDos.Module_Commun._Etp <> #Exp_Dos.CommunDos.Module_Commun._EtpMemo THEN
+	                #Exp_Dos.CommunDos.Module_Commun._DescEtp := 'APRES VIDANGE';
+	                #Exp_Dos.CommunDos.Module_Commun._EtpPrec := #Exp_Dos.CommunDos.Module_Commun._Etp;
+	                #Exp_Dos.CommunDos.Module_Commun._EtpMemo := #Exp_Dos.CommunDos.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Preliminaire Apres Vidange
+	        REGION Cyclique Apres Vidange
+	            #Exp_Dos.CommunDos.Module_Commun._Etp := #Etp_Maj_Base;
+	        END_REGION Cyclique Apres Vidange
+	    #Etp_Maj_Base:
+	        REGION Preliminaire Maj Base
+	            IF #Exp_Dos.CommunDos.Module_Commun._Etp <> #Exp_Dos.CommunDos.Module_Commun._EtpMemo THEN
+	                "Maj_Qte_Tache"(Num_Tache:=#Exp_Dos.CommunDos.Module_Commun._Tache,
+	                                Num_Zone:=#Exp_Dos.CommunDos.Module_Commun._NumZone,
+	                                Qte:="Calc_Qte_Tache"(Num_Zone:=#Exp_Dos.CommunDos.Module_Commun._NumZone, Lst_Amont:=#Exp_Dos.Lst_Taches_Amont_Qte));
+	                #Exp_Dos.CommunDos.Module_Commun._DescEtp := 'MAJ BASE';
+	                #Exp_Dos.CommunDos.Module_Commun._EtpPrec := #Exp_Dos.CommunDos.Module_Commun._Etp;
+	                #Exp_Dos.CommunDos.Module_Commun._EtpMemo := #Exp_Dos.CommunDos.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Preliminaire Maj Base
+	        REGION Cyclique Maj Base
+	            #Exp_Dos.CommunDos.Module_Commun._Etp := #Etp_Fin_Lot;
+	        END_REGION Cyclique Maj Base
+	    #Etp_Fin_Lot:
+	        REGION Preliminaire Fin Lot
+	            IF #Exp_Dos.CommunDos.Module_Commun._Etp <> #Exp_Dos.CommunDos.Module_Commun._EtpMemo THEN
+	                #Exp_Dos.CommunDos.Module_Commun._DescEtp := 'FIN LOT';
+	                #Exp_Dos.CommunDos.Module_Commun._EtpPrec := #Exp_Dos.CommunDos.Module_Commun._Etp;
+	                //=== Traitement cas retour de defaut ===//
+	                IF #Exp_Dos.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #Exp_Dos.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO Fin_Lot_Def1;
+	                        2:
+	                            GOTO Fin_Lot_Def2;
+	                    END_CASE;
+	                END_IF;
+	                //=== Traitement cas retour de defaut ===//
+	                #Ret_Proc_MAJ_Stock_Exp := "Proc_MAJ_Stock_Exp"(Num_Zone := #Exp_Dos.CommunDos.Module_Commun._NumZone,
+	                                                                Num_Tache := #Exp_Dos.CommunDos.Module_Commun._Tache,
+	                                                                Qte_Lot := "Calc_Qte_Tache"(Num_Zone := #Exp_Dos.CommunDos.Module_Commun._NumZone,
+	                                                                Lst_Amont := #Exp_Dos.Lst_Taches_Amont_Qte),
+	                                                                Err_Sql=>#Err_Sql,
+	                                                                Msg_Def => #Msg_Def, Data_Dosage := #Exp_Dos.Pt_Zs);
+	                IF ("dbSql4SiemensInterface".stSql4SiemensInterface.Observer.xTimeout) THEN
+	                    #Aff_Def := TRUE;
+	                    #Mess_Def := 'Connexion avec la base interrompue';
+	                ELSIF #Ret_Proc_MAJ_Stock_Exp = 'NOK' OR (#Ret_Proc_MAJ_Stock_Exp = 'OK' AND #Msg_Def <> 'VIDE')  THEN
+	                    #Aff_Def := TRUE;
+	                    #Mess_Def := #Msg_Def;
+	                END_IF;
+	                IF #Aff_Def THEN
+	                    #Aff_Def := FALSE;
+	                    #Exp_Dos.Dial_Def.Num_Def_Etape := 1;
+	                    #Exp_Dos.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base, Msg_Defaut := #Msg_Def,
+	                                                                      Type_Defaut := 0,
+	                                                                      Automatisme := #Exp_Dos.Pt_Zs._SuiviCommun._CdProc,
+	                                                                      Num_Lot := #Exp_Dos.Pt_Zs._SuiviCommun._NoLot,
+	                                                                      Origine_Defaut := 'Gest Exp Dos',
+	                                                                      Libelle_Origine := 'Proc_MAJ_Stock',
+	                                                                      Acq1 := 'Relance',
+	                                                                      Acq2 := '',
+	                                                                      Acq3 := '',
+	                                                                      Acq4 := '',
+	                                                                      Acq5 := '',
+	                                                                      Acq6 := '',
+	                                                                      Acq7 := '',
+	                                                                      Acq8 := '',
+	                                                                      Acq_Choisi := -1,
+	                                                                      Date_Arrivee := #Tps_Act);
+	                    #Exp_Dos.CommunDos.Module_Commun._Etp := #Etp_Att_Acq;
+	                    RETURN;
+	                END_IF;
+	            Fin_Lot_Def1:
+	                //============ Traitement des reponses pour le defaut Proc_MAJ_Stock ============//
+	                IF (#Exp_Dos.Dial_Def.Reponse_Def = 'Relance') THEN
+	                    // Vider la reponse defaut
+	                    #Exp_Dos.Dial_Def.Reponse_Def := '';
+	                    RETURN;
+	                END_IF;
+	                //============Traitement des reponses pour le defaut Proc_MAJ_Stock ============//
+	                //Procedure Fin Fabrication
+	                #Ret_Proc_Fin_Fab := "Proc_Fin_Fab"(Err_Sql=> #Err_Sql, Msg_Def=>#Msg_Def, Data_Dosage:=#Exp_Dos.Pt_Zs);
+	                IF ("dbSql4SiemensInterface".stSql4SiemensInterface.Observer.xTimeout) THEN
+	                    #Aff_Def := TRUE;
+	                    #Mess_Def := 'Connexion avec la base interrompue';
+	                ELSIF #Ret_Proc_MAJ_Stock_Exp = 'NOK' OR (#Ret_Proc_MAJ_Stock_Exp = 'OK' AND #Msg_Def <> 'VIDE') THEN
+	                    #Aff_Def := TRUE;
+	                    #Mess_Def := #Msg_Def;
+	                END_IF;
+	                IF #Aff_Def THEN
+	                    #Aff_Def := FALSE;
+	                    #Exp_Dos.Dial_Def.Num_Def_Etape := 2;
+	                    #Exp_Dos.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base, Msg_Defaut := #Mess_Def,
+	                                                                      Type_Defaut := 0,
+	                                                                      Automatisme := #Exp_Dos.Pt_Zs._SuiviCommun._CdProc,
+	                                                                      Num_Lot := #Exp_Dos.Pt_Zs._SuiviCommun._NoLot,
+	                                                                      Origine_Defaut := 'Gest Exp Dos',
+	                                                                      Libelle_Origine := 'Proc_Fin_Fab',
+	                                                                      Acq1 := 'Relance',
+	                                                                      Acq2 := '',
+	                                                                      Acq3 := '',
+	                                                                      Acq4 := '',
+	                                                                      Acq5 := '',
+	                                                                      Acq6 := '',
+	                                                                      Acq7 := '',
+	                                                                      Acq8 := '',
+	                                                                      Acq_Choisi := -1,
+	                                                                      Date_Arrivee := #Tps_Act);
+	                    #Exp_Dos.CommunDos.Module_Commun._Etp := #Etp_Att_Acq;
+	                    RETURN;
+	                END_IF;
+	            Fin_Lot_Def2:
+	                //============ Traitement des reponses pour le defaut Proc_MAJ_Stock ============//
+	                IF (#Exp_Dos.Dial_Def.Reponse_Def = 'Relance') THEN
+	                    // Vider la reponse defaut
+	                    #Exp_Dos.Dial_Def.Reponse_Def := '';
+	                    RETURN;
+	                END_IF;
+	                //============Traitement des reponses pour le defaut Proc_MAJ_Stock ============//
+	                #Exp_Dos.CommunDos.Module_Commun._EtpMemo := #Exp_Dos.CommunDos.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Preliminaire Fin Lot
+	        REGION Cyclique Fin Lot
+	            #Ret_Maj_Niv := "Maj_Niv"(Num_Zone := #Exp_Dos.CommunDos.Module_Commun._NumZone,
+	                                      Num_Tache := #Exp_Dos.CommunDos.Module_Commun._Tache,
+	                                      Niveau := "NIV_CIR_EXP_FIN_LOT");
+	            #Ret_Libere_Zone_Suiv_Lot := "Libere_Zone_Suiv_Lot"(#Exp_Dos.CommunDos.Module_Commun._NumZone);
+	            IF #Ret_Libere_Zone_Suiv_Lot  < 0 THEN
+	                #Exp_Dos.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base, Msg_Defaut := 'Defaut; Au moins une tache est encours pour le meme lot',
+	                                                                  Type_Defaut := 3,
+	                                                                  Automatisme := #Exp_Dos.Pt_Zs._SuiviCommun._CdProc,
+	                                                                  Num_Lot := #Exp_Dos.Pt_Zs._SuiviCommun._NoLot,
+	                                                                  Origine_Defaut := 'Liberation Zone',
+	                                                                  Libelle_Origine := 'Synchronisation',
+	                                                                  Acq1 := 'Relance',
+	                                                                  Acq2 := '',
+	                                                                  Acq3 := '',
+	                                                                  Acq4 := '',
+	                                                                  Acq5 := '',
+	                                                                  Acq6 := '',
+	                                                                  Acq7 := '',
+	                                                                  Acq8 := '',
+	                                                                  Acq_Choisi := -1,
+	                                                                  Date_Arrivee := #Tps_Act);
+	                #Exp_Dos.CommunDos.Module_Commun._Etp := #Etp_Att_Acq;
+	                RETURN;
+	            END_IF;
+	            
+	            #Exp_Dos.CommunDos.Module_Commun._Etp := #Etp_Repos;
+	            RETURN;
+	        END_REGION Cyclique Fin Lot
+	    #Etp_Att_Acq:
+	        REGION Preliminaire Att Acq
+	            IF #Exp_Dos.CommunDos.Module_Commun._Etp <> #Exp_Dos.CommunDos.Module_Commun._EtpMemo THEN
+	                
+	                #Exp_Dos.CommunDos.Module_Commun._EtpMemo := #Exp_Dos.CommunDos.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Preliminaire Att Acq
+	        REGION Cyclique Att Acq
+	            #Exp_Dos.Dial_Def.Reponse_Def := "FC_Recup_Rep_Def"(Index_Def := #Exp_Dos.Dial_Def.Index_Defaut, Reponse_Ecrit => #Exp_Dos.Dial_Def.Text_Reponse);
+	            IF #Exp_Dos.Dial_Def.Reponse_Def <> '' THEN
+	                "FC_Raz_Def"(#Exp_Dos.Dial_Def.Index_Defaut);
+	                #Exp_Dos.CommunDos.Module_Commun._Etp := #Exp_Dos.CommunDos.Module_Commun._EtpPrec;
+	                RETURN;
+	            END_IF;
+	        END_REGION Cyclique Att Acq
+	END_CASE;
+END_FUNCTION
+

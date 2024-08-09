@@ -1,0 +1,85 @@
+﻿FUNCTION "fcSql4Siemens_AddRequest" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      sRequest : String[254];
+   END_VAR
+
+   VAR_IN_OUT 
+      stSql4SiemensInterface : "utSql4SiemensInterface";
+   END_VAR
+
+
+BEGIN
+	// +------------------------------------------------------------------------------------------------------------------+
+	// | The method adds (a part of) a request to the request buffer. On the first entry, the request prefix will be added|
+	// +------------------------------------------------------------------------------------------------------------------+
+	
+	// +-------------+-------------+-------------+------------------------------------------------------------------------+
+	// | Version     | Date        | Author      | Comment                                                                |
+	// +-------------+-------------+-------------+------------------------------------------------------------------------+
+	// | 4.0.0.0     | 13.06.2019  | BaM         | Initial version                                                        |
+	// +-------------+-------------+-------------+------------------------------------------------------------------------+
+	
+	// Add the request prefix if necessary
+	IF (#stSql4SiemensInterface.diRequestDataSize = 0) THEN
+	  // Create request telegram
+	    IF (#stSql4SiemensInterface.xUseMrpParameter = TRUE) THEN
+	        // - Add 'MRP'<NUL> (Option)
+	        "fcSql4Siemens_AddString"(sValue := 'MRP',
+	                                  xAddNul := TRUE,
+	                                  stSql4SiemensInterface := #stSql4SiemensInterface);
+	        // - Add MRP-Value<NUL>
+	        "fcSql4Siemens_AddString"(sValue := DINT_TO_STRING(#stSql4SiemensInterface.cdiResponseReturnParamSize),
+	                                  xAddNul := TRUE,
+	                                  stSql4SiemensInterface := #stSql4SiemensInterface);
+	    END_IF;
+	  // - Add 'MR'<NUL>
+	  "fcSql4Siemens_AddString"(sValue := 'MR',
+	                            xAddNul := TRUE,
+	                            stSql4SiemensInterface := #stSql4SiemensInterface);
+	  // - Add MR-Value<NUL>
+	  "fcSql4Siemens_AddString"(sValue := DINT_TO_STRING(#stSql4SiemensInterface.cdiResponseRowSize),
+	                         xAddNul := TRUE,
+	                         stSql4SiemensInterface := #stSql4SiemensInterface);
+	  // - Add MC<NUL>
+	  "fcSql4Siemens_AddString"(sValue := 'MC',
+	                         xAddNul := TRUE,
+	                         stSql4SiemensInterface := #stSql4SiemensInterface);
+	  // - Add MC-Value<NUL>
+	  "fcSql4Siemens_AddString"(sValue := DINT_TO_STRING(#stSql4SiemensInterface.cdiResponseColumnSize),
+	                            xAddNul := TRUE,
+	                            stSql4SiemensInterface := #stSql4SiemensInterface);
+	  // - Add MS<NUL>
+	  "fcSql4Siemens_AddString"(sValue := 'MS',
+	                            xAddNul := TRUE,
+	                            stSql4SiemensInterface := #stSql4SiemensInterface);
+	  // - Add MS-Value<NUL>
+	  "fcSql4Siemens_AddString"(sValue := DINT_TO_STRING(#stSql4SiemensInterface.cdiResponseMaxStringSize),
+	                         xAddNul := TRUE,
+	                         stSql4SiemensInterface := #stSql4SiemensInterface);
+	
+	
+	  // - Add MB<NUL>
+	  "fcSql4Siemens_AddString"(sValue := 'MB',
+	                            xAddNul := TRUE,
+	                            stSql4SiemensInterface := #stSql4SiemensInterface);
+	  // - Add MB-Value<NUL>
+	  "fcSql4Siemens_AddString"(sValue := DINT_TO_STRING("fcGetArrayElementCount"(#stSql4SiemensInterface.abResponseData)),
+	                            xAddNul := TRUE,
+	                            stSql4SiemensInterface := #stSql4SiemensInterface); 
+	  // - Add S<NUL>
+	  "fcSql4Siemens_AddString"(sValue := 'S',
+	                            xAddNul := TRUE,
+	                            stSql4SiemensInterface := #stSql4SiemensInterface);
+	END_IF;
+	
+	// Add the request string
+	"fcSql4Siemens_AddString"(sValue := #sRequest,
+	                          xAddNul := FALSE,
+	                          stSql4SiemensInterface := #stSql4SiemensInterface);
+	
+	// Return TRUE if the values could be added
+	#fcSql4Siemens_AddRequest := (#stSql4SiemensInterface.diRequestDataSize < "fcGetArrayElementCount"(#stSql4SiemensInterface.abResponseData));
+END_FUNCTION
+

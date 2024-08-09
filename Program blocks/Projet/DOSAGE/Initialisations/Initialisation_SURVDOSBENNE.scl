@@ -1,0 +1,117 @@
+﻿FUNCTION "Initialisation_SURVDOSBENNE" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+BEGIN
+	//============================= Initialisation  BP1 =============================//
+	"DB_Dosage".BP[0].Benne.Nom := 'SBP1';
+	"DB_Dosage".BP[0].Benne.Mob_Benne := "Index_Mobile"('BP1');
+	"DB_Dosage".BP[0].Benne.Mob_VibreurBenne := "Index_Mobile"('VIB_BP1');
+	"DB_Dosage".BP[0].Benne.Mob_VanneAir := "Index_Mobile"('VN_AIR_BP1');
+	"DB_Dosage".BP[0].Benne.Mob_Decomp := "Index_Mobile"('VN_DEC_BP1');
+	"DB_Dosage".BP[0].Benne.Mob_Trappe1 := "Index_Mobile"('TRP1_BP1');
+	"DB_Dosage".BP[0].Benne.Mob_Trappe2 := "Index_Mobile"('TRP2_BP1');
+	"DB_Dosage".BP[0].Benne.Seuil_Vib_Benne := 300;
+	"DB_Dosage".BP[0].Benne.Pas_Min := 1;
+	"DB_Dosage".BP[0].Benne.Tol_Stb := 1;
+	"DB_Dosage".BP[0].Benne.Tol0 := 1;
+	"DB_Dosage".BP[0].Benne.Tps_Max_Vidange := T#4m;
+	"DB_Dosage".BP[0].Benne.Tps_Vidange := T#0s;
+	"DB_Dosage".BP[0].Benne.Tps_Stab := T#2s;
+	"DB_Dosage".BP[0].Benne.Tps_Max_Stab := T#6s;
+	"DB_Dosage".BP[0].Benne.Tps_Evol_Poids := T#3s;
+	"DB_Dosage".BP[0].Benne.Tps_Att_Chute := T#10s;
+	"DB_Dosage".BP[0].Benne.Tps_Min_Extrat := T#500ms;
+	"DB_Dosage".BP[0].Benne.Capacite := 3000;
+	"DB_Dosage".BP[0].Lst_Taches_Att_Vidange[0]._Tache := "TAC_TREMSS_BP1";
+	"DB_Dosage".BP[0].Lst_Taches_Att_Vidange[0]._Niv := "NIV_TREMIE_TRANS_AUT_REMP";
+	//============================= Initialisation  BP2 =============================//
+	"DB_Dosage".BP[1].Benne.Nom := 'SBP2';
+	"DB_Dosage".BP[1].Benne.Mob_Benne := "Index_Mobile"('BP2');
+	"DB_Dosage".BP[1].Benne.Mob_VibreurBenne := "Index_Mobile"('VIB_BP2');
+	"DB_Dosage".BP[1].Benne.Mob_VanneAir := "Index_Mobile"('VN_AIR_BP2');
+	"DB_Dosage".BP[1].Benne.Mob_Decomp := "Index_Mobile"('VN_DEC_BP2');
+	"DB_Dosage".BP[1].Benne.Mob_Trappe1 := "Index_Mobile"('TRP1_BP2');
+	"DB_Dosage".BP[1].Benne.Mob_Trappe2 := "Index_Mobile"('TRP2_BP2');
+	"DB_Dosage".BP[1].Benne.Seuil_Vib_Benne := 300;
+	"DB_Dosage".BP[1].Benne.Pas_Min := 1;
+	"DB_Dosage".BP[1].Benne.Tol_Stb := 1;
+	"DB_Dosage".BP[1].Benne.Tol0 := 1;
+	"DB_Dosage".BP[1].Benne.Tps_Max_Vidange := T#3m;
+	"DB_Dosage".BP[1].Benne.Tps_Vidange := T#0s;
+	"DB_Dosage".BP[1].Benne.Tps_Stab := T#2s;
+	"DB_Dosage".BP[1].Benne.Tps_Max_Stab := T#6s;
+	"DB_Dosage".BP[1].Benne.Tps_Evol_Poids := T#3s;
+	"DB_Dosage".BP[1].Benne.Tps_Att_Chute := T#10s;
+	"DB_Dosage".BP[1].Benne.Tps_Min_Extrat := T#500ms;
+	"DB_Dosage".BP[1].Benne.Capacite := 3000;
+	"DB_Dosage".BP[1].Lst_Taches_Att_Vidange[0]._Tache := "TAC_TREMSS_BP2";
+	"DB_Dosage".BP[1].Lst_Taches_Att_Vidange[0]._Niv := "NIV_TREMIE_TRANS_AUT_REMP";
+	//============================= INSTANCIATION  BP3 =============================//
+	"DB_Dosage".BP[2].Benne.Nom := 'SBP3';
+	"DB_Dosage".BP[2].Benne.Mob_Benne := "Index_Mobile"('BP3');
+	"DB_Dosage".BP[2].Benne.Mob_VibreurBenne := "Index_Mobile"('VIB_BP3');
+	"DB_Dosage".BP[2].Benne.Mob_VanneAir := "Index_Mobile"('VN_AIR_BP3');
+	"DB_Dosage".BP[2].Benne.Mob_Decomp := "Index_Mobile"('VN_DEC_BP3');
+	"DB_Dosage".BP[2].Benne.Mob_Trappe1 := "Index_Mobile"('TRP1_BP3');
+	"DB_Dosage".BP[2].Benne.Mob_Trappe2 := "Index_Mobile"('TRP2_BP3');
+	"DB_Dosage".BP[2].Benne.Seuil_Vib_Benne := 50;
+	"DB_Dosage".BP[2].Benne.Pas_Min := 3;
+	"DB_Dosage".BP[2].Benne.Tol_Stb := 1;
+	"DB_Dosage".BP[2].Benne.Tol0 := 1;
+	"DB_Dosage".BP[2].Benne.Tps_Max_Vidange := T#3m;
+	"DB_Dosage".BP[2].Benne.Tps_Vidange := T#0s;
+	"DB_Dosage".BP[2].Benne.Tps_Stab := T#2s;
+	"DB_Dosage".BP[2].Benne.Tps_Max_Stab := T#6s;
+	"DB_Dosage".BP[2].Benne.Tps_Evol_Poids := T#3s;
+	"DB_Dosage".BP[2].Benne.Tps_Att_Chute := T#10s;
+	"DB_Dosage".BP[2].Benne.Tps_Min_Extrat := T#500ms;
+	"DB_Dosage".BP[2].Benne.Capacite := 250;
+	"DB_Dosage".BP[2].Lst_Taches_Att_Vidange[0]._Tache := "TAC_TREMSS_BP3";
+	"DB_Dosage".BP[2].Lst_Taches_Att_Vidange[0]._Niv := "NIV_TREMIE_TRANS_AUT_REMP";
+	//============================= INSTANCIATION  BP4 =============================//
+	"DB_Dosage".BP[3].Benne.Nom := 'SBP4';
+	"DB_Dosage".BP[3].Benne.Mob_Benne := "Index_Mobile"('BP4');
+	"DB_Dosage".BP[3].Benne.Mob_VibreurBenne := "Index_Mobile"('VIB_BP4');
+	"DB_Dosage".BP[3].Benne.Mob_VanneAir := "Index_Mobile"('');
+	"DB_Dosage".BP[3].Benne.Mob_Decomp := "Index_Mobile"('');
+	"DB_Dosage".BP[3].Benne.Mob_Trappe1 := "Index_Mobile"('TRP1_BP4');
+	"DB_Dosage".BP[3].Benne.Mob_Trappe2 := "Index_Mobile"('TRP2_BP4');
+	"DB_Dosage".BP[3].Benne.Seuil_Vib_Benne := 20;
+	"DB_Dosage".BP[3].Benne.Pas_Min := 3;
+	"DB_Dosage".BP[3].Benne.Tol_Stb := 1;
+	"DB_Dosage".BP[3].Benne.Tol0 := 1;
+	"DB_Dosage".BP[3].Benne.Tps_Max_Vidange := T#3m;
+	"DB_Dosage".BP[3].Benne.Tps_Vidange := T#0s;
+	"DB_Dosage".BP[3].Benne.Tps_Stab := T#2s;
+	"DB_Dosage".BP[3].Benne.Tps_Max_Stab := T#6s;
+	"DB_Dosage".BP[3].Benne.Tps_Evol_Poids := T#3s;
+	"DB_Dosage".BP[3].Benne.Tps_Att_Chute := T#10s;
+	"DB_Dosage".BP[3].Benne.Tps_Min_Extrat := T#500ms;
+	"DB_Dosage".BP[3].Benne.Capacite := 100;
+	"DB_Dosage".BP[3].Lst_Taches_Att_Vidange[0]._Tache := "TAC_TREMSS_BP4";
+	"DB_Dosage".BP[3].Lst_Taches_Att_Vidange[0]._Niv := "NIV_TREMIE_TRANS_AUT_REMP";
+	//============================= INSTANCIATION  BP5 =============================//
+	"DB_Dosage".BP[4].Benne.Nom := 'SBP5';
+	"DB_Dosage".BP[4].Benne.Mob_Benne := "Index_Mobile"('BP5');
+	"DB_Dosage".BP[4].Benne.Mob_VibreurBenne := "Index_Mobile"('VIB_BP5');
+	"DB_Dosage".BP[4].Benne.Mob_VanneAir := "Index_Mobile"('VN_AIR_BP5');
+	"DB_Dosage".BP[4].Benne.Mob_Decomp := "Index_Mobile"('VN_DEC_BP5');
+	"DB_Dosage".BP[4].Benne.Mob_Trappe1 := "Index_Mobile"('TRP1_BP5');
+	"DB_Dosage".BP[4].Benne.Mob_Trappe2 := "Index_Mobile"('TRP2_BP5');
+	"DB_Dosage".BP[4].Benne.Seuil_Vib_Benne := 20;
+	"DB_Dosage".BP[4].Benne.Pas_Min := 3;
+	"DB_Dosage".BP[4].Benne.Tol_Stb := 1;
+	"DB_Dosage".BP[4].Benne.Tol0 := 1;
+	"DB_Dosage".BP[4].Benne.Tps_Max_Vidange := T#3m;
+	"DB_Dosage".BP[4].Benne.Tps_Vidange := T#0s;
+	"DB_Dosage".BP[4].Benne.Tps_Stab := T#2s;
+	"DB_Dosage".BP[4].Benne.Tps_Max_Stab := T#6s;
+	"DB_Dosage".BP[4].Benne.Tps_Evol_Poids := T#3s;
+	"DB_Dosage".BP[4].Benne.Tps_Att_Chute := T#10s;
+	"DB_Dosage".BP[4].Benne.Tps_Min_Extrat := T#500ms;
+	"DB_Dosage".BP[4].Benne.Capacite := 500;
+	"DB_Dosage".BP[4].Lst_Taches_Att_Vidange[0]._Tache := "TAC_TREMSS_BP5";
+	"DB_Dosage".BP[4].Lst_Taches_Att_Vidange[0]._Niv := "NIV_TREMIE_TRANS_AUT_REMP";
+END_FUNCTION
+

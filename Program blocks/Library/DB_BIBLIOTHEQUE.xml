@@ -1,0 +1,84 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Document>
+  <Engineering version="V17" />
+  <DocumentInfo>
+    <Created>2024-08-09T12:50:43.9381424Z</Created>
+    <ExportSetting>WithDefaults</ExportSetting>
+    <InstalledProducts>
+      <Product>
+        <DisplayName>Totally Integrated Automation Portal</DisplayName>
+        <DisplayVersion>V17 Update 7</DisplayVersion>
+      </Product>
+      <OptionPackage>
+        <DisplayName>TIA Portal Openness</DisplayName>
+        <DisplayVersion>V17 Update 7</DisplayVersion>
+      </OptionPackage>
+      <OptionPackage>
+        <DisplayName>TIA Portal Version Control Interface</DisplayName>
+        <DisplayVersion>V17</DisplayVersion>
+      </OptionPackage>
+      <Product>
+        <DisplayName>STEP 7 Professional</DisplayName>
+        <DisplayVersion>V17 Update 7</DisplayVersion>
+      </Product>
+      <OptionPackage>
+        <DisplayName>STEP 7 Safety</DisplayName>
+        <DisplayVersion>V17 Update 6</DisplayVersion>
+      </OptionPackage>
+      <Product>
+        <DisplayName>WinCC Professional</DisplayName>
+        <DisplayVersion>V17 Update 7</DisplayVersion>
+      </Product>
+    </InstalledProducts>
+  </DocumentInfo>
+  <SW.Blocks.GlobalDB ID="0">
+    <AttributeList>
+      <AutoNumber>true</AutoNumber>
+      <DBAccessibleFromOPCUA>true</DBAccessibleFromOPCUA>
+      <DBAccessibleFromWebserver>true</DBAccessibleFromWebserver>
+      <HeaderAuthor />
+      <HeaderFamily />
+      <HeaderName />
+      <HeaderVersion>0.1</HeaderVersion>
+      <Interface><Sections xmlns="http://www.siemens.com/automation/Openness/SW/Interface/v5">
+  <Section Name="Static">
+    <Member Name="Mobile" Datatype="Array[0..&quot;Nbr_Max_Mobiles&quot;] of &quot;S_Mobile&quot;" Remanence="Retain" Accessibility="Public"><AttributeList><BooleanAttribute Name="ExternalAccessible" SystemDefined="true">true</BooleanAttribute><BooleanAttribute Name="ExternalVisible" SystemDefined="true">true</BooleanAttribute><BooleanAttribute Name="ExternalWritable" SystemDefined="true">true</BooleanAttribute><BooleanAttribute Name="SetPoint" SystemDefined="true">false</BooleanAttribute></AttributeList><Sections><Section Name="None"><Member Name="Pos" Datatype="Array[0..&quot;Nbr_Max_Pos&quot;] of &quot;S_Position&quot;"><Sections><Section Name="None"><Member Name="Nom" Datatype="String[16]" /><Member Name="Commentaire" Datatype="String[30]" /><Member Name="Entr0_Av_Pos" Datatype="Array[0..&quot;Nbr_Entr_Pos&quot;] of Int" /><Member Name="Entr0_Ap_Pos" Datatype="Array[0..&quot;Nbr_Entr_Pos&quot;] of Int" /><Member Name="Entr0_Ap_Fin_Pos" Datatype="Array[0..&quot;Nbr_Entr_Pos&quot;] of Int" /><Member Name="Entr1_Av_Pos" Datatype="Array[0..&quot;Nbr_Entr_Pos&quot;] of Int" /><Member Name="Entr1_Ap_Pos" Datatype="Array[0..&quot;Nbr_Entr_Pos&quot;] of Int" /><Member Name="Entr1_Ap_Fin_Pos" Datatype="Array[0..&quot;Nbr_Entr_Pos&quot;] of Int" /><Member Name="Sort0" Datatype="Array[0..&quot;Nbr_Sort_Pos&quot;] of Int" /><Member Name="Sort0_Pr_Fin_Pos" Datatype="Array[0..&quot;Nbr_Sort_Pos&quot;] of Int" /><Member Name="Sort0_Ap_Pos" Datatype="Array[0..&quot;Nbr_Sort_Pos&quot;] of Int" /><Member Name="Sort1" Datatype="Array[0..&quot;Nbr_Sort_Pos&quot;] of Int" /><Member Name="Sort1_Pr_Fin_Pos" Datatype="Array[0..&quot;Nbr_Sort_Pos&quot;] of Int" /><Member Name="Sort1_Ap_Pos" Datatype="Array[0..&quot;Nbr_Sort_Pos&quot;] of Int" /><Member Name="Mob_Suiv" Datatype="Array[0..&quot;Nbr_Mob_Suiv&quot;] of Int" /><Member Name="Suiv_Enc" Datatype="Int" /></Section></Sections></Member><Member Name="Dial_Def" Datatype="&quot;S_DIALOG_DEF&quot;"><Sections><Section Name="None"><Member Name="Index_Defaut" Datatype="USInt" /><Member Name="Num_Def_Etape" Datatype="USInt" /><Member Name="Reponse_Def" Datatype="String[20]" /><Member Name="Text_Reponse" Datatype="String[30]" /></Section></Sections></Member><Member Name="ParCal" Datatype="Struct"><Member Name="Energie" Datatype="Struct"><Member Name="_CosPhi" Datatype="Real" /><Member Name="_Energie" Datatype="UDInt" /><Member Name="_CumulEnergie" Datatype="UDInt" /></Member><Member Name="_TpPicke" Datatype="Date_And_Time" /><Member Name="_DebutCalFar" Datatype="Date_And_Time" /><Member Name="_Debut" Datatype="Date_And_Time" /><Member Name="_TpsTran" Datatype="Time" /><Member Name="_TpsSuivi" Datatype="Time" /><Member Name="_TpCalFar" Datatype="Time" /><Member Name="_DureeCalFar" Datatype="Time" /><Member Name="_Temps" Datatype="Time" /><Member Name="_QteTrans" Datatype="Real" /><Member Name="_Dens" Datatype="Real" /><Member Name="_QteSuivi" Datatype="Real" /><Member Name="_DebMasTrans" Datatype="Real" /><Member Name="_DebVolTrans" Datatype="Real" /><Member Name="_QteCalFar" Datatype="Real" /><Member Name="_EtpQ" Datatype="SInt" /><Member Name="_EtpMemoQ" Datatype="SInt" /><Member Name="_EtpT" Datatype="SInt" /><Member Name="_EtpMemoT" Datatype="SInt" /><Member Name="PreFois" Datatype="Bool" /><Member Name="_FgCalFar" Datatype="Bool" /><Member Name="_FgCalTps" Datatype="Bool" /><Member Name="PrFois" Datatype="Bool" /></Member><Member Name="Nom" Datatype="String[10]" /><Member Name="Commentaire" Datatype="String[30]" /><Member Name="Automatisme" Datatype="String[16]" /><Member Name="Num_Lot" Datatype="String[16]" /><Member Name="Cd_Mat" Datatype="String[20]" /><Member Name="TpMarcheNet" Datatype="UInt" /><Member Name="TpMarcheMan" Datatype="UInt" /><Member Name="TpDefaut" Datatype="UInt" /><Member Name="ValRelance" Datatype="UInt" /><Member Name="ModCalc" Datatype="USInt" /><Member Name="Nature" Datatype="USInt" /><Member Name="Num_Cir" Datatype="USInt" /><Member Name="Etp" Datatype="USInt" /><Member Name="Etp_Memo" Datatype="USInt" /><Member Name="Etp_Prec" Datatype="USInt" /><Member Name="Etat" Datatype="USInt" /><Member Name="Nbr_Pos" Datatype="USInt" /><Member Name="Type_Chang_Pos" Datatype="USInt" /><Member Name="Point_Entr0_Av_Pos" Datatype="USInt" /><Member Name="Point_Entr0_Ap_Pos" Datatype="USInt" /><Member Name="Point_Entr0_Ap_Fin_Pos" Datatype="USInt" /><Member Name="Point_Entr1_Av_Pos" Datatype="USInt" /><Member Name="Point_Entr1_Ap_Pos" Datatype="USInt" /><Member Name="Point_Entr1_Ap_Fin_Pos" Datatype="USInt" /><Member Name="Point_Sort0" Datatype="USInt" /><Member Name="Point_Sort0_Pr_Fin_Pos" Datatype="USInt" /><Member Name="Point_Sort1" Datatype="USInt" /><Member Name="Point_Sort1_Pr_Fin_Pos" Datatype="USInt" /><Member Name="Point_Mob_Suiv" Datatype="USInt" /><Member Name="Point_Mob_Prec" Datatype="USInt" /><Member Name="Point_mob_Horiz" Datatype="USInt" /><Member Name="Index_Defaut" Datatype="USInt" /><Member Name="Etat_SUP" Datatype="USInt" /><Member Name="Mob_Suiv" Datatype="Array[0..&quot;Nbr_Mob_Suiv&quot;] of Int" /><Member Name="Mob_Prec" Datatype="Array[0..&quot;Nbr_Mob_Prec&quot;] of Int" /><Member Name="Mob_Horiz" Datatype="Array[0..&quot;Nbr_Mob_Horiz&quot;] of Int" /><Member Name="Mob_Prec_Ec" Datatype="Array[0..4] of Int" /><Member Name="Ret_Test_Entr0_Av_Pos" Datatype="SInt" /><Member Name="Ret_Test_Entr1_Av_Pos" Datatype="SInt" /><Member Name="Ret_Test_Entr0_Ap_Pos" Datatype="SInt" /><Member Name="Ret_Test_Entr1_Ap_Pos" Datatype="SInt" /><Member Name="Ret_Test_Entr0_Ap_Fin_Pos" Datatype="SInt" /><Member Name="Ret_Test_Entr1_Ap_Fin_Pos" Datatype="SInt" /><Member Name="Pos_Dmd" Datatype="SInt" /><Member Name="Pos_Enc" Datatype="SInt" /><Member Name="MemoPos" Datatype="SInt" /><Member Name="Fct" Datatype="SInt" /><Member Name="Ord" Datatype="SInt" /><Member Name="Ord_Manu" Datatype="SInt" /><Member Name="Ret_Cond_Fct" Datatype="Bool" /><Member Name="Ret_Cond_Vid" Datatype="Bool" /><Member Name="SA_Vitesse" Datatype="Real" /><Member Name="SA_Dispo" Datatype="Real" /><Member Name="EA_Courant" Datatype="Real" /><Member Name="EA_Vitesse" Datatype="Real" /><Member Name="EA_Energie" Datatype="Real" /><Member Name="EA_Dispo" Datatype="Real" /><Member Name="Tps_Picke" Datatype="Date_And_Time" /><Member Name="Tps_Pass_Mat" Datatype="Time" /><Member Name="Tps_Att" Datatype="Time" /><Member Name="Tps_Vid" Datatype="Time" /><Member Name="Tps_Arr" Datatype="Time" /><Member Name="Tps_Ap_Def" Datatype="Time" /><Member Name="Tps_Max_Mar_Forc" Datatype="Time" /><Member Name="Tps_Chang_Pos" Datatype="Time" /><Member Name="Tps_Asserv" Datatype="Time" /><Member Name="Tps_Alerte_Dem" Datatype="Time" /><Member Name="Noeud" Datatype="Bool" /><Member Name="Tjr_Desasservi" Datatype="Bool" /><Member Name="Vide" Datatype="Bool" /><Member Name="Manuel" Datatype="Bool" /><Member Name="Manuel_Memo" Datatype="Bool" /><Member Name="Local" Datatype="Bool" /><Member Name="Asservi" Datatype="Bool" /><Member Name="HORS_SERVICE" Datatype="Bool" /><Member Name="E_Verrou" Datatype="Bool" /><Member Name="S_Verrou" Datatype="Bool" /><Member Name="Reserve" Datatype="Bool" /><Member Name="Maintenance" Datatype="Bool" /><Member Name="Dmd_Chang_Pos" Datatype="Bool" /><Member Name="Pass_Mat" Datatype="Bool" /><Member Name="Niv_haut" Datatype="Bool" /><Member Name="AncSignal" Datatype="Bool" /></Section></Sections></Member>
+    <Member Name="Lots_Taches" Datatype="Array[0..&quot;Nbr_Max_Tache&quot;] of &quot;S_Lots_Tache&quot;" Remanence="Retain" Accessibility="Public"><AttributeList><BooleanAttribute Name="ExternalAccessible" SystemDefined="true">true</BooleanAttribute><BooleanAttribute Name="ExternalVisible" SystemDefined="true">true</BooleanAttribute><BooleanAttribute Name="ExternalWritable" SystemDefined="true">true</BooleanAttribute><BooleanAttribute Name="SetPoint" SystemDefined="true">true</BooleanAttribute></AttributeList><Sections><Section Name="None"><Member Name="Zones_Suiv" Datatype="Array[0..&quot;Nbr_Max_Lots&quot;] of SInt" /></Section></Sections></Member>
+    <Member Name="Zones_Suivi" Datatype="Array[0..&quot;Nbr_Max_Lots&quot;] of &quot;S_Zone_Suiv_Lot&quot;" Remanence="Retain" Accessibility="Public"><AttributeList><BooleanAttribute Name="ExternalAccessible" SystemDefined="true">true</BooleanAttribute><BooleanAttribute Name="ExternalVisible" SystemDefined="true">true</BooleanAttribute><BooleanAttribute Name="ExternalWritable" SystemDefined="true">true</BooleanAttribute><BooleanAttribute Name="SetPoint" SystemDefined="true">true</BooleanAttribute></AttributeList><Sections><Section Name="None"><Member Name="Occupee" Datatype="Bool" /><Member Name="Taches" Datatype="Array[0..&quot;Nbr_Max_Tache&quot;] of &quot;S_Tache&quot;"><Sections><Section Name="None"><Member Name="Activ" Datatype="Bool" /><Member Name="Nom" Datatype="String[&quot;T_Nom_Tache&quot;]" /><Member Name="Niveau" Datatype="USInt" /><Member Name="Qte" Datatype="Real" /></Section></Sections></Member></Section></Sections></Member>
+    <Member Name="Defaut" Datatype="Array[0..&quot;Nbr_Max_Def&quot;] of &quot;S_Defaut&quot;" Remanence="Retain" Accessibility="Public"><AttributeList><BooleanAttribute Name="ExternalAccessible" SystemDefined="true">true</BooleanAttribute><BooleanAttribute Name="ExternalVisible" SystemDefined="true">true</BooleanAttribute><BooleanAttribute Name="ExternalWritable" SystemDefined="true">true</BooleanAttribute><BooleanAttribute Name="SetPoint" SystemDefined="true">true</BooleanAttribute></AttributeList><Sections><Section Name="None"><Member Name="Msg_Defaut" Datatype="String" /><Member Name="Automatisme" Datatype="String[16]" /><Member Name="Num_Lot" Datatype="String[16]" /><Member Name="Origine_Defaut" Datatype="String[16]" /><Member Name="Libelle_Origine" Datatype="String[16]" /><Member Name="Acq1" Datatype="String[16]" /><Member Name="Acq2" Datatype="String[16]" /><Member Name="Acq3" Datatype="String[16]" /><Member Name="Acq4" Datatype="String[16]" /><Member Name="Acq5" Datatype="String[16]" /><Member Name="Acq6" Datatype="String[16]" /><Member Name="Acq7" Datatype="String[16]" /><Member Name="Acq8" Datatype="String[16]" /><Member Name="Reponse" Datatype="String[30]" /><Member Name="Reponse_Archiv" Datatype="String[30]" /><Member Name="Text_Reponse" Datatype="String[30]" /><Member Name="Acq_Choisi" Datatype="SInt" /><Member Name="Type_Defaut" Datatype="USInt" /><Member Name="ID_Base" Datatype="ULInt" /><Member Name="Date_Arrivee" Datatype="Date_And_Time" /><Member Name="Reponse_Lue" Datatype="Bool" /></Section></Sections></Member>
+    <Member Name="D_IO" Datatype="Array[0..2999] of &quot;S_D_IO&quot;" Remanence="Retain" Accessibility="Public"><AttributeList><BooleanAttribute Name="ExternalAccessible" SystemDefined="true">true</BooleanAttribute><BooleanAttribute Name="ExternalVisible" SystemDefined="true">true</BooleanAttribute><BooleanAttribute Name="ExternalWritable" SystemDefined="true">true</BooleanAttribute><BooleanAttribute Name="SetPoint" SystemDefined="true">true</BooleanAttribute></AttributeList><Sections><Section Name="None"><Member Name="Tps_Picke" Datatype="Date_And_Time" /><Member Name="Filtr_0_1" Datatype="Time" /><Member Name="Filtr_1_0" Datatype="Time" /><Member Name="Description" Datatype="String[100]" /><Member Name="Mnemonique" Datatype="String[20]" /><Member Name="Reseau" Datatype="USInt" /><Member Name="Rack" Datatype="USInt" /><Member Name="Carte" Datatype="USInt" /><Member Name="Type_IO" Datatype="Char" /><Member Name="Log_Nc" Datatype="Bool" /><Member Name="Masque" Datatype="Bool" /><Member Name="Force" Datatype="Bool" /><Member Name="Etat" Datatype="Bool" /><Member Name="Adr_IO" Datatype="Bool" /><Member Name="Init_Tps_Filtre" Datatype="Bool" /></Section></Sections></Member>
+  </Section>
+</Sections></Interface>
+      <IsOnlyStoredInLoadMemory>false</IsOnlyStoredInLoadMemory>
+      <IsRetainMemResEnabled>false</IsRetainMemResEnabled>
+      <IsWriteProtectedInAS>false</IsWriteProtectedInAS>
+      <MemoryLayout>Optimized</MemoryLayout>
+      <MemoryReserve>100</MemoryReserve>
+      <Name>DB_BIBLIOTHEQUE</Name>
+      <Number>3</Number>
+      <ProgrammingLanguage>DB</ProgrammingLanguage>
+    </AttributeList>
+    <ObjectList>
+      <MultilingualText ID="1" CompositionName="Comment">
+        <ObjectList>
+          <MultilingualTextItem ID="2" CompositionName="Items">
+            <AttributeList>
+              <Culture>en-US</Culture>
+              <Text />
+            </AttributeList>
+          </MultilingualTextItem>
+        </ObjectList>
+      </MultilingualText>
+      <MultilingualText ID="3" CompositionName="Title">
+        <ObjectList>
+          <MultilingualTextItem ID="4" CompositionName="Items">
+            <AttributeList>
+              <Culture>en-US</Culture>
+              <Text />
+            </AttributeList>
+          </MultilingualTextItem>
+        </ObjectList>
+      </MultilingualText>
+    </ObjectList>
+  </SW.Blocks.GlobalDB>
+</Document>

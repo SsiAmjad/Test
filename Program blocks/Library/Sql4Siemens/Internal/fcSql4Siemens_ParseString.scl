@@ -1,0 +1,85 @@
+﻿FUNCTION "fcSql4Siemens_ParseString" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      diOffset : DInt;
+   END_VAR
+
+   VAR_OUTPUT 
+      diNewOffset : DInt;
+      sValue : WString;
+   END_VAR
+
+   VAR_IN_OUT 
+      stSql4SiemensInterface : "utSql4SiemensInterface";
+   END_VAR
+
+   VAR_TEMP 
+      diSourceLen : DInt;
+      iRet : Int;
+      abChar : Array[0..4095] of Byte;
+      iOffset : Int;
+      iLoop : Int;
+      Wsvalue : WString[500];
+      WabChar : Array[0..4095] of WChar;
+      i : Int;
+      diOffset_1 : UInt;
+   END_VAR
+
+
+BEGIN
+	// +------------------------------------------------------------------------------------------------------------------+
+	// | Parse a string from the response buffer                                                                          |
+	// +------------------------------------------------------------------------------------------------------------------+
+	
+	// +-------------+-------------+-------------+------------------------------------------------------------------------+
+	// | Version     | Date        | Author      | Comment                                                                |
+	// +-------------+-------------+-------------+------------------------------------------------------------------------+
+	// | 4.0.0.0     | 08.05.2019  | BaM         | Initial version                                                        |
+	// +-------------+-------------+-------------+------------------------------------------------------------------------+
+	
+	// Source
+	 #diSourceLen := #stSql4SiemensInterface.diResponseDataSize - #diOffset;//initialise une variable "diSourceLen" avec la taille de la réponse à parser (analyser), qui est stockée dans une variable nommée "stSql4SiemensInterface.diResponseDataSize", moins la position actuelle du curseur de parsing, qui est stockée dans une variable nommée "diOffset".
+	
+	 IF (#diSourceLen > 10000) THEN
+	     #diSourceLen := 10000;
+	END_IF; 
+	
+	// Move data //pour copier les données à partir du buffer de réponse dans une variable nommée "abChar"
+	#iRet := MOVE_BLK_VARIANT(SRC := #stSql4SiemensInterface.abResponseData,
+	                          COUNT := DINT_TO_UINT(#diSourceLen),
+	                          SRC_INDEX := #diOffset,
+	                          DEST_INDEX := 0,
+	                          DEST => #abChar);
+	FOR #i := 0 TO 4094 DO
+	    #WabChar[#i] := BYTE_TO_WCHAR(#abChar[#i]);
+	END_FOR;
+	
+	
+	
+	
+	// Search <NUL> byte// chercher le premier caractère nul dans la chaîne de caractères copiée
+	#iOffset := -1;
+	FOR #iLoop := 0 TO DINT_TO_INT(#diSourceLen - 1) DO
+	  IF (#abChar[#iLoop] = 0) THEN
+	    #iOffset := #iLoop;
+	    EXIT;
+	  END_IF;
+	END_FOR;
+	
+	
+	IF (#iOffset >= 0) THEN
+	     Chars_TO_Strg(Chars := #WabChar,
+	                pChars := 0,
+	                Cnt := INT_TO_UINT(#iOffset),
+	                Strg => #sValue);
+	  #diNewOffset := #diOffset + INT_TO_DINT(#iOffset) + 1;//calcule également une nouvelle position de curseur en ajoutant l'indice du premier caractère nul à la position actuelle du curseur de parsing
+	  #fcSql4Siemens_ParseString := TRUE;
+	ELSE
+	    #sValue := STRING_TO_WSTRING('');
+	  #diNewOffset := #diOffset;
+	  #fcSql4Siemens_ParseString := FALSE;
+	END_IF;
+	
+END_FUNCTION
+

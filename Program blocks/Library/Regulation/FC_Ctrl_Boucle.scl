@@ -1,0 +1,32 @@
+﻿FUNCTION "FC_Ctrl_Boucle" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Regulation : "S_Regul";
+   END_VAR
+
+   VAR CONSTANT 
+      STOP : SInt := 0;
+      REGUL_MANU : SInt := 2;
+      SUSPENSION : SInt := 3;
+   END_VAR
+
+
+BEGIN
+	IF #Regulation.Mode_Manu THEN
+	    #Regulation.Reg_Rampe := 0;
+	    #Regulation.Etape := #REGUL_MANU;
+	    RETURN;
+	END_IF;
+	IF NOT #Regulation.Valid THEN
+	    #Regulation.Reg_Rampe := 0;
+	    #Regulation.Etape := #STOP;
+	    RETURN;
+	END_IF;
+	IF #Regulation.Susp THEN
+	    #Regulation.Reg_Rampe := 0;
+	    #Regulation.Etape := #SUSPENSION;
+	    RETURN;
+	END_IF;
+END_FUNCTION
+

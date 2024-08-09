@@ -1,0 +1,84 @@
+﻿FUNCTION "Proc_MAJ_Stock_Exp" : String
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Num_Zone : SInt;
+      Num_Tache : SInt;
+      Qte_Lot : Real;
+   END_VAR
+
+   VAR_OUTPUT 
+      Err_Sql : String;
+      Msg_Def : String;
+   END_VAR
+
+   VAR_IN_OUT 
+      Data_Dosage : "S_Suivi_Dosage";
+   END_VAR
+
+   VAR_TEMP 
+      Tache_Exp : Array[0..9] of SInt;
+      parameters_value : Array[0..20] of String;
+      Resultat_Decode : WString[4000];
+      net : String;
+      chute : String;
+      anc_chute : String;
+      poids : String;
+      status : Int;
+   END_VAR
+
+
+BEGIN
+	//Insertion des parametres 
+	#parameters_value[0] := UINT_TO_STRING("Num_Poste");
+	#parameters_value[1] := '0';
+	#parameters_value[2] := #Data_Dosage._SuiviCommun._CdMat;
+	#parameters_value[3] := #Data_Dosage._Cel_Dest;
+	#parameters_value[4] := '';
+	#parameters_value[5] := ULINT_TO_STRING(#Data_Dosage._IdHDos);
+	#Tache_Exp[0] := #Num_Tache;
+	VAL_STRG(IN := #Qte_Lot,
+	         SIZE := 10,
+	         PREC := 3,
+	         FORMAT := 0004,
+	         P := 1,
+	         OUT => #net);
+	#parameters_value[6] := #net;
+	#parameters_value[7] := '0';
+	#parameters_value[8] := '';
+	#parameters_value[9] := '000';
+	#parameters_value[10] := 'T';
+	#parameters_value[11] := '0'; 
+	#parameters_value[12] := '0';
+	#parameters_value[13] := '0';
+	
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	
+	#Resultat_Decode := "COMBASE"(procedure_name := 'SP_Dos_udpstock',
+	                              values_of_record := #parameters_value,
+	                              parameters_number := 13,
+	                              ERROR_MESSAGE => #Err_Sql);
+	
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := 'REPONSE:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Proc_MAJ_Stock_Exp);
+	
+	IF #Proc_MAJ_Stock_Exp = 'NOK' THEN
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := 'MESS:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Msg_Def);
+	    RETURN;
+	ELSIF #Proc_MAJ_Stock_Exp = 'OK' THEN
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := 'MESS:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Msg_Def);
+	    IF #Msg_Def = 'VIDE' THEN
+	        RETURN;
+	    END_IF;
+	ELSE
+	    RETURN;
+	END_IF;
+END_FUNCTION
+

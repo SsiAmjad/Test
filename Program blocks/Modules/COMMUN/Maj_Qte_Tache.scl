@@ -1,0 +1,14 @@
+﻿FUNCTION "Maj_Qte_Tache" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Num_Tache : SInt;
+      Num_Zone : SInt;
+      Qte : Real;
+   END_VAR
+
+
+BEGIN
+	"DB_BIBLIOTHEQUE".Zones_Suivi[#Num_Zone].Taches[#Num_Tache].Qte := #Qte;
+END_FUNCTION
+

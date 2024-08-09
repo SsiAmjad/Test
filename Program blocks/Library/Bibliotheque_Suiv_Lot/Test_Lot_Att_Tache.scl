@@ -1,0 +1,52 @@
+﻿FUNCTION "Test_Lot_Att_Tache" : SInt
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Num_Tache : SInt;
+   END_VAR
+
+   VAR_OUTPUT 
+      Num_Zone : SInt;
+   END_VAR
+
+   VAR_TEMP 
+      Ret_RD_Sys_T : Int;
+      Sys_T : Date_And_Time;
+      Index_Acquit : USInt;
+   END_VAR
+
+
+BEGIN
+	(*
+	================================================  Documentation  ================================================
+	Cette fonction récupère le numéro de la première zone ou la tache entrée n'a pas encore atteinte son niveau max
+	- Paramètre d'entré : + Nom de la tache
+	- Paramètre de sortie : +Numéro de la zone
+	- Valeurs de retour : + 1 si la fonction a trouvé une zone de suivi
+	                      + -1 si aucune zone n'attend cette tache
+	================================================  Documentation  ================================================
+	*)
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | Version | Date       | Autheur     | Ajouts/Modifications                                                   |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | V_1     | 13.10.2023 | I.DAOUDI    | Creation du block                                                      |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	 #Ret_RD_Sys_T := RD_SYS_T(#Sys_T);
+	// Test de la validite du numero de la tache
+	IF #Num_Tache < 0 OR #Num_Tache > "Nbr_Max_Tache" THEN
+	    #Num_Zone := -1;
+	    #Test_Lot_Att_Tache := -1;
+	    RETURN;
+	END_IF;
+	// Aucun lot attend la tache
+	IF "DB_BIBLIOTHEQUE".Lots_Taches[#Num_Tache].Zones_Suiv[0] = -1 THEN
+	    #Num_Zone := -1;
+	    #Test_Lot_Att_Tache := -1;
+	    RETURN;
+	END_IF;
+	// Recuperation du numero de la zone attendant la tache
+	#Num_Zone := "DB_BIBLIOTHEQUE".Lots_Taches[#Num_Tache].Zones_Suiv[0];
+	#Test_Lot_Att_Tache := 1;
+	RETURN;
+END_FUNCTION
+

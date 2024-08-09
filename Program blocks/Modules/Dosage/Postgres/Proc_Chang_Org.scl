@@ -1,0 +1,126 @@
+﻿FUNCTION "Proc_Chang_Org" : String
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Nouvelle_Zone : String;
+   END_VAR
+
+   VAR_OUTPUT 
+      Err_Sql : String;
+      Msg_Def : String;
+   END_VAR
+
+   VAR_IN_OUT 
+      Data_Dosage : "S_Suivi_Dosage";
+      Compo : "S_Com_Fab";
+   END_VAR
+
+   VAR_TEMP 
+      parameters_value : Array[0..20] of String;
+      Resultat_Decode : WString[4000];
+      status : Int;
+      Rep_temp : String;
+   END_VAR
+
+
+BEGIN
+	//Insertion des parametres 
+	#parameters_value[0] := UINT_TO_STRING("Num_Poste");
+	#parameters_value[1] := ULINT_TO_STRING(#Data_Dosage._IdHDos);
+	#parameters_value[2] := ULINT_TO_STRING(#Compo.IHDOSLIG);
+	#parameters_value[3] := #Nouvelle_Zone;
+	#parameters_value[4] := 'N';
+	#parameters_value[5] := 'N';
+	
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	
+	#Resultat_Decode := "COMBASE"(procedure_name := 'SP_Dos_ChangOrg',
+	                              values_of_record := #parameters_value,
+	                              parameters_number := 5,
+	                              ERROR_MESSAGE => #Err_Sql);
+	
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := 'REPONSE:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Proc_Chang_Org);
+	
+	IF #Proc_Chang_Org = 'NOK' THEN
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := 'MESS:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Msg_Def);
+	    RETURN;
+	ELSIF #Proc_Chang_Org = 'OK' THEN
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := 'MESS:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Msg_Def);
+	    IF #Msg_Def = 'VIDE' THEN
+	        RETURN;
+	    END_IF;
+	ELSE
+	    RETURN;
+	END_IF;
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|COMP:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Compo.Code_MP);
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|LCOMP:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Compo.Libel_MP);
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|LDOS:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Compo.Incorpo);
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|ZONE:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Compo.Code_Cel);
+	
+	(* #status := "FCT_DECODE_TRAME"(KEYWORD := '|NQTE:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	#Compo.Poids := STRING_TO_REAL(#Rep_temp); *)
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|DENS:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	#Compo.Densite := STRING_TO_REAL(#Rep_temp);
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|PV:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	#Compo.Vit_PV := STRING_TO_USINT(#Rep_temp);
+	IF #Compo.Vit_PV <= 0 THEN
+	    #Compo.Vit_PV := 100;
+	END_IF;
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|GV:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	#Compo.Vit_GV := STRING_TO_USINT(#Rep_temp);
+	IF #Compo.Vit_GV <= 0 THEN
+	    #Compo.Vit_GV := 100;
+	END_IF;
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|PGP:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	#Compo.Seuil_PV := STRING_TO_USINT(#Rep_temp);
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|DEB:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	#Compo.Debit_PV := STRING_TO_REAL(#Rep_temp);
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|CHUTE:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	#Compo.Col_Chute := STRING_TO_REAL(#Rep_temp);
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|IHDOSLIG:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	#Compo.IHDOSLIG := STRING_TO_ULINT(#Rep_temp);
+END_FUNCTION
+

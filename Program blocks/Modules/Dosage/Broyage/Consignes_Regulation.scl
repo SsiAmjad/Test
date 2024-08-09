@@ -1,0 +1,23 @@
+﻿FUNCTION "Consignes_Regulation" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Broyeur : "S_Broyage";
+   END_VAR
+
+
+BEGIN
+	#Broyeur.Cons_Charge := #Broyeur.Pt_Zs._ParamBro._Charge;
+	#Broyeur.Affich_Superv.Consigne := #Broyeur.Pt_Zs._ParamBro._Charge;
+	#Broyeur.Cons_Charge_Amp := (#Broyeur.Cons_Charge * #Broyeur.Intens_Nominale) / 100;
+	// #Broyeur.Vit_Dem_Alim := #Broyeur.Pt_Zs._Param_Broy._Vit_Dem_Alim;
+	// #Broyeur.Vit_Lim_Alim := #Broyeur.Pt_Zs._Param_Broy._Vit_Limit_Alim;
+	// #Broyeur.Vit_Mar_Vide_Alim := #Broyeur.Pt_Zs._Param_Broy._Vit_Vide_Alim;
+	// #Broyeur.Vit_Vid_Alim := #Broyeur.Pt_Zs._Param_Broy._Vit_Vidange_Alim;
+	#Broyeur.Tps_Av_Montee := #Broyeur.Pt_Zs._ParamBro._Tps_Avant_Montee;
+	#Broyeur.Cons_Fin_Montee := #Broyeur.Pt_Zs._ParamBro._Cons_Fin_Montee;
+	#Broyeur.Rampe_Montee := #Broyeur.Pt_Zs._ParamBro._Rampe_Montee;
+	#Broyeur.Cons_Vit_Br := #Broyeur.Pt_Zs._ParamBro._Vit_Bro;
+	#Broyeur.SAV_Broy := REAL_TO_USINT( (#Broyeur.Pt_Zs._ParamBro._Vit_Bro / #Broyeur.Vit_Max_Broy) * 100);
+END_FUNCTION
+

@@ -1,0 +1,205 @@
+﻿FUNCTION "Rech_Cir_SansReserve" : SInt
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Circuit : "S_Circuit";
+   END_VAR
+
+   VAR_TEMP 
+      Index_Origine : Int;
+      Index_Destination : Int;
+      i : USInt;
+      j : USInt;
+      k : USInt;
+      l : USInt;
+      m : USInt;
+      nbr_mob : USInt;
+      Index_Circuit : USInt;
+      nbr_Mob_Memo : USInt;
+      a : USInt;
+      b : USInt;
+      n : USInt;
+      Ret_Reserv_Mobile : Int;
+      x : USInt;
+   END_VAR
+
+
+BEGIN
+	
+	
+	REGION Reinitialiser les circuits trouves
+	    FOR #a := 0 TO "Nbr_Circuits" DO
+	        FOR #b := 0 TO "Nbr_Mob_Circuit" DO
+	            "CirTrouv".Circuits_Trouves[#a, #b] := -1;
+	            
+	        END_FOR;
+	    END_FOR;
+	    FOR #a := 0 TO "Nbr_Mob_Circuit" DO
+	        #Circuit.Mob_Circuit[#a].Mobile := -1;
+	    END_FOR;
+	END_REGION Reinitialiser les circuits trouves
+	
+	REGION Definir l'index de l'orgine et de la destination
+	    #Index_Origine := #Circuit.Origine;
+	    IF #Index_Origine = -1 THEN
+	        #Rech_Cir_SansReserve := -1;
+	        RETURN;
+	    END_IF;
+	    #Index_Destination := #Circuit.Destination;
+	    IF #Index_Destination = -1 THEN
+	        #Rech_Cir_SansReserve := -1;
+	        RETURN;
+	    END_IF;
+	END_REGION Definir l'index de l'orgine et de la destination
+	
+	REGION Identifier les listes des noeuds dont le premier element est l'origine et le dernier renseigne est la destination
+	    
+	    FOR #i := 0 TO "Nbr_Circuits" DO
+	        IF "CircNoeud"."THIS"[#i].Noeud[0] = #Index_Origine THEN //"CirTrouv".Noeuds_Circuits[#i, 0] = #Index_Origine THEN
+	            FOR #j := 0 TO "Nbr_Noeuds" DO
+	                IF "CircNoeud"."THIS"[#i].Noeud[#j] = #Index_Destination THEN    //   "CirTrouv".Noeuds_Circuits[#i, #j] = #Index_Destination THEN
+	                    "Trouv_Cir"(Noeuds_Circuit := "CircNoeud"."THIS"[#i].Noeud,       // "CirTrouv".Noeuds_Circuits[#i],
+	                                Index_Circuit := #k);
+	                    #k := #k + 1;
+	                    EXIT;
+	                END_IF;
+	            END_FOR;
+	        ELSE
+	            CONTINUE;
+	        END_IF;
+	    END_FOR;
+	    
+	    
+	    
+	    
+	END_REGION Identifier les listes des noeuds dont le premier element est l'origine et le dernier renseigne est la destination
+	
+	REGION Filtrage
+	    FOR #i := 0 TO "Nbr_Circuits" DO
+	        // Arreter la boucle si le premier element d'un circuit est non renseigne
+	        IF "CirTrouv".Circuits_Trouves[#i, 0] = -1 THEN
+	            EXIT;
+	        END_IF;
+	        #j := 0;
+	        WHILE "CirTrouv".Circuits_Trouves[#i, #j] <> -1 DO
+	            REGION Filtrage par disponibilite des mobiles du circuit
+	                IF "DB_BIBLIOTHEQUE".Mobile["CirTrouv".Circuits_Trouves[#i, #j]].Manuel OR
+	                    "DB_BIBLIOTHEQUE".Mobile["CirTrouv".Circuits_Trouves[#i, #j]].HORS_SERVICE OR
+	                    //modif SAS
+	                    ("DB_BIBLIOTHEQUE".Mobile["CirTrouv".Circuits_Trouves[#i, #j]].Reserve AND
+	                    "DB_BIBLIOTHEQUE".Mobile["CirTrouv".Circuits_Trouves[#i, #j]].Num_Cir <> #Circuit.Num_Circuit)
+	                    //FIN MODIF
+	                    OR
+	                    "DB_BIBLIOTHEQUE".Mobile["CirTrouv".Circuits_Trouves[#i, #j]].E_Verrou OR
+	                    "DB_BIBLIOTHEQUE".Mobile["CirTrouv".Circuits_Trouves[#i, #j]].Niv_haut THEN
+	                    // Detruire le circuit
+	                    FOR #k := 0 TO "Nbr_Mob_Circuit" DO
+	                        "CirTrouv".Circuits_Trouves[#i, #k] := -1;
+	                    END_FOR;
+	                    // Passer au prochain circuit
+	                    EXIT;
+	                END_IF;
+	            END_REGION Filtrage par disponibilite des mobiles du circuit
+	            
+	            REGION Filtrage par critere exclu
+	                FOR #k := 0 TO "Nbr_Criteres" DO
+	                    IF #Circuit.Criteres[#k].Mobile = -1 OR #Circuit.Criteres[#k].Critere = -1 THEN
+	                        CONTINUE;
+	                    END_IF;
+	                    IF #Circuit.Criteres[#k].Critere = "Mob_Exclu" THEN
+	                        IF "CirTrouv".Circuits_Trouves[#i, #j] = #Circuit.Criteres[#k].Mobile THEN
+	                            // Detruire le circuit
+	                            FOR #m := 0 TO "Nbr_Mob_Circuit" DO
+	                                "CirTrouv".Circuits_Trouves[#i, #m] := -1;
+	                            END_FOR;
+	                            // Passer au prochain circuit
+	                            EXIT;
+	                        END_IF;
+	                    END_IF;
+	                END_FOR;
+	                #j := #j + 1;
+	            END_REGION Filtrage par critere exclu 
+	        END_WHILE;
+	        
+	        REGION Filtrage par critere obligatoire
+	            FOR #k := 0 TO "Nbr_Criteres" DO
+	                IF #Circuit.Criteres[#k].Critere = "Mob_Obligatoire" THEN
+	                    FOR #l := 0 TO "Nbr_Mob_Circuit" DO
+	                        IF "CirTrouv".Circuits_Trouves[#i, #l] = #Circuit.Criteres[#k].Mobile THEN
+	                            // Passer au prochain circuit
+	                            EXIT;
+	                        ELSE
+	                            // Attente le parcours de tout les mobiles du circuit
+	                            IF #l = "Nbr_Mob_Circuit" THEN
+	                                // Detruire le circuit
+	                                FOR #m := 0 TO "Nbr_Mob_Circuit" DO
+	                                    "CirTrouv".Circuits_Trouves[#i, #m] := -1;
+	                                END_FOR;
+	                                EXIT;
+	                            END_IF;
+	                        END_IF;
+	                    END_FOR;
+	                END_IF;
+	            END_FOR;
+	        END_REGION Filtrage par critere obligatoire
+	    END_FOR;
+	    
+	    REGION Filtrage par type de recherche
+	        IF #Circuit.Type_Rech = "Court" THEN
+	            FOR #l := 0 TO "Nbr_Circuits" DO
+	                //Test
+	                #nbr_mob := 0;
+	                #m := 0;
+	                //Test
+	                IF "CirTrouv".Circuits_Trouves[#l, 0] = -1 THEN
+	                    EXIT;
+	                ELSE
+	                    WHILE "CirTrouv".Circuits_Trouves[#l, #m] > -1 DO
+	                        #nbr_mob := #nbr_mob + 1;
+	                        #m := #m + 1;
+	                        //test
+	                        IF #m > "Nbr_Mob_Circuit" THEN
+	                            EXIT;
+	                        END_IF;
+	                        //test
+	                    END_WHILE;
+	                    IF (#nbr_mob < #nbr_Mob_Memo OR #l = 0) THEN
+	                        #Index_Circuit := #l;
+	                        #nbr_Mob_Memo := #nbr_mob;
+	                        #m := 0;
+	                    END_IF;
+	                    FOR #n := 0 TO "Nbr_Mob_Circuit" DO
+	                        #Circuit.Mob_Circuit[#n].Mobile := "CirTrouv".Circuits_Trouves[#Index_Circuit, #n];
+	                    END_FOR;
+	                END_IF;
+	            END_FOR;
+	        END_IF;
+	    END_REGION Filtrage par type de recherche 
+	END_REGION Filtrage
+	
+	REGION Retour Rech _Cir
+	    IF #Circuit.Mob_Circuit[0].Mobile <> #Circuit.Origine THEN
+	        #Rech_Cir_SansReserve := -1;
+	    ELSE
+	        // Modif MB: ajout reservation circuit 
+	        FOR #i := 0 TO "Nbr_Mob_Circuit" DO
+	            //Test fin circuit
+	            IF #Circuit.Mob_Circuit[#i].Mobile = -1 THEN
+	                EXIT;
+	            END_IF;
+	            // mise à jour des precedents en cours
+	            IF (#Circuit.Mob_Circuit[#i + 1].Mobile > -1) THEN
+	                FOR #x := 0 TO 4 DO
+	                    IF ("DB_BIBLIOTHEQUE".Mobile[#Circuit.Mob_Circuit[#i + 1].Mobile].Mob_Prec_Ec[#x] = -1) THEN
+	                        "DB_BIBLIOTHEQUE".Mobile[#Circuit.Mob_Circuit[#i + 1].Mobile].Mob_Prec_Ec[#x] := #Circuit.Mob_Circuit[#i].Mobile;
+	                        EXIT;
+	                    END_IF;
+	                END_FOR;
+	            END_IF;
+	        END_FOR;
+	        #Rech_Cir_SansReserve := 1;
+	    END_IF;
+	END_REGION Retour Rech _Cir
+	
+END_FUNCTION
+

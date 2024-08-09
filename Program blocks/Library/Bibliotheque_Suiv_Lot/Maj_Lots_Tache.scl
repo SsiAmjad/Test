@@ -1,0 +1,30 @@
+﻿FUNCTION "Maj_Lots_Tache" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Num_Tache : SInt;
+   END_VAR
+
+   VAR_TEMP 
+      i : SInt;
+   END_VAR
+
+
+BEGIN
+	(*
+	===================================================  Documentation  =================================================== 
+	Cette fonction  met a jour les lots qui attendent une tache
+	- Paramètre d'entré : + Numero de la tache
+	===================================================  Documentation  =================================================== 
+	*)
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | Version | Date       | Autheur     | Ajouts/Modifications                                                   |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | V_1     | 17.10.2023 | I.DAOUDI    | Creation du block                                                      |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	FOR #i := 0 TO "Nbr_Max_Lots" - 1 DO
+	    "DB_BIBLIOTHEQUE".Lots_Taches[#Num_Tache].Zones_Suiv[#i] := "DB_BIBLIOTHEQUE".Lots_Taches[#Num_Tache].Zones_Suiv[#i + 1];
+	    "DB_BIBLIOTHEQUE".Lots_Taches[#Num_Tache].Zones_Suiv["Nbr_Max_Lots"] := -1;
+	END_FOR;
+END_FUNCTION
+

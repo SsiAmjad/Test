@@ -1,0 +1,52 @@
+﻿FUNCTION "FC_ASSEMBLY_FOR_POSTGRE" : Void
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : DAOUDI
+VERSION : 0.1
+   VAR_INPUT 
+      parameters_value : Array[0..20] of String;
+      procedure_name : String;
+      parameters_number : SInt;
+   END_VAR
+
+   VAR_OUTPUT 
+      assembled_query : String;
+   END_VAR
+
+   VAR_TEMP 
+      I : SInt;
+      query : String;
+   END_VAR
+
+
+BEGIN
+	//====================================================================
+	//          CONCATINATE QUERY'S ELEMENTS FOR POSTGRESQL
+	//====================================================================
+	//====================================================================
+	//          SYNTAXE OF CALLING PROCEDURE ON POSTGRESQL
+	//          CALL PROCEDURE_NAME('PARAM0', 'PARAM2' .... 'PARAM"N"');
+	//          N IS THE NUMBER OF VALUES
+	//====================================================================
+	#query := '';                                                               // INITIALIZE QUERY'S BUFFER
+	#assembled_query := '';                                                     // INITIALIZE QUERY'S OUTPUT BUFFER
+	#query := CONCAT(IN1 := 'CALL ', IN2 := #procedure_name);                   // CALL PROCEDURE_NAME
+	#query := CONCAT(IN1 := #query, IN2 := '(');                                // CALL PROCEDURE_NAME (
+	//====================================================================
+	//        START LOOP THAT INSERT AND CONCATINATE ALL PARAMETERS
+	//====================================================================
+	FOR #I := 0 TO #parameters_number DO
+	    #query := CONCAT(IN1 := #query, IN2 := '$'');                           // CALL PROCEDURE_NAME ('
+	    #query := CONCAT(IN1 := #query, IN2 := #parameters_value[#I]);          // CALL PROCEDURE_NAME ('PARAM1
+	    IF #I < #parameters_number THEN                                         // CHECK IF THIS PARAMETER IS NOT THE LAST ONE
+	        #query := CONCAT(IN1 := #query, IN2 := '$',');                      // CALL PROCEDURE_NAME ('PARAM1'
+	    ELSE                                                                    // CASE WHERE THIS PARAMETER IS THE LAST ONE
+	        #query := CONCAT(IN1 := #query, IN2 := '$');');                     // CALL PROCEDURE_NAME ('PARAM1''); AFTER #parameter 
+	        #assembled_query := #query;
+	    END_IF;
+	END_FOR;
+	//====================================================================
+	//        END LOOP THAT INSERT AND CONCATINATE ALL PARAMETERS
+	//====================================================================
+	
+END_FUNCTION
+

@@ -1,0 +1,72 @@
+﻿FUNCTION "Cal_Qte_Possi" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      REC : "S_REC";
+   END_VAR
+
+   VAR_TEMP 
+      Ret_RD_Sys_T : Int;
+      ret : Bool;
+      TpsPassé : Time;
+   END_VAR
+
+   VAR CONSTANT 
+      Repos : SInt := 0;
+      Calcul_Qte : SInt := 1;
+   END_VAR
+
+
+BEGIN
+	CASE #REC.CalQte.Etape OF
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║            Etape "Repos"           ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	    #Repos:
+	        REGION traitement preliminaire
+	            IF (#REC.CalQte.Etape <> #REC.CalQte.EtapeMemo) THEN
+	                #REC.CalQte.EtapeMemo := #REC.CalQte.Etape;
+	            END_IF;
+	       END_REGION
+	       REGION traitement_cyclique
+	           IF #REC._FgActQtePossible THEN
+	               #REC.CalQte.Etape := #Calcul_Qte;
+	               RETURN;
+	           END_IF;
+	       END_REGION
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║         Etape "Calcul QTE"         ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)        
+	    #Calcul_Qte:
+	        REGION traitement preliminaire
+	            IF #REC.CalQte.Etape <> #REC.CalQte.EtapeMemo THEN
+	                #REC.CalQte.EtapeMemo := #REC.CalQte.Etape;
+	                #Ret_RD_Sys_T := RD_SYS_T(#REC.RecCommun.CommunGeneral._TpsPicke);
+	                #REC.CalQte.DebutQtePos:=#REC.RecCommun.CommunGeneral._TpsPicke;
+	            END_IF;
+	        END_REGION
+	        REGION traitement cyclique
+	           // Statement section REGION
+	            IF #REC._FgActQtePossible=FALSE   THEN
+	                #REC.CalQte.Etape := #Repos;
+	                RETURN;
+	            ELSE
+	                #ret := "Tempo"(Duree := #REC._TpCalcQtePossible, Tps_Picke :=  #REC.CalQte.DebutQtePos, Anticip := FALSE, Tps_Passe => #TpsPassé);
+	                IF #ret THEN
+	                    #REC._QtePossible := (#REC._Volume * #REC._Densite * 1000) - #REC._Stock;
+	                    #REC.CalQte.DebutQtePos := #REC.RecCommun.CommunGeneral._TpsPicke;
+	                END_IF;
+	            END_IF;
+	        END_REGION
+	END_CASE;
+	
+END_FUNCTION
+

@@ -1,0 +1,27 @@
+﻿FUNCTION "fcSql4Siemens_Reset" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      stSql4SiemensInterface : "utSql4SiemensInterface";
+   END_VAR
+
+
+BEGIN
+	// +------------------------------------------------------------------------------------------------------------------+
+	// | The method resets the request buffer.                                                                            |
+	// +------------------------------------------------------------------------------------------------------------------+
+	
+	// +-------------+-------------+-------------+------------------------------------------------------------------------+
+	// | Version     | Date        | Author      | Comment                                                                |
+	// +-------------+-------------+-------------+------------------------------------------------------------------------+
+	// | 4.0.0.0     | 13.06.2019  | BaM         | Initial version                                                        |
+	// +-------------+-------------+-------------+------------------------------------------------------------------------+
+	
+	// Set the used memory size to 0
+	#stSql4SiemensInterface.diRequestDataSize := 0;
+	#stSql4SiemensInterface.diResponseDataSize := 0;
+	
+	// Return TRUE
+	#fcSql4Siemens_Reset := TRUE;
+END_FUNCTION
+

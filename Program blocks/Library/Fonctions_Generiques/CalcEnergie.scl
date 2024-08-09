@@ -1,0 +1,29 @@
+﻿FUNCTION "CalcEnergie" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Mobile : "S_Mobile";
+   END_VAR
+
+   VAR_TEMP 
+      PuissInst : Real;
+   END_VAR
+
+   VAR CONSTANT 
+      Tension : Real := 400.0;
+   END_VAR
+
+
+BEGIN
+	IF #Mobile.EA_Courant > 0 AND #Mobile.Etat = "Pret" THEN
+	    #PuissInst := (#Mobile.EA_Courant * #Mobile.ParCal.Energie._CosPhi * #Tension * 1.732) / 1000; //Kwatt 
+	    
+	    IF #Mobile.TpMarcheNet > 0 THEN
+	        #Mobile.ParCal.Energie._Energie := (#PuissInst * #Mobile.TpMarcheNet)+ #Mobile.ParCal.Energie._CumulEnergie;//Energie en Kw/sec 
+	       // #Mobile.ParCal.Energie._CumulEnergie := #Mobile.ParCal.Energie._Energie;
+	    ELSE
+	        #Mobile.ParCal.Energie._CumulEnergie := #Mobile.ParCal.Energie._Energie;
+	    END_IF;
+	END_IF;
+END_FUNCTION
+

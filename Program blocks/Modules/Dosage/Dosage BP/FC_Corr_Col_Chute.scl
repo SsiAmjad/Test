@@ -1,0 +1,22 @@
+﻿FUNCTION "FC_Corr_Col_Chute" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Benne : "S_Benne";
+   END_VAR
+
+
+BEGIN
+	#Benne.Composant.Col_Chute := #Benne.Composant.Net - #Benne.Poids_Memo_Chute ;
+	// IF #Benne.Fg_Constat_Cln_Chute THEN
+	//     #Benne.Composant.Col_Chute := #Benne.Composant.Net - (#Benne.Composant.Poids/2);
+	// ELSE
+	//     #Benne.Composant.Col_Chute := #Benne.Composant.Net - #Benne.Cons_Arr_Ext;
+	// END_IF;
+	
+	IF #Benne.Composant.Col_Chute > #Benne.Composant.Col_Chute_Max THEN
+	    #Benne.Composant.Col_Chute := #Benne.Composant.Anc_Chute;
+	END_IF;
+	RETURN;
+END_FUNCTION
+

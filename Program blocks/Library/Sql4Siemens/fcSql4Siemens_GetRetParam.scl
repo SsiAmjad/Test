@@ -1,0 +1,46 @@
+﻿FUNCTION "fcSql4Siemens_GetRetParam" : WString
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      diParam : DInt;
+   END_VAR
+
+   VAR_IN_OUT 
+      stSql4SiemensInterface : "utSql4SiemensInterface";
+   END_VAR
+
+   VAR_TEMP 
+      diOffset : DInt;
+      iLength : Int;
+      sValue : WString[300];
+      xRet : Bool;
+   END_VAR
+
+
+BEGIN
+	// +------------------------------------------------------------------------------------------------------------------+
+	// | The method returns the return parameter by the parameter "diPar". (PARAMETERS ARE ZERO BASED)                    |
+	// +------------------------------------------------------------------------------------------------------------------+
+	
+	// +-------------+-------------+-------------+------------------------------------------------------------------------+
+	// | Version     | Date        | Author      | Comment                                                                |
+	// +-------------+-------------+-------------+------------------------------------------------------------------------+
+	// | 4.0.0.0     | 13.06.2019  | BaM         | Initial version                                                        |
+	// +-------------+-------------+-------------+------------------------------------------------------------------------+
+	
+	
+	#sValue := STRING_TO_WSTRING('');
+	IF (#diParam >= 0) AND (#diParam < #stSql4SiemensInterface.cdiResponseReturnParamSize) THEN
+	  // Read the offset position and length on the response buffer
+	  #diOffset := #stSql4SiemensInterface.adiResponseReturnParam[#diParam].diOffset;
+	  #iLength := #stSql4SiemensInterface.adiResponseReturnParam[#diParam].iLength;
+	  // Read the return parameter value
+	  IF (#diOffset > 0) AND (#iLength > 0) THEN
+	      #xRet := "fcSql4Siemens_ReadString"(diOffset := #diOffset, iLength := #iLength, WsValue => #sValue, stSql4SiemensInterface := #stSql4SiemensInterface);
+	  END_IF;
+	END_IF;
+	
+	// Return the result
+	#fcSql4Siemens_GetRetParam := #sValue;
+END_FUNCTION
+

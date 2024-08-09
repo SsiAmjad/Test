@@ -1,0 +1,30 @@
+﻿FUNCTION "Min_Max" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Min : USInt;
+      Max : USInt;
+      Val_Calc : USInt;
+   END_VAR
+
+   VAR_IN_OUT 
+      Sort_Ana : USInt;
+   END_VAR
+
+
+BEGIN
+	IF #Sort_Ana >= #Max THEN
+	    #Sort_Ana := #Max;
+	    RETURN;
+	END_IF;
+	IF #Sort_Ana <= #Min THEN
+	    #Sort_Ana := #Min;
+	    RETURN;
+	END_IF;
+	IF #Val_Calc > 0 THEN
+	    #Sort_Ana := #Val_Calc;
+	    RETURN;
+	END_IF;
+	
+END_FUNCTION
+

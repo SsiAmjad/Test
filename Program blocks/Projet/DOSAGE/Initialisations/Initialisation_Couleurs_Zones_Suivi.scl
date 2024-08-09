@@ -1,0 +1,30 @@
+﻿FUNCTION "Initialisation_Couleurs_Zones_Suivi" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+BEGIN
+	"DB_Data_Dosage"."THIS"[0]._SuiviCommun._Couleur.R := 239;
+	"DB_Data_Dosage"."THIS"[0]._SuiviCommun._Couleur.G := 238;
+	"DB_Data_Dosage"."THIS"[0]._SuiviCommun._Couleur.B := 238;
+	//
+	"DB_Data_Dosage"."THIS"[1]._SuiviCommun._Couleur.R := 211;
+	"DB_Data_Dosage"."THIS"[1]._SuiviCommun._Couleur.G := 196;
+	"DB_Data_Dosage"."THIS"[1]._SuiviCommun._Couleur.B := 190;
+	//
+	"DB_Data_Dosage"."THIS"[2]._SuiviCommun._Couleur.R := 233;
+	"DB_Data_Dosage"."THIS"[2]._SuiviCommun._Couleur.G := 204;
+	"DB_Data_Dosage"."THIS"[2]._SuiviCommun._Couleur.B := 177;
+	//
+	"DB_Data_Dosage"."THIS"[3]._SuiviCommun._Couleur.R := 228;
+	"DB_Data_Dosage"."THIS"[3]._SuiviCommun._Couleur.G := 218;
+	"DB_Data_Dosage"."THIS"[3]._SuiviCommun._Couleur.B := 194;
+	//
+	"DB_Data_Dosage"."THIS"[4]._SuiviCommun._Couleur.R := 244;
+	"DB_Data_Dosage"."THIS"[4]._SuiviCommun._Couleur.G := 238;
+	"DB_Data_Dosage"."THIS"[4]._SuiviCommun._Couleur.B := 225;
+	//
+	"DB_Data_Dosage"."THIS"[5]._SuiviCommun._Couleur.R := 196;
+	"DB_Data_Dosage"."THIS"[5]._SuiviCommun._Couleur.G := 189;
+	"DB_Data_Dosage"."THIS"[5]._SuiviCommun._Couleur.B := 172; 
+END_FUNCTION
+

@@ -1,0 +1,41 @@
+﻿FUNCTION "Test_Valid_Tache" : SInt
+TITLE = Test de la validite du numero de la tache
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : 'I.Daoudi'
+FAMILY : Suiv_Lot
+VERSION : 1.0
+//Test de la validite du numero de la tache
+   VAR_INPUT 
+      Num_Tache : SInt;
+      Num_Zone : SInt;
+   END_VAR
+
+   VAR_TEMP 
+      Ret_Test_Valid_Tache : SInt;
+      Ret_Test_Valid_Zone : SInt;
+   END_VAR
+
+
+BEGIN
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | Version | Date       | Autheur     | Ajouts/Modifications                                                   |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | V_1     | 27.10.2023 | I.DAOUDI    | Creation du block                                                      |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	
+	// Test de la validite du numero de la zone
+	#Ret_Test_Valid_Zone := "Test_Valid_Zone"(#Num_Zone);
+	IF #Ret_Test_Valid_Zone = -1 THEN
+	    #Test_Valid_Tache := -1;
+	    RETURN;
+	END_IF;
+	// Test de la validite du numero de la tache
+	IF #Num_Tache < 0 OR #Num_Tache > "Nbr_Max_Tache" THEN
+	    #Test_Valid_Tache := -1;
+	    RETURN;
+	END_IF;
+	// Test valide
+	#Test_Valid_Tache := 1;
+	RETURN;
+END_FUNCTION
+

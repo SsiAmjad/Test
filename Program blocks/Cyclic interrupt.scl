@@ -1,0 +1,22 @@
+﻿ORGANIZATION_BLOCK "Cyclic interrupt"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_TEMP 
+      ret_string : String;
+   END_VAR
+
+
+BEGIN
+	#ret_string:="Proc_RechInfozone"(Procede := 'RECF',
+	                    Type := '',
+	                    fgbase := "fgbase",
+	                    Resultat_Decode := "ResultProc".ResulRechInfoZoneREC);
+	IF NOT "dbSql4SiemensInterface".stSql4SiemensInterface.Observer.xTimeout  THEN
+	    #ret_string := "Proc_RechInfozone"(Procede := 'DOS',
+	                                       Type := '',
+	                                       fgbase := "fgbase",
+	                                       Resultat_Decode := "ResultProc".ResulRechInfoZoneDOS);
+	END_IF;
+	
+END_ORGANIZATION_BLOCK
+

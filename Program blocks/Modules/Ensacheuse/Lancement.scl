@@ -1,0 +1,127 @@
+﻿FUNCTION "Lancement" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      FgBase : Bool;
+      Procede : String;
+   END_VAR
+
+   VAR_IN_OUT 
+      TraitEnsa : Struct
+         Etape : SInt;
+         EtapeMemo : SInt;
+         EtpPrec : SInt;
+         NumZone : SInt;
+         Tache : SInt;
+         TpsPicke : Date_And_Time;
+         TpLectPrg : Time;
+         programmeafaire : Bool;
+      END_STRUCT;
+   END_VAR
+
+   VAR_TEMP 
+      Ret_Sint : SInt;
+      tpspasse : Time;
+      ret_bool : Bool;
+      Niveau_Tache : USInt;
+   END_VAR
+
+
+BEGIN
+	CASE #TraitEnsa.Etape OF
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                        ╔════════════════════════════════════╗
+	                                                                        ║               REPOS                ║
+	                                                                        ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	0:
+	REGION traitement preliminaire 'Repos'
+	    IF (#TraitEnsa.Etape <> #TraitEnsa.EtpPrec) THEN
+	        #TraitEnsa.EtpPrec := #TraitEnsa.Etape;
+	    END_IF;
+	END_REGION traitement preliminaire 'Repos'
+	REGION traitement cyclique 'Repos'
+	    #Ret_Sint := "Rech_Zone_Suivi_Libre"(#TraitEnsa.NumZone);
+	    IF #Ret_Sint = 1 THEN
+	        #TraitEnsa.Etape := 1;
+	        RETURN;
+	    END_IF;
+	    
+	    
+	END_REGION traitement cyclique 'Repos'
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                        ╔════════════════════════════════════╗
+	                                                                        ║        Gestion Programme           ║
+	                                                                        ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	1:
+	REGION traitement preliminaire 'Gestion'
+	    IF (#TraitEnsa.Etape <> #TraitEnsa.EtpPrec) THEN
+	        #TraitEnsa.EtpPrec := #TraitEnsa.Etape;
+	    END_IF;
+	END_REGION traitement preliminaire 'Gestion'
+	REGION traitement cyclique 'Gestion'
+	    #ret_bool := "Tempo"(Duree := #TraitEnsa.TpLectPrg, Tps_Picke := #TraitEnsa.TpsPicke, Anticip := #TraitEnsa.programmeafaire, Tps_Passe => #tpspasse);
+	    IF #ret_bool THEN
+	        IF #FgBase THEN //Appel Proc RechProg     _ret=RechProg(pt_zs,_procede);
+	            IF #Ret_Sint = 0 THEN  //Requete bien execute
+	                // IF Lire Param Auto
+	                // Appel proc rech param ensachage _ret=RechParamEns(pt_zs,_sectParam);
+	                /// si la fonction est bien traite 
+	                //#TraitEnsa.programmeafaire := true;
+	                IF #Procede='Ensachage1' THEN
+	                    "LotSimulEnsa1"(NumZone:= #TraitEnsa.NumZone);
+	                ELSE
+	                    "LotSimulEnsa2"(NumZone:=#TraitEnsa.NumZone);
+	                END_IF;
+	                
+	                
+	                #TraitEnsa.programmeafaire := true;
+	            END_IF;
+	        ELSE
+	            IF #Procede = 'Ensachage1' THEN
+	                "LotSimulEnsa1"(NumZone:=#TraitEnsa.NumZone);
+	            ELSE
+	                "LotSimulEnsa2"(NumZone:=#TraitEnsa.NumZone);
+	            END_IF;
+	            #TraitEnsa.programmeafaire := true;
+	        END_IF;
+	    END_IF;
+	    
+	    IF #TraitEnsa.programmeafaire THEN
+	        #Ret_Sint := "Maj_Activ"(Num_Zone := #TraitEnsa.NumZone, Num_Tache :=   #TraitEnsa.Tache);
+	        #TraitEnsa.Etape := 2;
+	        RETURN;
+	    END_IF;
+	    
+	END_REGION Gestion
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                        ╔════════════════════════════════════╗
+	                                                                        ║          Att Fin Lot               ║
+	                                                                        ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	2:
+	REGION traitement preliminaire 'Fin Lot'
+	    IF (#TraitEnsa.Etape <> #TraitEnsa.EtpPrec) THEN
+	        #TraitEnsa.EtpPrec := #TraitEnsa.Etape;
+	    END_IF;
+	END_REGION traitement preliminaire 'Fin Lot'
+	REGION traitement cyclique 'Fin Lot'
+	    
+	    #Ret_Sint := "Test_Niv"(Num_Zone := #TraitEnsa.NumZone, Num_Tache :=  #TraitEnsa.Tache, Niveau := "N_FINLOT", Niveau_Tache => #Niveau_Tache);
+	    IF #Ret_Sint = 1 THEN
+	        #TraitEnsa.Etape := 0;
+	        #TraitEnsa.programmeafaire :=  FALSE;
+	        #Ret_Sint:="Libere_Zone_Suiv_Lot"(#TraitEnsa.NumZone);
+	    END_IF;
+	END_REGION Fin Lot
+	
+	END_CASE;
+END_FUNCTION
+

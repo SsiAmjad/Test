@@ -1,0 +1,849 @@
+﻿FUNCTION "DosCompoPont" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      FgBase : Bool;
+   END_VAR
+
+   VAR_IN_OUT 
+      DosComp : "S_DosCompo";
+   END_VAR
+
+   VAR_TEMP 
+      Ret_Sint : SInt;
+      MajNiv : SInt;
+      i : USInt;
+      Text_Def : String;
+      Ret_RD_Sys_T : Int;
+      Ret_Bool : Bool;
+      Tps_Passe : Time;
+   END_VAR
+
+   VAR CONSTANT 
+      Etape_Repos : SInt := 0;
+      Etape_AttCond : SInt := 1;
+      Etape_VerifCelOrig : SInt := 2;
+      Etape_CtrlColChute : SInt := 3;
+      Etape_RechCircuit : SInt := 4;
+      Etape_DemCircuit : SInt := 5;
+      Etape_Surveillance : SInt := 6;
+      Etape_DefArrProd : SInt := 7;
+      Etape_VidCircuit : SInt := 8;
+      Etape_AttPoidsStable : SInt := 9;
+      Etape_CtrlPoidsCompo : SInt := 10;
+      Etape_AttAvalBenne : SInt := 11;
+      Etape_DemVidBenne : SInt := 12;
+      Etape_VidBenne : SInt := 13;
+      Etape_VidCirBenne : SInt := 14;
+      Etape_FinLot : SInt := 15;
+      Etape_Attente_RepDial : SInt := 16;
+   END_VAR
+
+
+BEGIN
+	// CASE #DosComp._ChargCommun._CommunGeneral._Etp OF
+	// (*      
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	//                                                                 ╔════════════════════════════════════╗
+	//                                                                 ║          Etape "repos"             ║
+	//                                                                 ╚════════════════════════════════════╝
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	// *)
+	//     #Etape_Repos:
+	//         REGION Traitement preliminaire "repos"
+	//             IF (#DosComp._ChargCommun._CommunGeneral._Etp <> #DosComp._ChargCommun._CommunGeneral._EtpPrec) THEN
+	//                 #DosComp._ChargCommun._CommunGeneral._EtpPrec := #DosComp._ChargCommun._CommunGeneral._Etp;
+	//                 #DosComp._ChargCommun._CommunGeneral._DescEtp := 'Etape repos';
+	                
+	//             END_IF;
+	//         END_REGION Traitement preliminaire    
+	//         REGION Traitement cyclique "repos" 
+	//             //Attente de l'activation de la tâche
+	//             #Ret_Sint := "Test_Lot_Att_Tache"(Num_Tache := #DosComp._ChargCommun._CommunGeneral._Tache, Num_Zone => #DosComp._ChargCommun._CommunGeneral._NumZone);
+	//             IF #Ret_Sint = 1 THEN
+	//                 #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_AttCond;
+	//                 RETURN;
+	//             END_IF;
+	//         END_REGION Traitement cyclique "repos" 
+	// (*      
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	//                                                                 ╔════════════════════════════════════╗
+	//                                                                 ║          Etape "AttCond"           ║
+	//                                                                 ╚════════════════════════════════════╝
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	// *)
+	//     #Etape_AttCond:
+	//         REGION Traitement preliminaire "AttCond"
+	//             IF (#DosComp._ChargCommun._CommunGeneral._Etp <> #DosComp._ChargCommun._CommunGeneral._EtpPrec) THEN
+	//                 #DosComp._ChargCommun._CommunGeneral._EtpPrec := #DosComp._ChargCommun._CommunGeneral._Etp;
+	//                 #DosComp._ChargCommun._CommunGeneral._DescEtp := 'Etape AttCond';
+	//                 #MajNiv := "Maj_Niv"(Num_Zone := #DosComp._ChargCommun._CommunGeneral._NumZone, Num_Tache := #DosComp._ChargCommun._CommunGeneral._Tache, Niveau := "NIV_CHARGCOMPO_ATT_PREREMP");
+	//             END_IF;
+	//         END_REGION Traitement preliminaire    
+	//         REGION Traitement cyclique "AttCond" 
+	            
+	//             IF "FC_Test_Niv_AmontAval"(Num_Zone := #DosComp._ChargCommun._CommunGeneral._NumZone, Lst_Taches := #DosComp._ListeTaAttAutDemarrage) THEN
+	//                 #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_VerifCelOrig;
+	//                 RETURN;
+	//             END_IF;
+	            
+	//         END_REGION Traitement cyclique "AttCond" 
+	// (*      
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	//                                                                 ╔════════════════════════════════════╗
+	//                                                                 ║          Etape "VerifCelOrig"      ║
+	//                                                                 ╚════════════════════════════════════╝
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	// *)
+	//     #Etape_VerifCelOrig:
+	//         REGION Traitement preliminaire "VerifCelOrig"
+	//             IF (#DosComp._ChargCommun._CommunGeneral._Etp <> #DosComp._ChargCommun._CommunGeneral._EtpPrec) THEN
+	//                 #DosComp._ChargCommun._CommunGeneral._EtpPrec := #DosComp._ChargCommun._CommunGeneral._Etp;
+	//                 #DosComp._ChargCommun._CommunGeneral._DescEtp := 'Etape VerifCelOrig';
+	//             END_IF;
+	//         END_REGION Traitement preliminaire    
+	//         REGION Traitement cyclique "VerifCelOrig" 
+	            
+	//             FOR #i := 0 TO #DosComp._Ptzs._Nbcompo DO
+	//                 IF #DosComp._Ptzs._Compo[#i]._Type = 'R' AND #DosComp._Ptzs._Compo[#i]._EtatChar <> "FIN_CHARG" THEN
+	//                     #DosComp._Ptcompo := #DosComp._Ptzs._Compo[#i];
+	//                 END_IF;
+	//             END_FOR;
+	//             // controle si la capacite de la benne ne sera pas depasse avec le produit  dosee
+	//             IF #DosComp._ChargCommun._Vbasc + #DosComp._Ptcompo._PoidsConsPes > #DosComp._PoidsMaxBenne AND #DosComp._Ptcompo._PoidsConsPes < #DosComp._PoidsMaxBenne THEN
+	//                 #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_AttAvalBenne;
+	//                 #DosComp._Ptzs._DemVidPartiel := 1;
+	//                 RETURN;
+	//             END_IF;
+	//             #DosComp._ChargCommun._NouvCellule := #DosComp._Ptcompo._Cel;
+	//           (*  "CtrlDest"(fgbase := #FgBase,
+	//                        TypeCelDest := #DosComp._ChargCommun._TypeZoneOrig,
+	//                        NumPont := #DosComp._ChargCommun._NumCharg,
+	//                        Ptcompo_Cel := #DosComp._Ptcompo._Cel,
+	//                        FgConfVide:=_bool_in_,
+	//                        CntlDest := #DosComp.CntlDest,
+	//                        Dial_Def := #DosComp.Dial_Def,
+	//                        NoLot := #DosComp._Ptcompo._NoLot,
+	//                        CdMat := #DosComp._Ptcompo._CdMat,
+	//                        NomAuto := #DosComp._ChargCommun._CommunGeneral._Autom,
+	//                        Cel := "DB_Mod_Cellule",
+	//                        CelVid:=_char_inout_); *)
+	            
+	//             IF #DosComp.CntlDest.Controle < 0 THEN
+	//                 IF #DosComp.CntlDest.Controle = -1 THEN
+	//                     #DosComp._Ptzs._AutrePont := TRUE;
+	//                 END_IF;
+	//                 #DosComp._Ptzs._EtatChar := "A_COMPLETER"; //A completer
+	//                 #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_FinLot;
+	//                 #DosComp._Ptzs._Abandon := TRUE;
+	//                 RETURN;
+	//             END_IF;
+	//             IF #FgBase THEN
+	//                 ;
+	//                 //Blocage(NoSocket, LireNomAuto(), pt_compo->Cel, 0, 'O'); ;
+	//             END_IF;
+	            
+	//             #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_CtrlColChute;
+	//             RETURN;
+	//         END_REGION Traitement cyclique "VerifCelOrig" 
+	// (*      
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	//                                                                 ╔════════════════════════════════════╗
+	//                                                                 ║          Etape "CtrlColChute"      ║
+	//                                                                 ╚════════════════════════════════════╝
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	// *)
+	//     #Etape_CtrlColChute:
+	//         REGION Traitement preliminaire "CtrlColChute"
+	//             IF (#DosComp._ChargCommun._CommunGeneral._Etp <> #DosComp._ChargCommun._CommunGeneral._EtpPrec) THEN
+	//                 #DosComp._ChargCommun._CommunGeneral._EtpPrec := #DosComp._ChargCommun._CommunGeneral._Etp;
+	//                 #DosComp._ChargCommun._CommunGeneral._DescEtp := 'Etape CtrlColChute';
+	//             END_IF;
+	//         END_REGION Traitement preliminaire    
+	//         REGION Traitement cyclique "CtrlColChute" 
+	//             // Recuperation colonne de chute
+	//             IF #FgBase THEN
+	//                 //RecupColChute(pt_compo, WLireNomCharg());
+	//                 ;
+	//             END_IF;
+	//             // Mise a jour bouche
+	//             #DosComp._Ptzs._BoucheVrac := #DosComp._Ptcompo._PtcelOrig._NumBouche;
+	//             #DosComp._Ptcompo._PtcelOrig._VoyantBouche := TRUE;
+	            
+	//             IF #DosComp._Ptcompo._DebitCel < #DosComp._ChargCommun._DebitMin THEN
+	//                 #DosComp._Ptcompo._DebitCel := #DosComp._ChargCommun._DebitMin;
+	//             END_IF;
+	            
+	//             #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_RechCircuit;
+	//             RETURN;
+	            
+	            
+	//         END_REGION Traitement cyclique "CtrlColChute"
+	// (*      
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	//                                                                 ╔════════════════════════════════════╗
+	//                                                                 ║          Etape "RechCircuit"       ║
+	//                                                                 ╚════════════════════════════════════╝
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	// *)
+	//     #Etape_RechCircuit:
+	//         REGION Traitement preliminaire "RechCircuit"
+	//             IF (#DosComp._ChargCommun._CommunGeneral._Etp <> #DosComp._ChargCommun._CommunGeneral._EtpPrec) THEN
+	//                 #DosComp._ChargCommun._CommunGeneral._EtpPrec := #DosComp._ChargCommun._CommunGeneral._Etp;
+	//                 #DosComp._ChargCommun._CommunGeneral._DescEtp := 'Etape RechCircuit';
+	//                 #Ret_RD_Sys_T := RD_SYS_T(#DosComp._TpsPicke);
+	//                 IF #DosComp.Dial_Def.Reponse_Def <> '' THEN
+	//                     CASE #DosComp.Dial_Def.Num_Def_Etape OF
+	//                         1:
+	//                             GOTO RECHCIR_DEF1;
+	//                     END_CASE;
+	//                 END_IF;
+	//             END_IF;
+	//         END_REGION Traitement preliminaire    
+	//         REGION Traitement cyclique "RechCircuit" 
+	            
+	//             //lorsque le le chargement ne contient que des trappes
+	//             IF #DosComp._Ptcompo._PtcelOrig._Moborg = -1 THEN
+	//                 #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_Surveillance;
+	//                 RETURN;
+	//             END_IF;
+	//             // recuperation d'origine destination et num circuit
+	//             #DosComp._Circuit.Origine := #DosComp._Ptcompo._PtcelOrig._Moborg;
+	//             #DosComp._Circuit.Destination := "Index_Mobile"(#DosComp._ChargCommun._Destination);
+	//             #DosComp._Circuit.Num_Circuit := #DosComp._ChargCommun._NoCircuit;
+	//             #Ret_Sint := "Rech_Cir"(Circuit := #DosComp._Circuit);
+	//             IF #Ret_Sint = -1 THEN
+	//                 //appel dialogue defaut
+	//                 #DosComp.Dial_Def.Num_Def_Etape := 1;
+	//                 #Text_Def := CONCAT(IN1 := 'Circuit de ', IN2 := "Nom_Mobile"(#DosComp._Circuit.Origine), IN3 := ' vers ', IN4 := #DosComp._ChargCommun._Destination, IN5 := ' introuvable ou reserve ');
+	//                 #DosComp.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #FgBase, Msg_Defaut := #Text_Def,
+	//                                                                   Type_Defaut := 2,
+	//                                                                   Automatisme := #DosComp._ChargCommun._CommunGeneral._Autom,
+	//                                                                   Num_Lot := #DosComp._Ptcompo._NoLot,
+	//                                                                   Origine_Defaut := 'Circuit Introuvable ou reserve',
+	//                                                                   Libelle_Origine := 'Circuit Introuvable ou reserve',
+	//                                                                   Acq1 := 'Relance',
+	//                                                                   Acq2 := 'Abandon',
+	//                                                                   Acq3 := '',
+	//                                                                   Acq4 := '',
+	//                                                                   Acq5 := '',
+	//                                                                   Acq6 := '',
+	//                                                                   Acq7 := '',
+	//                                                                   Acq8 := '',
+	//                                                                   Acq_Choisi := -1,
+	//                                                                   Date_Arrivee := #DosComp._TpsPicke);
+	//                 #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_Attente_RepDial;
+	//                 RETURN;
+	//             ELSE
+	//                 #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_DemCircuit;
+	//                 RETURN;
+	//             END_IF;
+	//         RECHCIR_DEF1:
+	//             //============ Traitement des reponses pour le defaut Recherche circuit  ====================================//
+	//             IF #DosComp.Dial_Def.Reponse_Def = 'Relance' THEN //Relance
+	//                 #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_RechCircuit;
+	//                 #DosComp.Dial_Def.Reponse_Def := '';
+	//                 RETURN;
+	//             END_IF;
+	//             IF #DosComp.Dial_Def.Reponse_Def = 'Abandon' THEN
+	//                 #DosComp._Ptzs._Abandon := TRUE;
+	//                 #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_FinLot;
+	//                 #DosComp.Dial_Def.Reponse_Def := '';
+	//                 RETURN;
+	//             END_IF;
+	//         END_REGION Traitement cyclique "RechCircuit" 
+	// (*      
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	//                                                                 ╔════════════════════════════════════╗
+	//                                                                 ║          Etape "DemCirc"           ║
+	//                                                                 ╚════════════════════════════════════╝
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	// *)
+	//     #Etape_DemCircuit:
+	//         REGION Traitement preliminaire "DemCirc"
+	//             IF (#DosComp._ChargCommun._CommunGeneral._Etp <> #DosComp._ChargCommun._CommunGeneral._EtpPrec) THEN
+	//                 #DosComp._ChargCommun._CommunGeneral._EtpPrec := #DosComp._ChargCommun._CommunGeneral._Etp;
+	//                 #DosComp._ChargCommun._CommunGeneral._DescEtp := 'Etape DemCirc';
+	//                 #MajNiv := "Maj_Niv"(Num_Zone := #DosComp._ChargCommun._CommunGeneral._NumZone, Num_Tache := #DosComp._ChargCommun._CommunGeneral._Tache, Niveau := "NIV_DOSCOMPO_DEM_CIR");
+	//                 IF #DosComp._ActionAvantDemarCircuit THEN
+	//                     "ActionAvantDemCircuit"();
+	//                 END_IF;
+	//                 #Ret_Sint := "Dem_Circuit"(#DosComp._Circuit);
+	//             END_IF;
+	//         END_REGION Traitement preliminaire    
+	//         REGION Traitement cyclique "DemCirc" 
+	//             #Ret_Bool := "Test_Etat_Circuit"(Etat := "Pret", Debut := 0, CIRCUIT := #DosComp._Circuit);
+	//             IF #Ret_Bool THEN
+	//                 #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_Surveillance;
+	//                 RETURN;
+	//             END_IF;
+	//         END_REGION Traitement cyclique "DemCirc"   
+	// (*      
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	//                                                                 ╔════════════════════════════════════╗
+	//                                                                 ║        Etape "Surveillance"        ║
+	//                                                                 ╚════════════════════════════════════╝
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	// *)
+	//     #Etape_Surveillance:
+	//         REGION Traitement preliminaire "Surveillance"
+	//             IF (#DosComp._ChargCommun._CommunGeneral._Etp <> #DosComp._ChargCommun._CommunGeneral._EtpPrec) THEN
+	//                 #DosComp._ChargCommun._CommunGeneral._EtpPrec := #DosComp._ChargCommun._CommunGeneral._Etp;
+	//                 #DosComp._ChargCommun._CommunGeneral._DescEtp := 'Etape Surveillance';
+	//                 #MajNiv := "Maj_Niv"(Num_Zone := #DosComp._ChargCommun._CommunGeneral._NumZone, Num_Tache := #DosComp._ChargCommun._CommunGeneral._Tache, Niveau := "NIV_DOSCOMPO_CHARG_EC");
+	//                 // Controle quantite pese est suprieur a 0
+	//                 IF #DosComp._Ptcompo._PoidsConsPes <= 0 THEN
+	//                     #DosComp._Ptcompo._PoidsConsPes := #DosComp._Ptcompo._PoidsCons;
+	//                 END_IF;
+	//                 #DosComp._ChargCommun._DefEvol := 1;
+	//                 #DosComp._Fpv := 0;
+	//                 #DosComp._MemoVit := 0;
+	//             END_IF;
+	//         END_REGION Traitement preliminaire    
+	//         REGION Traitement cyclique "Surveillance" 
+	            
+	//             IF #DosComp._ActionPendantChargement THEN
+	//                 "ActionPendantChargement"();
+	//             END_IF;
+	            
+	//             // Gestion de la vitesse de chargement
+	//             IF (#DosComp._Ptcompo._PoidsReel >= (#DosComp._Ptcompo._PoidsConsPes - #DosComp._Ptcompo._SeuilPV) OR #DosComp._Fpv <> 0) AND #DosComp._MemoVit <> 1 THEN
+	//                 //Demmarage extracteur PV
+	//                 "Dem_Ext_PV"(PtCompo := #DosComp._Ptcompo,
+	//                              ChargCommun := #DosComp._ChargCommun,
+	//                              Ptcel := #DosComp._Ptcompo._PtcelOrig);
+	//                 #DosComp._Fpv := 1; //* memorisation passage en PV */
+	//                 #DosComp._MemoVit := 1;
+	//             END_IF;
+	//             IF #DosComp._Fpv = 0 AND #DosComp._MemoVit <> 2 THEN
+	//                 "Dem_Ext_PV"(PtCompo := #DosComp._Ptcompo,
+	//                              ChargCommun := #DosComp._ChargCommun,
+	//                              Ptcel := #DosComp._Ptcompo._PtcelOrig);
+	//                 #DosComp._MemoVit := 2;
+	//             END_IF;
+	            
+	//             IF NOT #DosComp._ValidPoidsTheo THEN
+	//                 IF #DosComp._Ptcompo._PoidsReel > #DosComp._Ptcompo._PoidsConsPes - #DosComp._Ptcompo._ChuteCel THEN
+	//                     #DosComp._PoidsArret := #DosComp._Ptcompo._PoidsReel;
+	//                     //Fermeture des trappes
+	//                     "Arret_Ext"(ConsQte := #DosComp._Ptzs._ConsQte,
+	//                                 PtCompo := #DosComp._Ptcompo,
+	//                                 ChargCommun := #DosComp._ChargCommun,
+	//                                 Ptcel := #DosComp._Ptcompo._PtcelOrig);
+	//                     #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_VidCircuit;
+	//                     RETURN;
+	//                 END_IF;
+	//                 IF #DosComp._ChargCommun._DefEvol = -1 THEN
+	//                     #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_DefArrProd;
+	//                     RETURN;
+	//                 END_IF;
+	//             END_IF;
+	            
+	//             IF #DosComp._ChargCommun._Vbasc > #DosComp._PoidsMaxBenne THEN
+	//                 #DosComp._Ptzs._DemVidPartiel := 2;
+	//                 #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_VidCircuit;
+	//                 RETURN;
+	//             END_IF;
+	//         END_REGION Traitement cyclique "Surveillance" 
+	// (*      
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	//                                                                 ╔════════════════════════════════════╗
+	//                                                                 ║          Etape "DefArrProd"        ║
+	//                                                                 ╚════════════════════════════════════╝
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	// *)
+	//     #Etape_DefArrProd:
+	//         REGION Traitement preliminaire "DefArrProd"
+	//             IF (#DosComp._ChargCommun._CommunGeneral._Etp <> #DosComp._ChargCommun._CommunGeneral._EtpPrec) THEN
+	//                 #DosComp._ChargCommun._CommunGeneral._EtpPrec := #DosComp._ChargCommun._CommunGeneral._Etp;
+	//                 #DosComp._ChargCommun._CommunGeneral._DescEtp := 'Etape DefArrProd';
+	//                 #DosComp._SuspCircuit := TRUE;
+	//                 "Arret_Ext"(ConsQte := #DosComp._Ptzs._ConsQte,
+	//                             PtCompo := #DosComp._Ptcompo,
+	//                             ChargCommun := #DosComp._ChargCommun,
+	//                             Ptcel := #DosComp._Ptcompo._PtcelOrig);
+	//                 #Ret_RD_Sys_T := RD_SYS_T(#DosComp._TpsPicke);
+	//                 IF #DosComp.Dial_Def.Reponse_Def <> '' THEN
+	//                     CASE #DosComp.Dial_Def.Num_Def_Etape OF
+	//                         1:
+	//                             GOTO DefArrProd_DEF1;
+	//                     END_CASE;
+	//                 END_IF;
+	//                 IF #DosComp._Depesee THEN
+	//                     //Poids_DSD(pt_compo, TARE);
+	//                     ;
+	//                 ELSE
+	//                     // Poids_DSD(pt_compo, BRUT);
+	//                     ;
+	//                 END_IF;
+	                
+	//             END_IF;
+	//         END_REGION Traitement preliminaire    
+	//         REGION Traitement cyclique "DefArrProd" 
+	//             #DosComp.Dial_Def.Num_Def_Etape := 1;
+	//             #Text_Def := CONCAT(IN1 := 'PB arrive de produit cellule ', IN2 := #DosComp._Ptcompo._PtcelOrig._Cel);
+	//             #DosComp.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #FgBase,
+	//                                                               Msg_Defaut := #Text_Def,
+	//                                                               Type_Defaut := 2,
+	//                                                               Automatisme := #DosComp._ChargCommun._CommunGeneral._Autom,
+	//                                                               Num_Lot := #DosComp._Ptcompo._NoLot,
+	//                                                               Origine_Defaut := #Text_Def,
+	//                                                               Libelle_Origine := #Text_Def,
+	//                                                               Acq1 := 'Relance',
+	//                                                               Acq2 := 'Abandon',
+	//                                                               Acq3 := '',
+	//                                                               Acq4 := '',
+	//                                                               Acq5 := '',
+	//                                                               Acq6 := '',
+	//                                                               Acq7 := '',
+	//                                                               Acq8 := '',
+	//                                                               Acq_Choisi := -1,
+	//                                                               Date_Arrivee := #DosComp._TpsPicke);
+	//             #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_Attente_RepDial;
+	//             RETURN;
+	//         DefArrProd_DEF1:
+	//             //============ Traitement des reponses pour le defaut  ====================================//
+	//             IF #DosComp.Dial_Def.Reponse_Def = 'Abandon' THEN
+	//                 #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_VidCircuit;
+	//                 #DosComp.Dial_Def.Reponse_Def := '';
+	//                 RETURN;
+	//             END_IF;
+	            
+	//             IF NOT #DosComp._ValidPoidsTheo THEN
+	//                 IF #DosComp._Depesee THEN
+	//                     IF #DosComp._ChargCommun._Vbasc > #DosComp._Ptcompo._QteTare + #DosComp._TolModifPoidsDos THEN
+	//                         #DosComp._Ptcompo._PoidsDejaMvt := (#DosComp._Ptcompo._PoidsDejaMvt + #DosComp._Ptcompo._QteBrut - #DosComp._Ptcompo._QteTare) + #DosComp._Ptcompo._PoidsDejaMvt;
+	//                         //Poids_DSD(pt_compo, BRUT); 
+	//                     END_IF;
+	//                 ELSE
+	//                     IF #DosComp._ChargCommun._Vbasc > #DosComp._Ptcompo._QteBrut + #DosComp._TolModifPoidsDos THEN
+	//                         #DosComp._Ptcompo._PoidsDejaMvt := (#DosComp._Ptcompo._PoidsDejaMvt + #DosComp._Ptcompo._QteBrut - #DosComp._Ptcompo._QteTare) + #DosComp._Ptcompo._PoidsDejaMvt;
+	//                         //Poids_DSD(pt_compo, TARE); 
+	//                     END_IF;
+	//                 END_IF;
+	//             END_IF;
+	//             IF #DosComp.Dial_Def.Reponse_Def = 'Relance' THEN
+	                
+	//                 #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_Surveillance;
+	//                 #DosComp.Dial_Def.Reponse_Def := '';
+	//                 #DosComp._SuspCircuit := FALSE;
+	//                 RETURN;
+	//             END_IF;
+	//         END_REGION Traitement cyclique "DefArrProd" 
+	// (*      
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	//                                                                 ╔════════════════════════════════════╗
+	//                                                                 ║          Etape "VidCircuit"        ║
+	//                                                                 ╚════════════════════════════════════╝
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	// *)
+	//     #Etape_VidCircuit:
+	//         REGION Traitement preliminaire "VidCircuit"
+	//             IF (#DosComp._ChargCommun._CommunGeneral._Etp <> #DosComp._ChargCommun._CommunGeneral._EtpPrec) THEN
+	//                 #DosComp._ChargCommun._CommunGeneral._EtpPrec := #DosComp._ChargCommun._CommunGeneral._Etp;
+	//                 #DosComp._ChargCommun._CommunGeneral._DescEtp := 'Etape DemCirc';
+	//                 #MajNiv := "Maj_Niv"(Num_Zone := #DosComp._ChargCommun._CommunGeneral._NumZone, Num_Tache := #DosComp._ChargCommun._CommunGeneral._Tache, Niveau := "NIV_DOSCOMPO_VID_CIR");
+	//                 FOR #i := 0 TO #DosComp._Ptzs._Nbcompo DO
+	//                     IF #DosComp._Ptzs._Compo[#i]._Type = 'R' AND #DosComp._Ptzs._Compo[#i]._EtatChar <> "FIN_CHARG" AND #DosComp._Ptcompo <> #DosComp._Ptzs._Compo[#i] THEN
+	//                         #Ret_Sint := "Controle_Cellule"(FgMaskNh := FALSE,
+	//                                                         NvCellule := #DosComp._Ptzs._Compo[#i]._Cel,
+	//                                                         TypeCelDest := #DosComp._ChargCommun._TypeZoneOrig,
+	//                                                         Cel := "DB_Mod_Cellule",
+	//                                                         NiveauHautDestNh => #Ret_Bool);
+	//                         IF #Ret_Sint = 2 THEN  ///Controle valide
+	//                             IF #DosComp._Ptzs._Compo[#i]._PtcelOrig._Moborg = #DosComp._Ptcompo._PtcelOrig._Moborg THEN
+	//                                 #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_AttPoidsStable;
+	//                                 RETURN;
+	//                             END_IF;
+	//                         END_IF;
+	                       
+	//                     END_IF;
+	//                 END_FOR;
+	//                 IF #DosComp._ActionAvantVidangeCircuit THEN
+	//                     "ActionAvantVidangeCircuit"();
+	//                 END_IF;
+	//                 "Arret_Ext"(ConsQte := #DosComp._Ptzs._ConsQte,
+	//                             PtCompo := #DosComp._Ptcompo,
+	//                             ChargCommun := #DosComp._ChargCommun,
+	//                             Ptcel := #DosComp._Ptcompo._PtcelOrig);
+	//                 IF #DosComp._Ptcompo._PtcelOrig._Moborg = -1 THEN
+	//                     #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_AttPoidsStable;
+	//                     RETURN;
+	//                 END_IF;
+	//                 #Ret_Sint := "Fin_Pos_Circuit"(#DosComp._Circuit);
+	//             END_IF;
+	//         END_REGION Traitement preliminaire    
+	//         REGION Traitement cyclique "VidCircuit" 
+	//             IF "Test_Etat_Circuit"(Etat := "Enc_Fin_Pos", Debut := 0, CIRCUIT := #DosComp._Circuit) THEN
+	//                 #Ret_Sint := "Libere_Circuit"(#DosComp._Circuit);
+	//                 IF #DosComp._ActionApresVidangeCircuit THEN
+	//                     "ActionApresVidangeCircuit"();
+	//                 END_IF;
+	//                 #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_AttPoidsStable;
+	//                 RETURN;
+	//             END_IF;
+	//         END_REGION Traitement cyclique "VidCircuit"  
+	// (*      
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	//                                                                 ╔════════════════════════════════════╗
+	//                                                                 ║       Etape "AttPoidsStable"       ║
+	//                                                                 ╚════════════════════════════════════╝
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	// *)
+	//         #Etape_AttPoidsStable:
+	//             REGION Traitement preliminaire "AttPoidsStable"
+	//             IF (#DosComp._ChargCommun._CommunGeneral._Etp <> #DosComp._ChargCommun._CommunGeneral._EtpPrec) THEN
+	//                 #DosComp._ChargCommun._CommunGeneral._EtpPrec := #DosComp._ChargCommun._CommunGeneral._Etp;
+	//                 #DosComp._ChargCommun._CommunGeneral._DescEtp := 'Etape AttPoidsStable';
+	//                 #Ret_RD_Sys_T := RD_SYS_T(#DosComp._DebStable);
+	//                 #DosComp._MemoPoids := #DosComp._ChargCommun._Vbasc;
+	//             END_IF;
+	//         END_REGION Traitement preliminaire    
+	//         REGION Traitement cyclique "AttPoidsStable" 
+	//             #Ret_Bool := "Tempo"(Duree := #DosComp._TpPoidsStab, Tps_Picke := #DosComp._DebStable, Anticip := FALSE, Tps_Passe => #Tps_Passe);
+	//             IF #Ret_Bool THEN
+	//                 IF #DosComp._ChargCommun._Vbasc - #DosComp._MemoPoids > #DosComp._EcartPoidsStab THEN
+	//                     #Ret_RD_Sys_T := RD_SYS_T(#DosComp._DebStable);
+	//                     #DosComp._MemoPoids := #DosComp._ChargCommun._Vbasc;
+	//                 ELSE
+	//                     #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_CtrlPoidsCompo;
+	//                     RETURN;
+	//                 END_IF;
+	//             END_IF;
+	//         END_REGION Traitement cyclique "AttPoidsStable"     
+	// (*      
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	//                                                                 ╔════════════════════════════════════╗
+	//                                                                 ║       Etape "CtrlPoidsCompo"       ║
+	//                                                                 ╚════════════════════════════════════╝
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	// *)
+	//     #Etape_CtrlPoidsCompo:
+	//         REGION Traitement preliminaire "CtrlPoidsCompo"
+	//             IF (#DosComp._ChargCommun._CommunGeneral._Etp <> #DosComp._ChargCommun._CommunGeneral._EtpPrec) THEN
+	//                 #DosComp._ChargCommun._CommunGeneral._EtpPrec := #DosComp._ChargCommun._CommunGeneral._Etp;
+	//                 #DosComp._ChargCommun._CommunGeneral._DescEtp := 'Etape CtrlPoidsCompo';
+	//                 #Ret_RD_Sys_T := RD_SYS_T(#DosComp._TpsPicke);
+	//                 IF #DosComp.Dial_Def.Reponse_Def <> '' THEN
+	//                     CASE #DosComp.Dial_Def.Num_Def_Etape OF
+	//                         1:
+	//                             GOTO DefCtrlPoidsCompo_DEF1;
+	//                     END_CASE;
+	//                 END_IF;
+	//                 IF #DosComp._Ptzs._DemVidPartiel<>0 THEN
+	//                     #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_AttAvalBenne;
+	//                     RETURN;
+	//                 END_IF;
+	//             END_IF;
+	//         END_REGION Traitement preliminaire    
+	//         REGION Traitement cyclique "CtrlPoidsCompo" 
+	//             IF #DosComp._Ptcompo._PoidsReel< #DosComp._Ptcompo._PoidsCons- #DosComp._Ptcompo._ChuteCel THEN
+	//                 #DosComp.Dial_Def.Num_Def_Etape := 1;
+	//                 #Text_Def := CONCAT(IN1 := 'Defaut tolerence mineraux poids: ', IN2 :=REAL_TO_STRING(#DosComp._Ptcompo._PoidsReel),IN3 :='kg,',IN4 :='Cons: ', IN5 :=REAL_TO_STRING(#DosComp._Ptcompo._PoidsCons),IN6 :='kg (Qte Arr: ', IN7 :=REAL_TO_STRING(#DosComp._PoidsArret),IN8 :='kg)');
+	//                 #DosComp.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #FgBase,
+	//                                                                   Msg_Defaut := #Text_Def,
+	//                                                                   Type_Defaut := 2,
+	//                                                                   Automatisme := #DosComp._ChargCommun._CommunGeneral._Autom,
+	//                                                                   Num_Lot := #DosComp._Ptcompo._NoLot,
+	//                                                                   Origine_Defaut := #Text_Def,
+	//                                                                   Libelle_Origine := #Text_Def,
+	//                                                                   Acq1 := 'Relance',
+	//                                                                   Acq2 := '',
+	//                                                                   Acq3 := '',
+	//                                                                   Acq4 := '',
+	//                                                                   Acq5 := '',
+	//                                                                   Acq6 := '',
+	//                                                                   Acq7 := '',
+	//                                                                   Acq8 := '',
+	//                                                                   Acq_Choisi := -1,
+	//                                                                   Date_Arrivee := #DosComp._TpsPicke);
+	//                 #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_Attente_RepDial;
+	//                 RETURN;
+	//             END_IF;
+	//         DefCtrlPoidsCompo_DEF1:
+	//             //============ Traitement des reponses pour le defaut  ====================================//
+	//             IF #DosComp.Dial_Def.Reponse_Def = 'Relance' THEN
+	                
+	//                 #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_RechCircuit;
+	//                 #DosComp.Dial_Def.Reponse_Def := '';
+	//                 RETURN;
+	//             END_IF;
+	//             //============ Fin Traitement des reponses pour le defaut  ====================================//
+	            
+	            
+	//             IF #DosComp._Depesee THEN
+	//                 //Poids_DSD(pt_compo, TARE);
+	//                 ;
+	//             ELSE
+	//                 // Poids_DSD(pt_compo, BRUT);
+	//                 ;
+	//             END_IF;
+	            
+	//             IF #FgBase THEN
+	//                 IF #DosComp._Depesee THEN
+	//                     #DosComp._Ptcompo._QteTare := #DosComp._Ptcompo._QteTare - #DosComp._Ptcompo._PoidsDejaMvt;
+	//                 ELSE
+	//                     #DosComp._Ptcompo._QteBrut := #DosComp._Ptcompo._QteBrut + #DosComp._Ptcompo._PoidsDejaMvt;
+	//                 END_IF;
+	                
+	//                 IF #DosComp._ValidPoidsTheo THEN
+	//                    // MajStoExp(pt_compo->Cel, (wchar_t*)L"", pt_compo->poidsCons, 'N', pt_compo, 'N');
+	//                     ;
+	//                ELSE
+	//                   // MajStoExp(pt_compo->Cel, (wchar_t*)L"", pt_compo->poidsReel, 'N', pt_compo, 'N');
+	//                    ;
+	//                END_IF;
+	//                 IF #DosComp._Ptcompo._Type='R' THEN
+	//                     // FinExpVrac(pt_compo);
+	//                     ;
+	//                 END_IF;
+	//             END_IF;
+	            
+	//             #DosComp._Ptcompo._EtatChar := "FIN_CHARG";
+	            
+	//             FOR #i := 0 TO #DosComp._Ptzs._Nbcompo DO
+	//                 IF #DosComp._Ptzs._Compo[#i]._Type='R' AND #DosComp._Ptzs._Compo[#i]._EtatChar<>"FIN_CHARG" THEN
+	//                     #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_VerifCelOrig;
+	//                     RETURN;
+	//                 END_IF;
+	//             END_FOR;
+	//             #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_AttAvalBenne;
+	//             RETURN;
+	//         END_REGION Traitement cyclique "CtrlPoidsCompo"     
+	// (*      
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	//                                                                 ╔════════════════════════════════════╗
+	//                                                                 ║       Etape "AttAvalBenne"         ║
+	//                                                                 ╚════════════════════════════════════╝
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	// *)
+	//     #Etape_AttAvalBenne:
+	//         REGION Traitement preliminaire "AttAvalBenne"
+	//             IF (#DosComp._ChargCommun._CommunGeneral._Etp <> #DosComp._ChargCommun._CommunGeneral._EtpPrec) THEN
+	//                 #DosComp._ChargCommun._CommunGeneral._EtpPrec := #DosComp._ChargCommun._CommunGeneral._Etp;
+	//                 #DosComp._ChargCommun._CommunGeneral._DescEtp := 'Etape AttAvalBenne';
+	                
+	//                 IF #DosComp._Ptzs._DemVidPartiel =2 THEN
+	//                     IF #DosComp._Depesee THEN
+	//                         //Poids_DSD(pt_compo, TARE);
+	//                         ;
+	//                     ELSE
+	//                         // Poids_DSD(pt_compo, BRUT);
+	//                         ;
+	//                     END_IF;
+	//                     #DosComp._Ptcompo._PoidsDejaMvt :=( #DosComp._Ptcompo._QteBrut- #DosComp._Ptcompo._QteTare)+#DosComp._Ptcompo._PoidsDejaMvt ;
+	//                 END_IF;
+	//                 IF #DosComp._OrigineVidBenne=-1 OR #DosComp._DestinationVidBenne=-1  THEN
+	//                     #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_FinLot;
+	//                     RETURN;
+	//                 END_IF;
+	                
+	                
+	//             END_IF;
+	//         END_REGION Traitement preliminaire    
+	//         REGION Traitement cyclique "AttAvalBenne" 
+	//             IF "FC_Test_Niv_AmontAval"(Num_Zone := #DosComp._ChargCommun._CommunGeneral._NumZone, Lst_Taches := #DosComp._ListeTaAttAutVidange) THEN
+	//                 #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_DemVidBenne;
+	//                 RETURN;
+	//             END_IF;
+	            
+	//         END_REGION Traitement cyclique "AttAvalBenne" 
+	// (*      
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	//                                                                 ╔════════════════════════════════════╗
+	//                                                                 ║       Etape "DemVidBenne"          ║
+	//                                                                 ╚════════════════════════════════════╝
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	// *)
+	//     #Etape_DemVidBenne:
+	//         REGION Traitement preliminaire "DemVidBenne"
+	//             IF (#DosComp._ChargCommun._CommunGeneral._Etp <> #DosComp._ChargCommun._CommunGeneral._EtpPrec) THEN
+	//                 #DosComp._ChargCommun._CommunGeneral._EtpPrec := #DosComp._ChargCommun._CommunGeneral._Etp;
+	//                 #DosComp._ChargCommun._CommunGeneral._DescEtp := 'Etape DemVidBenne';
+	//                 #Ret_RD_Sys_T := RD_SYS_T(#DosComp._TpsPicke);
+	//                 IF #DosComp.Dial_Def.Reponse_Def <> '' THEN
+	//                     CASE #DosComp.Dial_Def.Num_Def_Etape OF
+	//                         1:
+	//                             GOTO DemVidBenne_DEF1;
+	//                     END_CASE;
+	//                 END_IF;
+	//             END_IF;
+	//         END_REGION Traitement preliminaire    
+	//         REGION Traitement cyclique "DemVidBenne" 
+	//             // recuperation d'origine destination et num circuit
+	//             #DosComp._Circuit1.Origine := #DosComp._OrigineVidBenne;
+	//             #DosComp._Circuit1.Destination := #DosComp._DestinationVidBenne;
+	//             #DosComp._Circuit1.Num_Circuit := #DosComp._ChargCommun._NoCircuit;
+	//             #Ret_Sint := "Rech_Cir"(Circuit := #DosComp._Circuit1);
+	//             IF #Ret_Sint = -1 THEN
+	//                 //appel dialogue defaut
+	//                 #DosComp.Dial_Def.Num_Def_Etape := 1;
+	//                 #Text_Def := CONCAT(IN1 := 'Circuit de ', IN2 := "Nom_Mobile"(#DosComp._Circuit1.Origine), IN3 := ' vers ', IN4 := #DosComp._ChargCommun._Destination, IN5 := ' introuvable ou reserve ');
+	//                 #DosComp.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #FgBase, Msg_Defaut := #Text_Def,
+	//                                                                   Type_Defaut := 2,
+	//                                                                   Automatisme := #DosComp._ChargCommun._CommunGeneral._Autom,
+	//                                                                   Num_Lot := #DosComp._Ptcompo._NoLot,
+	//                                                                   Origine_Defaut := 'Circuit Introuvable ou reserve',
+	//                                                                   Libelle_Origine := 'Circuit Introuvable ou reserve',
+	//                                                                   Acq1 := 'Relance',
+	//                                                                   Acq2 := 'Abandon',
+	//                                                                   Acq3 := '',
+	//                                                                   Acq4 := '',
+	//                                                                   Acq5 := '',
+	//                                                                   Acq6 := '',
+	//                                                                   Acq7 := '',
+	//                                                                   Acq8 := '',
+	//                                                                   Acq_Choisi := -1,
+	//                                                                   Date_Arrivee := #DosComp._TpsPicke);
+	//                 #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_Attente_RepDial;
+	//                 RETURN;
+	//             ELSE
+	//                 #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_VidBenne;
+	//                 #Ret_Sint := "Dem_Circuit"(#DosComp._Circuit1);
+	//                 RETURN;
+	//             END_IF;
+	//         DemVidBenne_DEF1:
+	//             //============ Traitement des reponses pour le defaut Recherche circuit  ====================================//
+	//             IF #DosComp.Dial_Def.Reponse_Def = 'Relance' THEN //Relance
+	//                 #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_DemVidBenne;
+	//                 #DosComp.Dial_Def.Reponse_Def := '';
+	//                 RETURN;
+	//             END_IF;
+	//             IF #DosComp.Dial_Def.Reponse_Def = 'Abandon' THEN
+	//                 #DosComp._Ptzs._Abandon := TRUE;
+	//                 #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_FinLot;
+	//                 #DosComp.Dial_Def.Reponse_Def := '';
+	//                 RETURN;
+	//             END_IF;
+	            
+	//         END_REGION Traitement cyclique "DemVidBenne" 
+	// (*      
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	//                                                                 ╔════════════════════════════════════╗
+	//                                                                 ║            Etape "VidBenne"        ║
+	//                                                                 ╚════════════════════════════════════╝
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	// *)
+	//     #Etape_VidBenne:
+	//         REGION Traitement preliminaire "VidBenne"
+	//             IF (#DosComp._ChargCommun._CommunGeneral._Etp <> #DosComp._ChargCommun._CommunGeneral._EtpPrec) THEN
+	//                 #DosComp._ChargCommun._CommunGeneral._EtpPrec := #DosComp._ChargCommun._CommunGeneral._Etp;
+	//                 #DosComp._ChargCommun._CommunGeneral._DescEtp := 'Etape VidBenne';
+	//                 #MajNiv := "Maj_Niv"(Num_Zone := #DosComp._ChargCommun._CommunGeneral._NumZone, Num_Tache := #DosComp._ChargCommun._CommunGeneral._Tache, Niveau := "NIV_DOSCOMPO_VID_BEN");
+	//                 #Ret_RD_Sys_T := RD_SYS_T(#DosComp._DebutMax);
+	//                 #Ret_RD_Sys_T := RD_SYS_T(#DosComp._Debut);
+	//                 #DosComp._ChargCommun._Simul._ValBascDec := TRUE;
+	//                 #DosComp._ChargCommun._Simul._ValBascInc := FALSE;
+	               
+	//             END_IF;
+	//         END_REGION Traitement preliminaire    
+	//         REGION Traitement cyclique "VidBenne" 
+	//             IF #DosComp._ChargCommun._Vbasc> #DosComp._Tol0Benne OR NOT "Test_Etat_Circuit"(Etat :="Pret", Debut := 0, CIRCUIT := #DosComp._Circuit1) THEN
+	//                 #Ret_RD_Sys_T := RD_SYS_T(#DosComp._Debut);
+	//             END_IF;
+	//           //   "Tempo" de vidange 
+	//             IF "Tempo"(Duree := #DosComp._TpVidBenne, Tps_Picke := #DosComp._Debut, Anticip := FALSE, Tps_Passe => #Tps_Passe) THEN
+	//                 IF #DosComp._ActionApresVidangeCircuit THEN
+	//                     "ActionApresVidangeBenne"();
+	//                 END_IF;
+	//                 #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_VidCirBenne;
+	//                 RETURN;
+	//             END_IF;
+	            
+	//             IF "Tempo"(Duree := #DosComp._TpMaxVidBenne, Tps_Picke := #DosComp._DebutMax, Anticip := FALSE, Tps_Passe => #Tps_Passe) THEN
+	//               //Message defaut Impossible de vider correctement la benne Mineraux
+	//                 #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_VidCirBenne;
+	//                 RETURN;
+	//             END_IF;
+	            
+	//         END_REGION Traitement cyclique "VidBenne" 
+	// (*      
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	//                                                                 ╔════════════════════════════════════╗
+	//                                                                 ║       Etape "VidCirBenne"          ║
+	//                                                                 ╚════════════════════════════════════╝
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	// *)
+	//     #Etape_VidCirBenne:
+	//         REGION Traitement preliminaire "VidCirBenne"
+	//             IF (#DosComp._ChargCommun._CommunGeneral._Etp <> #DosComp._ChargCommun._CommunGeneral._EtpPrec) THEN
+	//                 #DosComp._ChargCommun._CommunGeneral._EtpPrec := #DosComp._ChargCommun._CommunGeneral._Etp;
+	//                 #DosComp._ChargCommun._CommunGeneral._DescEtp := 'Etape VidBenne';
+	                
+	//                 #Ret_Sint := "Fin_Pos_Circuit"(#DosComp._Circuit1);
+	//                 #DosComp._ChargCommun._Simul._ValBascDec := TRUE;
+	//                 #DosComp._ChargCommun._Simul._ValBascInc := FALSE;
+	//             END_IF;
+	//         END_REGION Traitement preliminaire    
+	//         REGION Traitement cyclique "VidCirBenne" 
+	            
+	            
+	//             IF "Test_Etat_Circuit"(Etat := "Enc_Fin_Pos", Debut := 0, CIRCUIT := #DosComp._Circuit1) THEN
+	//                 #Ret_Sint := "Libere_Circuit"(#DosComp._Circuit1);
+	//                 FOR #i := 0 TO #DosComp._Ptzs._Nbcompo DO
+	//                     IF #DosComp._Ptzs._Compo[#i]._Type='R' AND #DosComp._Ptzs._Compo[#i]._EtatChar <>"FIN_CHARG"  THEN
+	//                         #DosComp._Ptzs._DemVidPartiel := 0;
+	//                         #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_VerifCelOrig;
+	//                         RETURN;
+	//                     END_IF;
+	//                 END_FOR;
+	//                 IF #DosComp._Ptzs._DemVidPartiel<>0 THEN
+	//                     #DosComp._Ptzs._DemVidPartiel := 0;
+	//                     #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_VerifCelOrig;
+	//                     RETURN;
+	//                 ELSE
+	//                     #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_FinLot;
+	//                     RETURN;
+	//                 END_IF;
+	//             END_IF;
+	            
+	            
+	//         END_REGION Traitement cyclique "VidCirBenne"   
+	// (*      
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	//                                                                 ╔════════════════════════════════════╗
+	//                                                                 ║            Etape "FinLot"          ║
+	//                                                                 ╚════════════════════════════════════╝
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	// *)
+	//             #Etape_FinLot  :
+	//         REGION Traitement preliminaire "FinLot"
+	//                     IF (#DosComp._ChargCommun._CommunGeneral._Etp <> #DosComp._ChargCommun._CommunGeneral._EtpPrec) THEN
+	//                         #DosComp._ChargCommun._CommunGeneral._EtpPrec := #DosComp._ChargCommun._CommunGeneral._Etp;
+	//                         #DosComp._ChargCommun._CommunGeneral._DescEtp := 'Etape VidBenne';
+	//                         #MajNiv := "Maj_Niv"(Num_Zone := #DosComp._ChargCommun._CommunGeneral._NumZone, Num_Tache := #DosComp._ChargCommun._CommunGeneral._Tache, Niveau := "NIV_DOSCOMPO_FVID_CIR");
+	                        
+	//                         #Ret_Sint := "Fin_Pos_Circuit"(#DosComp._Circuit1);
+	//                         #DosComp._ChargCommun._Simul._ValBascDec := TRUE;
+	//                         #DosComp._ChargCommun._Simul._ValBascInc := FALSE;
+	//                     END_IF;
+	//                 END_REGION Traitement preliminaire    
+	//                 REGION Traitement cyclique "FinLot" 
+	                    
+	                    
+	//                     IF "FC_Test_Niv_AmontAval"(Num_Zone := #DosComp._ChargCommun._CommunGeneral._NumZone, Lst_Taches := #DosComp._ListeTaAttFinCharg) THEN
+	//                         #DosComp._ChargCommun._CommunGeneral._Etp := #Etape_Repos;
+	//                         RETURN;
+	//                     END_IF;
+	//                     END_REGION  Traitement cyclique "FinLot" 
+	                
+	                
+	                
+	                
+	                
+	                
+	        
+	        
+	        
+	        
+	        
+	        
+	        
+	        
+	        
+	        
+	        
+	        
+	// END_CASE;
+END_FUNCTION
+

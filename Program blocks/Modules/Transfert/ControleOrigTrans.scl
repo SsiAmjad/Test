@@ -1,0 +1,379 @@
+﻿FUNCTION "ControleOrigTrans" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      fgbase : Bool;
+   END_VAR
+
+   VAR_OUTPUT 
+      Return : SInt;
+   END_VAR
+
+   VAR_IN_OUT 
+      TRANSF : "S_Transfert";
+      NoLot : String;
+      CdZoneOrg : String;
+      CdMatOrg : String;
+      NomAuto : String;
+   END_VAR
+
+   VAR_TEMP 
+      Cd_Zone_Or : String;
+      ret : SInt;
+      Ret_RD_Sys_T : Int;
+      Text_Def : String;
+      i : Int;
+      ResultProcCntrlAffec : String[254];
+   END_VAR
+
+   VAR CONSTANT 
+      Cntrl_Existance : SInt := 0;
+      Cntrl_Affectation : SInt := 1;
+      Cntrl_Nh : SInt := 2;
+      Attente_Rep_Dial : SInt := 3;
+   END_VAR
+
+
+BEGIN
+	
+	//                CONTROLE DESTINATION pour une Rception Vrac                //
+	//                               Retour 1:si ok                               //
+	//                                -1:si abandon                                //
+	
+	CASE #TRANSF.CntlDest.Etape OF
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                        ╔════════════════════════════════════╗
+	                                                                        ║     Controle existence Cellule     ║
+	                                                                        ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	    #Cntrl_Existance:
+	        REGION traitement preliminaire 'Repos'
+	            IF (#TRANSF.CntlDest.Etape <> #TRANSF.CntlDest.EtpPrec) THEN
+	                #TRANSF.CntlDest.EtpPrec := #TRANSF.CntlDest.Etape;
+	                IF #TRANSF.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #TRANSF.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO ContExi_DEF1;
+	                        2:
+	                            GOTO ContExi_DEF2;
+	                            
+	                            
+	                    END_CASE;
+	                    
+	                END_IF;
+	            END_IF;
+	        END_REGION traitement preliminaire 'Repos'
+	        REGION traitement cyclique 'Repos'
+	            //Appel  Rech_Cellule(CdZoneDest,Pt_Cel->Tab_Cel,&Pt_Cel_Dest,TypeDest);
+	            
+	            #ret := "Controle_Cellule"(FgMaskNh := #TRANSF._FgMaskCtrlNh,
+	                                       NvCellule := #CdZoneOrg,
+	                                       TypeCelDest := #TRANSF._TypeCelDest,
+	                                       Cel := "DB_Mod_Cellule",
+	                                       NiveauHautDestNh => #TRANSF._NiveauHautDestNh);
+	            IF #ret = -1 THEN
+	                //Destination inconnue ou non valide CdZoneDest
+	                #TRANSF.Dial_Def.Num_Def_Etape := 1;
+	                #Text_Def := CONCAT(IN1 := 'Origine inconnue  ', IN2 := #CdZoneOrg);
+	                #TRANSF.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := #Text_Def,
+	                                                                 Type_Defaut := 2,
+	                                                                 Automatisme := #NomAuto,
+	                                                                 Num_Lot := #NoLot,
+	                                                                 Origine_Defaut := 'Destination inconnue',
+	                                                                 Libelle_Origine := 'Destination inconnue',
+	                                                                 Acq1 := 'ABANDON',
+	                                                                 Acq2 := 'Cellule',
+	                                                                 Acq3 := '',
+	                                                                 Acq4 := '',
+	                                                                 Acq5 := '',
+	                                                                 Acq6 := '',
+	                                                                 Acq7 := '',
+	                                                                 Acq8 := '',
+	                                                                 Acq_Choisi := -1,
+	                                                                 Date_Arrivee := #TRANSF.CntlDest.TpsPicke);
+	                #TRANSF.CntlDest.Etape := #Attente_Rep_Dial;
+	                RETURN;
+	            END_IF;
+	        ContExi_DEF1:
+	            
+	            //============ Traitement des reponses pour le defaut1 Confirmation de lancement   ====================================//
+	            IF #TRANSF.Dial_Def.Reponse_Def = 'ABANDON' THEN
+	                #TRANSF.CntlDest.Etape := #Cntrl_Existance;
+	                #Return := -1;
+	                #TRANSF.Dial_Def.Reponse_Def := '';
+	                #TRANSF._FgLanc := FALSE;
+	                RETURN;
+	            END_IF;
+	            IF #TRANSF.Dial_Def.Reponse_Def = 'Cellule' THEN
+	                #Cd_Zone_Or := #TRANSF.Dial_Def.Text_Reponse;
+	                IF #fgbase THEN
+	                    // Appel Proc chng Orig
+	                    ;
+	                END_IF;
+	                #CdZoneOrg := #TRANSF.Dial_Def.Text_Reponse;
+	                #TRANSF.Dial_Def.Reponse_Def := '';
+	                #TRANSF.CntlDest.Etape := #Cntrl_Existance;
+	                RETURN;
+	            END_IF;
+	            IF #ret = 2 THEN
+	                #TRANSF.CntlDest.Etape := #Cntrl_Affectation;
+	                RETURN;
+	            END_IF;
+	            IF #ret = 1 THEN
+	                #TRANSF.Dial_Def.Num_Def_Etape := 2;
+	                #Text_Def := CONCAT(IN1 := 'Cellule ', IN2 := #CdZoneOrg, IN3 := ' en Niveau haut');
+	                #TRANSF.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := #Text_Def,
+	                                                                 Type_Defaut := 2,
+	                                                                 Automatisme := #NomAuto,
+	                                                                 Num_Lot := #NoLot,
+	                                                                 Origine_Defaut := 'Niveau haut',
+	                                                                 Libelle_Origine := 'Niveau haut',
+	                                                                 Acq1 := 'Relance',
+	                                                                 Acq2 := 'Abandon',
+	                                                                 Acq3 := 'Cellule',
+	                                                                 Acq4 := '',
+	                                                                 Acq5 := '',
+	                                                                 Acq6 := '',
+	                                                                 Acq7 := '',
+	                                                                 Acq8 := '',
+	                                                                 Acq_Choisi := -1,
+	                                                                 Date_Arrivee := #TRANSF.CntlDest.TpsPicke);
+	                #TRANSF.CntlDest.Etape := #Attente_Rep_Dial;
+	                RETURN;
+	            END_IF;
+	        ContExi_DEF2:
+	            
+	            //============ Traitement des reponses pour le defaut1 Confirmation de lancement   ====================================//
+	            IF #TRANSF.Dial_Def.Reponse_Def = 'Abandon' THEN
+	                #TRANSF.CntlDest.Etape := #Cntrl_Existance;
+	                #Return := -1;
+	                #TRANSF._FgLanc := FALSE;
+	                #TRANSF.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            IF #TRANSF.Dial_Def.Reponse_Def = 'Cellule' THEN
+	                #Cd_Zone_Or := #TRANSF.Dial_Def.Text_Reponse;
+	                #CdZoneOrg := #TRANSF.Dial_Def.Text_Reponse;
+	                #TRANSF.Dial_Def.Reponse_Def := '';
+	                #TRANSF.CntlDest.Etape := #Cntrl_Existance;
+	                RETURN;
+	            END_IF;
+	            IF #TRANSF.Dial_Def.Reponse_Def = 'Relance' THEN
+	                #TRANSF.Dial_Def.Reponse_Def := '';
+	                #TRANSF.CntlDest.Etape := #Cntrl_Existance;
+	                
+	                RETURN;
+	            END_IF;
+	            
+	            
+	            
+	        END_REGION traitement cyclique 'Repos'
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                        ╔════════════════════════════════════╗
+	                                                                        ║       controle affectation         ║
+	                                                                        ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	    #Cntrl_Affectation:
+	        REGION traitement preliminaire 
+	            IF (#TRANSF.CntlDest.Etape <> #TRANSF.CntlDest.EtpPrec) THEN
+	                #TRANSF.CntlDest.EtpPrec := #TRANSF.CntlDest.Etape;
+	                IF #TRANSF.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #TRANSF.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO ContAffec_DEF1;
+	                            
+	                            
+	                    END_CASE;
+	                    
+	                END_IF;
+	            END_IF;
+	        END_REGION traitement preliminaire
+	        REGION traitement cyclique 
+	            //Appel procedure controle affectation return 1 or -1 pb affectation
+	            IF #fgbase THEN
+	                // Appel proc  Ret = CtrlAffec(CdZoneOrg,CdMatOrg,LibMatOrg,"","","","",&chute,&seuil_pv,&vit_pv,&vit_gv,Txt_Def);
+	                #ResultProcCntrlAffec := "Proc_ControleAffectation"(NumPoste := "Num_Poste", zone := #CdZoneOrg,
+	                                                                    CodeMat := #CdMatOrg,
+	                                                                    Formule := '0',
+	                                                                    NoLot := #NoLot,
+	                                                                    ModeMasquage := 'S',
+	                                                                    ModeBloc := 'S',
+	                                                                    Cveriflot := 'O',
+	                                                                    Typezone := 'O',
+	                                                                    Procede := "NOM_PROC_TRA",
+	                                                                    Msg_Def => #Text_Def);
+	                
+	            ELSE
+	                #ResultProcCntrlAffec := 'OK';
+	            END_IF;
+	            
+	            IF #ResultProcCntrlAffec = 'NOK' THEN
+	                #TRANSF.Dial_Def.Num_Def_Etape := 1;
+	                // #Text_Def := CONCAT(IN1 := ' Destination non valide: ', IN2 := #CdZoneOrg);
+	                #TRANSF.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase,
+	                                                                 Msg_Defaut := #Text_Def,
+	                                                                 Type_Defaut := 2,
+	                                                                 Automatisme := #NomAuto,
+	                                                                 Num_Lot := #NoLot,
+	                                                                 Origine_Defaut := 'Origine non valide',
+	                                                                 Libelle_Origine := 'Origine non valide',
+	                                                                 Acq1 := 'Relance',
+	                                                                 Acq2 := 'Abandon',
+	                                                                 Acq3 := 'Cellule',
+	                                                                 Acq4 := '',
+	                                                                 Acq5 := '',
+	                                                                 Acq6 := '',
+	                                                                 Acq7 := '',
+	                                                                 Acq8 := '',
+	                                                                 Acq_Choisi := -1,
+	                                                                 Date_Arrivee := #TRANSF.CntlDest.TpsPicke);
+	                #TRANSF.CntlDest.Etape := #Attente_Rep_Dial;
+	                RETURN;
+	            END_IF;
+	            IF #ResultProcCntrlAffec = 'OK' THEN
+	                #TRANSF.CntlDest.Etape := #Cntrl_Existance;
+	                #Return := 1;
+	                #TRANSF.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	        ContAffec_DEF1:
+	            
+	            //============ Traitement des reponses pour le defaut1    ====================================//
+	            IF #TRANSF.Dial_Def.Reponse_Def = 'Abandon' THEN
+	                #TRANSF.CntlDest.Etape := #Cntrl_Existance;
+	                #Return := -1;
+	                #TRANSF.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	                
+	            END_IF;
+	            IF #TRANSF.Dial_Def.Reponse_Def = 'Cellule' THEN
+	                
+	                #Cd_Zone_Or := #TRANSF.Dial_Def.Text_Reponse;
+	                #CdZoneOrg := #TRANSF.Dial_Def.Text_Reponse;
+	                #TRANSF.Dial_Def.Reponse_Def := '';
+	                #TRANSF.CntlDest.Etape := #Cntrl_Existance;
+	                RETURN;
+	            END_IF;
+	            IF #TRANSF.Dial_Def.Reponse_Def = 'Relance' THEN
+	                #TRANSF.Dial_Def.Reponse_Def := '';
+	                #TRANSF.CntlDest.Etape := #Cntrl_Existance;
+	                RETURN;
+	            END_IF;
+	            (* IF #ret = 1 THEN
+	                 #TRANSF.CntlDest.Etape := #Cntrl_Affectation;
+	                 RETURN;
+	             END_IF; *)
+	            
+	            
+	            
+	        END_REGION traitement cyclique 
+	(* (*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                        ╔════════════════════════════════════╗
+	                                                                        ║            CONTROLE NH             ║
+	                                                                        ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	    #Cntrl_Nh:
+	        REGION traitement preliminaire 
+	            IF (transf.CntlDest.Etape <> transf.CntlDest.EtpPrec) THEN
+	                transf.CntlDest.EtpPrec := transf.CntlDest.Etape;
+	                IF transf.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE transf.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO NH_DEF1;
+	                            
+	                            
+	                    END_CASE;
+	                    
+	                END_IF;
+	            END_IF;
+	        END_REGION traitement preliminaire
+	        REGION traitement cyclique 
+	            transf._IndexDestEc := "RechIndexCel"(#CdZoneDest);
+	            IF transf._IndexDestEc > -1 THEN
+	                transf._ptDestEc := "DB_Mod_Cellule"._TabCel[transf._IndexDestEc];
+	            END_IF;
+	            IF transf._ptDestEc._ELT._NivHaut  THEN
+	                #Text_Def := CONCAT(IN1 := 'Cellule ', IN2 := #CdZoneDest, IN3 := ' en Niveau haut');
+	                
+	                transf.Dial_Def.Index_Defaut := "Dialog_Defaut"(Msg_Defaut := #Text_Def,
+	                                                              Type_Defaut := 2,
+	                                                              Automatisme := #NomAuto,
+	                                                              Num_Lot := #NoLot,
+	                                                              Origine_Defaut := 'Niveau haut',
+	                                                              Libelle_Origine := 'Niveau haut',
+	                                                              Acq1 := 'Relance',
+	                                                              Acq2 := 'Abandon',
+	                                                              Acq3 := 'Cellule',
+	                                                              Acq4 := '',
+	                                                              Acq5 := '',
+	                                                              Acq6 := '',
+	                                                              Acq7 := '',
+	                                                              Acq8 := '',
+	                                                              Acq_Choisi := -1,
+	                                                              Date_Arrivee := transf.CntlDest.TpsPicke);
+	                transf.RecCommun.CommunGeneral._Etp :=  #Attente_Rep_Dial;
+	            ELSE
+	                transf.CntlDest.Etape := #Cntrl_Existance;
+	                #Return := 1;
+	                transf.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	       NH_DEF1:
+	            
+	            //============ Traitement des reponses pour le defaut1 Confirmation de lancement   ====================================//
+	            IF transf.Dial_Def.Reponse_Def = 'Abandon' THEN
+	                transf.CntlDest.Etape := #Cntrl_Existance;
+	                #Return := -1;
+	                transf.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	                
+	            END_IF;
+	            IF transf.Dial_Def.Reponse_Def = 'Cellule' THEN
+	                
+	                #Nouv_Dest := transf.Dial_Def.Text_Reponse;
+	                #CdZoneDest := transf.Dial_Def.Text_Reponse;
+	                transf.Dial_Def.Reponse_Def := '';
+	                transf.CntlDest.Etape := #Cntrl_Existance;
+	                RETURN;
+	            END_IF;
+	           
+	        END_REGION traitement cyclique  *)
+	(*      
+	*************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                             ╔════════════════════════════════════╗
+	                                                                             ║ Etape "Attente Reponse Dialogue"   ║
+	                                                                             ╚════════════════════════════════════╝
+	*************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                    
+	*)
+	    #Attente_Rep_Dial:
+	        REGION Preliminaire Attente Acquuitement
+	            IF (#TRANSF.CntlDest.Etape <> #TRANSF.CntlDest.EtpPrec) THEN
+	                #TRANSF.CntlDest.EtapeMemo := #TRANSF.CntlDest.EtpPrec;
+	                #TRANSF.CntlDest.EtpPrec := #TRANSF.CntlDest.Etape;
+	            END_IF;
+	            
+	        END_REGION Preliminaire Attente Acquuitement
+	        REGION Cyclique Attente Acquitement
+	            
+	            #TRANSF.Dial_Def.Reponse_Def := "FC_Recup_Rep_Def"(Index_Def := #TRANSF.Dial_Def.Index_Defaut, Reponse_Ecrit => #TRANSF.Dial_Def.Text_Reponse);
+	            IF #TRANSF.Dial_Def.Reponse_Def <> '' THEN
+	                "FC_Raz_Def"(#TRANSF.Dial_Def.Index_Defaut);
+	                #TRANSF.CntlDest.Etape := #TRANSF.CntlDest.EtapeMemo;
+	                RETURN;
+	            END_IF;
+	        END_REGION Cyclique Attente Acquitement   
+	        
+	END_CASE;
+	
+	
+	
+	
+	
+END_FUNCTION
+

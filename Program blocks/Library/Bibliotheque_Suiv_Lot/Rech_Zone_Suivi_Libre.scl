@@ -1,0 +1,50 @@
+﻿FUNCTION "Rech_Zone_Suivi_Libre" : SInt
+TITLE = Recherche d'une zone de suivi libre
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : 'I.DAOUDI'
+FAMILY : Suiv_Lot
+VERSION : 1.0
+//Cette fonction cherche une zone de suivi libre
+//- Paramètre de sortie : + L'index de la zone libre
+//- Valeurs de retour : + 1 si la fonction a trouvé une zone de suivi libre
+//                      + -1 si toutes les zones de suivi sont occupées
+   VAR_OUTPUT 
+      Zone_Suivi : SInt;
+   END_VAR
+
+   VAR_TEMP 
+      i : SInt;
+      Ret_RD_Sys_T : Int;
+      Sys_T : Date_And_Time;
+      Index_Acquit : USInt;
+   END_VAR
+
+
+BEGIN
+	(*
+	===================================================  Documentation  ===================================================
+	Cette fonction cherche une zone de suivi libre
+	- Paramètre de sortie : + L'index de la zone libre
+	- Valeurs de retour : + 1 si la fonction a trouvé une zone de suivi libre
+	                      + -1 si toutes les zones de suivi sont occupées
+	===================================================  Documentation  ===================================================
+	*)
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | Version | Date       | Autheur     | Ajouts/Modifications                                                   |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | V_1     | 12.10.2023 | I.DAOUDI    | Creation du block                                                      |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	#Ret_RD_Sys_T := RD_SYS_T(#Sys_T);
+	// Lancement de la recherche dans DB_Zones_Suivi 
+	FOR #i := 0 TO "Nbr_Max_Lots" DO
+	    IF NOT ("DB_BIBLIOTHEQUE".Zones_Suivi[#i].Occupee) THEN
+	        "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Occupee := TRUE;
+	        #Zone_Suivi := #i;
+	        #Rech_Zone_Suivi_Libre := 1;
+	        RETURN;
+	    END_IF;
+	END_FOR;
+	#Rech_Zone_Suivi_Libre := -1;
+	RETURN;
+END_FUNCTION
+

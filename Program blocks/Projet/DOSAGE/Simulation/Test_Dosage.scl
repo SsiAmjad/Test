@@ -1,0 +1,441 @@
+﻿FUNCTION_BLOCK "Test_Dosage"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR 
+      "Pt_Zs(LotS1S2BP1)" : "S_Suivi_Dosage";
+      Zone_Suivi : SInt;
+      LotS1S2BP1 : Bool;
+      CIRCUIT { S7_SetPoint := 'False'} : "S_Circuit";
+      RAZ_Pt_Zs { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'; S7_SetPoint := 'False'} : "S_Suivi_Dosage";
+   END_VAR
+
+   VAR_TEMP 
+      Ret_Test : SInt;
+      i : SInt;
+      X : SInt;
+   END_VAR
+
+
+BEGIN
+	(* //--------------------------- Parametres Melangeuse ---------------------------//
+	#"Pt_Zs(LotS1S2BP1)"._ParamMelang._Vit_Mlg := 1500;
+	#"Pt_Zs(LotS1S2BP1)"._ParamMelang._Tps_Pre_Mlg := T#5s;
+	#"Pt_Zs(LotS1S2BP1)"._ParamMelang._Tps_Mlg := T#60s;
+	#"Pt_Zs(LotS1S2BP1)"._ParamMelang._Tps_Mlg_Max := T#80s;
+	#"Pt_Zs(LotS1S2BP1)"._ParamMelang._Tps_Mlg_Ap_Inj := T#15s;
+	#"Pt_Zs(LotS1S2BP1)"._ParamMelang._Tps_Inj_Max := T#50s;
+	//--------------------------- Parametres Melangeuse ---------------------------//
+	//
+	//--------------------------- Parametres Broyeur ---------------------------//
+	#"Pt_Zs(LotS1S2BP1)"._ParamBro._Fg_Bro := TRUE;
+	#"Pt_Zs(LotS1S2BP1)"._ParamBro._Vit_Bro := 1500;
+	#"Pt_Zs(LotS1S2BP1)"._ParamBro._Charge := 70;
+	#"Pt_Zs(LotS1S2BP1)"._ParamBro._Vit_Max_Alim := 100;
+	#"Pt_Zs(LotS1S2BP1)"._ParamBro._Vit_Min_Alim := 20;
+	
+	#"Pt_Zs(LotS1S2BP1)"._ParamBro._Rampe_Montee := 0.1;
+	#"Pt_Zs(LotS1S2BP1)"._ParamBro._Tps_Avant_Montee := T#2s;
+	
+	#"Pt_Zs(LotS1S2BP1)"._ParamBro._Vit_Debut_Alim := 10;
+	#"Pt_Zs(LotS1S2BP1)"._ParamBro._Vit_Rampe_Alim := 80;
+	#"Pt_Zs(LotS1S2BP1)"._ParamBro._Vit_Fixe_Alim := 20;
+	#"Pt_Zs(LotS1S2BP1)"._ParamBro._Vit_Fin_Rampe_Alim := 20;
+	
+	#"Pt_Zs(LotS1S2BP1)"._ParamBro._Volet_Air := 'I';
+	#"Pt_Zs(LotS1S2BP1)"._ParamBro._Cons_Debit_Air := 3000;
+	#"Pt_Zs(LotS1S2BP1)"._ParamBro._Vit_Ventil := 70;
+	
+	#"Pt_Zs(LotS1S2BP1)"._ParamBro._Hauteur_Couche := 'I';
+	//--------------------------- Parametres Broyeur ---------------------------//
+	
+	#"Pt_Zs(LotS1S2BP1)"._SuiviCommun._NoLot := '01052402210010010001';
+	#"Pt_Zs(LotS1S2BP1)"._SuiviCommun._CdForm := '3VC2M0';
+	#"Pt_Zs(LotS1S2BP1)"._SuiviCommun._LibFor := 'Poulet de chair - demarrage';
+	#"Pt_Zs(LotS1S2BP1)"._SuiviCommun._Version := '4000';
+	#"Pt_Zs(LotS1S2BP1)"._SuiviCommun._Repart := '02';
+	#"Pt_Zs(LotS1S2BP1)"._SuiviCommun._QteLot := 5000;
+	#"Pt_Zs(LotS1S2BP1)"._SuiviCommun._nb_dens := 0.65;
+	#"Pt_Zs(LotS1S2BP1)"._SuiviCommun._CdMat := '3VC2M0V';
+	#"Pt_Zs(LotS1S2BP1)"._SuiviCommun._LibMat := 'Poulet de chair - demarrage';
+	#"Pt_Zs(LotS1S2BP1)"._Cel_Dest := 'BT01';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[0].Code_MP := 'COMPO1';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[0].Libel_MP := 'LB COMPO1';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[0].Incorpo := 'SBP1';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[0].Vit_GV := 100;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[0].Vit_PV := 30;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[0].Poids := 300;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[0].Pourcent := 30;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[0].Seuil_PV := 100;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[0].Tol_Inf := 1;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[0].Tol_Sup := 1;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[0].Tol_Confor_Inf := 2;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[0].Tol_Confor_Sup := 2;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[0].Col_Chute_Max := 20;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[0].Code_Cel := 'S01';
+	
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[1].Code_MP := 'COMPO2';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[1].Libel_MP := 'LB COMPO2';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[1].Incorpo := 'SBP1';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[1].Vit_GV := 100;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[1].Vit_PV := 30;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[1].Poids := 500;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[1].Seuil_PV := 100;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[1].Tol_Inf := 1;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[1].Tol_Sup := 1;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[1].Tol_Confor_Inf := 2;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[1].Tol_Confor_Sup := 2;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[1].Col_Chute_Max := 20;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[1].Code_Cel := 'S02';
+	
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[2].Code_MP := 'COMPO11';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[2].Libel_MP := 'LB COMPO11';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[2].Incorpo := 'SBP2';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[2].Vit_GV := 100;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[2].Vit_PV := 30;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[2].Poids := 500;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[2].Seuil_PV := 100;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[2].Tol_Inf := 1;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[2].Tol_Sup := 1;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[2].Tol_Confor_Inf := 2;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[2].Tol_Confor_Sup := 2;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[2].Col_Chute_Max := 20;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[2].Code_Cel := 'S11';
+	
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[3].Code_MP := 'COMPO12';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[3].Libel_MP := 'LB COMPO12';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[3].Incorpo := 'SBP2';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[3].Vit_GV := 100;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[3].Vit_PV := 30;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[3].Poids := 300;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[3].Seuil_PV := 100;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[3].Tol_Inf := 1;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[3].Tol_Sup := 1;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[3].Tol_Confor_Inf := 2;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[3].Tol_Confor_Sup := 2;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[3].Col_Chute_Max := 20;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[3].Code_Cel := 'S12';
+	
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[4].Code_MP := 'COMPO30';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[4].Libel_MP := 'LB COMPO30';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[4].Incorpo := 'SBP3';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[4].Vit_GV := 100;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[4].Vit_PV := 30;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[4].Poids := 500;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[4].Seuil_PV := 100;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[4].Tol_Inf := 1;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[4].Tol_Sup := 1;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[4].Tol_Confor_Inf := 2;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[4].Tol_Confor_Sup := 2;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[4].Col_Chute_Max := 20;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[4].Code_Cel := 'S30';
+	
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[5].Code_MP := 'COMPO33';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[5].Libel_MP := 'LB COMPO33';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[5].Incorpo := 'SBP3';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[5].Vit_GV := 100;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[5].Vit_PV := 30;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[5].Poids := 300;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[5].Seuil_PV := 100;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[5].Tol_Inf := 1;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[5].Tol_Sup := 1;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[5].Tol_Confor_Inf := 2;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[5].Tol_Confor_Sup := 2;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[5].Col_Chute_Max := 20;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[5].Code_Cel := 'S33';
+	
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[6].Code_MP := 'COMPO50';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[6].Libel_MP := 'LB COMPO50';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[6].Incorpo := 'SBP4';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[6].Vit_GV := 100;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[6].Vit_PV := 30;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[6].Poids := 300;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[6].Seuil_PV := 100;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[6].Tol_Inf := 1;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[6].Tol_Sup := 1;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[6].Tol_Confor_Inf := 2;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[6].Tol_Confor_Sup := 2;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[6].Col_Chute_Max := 20;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[6].Code_Cel := 'S50';
+	
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[7].Code_MP := 'COMPO55';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[7].Libel_MP := 'LB COMPO55';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[7].Incorpo := 'SBP4';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[7].Vit_GV := 100;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[7].Vit_PV := 30;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[7].Poids := 500;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[7].Seuil_PV := 100;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[7].Tol_Inf := 1;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[7].Tol_Sup := 1;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[7].Tol_Confor_Inf := 2;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[7].Tol_Confor_Sup := 2;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[7].Col_Chute_Max := 20;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[7].Code_Cel := 'S55';
+	
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[8].Code_MP := 'COMPO36';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[8].Libel_MP := 'LB COMPO36';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[8].Incorpo := 'SBP5';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[8].Vit_GV := 100;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[8].Vit_PV := 30;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[8].Poids := 500;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[8].Seuil_PV := 100;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[8].Tol_Inf := 1;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[8].Tol_Sup := 1;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[8].Tol_Confor_Inf := 2;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[8].Tol_Confor_Sup := 2;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[8].Col_Chute_Max := 20;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[8].Code_Cel := 'S36';
+	
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[9].Code_MP := 'LIQ1';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[9].Incorpo := 'MLG1';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[9].Vit_GV := 100;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[9].Vit_PV := 30;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[9].Poids := 30;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[9].Seuil_PV := 100;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[9].Tol_Inf := 1;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[9].Tol_Sup := 1;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[9].Tol_Confor_Inf := 2;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[9].Tol_Confor_Sup := 2;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[9].Col_Chute_Max := 20;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[9].Code_Cel := 'S-Liq1';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[9].Num_Liq_Mlg := 1;
+	
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[10].Code_MP := 'LIQ2';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[10].Incorpo := 'MLG1';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[10].Vit_GV := 100;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[10].Vit_PV := 30;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[10].Poids := 30;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[10].Seuil_PV := 100;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[10].Tol_Inf := 1;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[10].Tol_Sup := 1;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[10].Tol_Confor_Inf := 2;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[10].Tol_Confor_Sup := 2;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[10].Col_Chute_Max := 20;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[10].Code_Cel := 'S-Liq2';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[10].Num_Liq_Mlg := 2;
+	
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[11].Code_MP := 'LIQ3';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[11].Incorpo := 'MLG1';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[11].Vit_GV := 100;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[11].Vit_PV := 30;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[11].Poids := 30;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[11].Seuil_PV := 100;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[11].Tol_Inf := 1;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[11].Tol_Sup := 1;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[11].Tol_Confor_Inf := 2;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[11].Tol_Confor_Sup := 2;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[11].Col_Chute_Max := 20;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[11].Code_Cel := 'S-Liq3';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[11].Num_Liq_Mlg := 3;
+	
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[12].Code_MP := 'COMPO1VS';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[12].Incorpo := 'VS';
+	// #"Pt_Zs(LotS1S2BP1)"._Lst_Compos[12].Conditionnement := 10;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[12].Poids := 10;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[12].Tol_Inf := 1;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[12].Tol_Sup := 1;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[12].Tol_Confor_Inf := 2;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[12].Tol_Confor_Sup := 2;
+	
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[13].Code_MP := 'COMPO2VS';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[13].Incorpo := 'VS';
+	// #"Pt_Zs(LotS1S2BP1)"._Lst_Compos[13].Conditionnement := 5;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[13].Poids := 5;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[13].Tol_Inf := 1;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[13].Tol_Sup := 1;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[13].Tol_Confor_Inf := 2;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[13].Tol_Confor_Sup := 2;
+	
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[14].Code_MP := 'COMPO3VS';
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[14].Incorpo := 'VS';
+	// #"Pt_Zs(LotS1S2BP1)"._Lst_Compos[14].Conditionnement := 5;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[14].Poids := 7;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[14].Tol_Inf := 1;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[14].Tol_Sup := 1;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[14].Tol_Confor_Inf := 2;
+	#"Pt_Zs(LotS1S2BP1)"._Lst_Compos[14].Tol_Confor_Sup := 2;
+	
+	#"Pt_Zs(LotS1S2BP1)"._Nbr_Compo := 15;
+	
+	"R_TRIG_DB_4"(CLK := #LotS1S2BP1);
+	IF "R_TRIG_DB_4".Q THEN
+	    #Ret_Test := "Rech_Zone_Suivi_Libre"(#Zone_Suivi);
+	    #"Pt_Zs(LotS1S2BP1)"._SuiviCommun._Couleur := "DB_Data_Dosage"."THIS"[#Zone_Suivi]._SuiviCommun._Couleur;
+	    "DB_Data_Dosage"."THIS"[#Zone_Suivi] := #"Pt_Zs(LotS1S2BP1)";
+	    #Ret_Test := "Maj_Activ"(Num_Tache := "TAC_BP1", Num_Zone := #Zone_Suivi);
+	    #Ret_Test := "Maj_Activ"(Num_Tache := "TAC_CIRSS_BP1", Num_Zone := #Zone_Suivi);
+	    #Ret_Test := "Maj_Activ"(Num_Tache := "TAC_BP2", Num_Zone := #Zone_Suivi);
+	    #Ret_Test := "Maj_Activ"(Num_Tache := "TAC_BP3", Num_Zone := #Zone_Suivi);
+	    #Ret_Test := "Maj_Activ"(Num_Tache := "TAC_BP4", Num_Zone := #Zone_Suivi);
+	    #Ret_Test := "Maj_Activ"(Num_Tache := "TAC_BP5", Num_Zone := #Zone_Suivi);
+	    #Ret_Test := "Maj_Activ"(Num_Tache := "TAC_TREMSS_BP1", Num_Zone := #Zone_Suivi);
+	    #Ret_Test := "Maj_Activ"(Num_Tache := "TAC_TREMSS_BP2", Num_Zone := #Zone_Suivi);
+	    #Ret_Test := "Maj_Activ"(Num_Tache := "TAC_TREMSS_BP3", Num_Zone := #Zone_Suivi);
+	    #Ret_Test := "Maj_Activ"(Num_Tache := "TAC_TREMSS_BP4", Num_Zone := #Zone_Suivi);
+	    #Ret_Test := "Maj_Activ"(Num_Tache := "TAC_TREMSS_BP5", Num_Zone := #Zone_Suivi);
+	    #Ret_Test := "Maj_Activ"(Num_Tache := "TAC_CIRREMP_BR1", Num_Zone := #Zone_Suivi);
+	    #Ret_Test := "Maj_Activ"(Num_Tache := "TAC_TREMSR_BR2", Num_Zone := #Zone_Suivi);
+	    #Ret_Test := "Maj_Activ"(Num_Tache := "TAC_BR2", Num_Zone := #Zone_Suivi);
+	    #Ret_Test := "Maj_Activ"(Num_Tache := "TAC_TREMSS_BR2", Num_Zone := #Zone_Suivi);
+	    #Ret_Test := "Maj_Activ"(Num_Tache := "TAC_CIRREMP_MLG1", Num_Zone := #Zone_Suivi);
+	    #Ret_Test := "Maj_Activ"(Num_Tache := "TAC_TREMSR_MLG1", Num_Zone := #Zone_Suivi);
+	    #Ret_Test := "Maj_Activ"(Num_Tache := "TAC_MELANG1", Num_Zone := #Zone_Suivi);
+	    #Ret_Test := "Maj_Activ"(Num_Tache := "TAC_TREMSS_MLG1", Num_Zone := #Zone_Suivi);
+	    #Ret_Test := "Maj_Activ"(Num_Tache := "TAC_LIQ1_MLG1", Num_Zone := #Zone_Suivi);
+	    #Ret_Test := "Maj_Activ"(Num_Tache := "TAC_LIQ2_MLG1", Num_Zone := #Zone_Suivi);
+	    #Ret_Test := "Maj_Activ"(Num_Tache := "TAC_LIQ3_MLG1", Num_Zone := #Zone_Suivi);
+	    #Ret_Test := "Maj_Activ"(Num_Tache := "TAC_LIQ4_MLG1", Num_Zone := #Zone_Suivi);
+	    #Ret_Test := "Maj_Activ"(Num_Tache := "TAC_LIQ5_MLG1", Num_Zone := #Zone_Suivi);
+	    #Ret_Test := "Maj_Activ"(Num_Tache := "TAC_DEROUT_EXP", Num_Zone := #Zone_Suivi);
+	    #Ret_Test := "Maj_Activ"(Num_Tache := "TAC_LANC_EXP", Num_Zone := #Zone_Suivi); 
+	    #Ret_Test := "Maj_Activ"(Num_Tache := "TAC_VS_MLG1", Num_Zone := #Zone_Suivi);
+	END_IF;
+	*)
+	"DB_Dosage".BP[0].Benne.Simul._ModeSimul := "simul";
+	"DB_Dosage".BP[1].Benne.Simul._ModeSimul := "simul";
+	"DB_Dosage".BP[2].Benne.Simul._ModeSimul := "simul";
+	"DB_Dosage".BP[3].Benne.Simul._ModeSimul := "simul";
+	"DB_Dosage".BP[4].Benne.Simul._ModeSimul := "simul";
+	"DB_Dosage".BR[0].Simulateur.Simul := "simul";
+	"DB_Dosage".BR[1].Simulateur.Simul := "simul";
+	
+	// DOSAGE BP
+	"SurvDosBenne"(Fg_Base:="fgbase",
+	               Raz_Pt_Zs:=#RAZ_Pt_Zs,
+	               SurvDosBenne:="DB_Dosage".BP[0]);
+	"SurvDosBenne"(Fg_Base:="fgbase",
+	               Raz_Pt_Zs:=#RAZ_Pt_Zs,
+	               SurvDosBenne:="DB_Dosage".BP[1]);
+	"SurvDosBenne"(Fg_Base:="fgbase",
+	               Raz_Pt_Zs:=#RAZ_Pt_Zs,
+	               SurvDosBenne:="DB_Dosage".BP[2]);
+	"SurvDosBenne"(Fg_Base:="fgbase",
+	               Raz_Pt_Zs:=#RAZ_Pt_Zs,
+	               SurvDosBenne:="DB_Dosage".BP[3]);
+	"SurvDosBenne"(Fg_Base:="fgbase",
+	               Raz_Pt_Zs:=#RAZ_Pt_Zs,
+	               SurvDosBenne:="DB_Dosage".BP[4]);
+	// TREMIES TRANS
+	"Gest_Tremie_Trans"(Fg_Base:="fgbase",
+	                    RAZ_Pt_Zs:=#RAZ_Pt_Zs,
+	                    Tremie_Trans:="DB_Dosage".TRM_TRANS[0]);
+	"Gest_Tremie_Trans"(Fg_Base:="fgbase",
+	                    RAZ_Pt_Zs:=#RAZ_Pt_Zs,
+	                    Tremie_Trans:="DB_Dosage".TRM_TRANS[1]);
+	"Gest_Tremie_Trans"(Fg_Base:="fgbase",
+	                    RAZ_Pt_Zs:=#RAZ_Pt_Zs,
+	                    Tremie_Trans:="DB_Dosage".TRM_TRANS[2]);
+	"Gest_Tremie_Trans"(Fg_Base:="fgbase",
+	                    RAZ_Pt_Zs:=#RAZ_Pt_Zs,
+	                    Tremie_Trans:= "DB_Dosage".TRM_TRANS[3]);
+	"Gest_Tremie_Trans"(Fg_Base:="fgbase",
+	                    RAZ_Pt_Zs:=#RAZ_Pt_Zs,
+	                    Tremie_Trans:= "DB_Dosage".TRM_TRANS[4]);
+	"Gest_Tremie_Trans"(Fg_Base:="fgbase",
+	                    RAZ_Pt_Zs:=#RAZ_Pt_Zs,
+	                    Tremie_Trans:= "DB_Dosage".TRM_TRANS[5]);
+	"Gest_Tremie_Trans"(Fg_Base := "fgbase",
+	                    RAZ_Pt_Zs:=#RAZ_Pt_Zs,
+	                    Tremie_Trans := "DB_Dosage".TRM_TRANS[6]);
+	"Gest_Tremie_Trans"(Fg_Base := "fgbase",
+	                    RAZ_Pt_Zs:=#RAZ_Pt_Zs,
+	                    Tremie_Trans := "DB_Dosage".TRM_TRANS[7]);
+	// CIRCUITS TRANSFERT
+	"Gest_Circuit_Transfert"(Fg_Base:="fgbase",
+	                         RAZ_Pt_Zs:=#RAZ_Pt_Zs,
+	                         Cir_Trans:= "DB_Dosage".TRANSF[0]);
+	"Gest_Circuit_Transfert"(Fg_Base:="fgbase",
+	                         RAZ_Pt_Zs:=#RAZ_Pt_Zs,
+	                         Cir_Trans:= "DB_Dosage".TRANSF[1]);
+	"Gest_Circuit_Transfert"(Fg_Base:="fgbase",
+	                         RAZ_Pt_Zs:=#RAZ_Pt_Zs,
+	                         Cir_Trans:= "DB_Dosage".TRANSF[2]);
+	"Gest_Circuit_Transfert"(Fg_Base := "fgbase",
+	                         RAZ_Pt_Zs:=#RAZ_Pt_Zs,
+	                         Cir_Trans := "DB_Dosage".TRANSF[3]);
+	"Gest_Circuit_Transfert"(Fg_Base := "fgbase",
+	                         RAZ_Pt_Zs:=#RAZ_Pt_Zs,
+	                         Cir_Trans := "DB_Dosage".TRANSF[4]);
+	// BROYEURS
+	"Gestion_Broyeur"(Fg_Base:="fgbase",
+	                  RAZ_Pt_Zs:=#RAZ_Pt_Zs,
+	                  Broyeur:= "DB_Dosage".BR[0]);
+	"Gestion_Broyeur"(Fg_Base := "fgbase",
+	                  RAZ_Pt_Zs:=#RAZ_Pt_Zs,
+	                  Broyeur := "DB_Dosage".BR[1]);
+	// TREMIES TRAPPE
+	"Gest_Tremie_Trappe"(Fg_Base:="fgbase",
+	                     RAZ_Pt_Zs:=#RAZ_Pt_Zs,
+	                     Tremie_Trappe:="DB_Dosage".TRM_TRP[0]);
+	"Gest_Tremie_Trappe"(Fg_Base:="fgbase",
+	                     RAZ_Pt_Zs:=#RAZ_Pt_Zs,
+	                     Tremie_Trappe:="DB_Dosage".TRM_TRP[1]);
+	"Gest_Tremie_Trappe"(Fg_Base:="fgbase",
+	                     RAZ_Pt_Zs:=#RAZ_Pt_Zs,
+	                     Tremie_Trappe:="DB_Dosage".TRM_TRP[2]);
+	"Gest_Tremie_Trappe"(Fg_Base:="fgbase",
+	                     RAZ_Pt_Zs:=#RAZ_Pt_Zs,
+	                     Tremie_Trappe:="DB_Dosage".TRM_TRP[3]);
+	"Gest_Tremie_Trappe"(Fg_Base := "fgbase",
+	                     RAZ_Pt_Zs:=#RAZ_Pt_Zs,
+	                     Tremie_Trappe := "DB_Dosage".TRM_TRP[4]);
+	// MELANGEUSES
+	"Gestion_Melangeuse"(Fg_Base:="fgbase",
+	                     Raz_Pt_Zs:=#RAZ_Pt_Zs,
+	                     Melangeuse:= "DB_Dosage".MLG[0]);
+	"Gestion_Melangeuse"(Fg_Base := "fgbase",
+	                     Raz_Pt_Zs:=#RAZ_Pt_Zs,
+	                     Melangeuse := "DB_Dosage".MLG[1]);
+	// LIQUIDES
+	"Gestion_Liquide_Melangeuse"(Fg_Base:="fgbase",
+	                             Raz_Pt_Zs:=#RAZ_Pt_Zs,
+	                             Liq_Mel:="DB_Dosage".LIQUIDES_MLG[0]);
+	"Gestion_Liquide_Melangeuse"(Fg_Base:="fgbase",
+	                             Raz_Pt_Zs:=#RAZ_Pt_Zs,
+	                             Liq_Mel:="DB_Dosage".LIQUIDES_MLG[1]);
+	"Gestion_Liquide_Melangeuse"(Fg_Base:="fgbase",
+	                             Raz_Pt_Zs:=#RAZ_Pt_Zs,
+	                             Liq_Mel:="DB_Dosage".LIQUIDES_MLG[2]);
+	"Gestion_Liquide_Melangeuse"(Fg_Base := "fgbase",
+	                             Raz_Pt_Zs:=#RAZ_Pt_Zs,
+	                             Liq_Mel := "DB_Dosage".LIQUIDES_MLG[3]);
+	"Gestion_Liquide_Melangeuse"(Fg_Base := "fgbase",
+	                             Raz_Pt_Zs:=#RAZ_Pt_Zs,
+	                             Liq_Mel := "DB_Dosage".LIQUIDES_MLG[4]);
+	"Gestion_Liquide_Melangeuse"(Fg_Base := "fgbase",
+	                             Raz_Pt_Zs:=#RAZ_Pt_Zs,
+	                             Liq_Mel := "DB_Dosage".LIQUIDES_MLG[5]);
+	"Gestion_Liquide_Melangeuse"(Fg_Base := "fgbase",
+	                             Raz_Pt_Zs:=#RAZ_Pt_Zs,
+	                             Liq_Mel := "DB_Dosage".LIQUIDES_MLG[6]);
+	"Gestion_Liquide_Melangeuse"(Fg_Base := "fgbase",
+	                             Raz_Pt_Zs:=#RAZ_Pt_Zs,
+	                             Liq_Mel := "DB_Dosage".LIQUIDES_MLG[7]);
+	"Gestion_Liquide_Melangeuse"(Fg_Base := "fgbase",
+	                             Raz_Pt_Zs:=#RAZ_Pt_Zs,
+	                             Liq_Mel := "DB_Dosage".LIQUIDES_MLG[8]);
+	"Gestion_Liquide_Melangeuse"(Fg_Base := "fgbase",
+	                             Raz_Pt_Zs:=#RAZ_Pt_Zs,
+	                             Liq_Mel := "DB_Dosage".LIQUIDES_MLG[9]);
+	// EXPEDITIONS
+	"Gest_Derout_Exp"(Fg_Base:="fgbase",
+	                  RAZ_Pt_Zs:=#RAZ_Pt_Zs,
+	                  Derout:= "DB_Dosage".DEROUT);
+	"Gest_Lanc_Exp"(Fg_Base:="fgbase",
+	                RAZ_Pt_Zs:=#RAZ_Pt_Zs,
+	                Lanc_Exp:="DB_Dosage".LANC_EXP);
+	"Gest_Exp_Dos"(Fg_Base:="fgbase",
+	               Exp_Dos:="DB_Dosage".EXP_DOS[0]);
+	"Gest_Exp_Dos"(Fg_Base := "fgbase",
+	               Exp_Dos := "DB_Dosage".EXP_DOS[1]);
+	// VERSE SAC
+	"Gest_Verse_Sac"(Fg_Base := "fgbase",
+	                 RAZ_Pt_Zs:=#RAZ_Pt_Zs,
+	                 Verse_Sac := "DB_Dosage".VS[0]);
+	// "Gest_Verse_Sac"(Fg_Base := "fgbase",
+	//                  RAZ_Pt_Zs:=#RAZ_Pt_Zs,
+	//                  Verse_Sac := "DB_Dosage".VS[1]);
+	//////////////////////////////////////////////////////////////
+	
+	
+END_FUNCTION_BLOCK
+

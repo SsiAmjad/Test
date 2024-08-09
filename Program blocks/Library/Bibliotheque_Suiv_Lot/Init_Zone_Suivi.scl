@@ -1,0 +1,43 @@
+﻿FUNCTION "Init_Zone_Suivi" : Void
+TITLE = Initialisation d'une zone de suivi
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : 'I.Daoudi'
+FAMILY : Suiv_Lot
+VERSION : 1.0
+//Cette fonction sert à réinitiliser les valeurs pour une zone de suivi de lot en valeurs par défaut
+// - Paramètres d'entrés: + Numéro de la zone 
+// - Valeurs de retour : + 1 si la zone est réinitialisée avec succés
+//                                      + -1 si le numéro de la zone n' existe pas
+   VAR_INPUT 
+      Num_Zone : SInt;   // Num de lot de la zone a initialiser
+   END_VAR
+
+   VAR_TEMP 
+      j : SInt;
+   END_VAR
+
+
+BEGIN
+	(* 
+	=======================================   Documentation  =======================================
+	Cette fonction sert à réinitiliser les valeurs pour une zone de suivi de lot en valeurs par défaut
+	 - Paramètres d'entrés: + Numéro de la zone 
+	 - Valeurs de retour : + 1 si la zone est réinitialisée avec succés
+	                       + -1 si le numéro de la zone n' existe pas
+	=======================================   Documentation  =======================================                       
+	*)
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | Version | Date       | Autheur     | Ajouts/Modifications                                                   |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | V_1     | 12.10.2023 | I.DAOUDI    | Creation du block                                                      |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	
+	// Reinitialiser la zone de suivi
+	"DB_BIBLIOTHEQUE".Zones_Suivi[#Num_Zone].Occupee := FALSE;
+	FOR #j := 0 TO "Nbr_Max_Tache" DO
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#Num_Zone].Taches[#j].Activ := FALSE;
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#Num_Zone].Taches[#j].Niveau := "Niv_Tache_Max";
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#Num_Zone].Taches[#j].Qte := 0;
+	END_FOR;
+END_FUNCTION
+

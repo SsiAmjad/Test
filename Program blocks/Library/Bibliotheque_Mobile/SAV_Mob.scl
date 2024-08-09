@@ -1,0 +1,22 @@
+﻿FUNCTION "SAV_Mob" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Index_Mobile : Int;
+      Vitesse : USInt;
+   END_VAR
+
+   VAR_TEMP 
+      Ret_Dem_Mobile : SInt;
+   END_VAR
+
+
+BEGIN
+	IF NOT "Valid_Index"(#Index_Mobile) THEN
+	    RETURN;
+	END_IF;
+	"DB_BIBLIOTHEQUE".Mobile[#Index_Mobile].SA_Vitesse := #Vitesse;
+	#Ret_Dem_Mobile := "Dem_Mobile"(#Index_Mobile);
+	RETURN;
+END_FUNCTION
+

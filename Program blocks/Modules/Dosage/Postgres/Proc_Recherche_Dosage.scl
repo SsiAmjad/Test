@@ -1,0 +1,190 @@
+﻿FUNCTION "Proc_Recherche_Dosage" : String[254]
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_OUTPUT 
+      Err_Sql : String;
+      Msg_Def : String;
+   END_VAR
+
+   VAR_IN_OUT 
+      Resultat_Decode : WString;
+      Data_Dosage : "S_Suivi_Dosage";
+   END_VAR
+
+   VAR_TEMP 
+      parameters_value : Array[0..20] of String;
+      status : Int;
+      Rep_temp : String;
+      i : SInt;
+      POSITION_CLE : Int;
+   END_VAR
+
+
+BEGIN
+	//Insertion des parametres 
+	#parameters_value[0] := UINT_TO_STRING("Num_Poste");
+	#parameters_value[1] := 'DOSAGE';
+	// #parameters_value[2] := ;
+	
+	
+	
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	
+	#Resultat_Decode := "COMBASE"(procedure_name := 'sp_dos_rechdos',
+	                                 values_of_record := #parameters_value,
+	                                 parameters_number := 2,
+	                                 ERROR_MESSAGE => #Err_Sql);
+	
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := 'REPONSE:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Proc_Recherche_Dosage);
+	
+	IF #Proc_Recherche_Dosage = 'NOK' THEN
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := 'MESS:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Msg_Def);
+	    RETURN;
+	ELSIF #Proc_Recherche_Dosage = 'OK' THEN
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := 'MESS:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Msg_Def);
+	    IF #Msg_Def = 'VIDE' THEN
+	        RETURN;
+	    END_IF;
+	ELSE
+	    RETURN;
+	END_IF;
+	
+	//================ Decode des informations generales ================//
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|SLOT:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Data_Dosage._SuiviCommun._NoLot);
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|SPF:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Data_Dosage._SuiviCommun._CdMat );
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|LBPF:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Data_Dosage._SuiviCommun._LibFor);
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|CODFOR:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Data_Dosage._SuiviCommun._CdForm);
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|VERS:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Data_Dosage._SuiviCommun._Version );
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|REP:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Data_Dosage._SuiviCommun._Repart);
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|CDPROC:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Data_Dosage._SuiviCommun._CdProc);
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|DEST1:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Data_Dosage._Cel_Dest );
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|PDSLOT:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	#Data_Dosage._SuiviCommun._QteLot := STRING_TO_REAL(#Rep_temp);
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|DENS:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	#Data_Dosage._SuiviCommun._nb_dens := STRING_TO_REAL(#Rep_temp);
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|IDHDOS:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	#Data_Dosage._IdHDos := STRING_TO_ULINT(#Rep_temp);
+	//================ Decode des informations generales ================//
+	#POSITION_CLE := FIND(IN1 := #Resultat_Decode, IN2 := STRING_TO_WSTRING('\n'));
+	IF #POSITION_CLE > 0 THEN
+	    #Resultat_Decode := DELETE(IN := #Resultat_Decode, L := LEN('\n') + #POSITION_CLE - 1, P := 1);
+	END_IF;
+	//================ Decode des compos ================//
+	WHILE LEN(#Resultat_Decode) > 0 DO
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := '|COMP:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Data_Dosage._Lst_Compos[#i].Code_MP);// ;
+	    
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := '|LCOMP:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Data_Dosage._Lst_Compos[#i].Libel_MP);
+	    
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := '|LDOS:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Data_Dosage._Lst_Compos[#i].Incorpo);
+	    
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := '|ZONE:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Data_Dosage._Lst_Compos[#i].Code_Cel);
+	    
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := '|NQTE:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Rep_temp);
+	    #Data_Dosage._Lst_Compos[#i].Poids := STRING_TO_REAL(#Rep_temp);
+	    
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := '|NPC:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Rep_temp);
+	    #Data_Dosage._Lst_Compos[#i].Pourcent := STRING_TO_REAL(#Rep_temp);
+	    
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := '|TOLP:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Rep_temp);
+	    #Data_Dosage._Lst_Compos[#i].Tol_Sup := STRING_TO_REAL(#Rep_temp);
+	    
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := '|TOLM:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Rep_temp);
+	    #Data_Dosage._Lst_Compos[#i].Tol_Inf := STRING_TO_REAL(#Rep_temp);
+	    
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := '|DENS:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Rep_temp);
+	    #Data_Dosage._Lst_Compos[#i].Densite := STRING_TO_REAL(#Rep_temp);
+	    
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := '|PV:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Rep_temp);
+	    #Data_Dosage._Lst_Compos[#i].Vit_PV := STRING_TO_USINT(#Rep_temp);
+	    
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := '|GV:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Rep_temp);
+	    #Data_Dosage._Lst_Compos[#i].Vit_GV := STRING_TO_USINT(#Rep_temp);
+	    
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := '|PGP:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Rep_temp);
+	    #Data_Dosage._Lst_Compos[#i].Seuil_PV := STRING_TO_REAL(#Rep_temp);
+	    
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := '|CHUTE:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Rep_temp);
+	    #Data_Dosage._Lst_Compos[#i].Col_Chute := STRING_TO_REAL(#Rep_temp);
+	    
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := '|IHDOSLIG:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Rep_temp);
+	    #Data_Dosage._Lst_Compos[#i].IHDOSLIG := STRING_TO_ULINT(#Rep_temp);
+	    
+	    #POSITION_CLE := FIND(IN1 := #Resultat_Decode, IN2 := STRING_TO_WSTRING('\n'));
+	    IF #POSITION_CLE > 0 THEN
+	        #Resultat_Decode := DELETE(IN := #Resultat_Decode, L := LEN('\n') + #POSITION_CLE - 1, P := 1);
+	        #i := #i + 1;
+	    ELSE
+	        EXIT;
+	    END_IF;
+	END_WHILE;
+	//================ Decode des compos ================//
+END_FUNCTION
+

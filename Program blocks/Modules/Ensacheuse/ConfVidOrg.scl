@@ -1,0 +1,176 @@
+﻿FUNCTION "ConfVidOrg" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      FgBase : Bool;
+   END_VAR
+
+   VAR_IN_OUT 
+      Ensachage : Struct
+         _Ptzs : Struct
+            _ParEns : "S_PAR_ENS";
+            _PtcelOrig : "S_Cellule";
+            _TpEnsachage : Time;
+            _TpsMarche : Time;
+            _NoLot : String["T_Num_Lot"];
+            _CdMatEmb : String["T_CD_MAT"];
+            _Orig : String["T_CD_CEL"];
+            _DestAp : String["T_CD_CEL"];
+            _CelRep : String["T_CD_CEL"];
+            _Densite : Real;
+            _TolVide : Real;
+            _QteArret : Real;
+            _QtePrev : Real;
+            _ColChute : Real;
+            _Debit : Real;
+            _PoidsSacsControle : Real;
+            _QteDesaf : Real;
+            _Brut : Real;
+            _Tare : Real;
+            _ChutePartielle : Real;
+            _Vibreur : Int;
+            _IndexDest : Int;
+            _DsdSacsControle : Int;
+            _SacsPerces : Int;
+            _SacsChgtCellule : Int;
+            _SacsPrev : USInt;
+            _Conditionnement : USInt;
+            _FgModArret : Char;
+            _TypeArret : Char;
+            _FgEnsach : Char;
+            _FgTam : Char;
+            _Abandon : Bool;
+            _FgLancCir : Bool;
+         END_STRUCT;
+         _EnsaCommun : Struct
+            CommunGeneral : "S_COMMUN";
+            _PtTabDest : "S_Cellule";
+            _PtTabOrg : "S_Cellule";
+            _NomEnsach : String[20];
+            _TpEvol : Time;
+            _VNbTpsEns : Time;
+            _Destination : Int;
+            _FgConfVide : SInt;
+            _CelOrgVide : SInt;
+            _DefEvol : SInt;
+            _NoCircuit : USInt;
+            _TypeCelOrig : USInt;
+            _TypeCelDest : USInt;
+            _ChoixRechEns : USInt;
+            _NbTremie : Bool;
+            _NhTremie : Bool;
+            _NiTremie : Bool;
+            _BpVide : Bool;
+            _BpFinEns : Bool;
+            _TestMob : Bool;
+            _DemVibrCel : Bool;
+            _FgCgtOrg : Bool;
+            _VfgAttVidange : Bool;
+            _ForceIncomp : Bool;
+            _IntercepDef : Bool;
+            _FgLanc : Bool;
+            _Vfgarret : Bool;
+            _Vfgsusp : Bool;
+            _Vfgrel : Bool;
+            _VfgNhEns : Bool;
+            _VfgNbEns : Bool;
+            _VfgTpsEns : Bool;
+            _FgEnsEnCours : Bool;
+            _Vfgconfvide : Bool;
+            _VidCirChgCell : Bool;
+         END_STRUCT;
+         _PtCir : "S_Circuit";
+         _TabMobIncomp : Array[0.."MAX_MOB_INCOMP"] of "S_MobIncomp";
+         _ListeTaAttAutDemarrage : Array[0.."T_MAX_AMONTAVAL"] of "S_TacheNiv";   // Liste des tache a tester pour autoriser le demarrage du circuit
+         _ListeTaAttFinTremEns : Array[0.."T_MAX_AMONTAVAL"] of "S_TacheNiv";   // Liste des tache a tester pour autoriser le demarrage du circuit
+         Dial_Def : "S_DIALOG_DEF";
+         _TpsPicke : Date_And_Time;   // Liste des tachesa tester pour declarer la fin tremie ensachage
+         _debutEns : Date_And_Time;
+         _debutMarche : Date_And_Time;
+         _MbTamis : Int;
+         _MbInc : Int;
+         _CelOrgVide : SInt;
+         _NbRelDefArrProd : USInt;
+         _MemoVit : USInt;
+         _BtDepCycle : USInt;
+         _BtAdandonLigne : USInt;
+         _BtSusp : USInt;
+         _BpDepCycle : USInt;
+         _BpSusp : USInt;
+         _MemoEtapeBt : USInt;
+         _BtFin : USInt;
+         _MemoAppuiBP : USInt;
+         _Bouton : USInt;
+         _FgVid : Char;
+         _ValidPasArriveeProduit : Bool;   // Validation controle arrivee produit
+         _FgsuspCircuit : Bool;
+         _ChgtCelAuto : Bool;
+         _FgCgtOrg : Bool;
+         _FgEnsEnCours : Bool;
+         _FgRecupNivDest : Bool;
+         _FgConfirmDebEns : Bool;
+         _FgValidVidNh : Bool;   // Validation vidange lors de niveau haut
+         _ValidSurvOrigVide : Bool;   // Validation controle arrivee produit
+         _DemVib : Bool;
+         _FgInitSynchroSuspGest : Bool;
+      END_STRUCT;
+   END_VAR
+
+   VAR_TEMP 
+      Text_Def : String;
+   END_VAR
+
+
+BEGIN
+	(* IF NOT #Ensachage._Ptzs._PtcelOrig._NivBas THEN
+	    IF #Ensachage._EnsaCommun._FgConfVide <> 0 THEN
+	        IF NOT #Ensachage._EnsaCommun._BpVide THEN
+	            #Ensachage.Dial_Def.Num_Def_Etape := 1;
+	            #Text_Def := CONCAT(IN1 := 'Confirmez-vous acquit vide de la cellule ', IN2 := #Ensachage._Ptzs._PtcelOrig._Cel);
+	            #Ensachage.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #FgBase,
+	                                                                Msg_Defaut := #Text_Def,
+	                                                                Type_Defaut := 3,
+	                                                                Automatisme := #Ensachage._EnsaCommun.CommunGeneral._Autom,
+	                                                                Num_Lot := #Ensachage._Ptzs._NoLot,
+	                                                                Origine_Defaut := 'Acquit Vide',
+	                                                                Libelle_Origine := 'Acquit Vide',
+	                                                                Acq1 := 'Oui',
+	                                                                Acq2 := 'Non',
+	                                                                Acq3 := '',
+	                                                                Acq4 := '',
+	                                                                Acq5 := '',
+	                                                                Acq6 := '',
+	                                                                Acq7 := '',
+	                                                                Acq8 := '',
+	                                                                Acq_Choisi := -1,
+	                                                                Date_Arrivee := #Ensachage._TpsPicke);
+	            #Ensachage._EnsaCommun.CommunGeneral._Etp := Etape_Attente_RepDial;
+	            RETURN;
+	        END_IF;
+	    ELSIF #Ensachage._Ptzs._TypeArret = "ARRET_NB" OR #Ensachage._Ptzs._TypeArret = "ARRET_EVOL" THEN
+	        #Ensachage._FgVid := 'O';
+	    ELSE
+	        #Ensachage._FgVid := 'N';
+	    END_IF;
+	ELSE
+	    #Ensachage._FgVid := 'N';
+	    
+	    
+	    
+	    
+	END_IF;
+	
+	
+	
+	AcquitVide_DEF1:
+	//============ Traitement des reponses pour le defaut1 EtapeDefnbProd ===========================================================//
+	IF #Ensachage.Dial_Def.Reponse_Def = 'Oui' THEN    //abandon
+	    #Ensachage._FgVid := 'O';
+	END_IF;
+	IF #Ensachage.Dial_Def.Reponse_Def = 'Non' THEN //relance
+	    #Ensachage._FgVid := 'N';
+	END_IF;
+	//============================================  Fin traitement  ====================================================================//
+	*)
+END_FUNCTION
+

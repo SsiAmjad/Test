@@ -1,0 +1,126 @@
+﻿FUNCTION "Calcul_Temps" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      PARCAL : "S_CAL_FAR";
+   END_VAR
+
+   VAR_TEMP 
+      Ret_RD_Sys_T : Int;
+      TpsPassé : Time;
+   END_VAR
+
+   VAR CONSTANT 
+      REPOS_Q : SInt := 0;
+      Att_Marche_Trans : SInt := 1;
+      Test_Tempo : SInt := 2;
+   END_VAR
+
+
+BEGIN
+	CASE #PARCAL._EtpT OF
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║            Etape "Repos"           ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	    #REPOS_Q:
+	        REGION traitement preliminaire
+	            IF (#PARCAL._EtpT <> #PARCAL._EtpMemoT) THEN
+	                //Memorisation de l'etape encours
+	                #PARCAL._EtpMemoT := #PARCAL._EtpT;
+	                (*att
+	                ParCal._FgCalTps
+	                ParCal._MbTrans *)
+	            END_IF;
+	        END_REGION
+	        REGION TRAITEMENT CYCLIQUE
+	            //Attente Lancement
+	            IF #PARCAL._FgCalTps THEN
+	                #PARCAL._EtpT := #Att_Marche_Trans; //att_marche_transporteur
+	                RETURN;
+	            END_IF;
+	        END_REGION
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║Etape "Attente Marche Transporteur" ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	    #Att_Marche_Trans:
+	        REGION traitement preliminaire
+	            IF (#PARCAL._EtpT <> #PARCAL._EtpMemoT) THEN
+	                //Memorisation de l'etape encours
+	                #PARCAL._EtpMemoT := #PARCAL._EtpT;
+	            END_IF;
+	        END_REGION
+	        REGION TRAITEMENT CYCLIQUE
+	            //Test Arret calcul
+	            IF #PARCAL._FgCalTps = FALSE THEN
+	                #PARCAL._EtpT := #REPOS_Q;
+	                RETURN;
+	            END_IF;
+	            //test marche transporteur
+	            IF NOT "Test_Etat_Mobile"(Index_Mobile:=#PARCAL._MbTrans, Etat:="Pret") AND NOT "Test_Etat_Mobile"(Index_Mobile:=#PARCAL._MbTrans, Etat:="Vid") THEN
+	                RETURN;
+	            END_IF;
+	            #PARCAL._EtpT := #Test_Tempo;
+	            RETURN;
+	        END_REGION
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║          Etape "Test Tempo"        ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	    #Test_Tempo:
+	        REGION traitement preliminaire
+	            IF (#PARCAL._EtpT <> #PARCAL._EtpMemoT) THEN
+	                //Memorisation de l'etape encours
+	                #PARCAL._EtpMemoT := #PARCAL._EtpT;
+	                #Ret_RD_Sys_T := RD_SYS_T(#PARCAL._TpPicke);
+	                #PARCAL._Debut := #PARCAL._TpPicke;
+	                #PARCAL.PreFois := TRUE;
+	                // Initialisation du temps suivi
+	                #PARCAL._TpsSuivi := t#0s;
+	            END_IF;
+	        END_REGION
+	        REGION traitement cyclique
+	            #Ret_RD_Sys_T := RD_SYS_T(#PARCAL._TpPicke);
+	            #PARCAL._Temps := T_DIFF(IN1 := #PARCAL._TpPicke, IN2 := #PARCAL._Debut);
+	            //test arrect calcul
+	            IF #PARCAL._FgCalTps = FALSE THEN
+	                #PARCAL._EtpT := #REPOS_Q;
+	                RETURN;
+	            END_IF;
+	            //SORTIE Anticipee si arret transporteur
+	            IF  NOT "Test_Etat_Mobile"(Index_Mobile:=#PARCAL._MbTrans, Etat:="Pret") AND NOT "Test_Etat_Mobile"(Index_Mobile:=#PARCAL._MbTrans, Etat:="Vid")  THEN
+	                #PARCAL._EtpT := #REPOS_Q;
+	                RETURN;
+	            END_IF;
+	            //SORTIE Anticipee si pas de pm en calcul activité
+	            IF #PARCAL._PM = FALSE AND
+	                #PARCAL._PM2 = FALSE THEN
+	                #PARCAL._EtpT := #REPOS_Q;
+	                RETURN;
+	            END_IF;
+	            /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	            IF #PARCAL.PreFois THEN
+	                // Si changement
+	                //Memo du temps de transfert
+	                #PARCAL._TpsSuivi := #PARCAL._TpsTran;
+	                // RAZ temps de transfert
+	                #PARCAL._TpsTran := t#0s;
+	                // Si changement
+	                #PARCAL.PreFois := FALSE;
+	            END_IF;
+	            #PARCAL._TpsTran := #PARCAL._TpsSuivi + #PARCAL._Temps;
+	            RETURN;
+	        END_REGION
+	END_CASE;
+END_FUNCTION
+

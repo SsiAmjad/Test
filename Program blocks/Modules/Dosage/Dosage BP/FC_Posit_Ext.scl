@@ -1,0 +1,34 @@
+﻿FUNCTION "FC_Posit_Ext" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Position : Char;
+      CirExt : Array[0.."NB_MOB_EXT"] of "S_CirExt";
+   END_VAR
+
+   VAR_TEMP 
+      i : USInt;
+      RET : SInt;
+   END_VAR
+
+
+BEGIN
+	FOR #i := 0 TO "NB_MOB_EXT" DO
+	    IF #CirExt[#i]._IndexMob < 0 THEN
+	        RETURN;
+	    END_IF;
+	    IF #Position = 'G' THEN
+	        "FC_Posit_Mob"(Index_Mob := #CirExt[#i]._IndexMob,
+	                       Position := #CirExt[#i]._PosGv);
+	    ELSIF #Position = 'P' THEN
+	        "FC_Posit_Mob"(Index_Mob := #CirExt[#i]._IndexMob,
+	                       Position := #CirExt[#i]._PosPv);
+	    ELSIF #Position = 'A' THEN
+	        // "FC_Posit_Mob"(Index_Mob := #CirExt[#i]._IndexMob,
+	        //                Position := #CirExt[#i]._PosArret);
+	        // A tester
+	        #RET := "Arr_Imm_Mobile"(#CirExt[#i]._IndexMob);
+	    END_IF;
+	END_FOR;
+END_FUNCTION
+

@@ -1,0 +1,471 @@
+﻿FUNCTION "Rens_Cellules" : Void
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : SAS
+VERSION : 0.1
+   VAR_TEMP 
+      index : Int;
+   END_VAR
+
+
+BEGIN
+	// Iitialisation table cellules
+	#index := 0;
+	// declation cellule S1
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'S01';
+	//"DB_Mod_Cellule"._TabCel[#index]._Type := 16#3;
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "RECF1" OR "RECF2" OR "TRANSF1" ;//;
+	"DB_Mod_Cellule"._TabCel[#index]._NivHaut := "RNH_S1";
+	
+	
+	#index := #index + 1;
+	// declation cellule S2
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'S02';
+	//"DB_Mod_Cellule"._TabCel[#index]._Type := 16#3;
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "RECF1" OR "RECF2" OR "TRANSF1" ;
+	"DB_Mod_Cellule"._TabCel[#index]._NivHaut := "RNH_S2";
+	
+	#index := #index + 1;
+	// declation cellule S3
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'S03';
+	//"DB_Mod_Cellule"._TabCel[#index]._Type := 16#3;
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "RECF1" OR "RECF2" OR "TRANSF1";
+	"DB_Mod_Cellule"._TabCel[#index]._NivHaut := "RNH_S3";
+	
+	#index := #index + 1;
+	// declation cellule S4
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'S04';
+	//"DB_Mod_Cellule"._TabCel[#index]._Type := 16#3;
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "RECF1" OR "RECF2" OR "TRANSF1" ;
+	"DB_Mod_Cellule"._TabCel[#index]._NivHaut := "RNH_S4";
+	
+	#index := #index + 1;
+	// declation cellule S5
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'S05';
+	//"DB_Mod_Cellule"._TabCel[#index]._Type := 16#3;
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "RECF1" OR "RECF2" OR "TRANSF1" ;
+	"DB_Mod_Cellule"._TabCel[#index]._NivHaut := "RNH_S5";
+	
+	#index := #index + 1;
+	// declation cellule S6
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'S06';
+	//"DB_Mod_Cellule"._TabCel[#index]._Type := 16#3;
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "RECF1" OR "RECF2" OR "TRANSF1" ;
+	"DB_Mod_Cellule"._TabCel[#index]._NivHaut := "RNH_S6";
+	
+	#index := #index + 1;
+	// declation cellule S11
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'S11';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "RECF3";
+	"DB_Mod_Cellule"._TabCel[#index]._NivHaut := "RNH_S11";
+	
+	#index := #index + 1;
+	// declation cellule S12
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'S12';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "RECF1" OR "RECF2"  OR "RECF3" OR "TRANSF1";
+	"DB_Mod_Cellule"._TabCel[#index]._NivHaut := "RNH_S12";
+	#index := #index + 1;
+	// declation cellule S13
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'S13';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "RECF3";
+	"DB_Mod_Cellule"._TabCel[#index]._NivHaut := "RNH_S13";
+	
+	#index := #index + 1;
+	// declation cellule S14
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'S14';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "RECF1" OR "RECF2" OR "RECF3" OR "TRANSF1" ;
+	"DB_Mod_Cellule"._TabCel[#index]._NivHaut := "RNH_S14";
+	
+	#index := #index + 1;
+	// declation cellule S15
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'S15';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "RECF3";
+	"DB_Mod_Cellule"._TabCel[#index]._NivHaut := "RNH_S15";
+	
+	#index := #index + 1;
+	// declation cellule S16
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'S16';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "RECF1" OR "RECF2" OR "RECF3" OR "TRANSF1" ;
+	"DB_Mod_Cellule"._TabCel[#index]._NivHaut := "RNH_S16";
+	
+	#index := #index + 1;
+	// declation cellule S17
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'S17';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "RECF3";
+	"DB_Mod_Cellule"._TabCel[#index]._NivHaut := "RNH_S17";
+	
+	#index := #index + 1;
+	// declation cellule S18
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'S18';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "RECF1" OR "RECF2"  OR "RECF3"OR "TRANSF1";
+	"DB_Mod_Cellule"._TabCel[#index]._NivHaut := "RNH_S18";
+	
+	#index := #index + 1;
+	// declation cellule S19
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'S19';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "RECF1" OR "RECF2" OR "RECF3" OR "TRANSF1" ;
+	"DB_Mod_Cellule"._TabCel[#index]._NivHaut := "RNH_S19";
+	
+	#index := #index + 1;
+	// declation cellule S20
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'S20';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "RECF1" OR "RECF2" OR "TRANSF1" ;
+	"DB_Mod_Cellule"._TabCel[#index]._NivHaut := "RNH_S20";
+	
+	#index := #index + 1;
+	// declation cellule S30
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'S30';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "RECF4" OR "RECF3" ;
+	"DB_Mod_Cellule"._TabCel[#index]._NivHaut := "RNH_S30";
+	
+	#index := #index + 1;
+	// declation cellule S31
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'S31';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "RECF4" OR "RECF3";
+	"DB_Mod_Cellule"._TabCel[#index]._NivHaut := "RNH_S31";
+	
+	#index := #index + 1;
+	// declation cellule S32
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'S32';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "RECF4" OR "RECF3";
+	"DB_Mod_Cellule"._TabCel[#index]._NivHaut := "RNH_S32";
+	
+	#index := #index + 1;
+	// declation cellule S33
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'S33';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "RECF4" OR "RECF3";
+	"DB_Mod_Cellule"._TabCel[#index]._NivHaut := "RNH_S33";
+	
+	#index := #index + 1;
+	// declation cellule S34
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'S34';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "RECF4" OR "RECF3";
+	"DB_Mod_Cellule"._TabCel[#index]._NivHaut := "RNH_S34";
+	
+	#index := #index + 1;
+	// declation cellule S35
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'S35';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "RECF4" OR "RECF3";
+	"DB_Mod_Cellule"._TabCel[#index]._NivHaut := "RNH_S35";
+	
+	#index := #index + 1;
+	// declation cellule S36
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'S36';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "RECF4" OR "RECF3";
+	"DB_Mod_Cellule"._TabCel[#index]._NivHaut := "RNH_S36";
+	
+	#index := #index + 1;
+	// declation cellule S37
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'S37';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "RECF4" OR "RECF3";
+	"DB_Mod_Cellule"._TabCel[#index]._NivHaut := "RNH_S37";
+	
+	#index := #index + 1;
+	// declation cellule S38
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'S38';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "RECF4" OR "RECF3";
+	"DB_Mod_Cellule"._TabCel[#index]._NivHaut := "RNH_S38";
+	
+	#index := #index + 1;
+	// declation cellule S39
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'S39';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "RECF4" OR "RECF3";
+	"DB_Mod_Cellule"._TabCel[#index]._NivHaut := "RNH_S39";
+	
+	#index := #index + 1;
+	// declation cellule S40
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'S40';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "RECF4" OR "RECF3";
+	"DB_Mod_Cellule"._TabCel[#index]._NivHaut := "RNH_S40";
+	
+	
+	#index := #index + 1;
+	//declation cellule S41
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'S41';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "RECF4" OR "RECF3";
+	"DB_Mod_Cellule"._TabCel[#index]._NivHaut := "RNH_S41";
+	#index := #index + 1;
+	//declation cellule B1
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'B01';
+	"DB_Mod_Cellule"._TabCel[#index]._Type :=  "RECF2" OR "TRANSF1";
+	//"DB_Mod_Cellule"._TabCel[#index]._NivHaut := "RNH_B01";
+	#index := #index + 1;
+	//declation cellule B2
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'B02';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "RECF2" OR "TRANSF1" ;
+	//"DB_Mod_Cellule"._TabCel[#index]._NivHaut := "RNH_B02";
+	#index := #index + 1;
+	//declation cellule S21
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'S21';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "RECF2" OR "TRANSF1" ;
+	"DB_Mod_Cellule"._TabCel[#index]._NivHaut := "RNH_S21";
+	//"DB_Mod_Cellule"._TabCel[#index]._NivBas := "RNB_S21";
+	"DB_Mod_Cellule"._TabCel[#index]._Extrac[0]._IndexMob:= "Index_Mobile"('VAS21');
+	"DB_Mod_Cellule"._TabCel[#index]._Moborg := "Index_Mobile"('TVS212');
+	
+	#index := #index + 1;
+	//declation cellule S22
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'S22';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "RECF2" OR "TRANSF1";
+	"DB_Mod_Cellule"._TabCel[#index]._NivHaut := "RNH_S22";
+	//"DB_Mod_Cellule"._TabCel[#index]._NivBas := "RNB_S22";
+	"DB_Mod_Cellule"._TabCel[#index]._Extrac[0]._IndexMob := "Index_Mobile"('VAS22');
+	"DB_Mod_Cellule"._TabCel[#index]._Moborg := "Index_Mobile"('TVS22');
+	
+	#index := #index + 1;
+	//declation cellule S23
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'S23';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "RECF2" OR "TRANSF1" ;
+	"DB_Mod_Cellule"._TabCel[#index]._NivHaut := "RNH_S23";
+	//"DB_Mod_Cellule"._TabCel[#index]._NivHaut := "RNB_S23";
+	"DB_Mod_Cellule"._TabCel[#index]._Moborg := "Index_Mobile"('TVS212');
+	"DB_Mod_Cellule"._TabCel[#index]._Extrac[0]._IndexMob := "Index_Mobile"('VAS23');
+	
+	#index := #index + 1;
+	//declation cellule S24
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'S24';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "RECF2" OR "TRANSF1" ;
+	"DB_Mod_Cellule"._TabCel[#index]._Extrac[0]._IndexMob := "Index_Mobile"('VAS24');
+	"DB_Mod_Cellule"._TabCel[#index]._NivHaut := "RNH_S24";
+	//"DB_Mod_Cellule"._TabCel[#index]._NivBas := "RNB_S24";
+	"DB_Mod_Cellule"._TabCel[#index]._Moborg := "Index_Mobile"('TVS24');
+	#index := #index + 1;
+	//declation cellule BV01
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'BV01';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "VRAC";
+	"DB_Mod_Cellule"._TabCel[#index]._Extrac[0]._IndexMob := "Index_Mobile"('TRBV01');
+	"DB_Mod_Cellule"._TabCel[#index]._NumPont := "Pont1";
+	#index := #index + 1;
+	//declation cellule BV02
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'BV02';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "VRAC";
+	"DB_Mod_Cellule"._TabCel[#index]._Extrac[0]._IndexMob := "Index_Mobile"('TRBV02');
+	"DB_Mod_Cellule"._TabCel[#index]._NumPont := "Pont1";
+	#index := #index + 1;
+	//declation cellule BV03
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'BV03';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "VRAC";
+	"DB_Mod_Cellule"._TabCel[#index]._Extrac[0]._IndexMob := "Index_Mobile"('TRBV03');
+	"DB_Mod_Cellule"._TabCel[#index]._NumPont := "Pont1";
+	#index := #index + 1;
+	//declation cellule BV04
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'BV04';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "VRAC";
+	"DB_Mod_Cellule"._TabCel[#index]._Extrac[0]._IndexMob := "Index_Mobile"('TRBV04');
+	"DB_Mod_Cellule"._TabCel[#index]._NumPont := "Pont1";
+	#index := #index + 1;
+	//declation cellule BV05
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'BV05';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "VRAC";
+	"DB_Mod_Cellule"._TabCel[#index]._Extrac[0]._IndexMob := "Index_Mobile"('TRBV05');
+	"DB_Mod_Cellule"._TabCel[#index]._NumPont := "Pont1";
+	#index := #index + 1;
+	//declation cellule BV06
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'BV06';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "VRAC";
+	"DB_Mod_Cellule"._TabCel[#index]._Extrac[0]._IndexMob := "Index_Mobile"('TRBV06');
+	"DB_Mod_Cellule"._TabCel[#index]._NumPont := "Pont1";
+	#index := #index + 1;
+	//declation cellule BV07
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'BV07';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "VRAC";
+	"DB_Mod_Cellule"._TabCel[#index]._Extrac[0]._IndexMob := "Index_Mobile"('TRBV07');
+	"DB_Mod_Cellule"._TabCel[#index]._NumPont := "Pont1";
+	#index := #index + 1;
+	//declation cellule BV08
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'BV08';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "VRAC";
+	"DB_Mod_Cellule"._TabCel[#index]._Extrac[0]._IndexMob := "Index_Mobile"('TRBV08');
+	"DB_Mod_Cellule"._TabCel[#index]._NumPont := "Pont1";
+	#index := #index + 1;
+	//declation cellule BV09
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'BV09';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "VRAC";
+	"DB_Mod_Cellule"._TabCel[#index]._Extrac[0]._IndexMob := "Index_Mobile"('TRBV09');
+	"DB_Mod_Cellule"._TabCel[#index]._NumPont := "Pont1";
+	#index := #index + 1;
+	//declation cellule BV10
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'BV10';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "VRAC";
+	"DB_Mod_Cellule"._TabCel[#index]._Extrac[0]._IndexMob := "Index_Mobile"('TRBV10');
+	"DB_Mod_Cellule"._TabCel[#index]._NumPont := "Pont1";
+	#index := #index + 1;
+	//declation cellule BV11
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'BV11';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "VRAC";
+	"DB_Mod_Cellule"._TabCel[#index]._Extrac[0]._IndexMob := "Index_Mobile"('TRBV11');
+	"DB_Mod_Cellule"._TabCel[#index]._NumPont := "Pont1";
+	#index := #index + 1;
+	//declation cellule BV12
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'BV12';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "VRAC";
+	"DB_Mod_Cellule"._TabCel[#index]._Extrac[0]._IndexMob := "Index_Mobile"('TRBV12');
+	"DB_Mod_Cellule"._TabCel[#index]._NumPont := "Pont1";
+	#index := #index + 1;
+	//declation Fosse01
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'Fosse01';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "RECF3" OR  "TRANSF1";
+	#index := #index + 1;
+	
+	//declation cellule BT01
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'BT01';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "ORIG_ENS1";
+	"DB_Mod_Cellule"._TabCel[#index]._Extrac[0]._IndexMob := "Index_Mobile"('TRPBT01');
+	#index := #index + 1;
+	
+	//declation cellule BT02
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'BT02';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "ORIG_ENS1";
+	"DB_Mod_Cellule"._TabCel[#index]._Extrac[0]._IndexMob := "Index_Mobile"('TRPBT02');
+	#index := #index + 1;
+	
+	//declation cellule BT03
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'BT03';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "ORIG_ENS1";
+	"DB_Mod_Cellule"._TabCel[#index]._Extrac[0]._IndexMob := "Index_Mobile"('TRPBT03');
+	#index := #index + 1;
+	
+	//declation cellule BT04
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'BT04';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "ORIG_ENS1";
+	"DB_Mod_Cellule"._TabCel[#index]._Extrac[0]._IndexMob := "Index_Mobile"('TRPBT04');
+	#index := #index + 1;
+	
+	//declation cellule BT06
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'BT06';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "ORIG_ENS1";
+	"DB_Mod_Cellule"._TabCel[#index]._Extrac[0]._IndexMob := "Index_Mobile"('TRPBT06');
+	"DB_Mod_Cellule"._TabCel[#index]._Moborg := "Index_Mobile"('T45');
+	#index := #index + 1;
+	
+	//declation cellule BT07
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'BT07';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "ORIG_ENS1";
+	"DB_Mod_Cellule"._TabCel[#index]._Extrac[0]._IndexMob := "Index_Mobile"('TRPBT07');
+	"DB_Mod_Cellule"._TabCel[#index]._Moborg := "Index_Mobile"('T45');
+	#index := #index + 1;
+	
+	//declation cellule BT08
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'BT08';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "ORIG_ENS1";
+	"DB_Mod_Cellule"._TabCel[#index]._Extrac[0]._IndexMob := "Index_Mobile"('TRPBT08');
+	"DB_Mod_Cellule"._TabCel[#index]._Moborg := "Index_Mobile"('T45');
+	#index := #index + 1;
+	
+	//declation cellule BT09
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'BT09';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "ORIG_ENS1";
+	"DB_Mod_Cellule"._TabCel[#index]._Extrac[0]._IndexMob := "Index_Mobile"('TRPBT09');
+	"DB_Mod_Cellule"._TabCel[#index]._Moborg := "Index_Mobile"('T45');
+	#index := #index + 1;
+	
+	//declation cellule BT10
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'BT10';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "ORIG_ENS1" OR "ORIG_ENS2" OR "VRAC";
+	"DB_Mod_Cellule"._TabCel[#index]._NumPont := "Pont1";
+	"DB_Mod_Cellule"._TabCel[#index]._Extrac[0]._IndexMob := "Index_Mobile"('TRPBT10');
+	"DB_Mod_Cellule"._TabCel[#index]._Moborg := "Index_Mobile"('T51');
+	"DB_Mod_Cellule"._TabCel[#index]._Mobdest := "Index_Mobile"('T53');
+	
+	#index := #index + 1;
+	
+	//declation cellule BT11
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'BT11';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "ORIG_ENS1" OR "ORIG_ENS2" OR "VRAC";
+	"DB_Mod_Cellule"._TabCel[#index]._NumPont := "Pont1";
+	"DB_Mod_Cellule"._TabCel[#index]._Extrac[0]._IndexMob := "Index_Mobile"('TRPBT11');
+	"DB_Mod_Cellule"._TabCel[#index]._Moborg := "Index_Mobile"('T47');
+	"DB_Mod_Cellule"._TabCel[#index]._Mobdest := "Index_Mobile"('T53');
+	#index := #index + 1;
+	
+	//declation cellule BT12
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'BT12';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "ORIG_ENS1" OR "ORIG_ENS2" OR "VRAC";
+	"DB_Mod_Cellule"._TabCel[#index]._NumPont := "Pont1";
+	"DB_Mod_Cellule"._TabCel[#index]._Extrac[0]._IndexMob := "Index_Mobile"('TRPBT12');
+	"DB_Mod_Cellule"._TabCel[#index]._Moborg := "Index_Mobile"('T51');
+	"DB_Mod_Cellule"._TabCel[#index]._Mobdest := "Index_Mobile"('T53');
+	#index := #index + 1;
+	
+	//declation cellule BT13
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'BT13';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "ORIG_ENS1" OR "ORIG_ENS2" OR "VRAC";
+	"DB_Mod_Cellule"._TabCel[#index]._NumPont := "Pont1";
+	"DB_Mod_Cellule"._TabCel[#index]._Extrac[0]._IndexMob := "Index_Mobile"('TRPBT13');
+	"DB_Mod_Cellule"._TabCel[#index]._Moborg := "Index_Mobile"('T47');
+	"DB_Mod_Cellule"._TabCel[#index]._Mobdest:= "Index_Mobile"('T53');
+	#index := #index + 1;
+	
+	//declation cellule BT14
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'BT14';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "ORIG_ENS2";
+	"DB_Mod_Cellule"._TabCel[#index]._Extrac[0]._IndexMob := "Index_Mobile"('TRPBT14');
+	"DB_Mod_Cellule"._TabCel[#index]._Moborg := "Index_Mobile"('T50');
+	#index := #index + 1;
+	
+	//declation cellule BT15
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'BT15';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "ORIG_ENS2";
+	"DB_Mod_Cellule"._TabCel[#index]._Extrac[0]._IndexMob := "Index_Mobile"('TRPBT15');
+	"DB_Mod_Cellule"._TabCel[#index]._Moborg := "Index_Mobile"('T50');
+	#index := #index + 1;
+	
+	//declation cellule BT16
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'BT16';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "ORIG_ENS1" OR "ORIG_ENS2" OR "VRAC";
+	"DB_Mod_Cellule"._TabCel[#index]._NumPont := "Pont1";
+	"DB_Mod_Cellule"._TabCel[#index]._Extrac[0]._IndexMob := "Index_Mobile"('TRPBT16');
+	"DB_Mod_Cellule"._TabCel[#index]._Moborg := "Index_Mobile"('T51');
+	"DB_Mod_Cellule"._TabCel[#index]._Mobdest := "Index_Mobile"('T53');
+	#index := #index + 1;
+	
+	//declation cellule BT17
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'BT17';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "ORIG_ENS1" OR "ORIG_ENS2" OR "VRAC";
+	"DB_Mod_Cellule"._TabCel[#index]._NumPont := "Pont1";
+	"DB_Mod_Cellule"._TabCel[#index]._Extrac[0]._IndexMob := "Index_Mobile"('TRPBT17');
+	"DB_Mod_Cellule"._TabCel[#index]._Moborg := "Index_Mobile"('T51');
+	"DB_Mod_Cellule"._TabCel[#index]._Mobdest := "Index_Mobile"('T53');
+	#index := #index + 1;
+	
+	//declation cellule BT18
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'BT18';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "ORIG_ENS2" ;
+	"DB_Mod_Cellule"._TabCel[#index]._Extrac[0]._IndexMob := "Index_Mobile"('TRPBT18');
+	"DB_Mod_Cellule"._TabCel[#index]._Moborg := "Index_Mobile"('T50');
+	#index := #index + 1;
+	
+	//declation cellule BT19
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'BT19';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "ORIG_ENS2";
+	"DB_Mod_Cellule"._TabCel[#index]._Extrac[0]._IndexMob := "Index_Mobile"('TRPBT19');
+	"DB_Mod_Cellule"._TabCel[#index]._Moborg := "Index_Mobile"('T50');
+	#index := #index + 1;
+	
+	//declation cellule BT20
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'BT20';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "ORIG_ENS1" OR "ORIG_ENS2" OR "VRAC";
+	"DB_Mod_Cellule"._TabCel[#index]._NumPont := "Pont1";
+	"DB_Mod_Cellule"._TabCel[#index]._Extrac[0]._IndexMob := "Index_Mobile"('TRPBT20');
+	"DB_Mod_Cellule"._TabCel[#index]._Moborg := "Index_Mobile"('T47');
+	"DB_Mod_Cellule"._TabCel[#index]._Mobdest := "Index_Mobile"('T53');
+	#index := #index + 1;
+	
+	//declation cellule BT21
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'BT21';
+	"DB_Mod_Cellule"._TabCel[#index]._Type := "ORIG_ENS1" OR "ORIG_ENS2" OR "VRAC";
+	"DB_Mod_Cellule"._TabCel[#index]._NumPont := "Pont1";
+	"DB_Mod_Cellule"._TabCel[#index]._Extrac[0]._IndexMob := "Index_Mobile"('TRPBT21');
+	"DB_Mod_Cellule"._TabCel[#index]._Moborg := "Index_Mobile"('T47');
+	"DB_Mod_Cellule"._TabCel[#index]._Mobdest := "Index_Mobile"('T53');
+	#index := #index + 1;
+	//declation cellule BP01
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'BP01';
+	#index := #index + 1;
+	//declation cellule BP02
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'BP02';
+	#index := #index + 1;
+	//declation cellule BP03
+	"DB_Mod_Cellule"._TabCel[#index]._Cel := 'BP03';
+	
+END_FUNCTION
+

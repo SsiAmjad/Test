@@ -1,0 +1,21 @@
+﻿FUNCTION "LotSimulEnsa1" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      NumZone : SInt;
+   END_VAR
+
+
+BEGIN
+	// IF NOT "fgbase" THEN
+	"DB_PTSUIV_ENS".Tab_Lots[#NumZone]._NoLot := '11111';
+	"DB_PTSUIV_ENS".Tab_Lots[#NumZone]._CdMatOrg := '3RBLOV';
+	"DB_PTSUIV_ENS".Tab_Lots[#NumZone]._Densite := 0.6;
+	"DB_PTSUIV_ENS".Tab_Lots[#NumZone]._Conditionnement := 50;
+	"DB_PTSUIV_ENS".Tab_Lots[#NumZone]._SacsPrev := 40;
+	"DB_PTSUIV_ENS".Tab_Lots[#NumZone]._FgModArret := 'O';
+	"DB_PTSUIV_ENS".Tab_Lots[#NumZone]._QtePrev := 2000;
+	"DB_PTSUIV_ENS".Tab_Lots[#NumZone]._PtcelOrig := "DB_Mod_Cellule"._TabCel[51];
+	// END_IF;
+END_FUNCTION
+

@@ -1,0 +1,2267 @@
+﻿FUNCTION "Transfert" : Void
+TITLE = Fonction de la gestion module reception
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : SAS
+VERSION : 1.0
+   VAR_INPUT 
+      PtSuiv : "S_MODULE_SUIVI_COMMUNTRANS";
+      fgbase : Bool;
+   END_VAR
+
+   VAR_IN_OUT 
+      Transf : "S_Transfert";   // UDT Reception
+   END_VAR
+
+   VAR_TEMP 
+      NivActuel : USInt;   // Niveau Actuel
+      RetFct : String;
+      ResultProcDebuttransf : String[254];
+      ResultProcFintransf : String[254];
+      TestNumZone : SInt;
+      i : Int;
+      k : USInt;
+      Coef : Int;
+      Ret_Int : Int;
+      Ret_Bool : Bool;
+      MajNiv : SInt;
+      Ret_RD_Sys_T : Int;
+      Text_Def : String;
+      Tps_Passe : Time;
+      Return : Bool;
+      tpspasse : Time;
+      CdZoneDest : String;
+      Anc_Dest : String;
+      ReturnChngDest : SInt;
+      ResultProcChangmtdesttransf : String[254];
+      ResultProcCanceltrans : String;
+      ret_string : String;
+      Temp_Char : Char;
+      ret_sint : SInt;
+      x : USInt;
+   END_VAR
+
+   VAR CONSTANT 
+      Etape_Repos : SInt := 0;
+      Etape_Attente_Aval : SInt := 1;
+      Etape_Attente_Amont : SInt := 2;
+      Etape_Lancement : SInt := 3;
+      Etape_prepositionnement : SInt := 4;
+      Etape_attente_circuit_positionne : SInt := 5;
+      Etape_attente_produit : SInt := 6;
+      Etape_surveillance : SInt := 7;
+      Etape_defaut_origine : SInt := 20;
+      Etape_changement_destination : SInt := 9;
+      Etape_ChgmtDestNoeud : SInt := 10;
+      Etape_suspension : SInt := 11;
+      Etape_Arret_Source : SInt := 12;
+      Etape_vidange : SInt := 13;
+      Etape_MAJ_Base : SInt := 14;
+      Etape_Fin_Lot : SInt := 15;
+      Etape_testEnchOrig : SInt := 16;
+      Etape_changement_origine : SInt := 17;
+      Etape_Attente_RepDial : SInt := 18;
+      ListeDestParcourue : SInt := 30;   // Constante pour lire prochainement a partir de texte reponse
+      PosOuv : SInt := 1;
+      PosFerm : SInt := 0;
+   END_VAR
+
+
+BEGIN
+	IF #Transf._IndexDestEc > -1 THEN
+	    #Transf._ptDestEc := "DB_Mod_Cellule"._TabCel[#Transf._IndexDestEc];
+	END_IF;
+	IF #Transf._IndexOrigEc > -1 THEN
+	    #Transf._ptOrig := "DB_Mod_Cellule"._TabCel[#Transf._IndexOrigEc];
+	END_IF;
+	#Transf._FgChangDest := #Transf._TransfCommun.SUPTRANS.Commande._FgChangDest;
+	#Transf._FgSusp := #Transf._TransfCommun.SUPTRANS.Commande._Suspension;
+	#Transf._FgDemVid := #Transf._TransfCommun.SUPTRANS.Commande._Vidange;
+	#Transf._FgArretImm := #Transf._TransfCommun.SUPTRANS.Commande._ArretImmediat;
+	#Transf._IndexOrigEc := "RechIndexCel"("Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._PtOrig));
+	//#Transf._pm := #PM;
+	//#Transf.TransfCommun.CommunGeneral._ParCal._PM := #Transf._pm;
+	//#Transf.TransfCommun.CommunGeneral._ParCal._PM2 := #Transf._pm2;
+	
+	IF #Transf._Origine > -1 THEN
+	    #Transf._pm := #Transf._TransfCommun.CommunGeneral._ParCal._PM := "DB_BIBLIOTHEQUE".Mobile[#Transf._Origine].Pass_Mat;
+	END_IF;
+	
+	CASE #Transf._TransfCommun.CommunGeneral._Etp OF
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                        ╔════════════════════════════════════╗
+	                                                                        ║          Etape "repos"             ║
+	                                                                        ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	    #Etape_Repos:
+	        REGION Traitement preliminaire 
+	            IF (#Transf._TransfCommun.CommunGeneral._Etp <> #Transf._TransfCommun.CommunGeneral._EtpPrec) THEN
+	                #Transf._TransfCommun.CommunGeneral._EtpPrec := #Transf._TransfCommun.CommunGeneral._Etp;
+	                #Transf._TransfCommun.CommunGeneral._DescEtp := 'Etape repos';
+	                
+	                #Transf._FgArret := FALSE;
+	                #Transf._FgSusp := FALSE;
+	                #Transf._FgChangDest := FALSE;
+	                #Transf._FgDemVid := FALSE;
+	                #Transf._vitesseFosse := 0;
+	                #Transf._FgDemCtrlExam := 0;
+	                #Transf._fgDemQte := 0;
+	                #Transf._TransfCommun.SUPTRANS.Commande._FgChangDest := FALSE;
+	                
+	                
+	                #Transf._TransfCommun.CommunGeneral._ParCal._QteTrans := 0; // qte passée sur le transporteur
+	                #Transf._TransfCommun.CommunGeneral._ParCal._TpsTran := T#0S;//temps de transfer sur le transporteur
+	                #Transf._TransfCommun.CommunGeneral._ParCal._QteSuivi := 0; //qte memorisé en zone de suivi pour reprise
+	                #Transf._TransfCommun.CommunGeneral._ParCal._TpsSuivi := T#0S;//temps memorise en ZS
+	                #Ret_RD_Sys_T := RD_SYS_T(#Transf._TpsPicke);
+	                // Appel fct affichage
+	                "Supervision_Transf"(RAZ := TRUE,
+	                                     Transf := #Transf);
+	                IF #Transf.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #Transf.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO Repos_DEF1;
+	                    END_CASE;
+	                END_IF;
+	                
+	                
+	            END_IF;
+	        END_REGION Traitement preliminaire
+	        REGION Traitement cyclique "repos" 
+	            //Attente de l'activation de la tâche en utilisant la fonction "Lecni".
+	            #TestNumZone := "Test_Lot_Att_Tache"(Num_Tache := #Transf._TransfCommun.CommunGeneral._Tache, Num_Zone => #Transf._TransfCommun.CommunGeneral._NumZone);
+	            // Récupération de l'adresse de la zone de suivi de lot 
+	            IF (#TestNumZone = 1) THEN
+	                #Transf._Ptzs := #PtSuiv.Tab_Lots[#Transf._TransfCommun.CommunGeneral._NumZone];
+	                FOR #i := 0 TO "NB_MAX_DEST" DO
+	                    #Transf._TransfCommun.CommunGeneral._Dest[#i] := "Index_Mobile"(#Transf._Ptzs._Dest[#i]);
+	                    #Transf._TransfCommun.CommunGeneral._Orig[#i] := "Index_Mobile"(#Transf._Ptzs._Orig[#i]);
+	                END_FOR;
+	                
+	                IF ((#Transf._TransfCommun.CommunGeneral._Dest[0] = -1) OR (#Transf._TransfCommun.CommunGeneral._Orig[0] = -1)) THEN
+	                    //appel dialogue defaut
+	                    ;
+	                ELSE
+	                    #Transf._TransfCommun.CommunGeneral._Ptdest := #Transf._TransfCommun.CommunGeneral._Dest[0];
+	                    #Transf._TransfCommun.CommunGeneral._PtOrig := #Transf._TransfCommun.CommunGeneral._Orig[0];
+	                END_IF;
+	                // Init flag modif qte en fin de transfert
+	                #Transf._Ptzs._FgQteAjustee := FALSE;
+	                // Memorisation consigne quantite initiale (si arret sur quantite)
+	                #Transf._Ptzs._QteArretDemInit := #Transf._Ptzs._QteArretDem;
+	                // Init flag chgt de consigne (si arret sur quantite)
+	                #Transf._Ptzs._FgChgConsQte := FALSE;
+	                #Transf._RepQte := 0;
+	                //Appel fct affichage
+	                
+	                #Transf._AffDensInit := #Transf._Ptzs._DensiteOrg;
+	                // Lecture du coef d'ajustement densite farine
+	                IF #Transf._FgGestDens = TRUE THEN
+	                    #Coef := 1;
+	                    IF #fgbase THEN
+	                        "Proc_LectCoefDens"(NumPoste := "Num_Poste",
+	                                            Article := #Transf._Ptzs._CdMat,
+	                                            Lieu := "Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._ParCal._MbTrans),
+	                                            Procede := #Transf._TransfCommun.CommunGeneral._Autom);
+	                    END_IF;
+	                    
+	                    #Transf._Ptzs._CoefDens := #Coef;
+	                    IF #Transf._Ptzs._CoefDens > 0 THEN
+	                        #Transf._Ptzs._DensiteOrg := #Transf._Ptzs._DensiteOrg * #Transf._Ptzs._CoefDens;
+	                    END_IF;
+	                END_IF;
+	                #Transf._Ptzs._Nh := FALSE;
+	                #Transf._AffDensCours := #Transf._Ptzs._DensiteOrg;
+	                
+	                //Prise en compte du lot 
+	                // Majnivc(_ni,_ta,5,"Prise en compte du lot");
+	                #Ret_RD_Sys_T := RD_SYS_T(#Transf._debutCir);
+	                "Supervision_Transf"(RAZ := FALSE,
+	                                     Transf := #Transf);
+	                
+	                
+	                IF #fgbase THEN
+	                    #ResultProcDebuttransf := "Proc_Debut_Transf"(IdTransf := #Transf._Ptzs._Id_Transf,
+	                                                                  Dest := #Transf._Ptzs._Dest[0],
+	                                                                  Orig := #Transf._Ptzs._Orig[0],
+	                                                                  NumPoste := "Num_Poste",
+	                                                                  Msg_Def => #Text_Def);
+	                    
+	                ELSE
+	                    #ResultProcDebuttransf := 'OK';
+	                END_IF;
+	                
+	                IF #ResultProcDebuttransf <> 'OK' THEN
+	                    #Transf.Dial_Def.Num_Def_Etape := 1;
+	                    #Transf.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase,
+	                                                                     Msg_Defaut := #Text_Def,
+	                                                                     Type_Defaut := 2,
+	                                                                     Automatisme := #Transf._TransfCommun.CommunGeneral._Autom,
+	                                                                     Num_Lot := #Transf._Ptzs._NoLot,
+	                                                                     Origine_Defaut := 'Base de donnees',
+	                                                                     Libelle_Origine := 'Base de donnees',
+	                                                                     Acq1 := 'Abandon',
+	                                                                     Acq2 := 'Relance',
+	                                                                     Acq3 := '',
+	                                                                     Acq4 := '',
+	                                                                     Acq5 := '',
+	                                                                     Acq6 := '',
+	                                                                     Acq7 := '',
+	                                                                     Acq8 := '',
+	                                                                     Acq_Choisi := -1,
+	                                                                     Date_Arrivee := #Transf._TpsPicke);
+	                    #Transf._TransfCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                    RETURN;
+	                END_IF;
+	                IF #ResultProcDebuttransf = 'OK' THEN
+	                    #Transf._TransfCommun.CommunGeneral._Etp := #Etape_Attente_Aval;
+	                    RETURN;
+	                END_IF;
+	                
+	                
+	                
+	                
+	            END_IF;
+	            
+	        Repos_DEF1:
+	            //================================== Traitement des reponses pour le defaut1  =============================================================//
+	            IF #Transf.Dial_Def.Reponse_Def = 'Abandon' THEN
+	                #ResultProcCanceltrans := "Proc_Cancel_Transf"(IdTransf := #Transf._Ptzs._Id_Transf,
+	                                                               NumPoste := "Num_Poste",
+	                                                               Msg_Def => #Text_Def);
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_Fin_Lot;
+	                #Transf.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            IF #Transf.Dial_Def.Reponse_Def = 'Relance' THEN
+	                #Transf.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            //============================================  Fin traitement  ====================================================================//
+	            
+	            
+	            
+	        END_REGION Traitement cyclique "Repos" 
+	        RETURN;
+	        
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                    ╔════════════════════════════════════╗
+	                                                                                    ║        Etape "Attente Aval"        ║
+	                                                                                    ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                    
+	*)
+	    #Etape_Attente_Aval:
+	        REGION Traitement preliminaire 'Attente_Aval'
+	            IF (#Transf._TransfCommun.CommunGeneral._Etp <> #Transf._TransfCommun.CommunGeneral._EtpPrec) THEN
+	                //Memorisation de l'etape encours
+	                #Transf._TransfCommun.CommunGeneral._EtpPrec := #Transf._TransfCommun.CommunGeneral._Etp;
+	                //Reperer le niveau du grafcet
+	                #MajNiv := "Maj_Niv"(Num_Zone := #Transf._TransfCommun.CommunGeneral._NumZone, Num_Tache := #Transf._TransfCommun.CommunGeneral._Tache, Niveau := "TRANSF_AttenteAval_Niv");
+	                //Nomination l'etape en cours
+	                #Transf._TransfCommun.CommunGeneral._DescEtp := 'Etape Attente Aval';
+	            END_IF;
+	        END_REGION Traitement preliminaire 'Attente_Aval'
+	        
+	        REGION Traitement cyclique "Attente_Aval" 
+	            FOR #k := 0 TO "T_MAX_AMONTAVAL" DO
+	                IF (#Transf._TransfCommun.CommunGeneral._TabTachAval[#k]._Tache = -1) THEN
+	                    EXIT;
+	                END_IF;
+	                //  #Ret_Int := "Test_Niv"(Num_Zone := #Transf.TransfCommun.CommunGeneral._NumZone, Num_Tache := #Transf.TransfCommun.CommunGeneral._TabTachAval[#i]._Tache, Niveau:=_usint_in_);
+	                IF (#Ret_Int = -1) THEN
+	                    EXIT;
+	                END_IF;
+	            END_FOR;
+	            IF (#Ret_Int <> -1) THEN
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_Attente_Amont;   // Appel fct MAJ ETAPE
+	            END_IF;
+	        END_REGION Traitement cyclique "Attente_Aval" 
+	        
+	        RETURN;
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║       Etape "Attente Amont"        ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                    
+	*)
+	    #Etape_Attente_Amont:
+	        REGION Traitement preliminaire 'Attente_Amont'
+	            IF (#Transf._TransfCommun.CommunGeneral._Etp <> #Transf._TransfCommun.CommunGeneral._EtpPrec) THEN
+	                //Memorisation de l'etape encours
+	                #Transf._TransfCommun.CommunGeneral._EtpPrec := #Transf._TransfCommun.CommunGeneral._Etp;
+	                //Reperer le niveau du grafcet
+	                #MajNiv := "Maj_Niv"(Num_Zone := #Transf._TransfCommun.CommunGeneral._NumZone, Num_Tache := #Transf._TransfCommun.CommunGeneral._Tache, Niveau := "TRANSF_AttenteAmont_Niv");
+	                //Nomination l'etape en cours
+	                #Transf._TransfCommun.CommunGeneral._DescEtp := 'Etape Attente Amont';
+	            END_IF;
+	        END_REGION Traitement preliminaire 'Attente_Amont'
+	        REGION Traitement cyclique "Attente_Amont" 
+	            FOR #k := 0 TO "T_MAX_AMONTAVAL" DO
+	                IF (#Transf._TransfCommun.CommunGeneral._TabTachAmont[#k]._Tache = -1) THEN
+	                    EXIT;
+	                END_IF;
+	                //#Ret_Int := "Test_Niv"(Num_Zone := #Transf.TransfCommun.CommunGeneral._NumZone, Num_Tache := #Transf.TransfCommun.CommunGeneral._TabTachAmont[#i]._Tache, Niveau:=_usint_in_);
+	                IF (#Ret_Int = -1) THEN
+	                    EXIT;
+	                END_IF;
+	            END_FOR;
+	            IF (#Ret_Int <> -1) THEN
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_Lancement; // Appel fct MAJ ETAPE
+	            END_IF;
+	            RETURN;
+	        END_REGION Traitement cyclique "Attente_Amont"
+	        
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║          Etape "Lancement"         ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                        
+	*)
+	    #Etape_Lancement:
+	        REGION Traitement preliminaire 'Lancement'
+	            IF (#Transf._TransfCommun.CommunGeneral._Etp <> #Transf._TransfCommun.CommunGeneral._EtpPrec) THEN
+	                //Memorisation de l'etape encours
+	                #Transf._TransfCommun.CommunGeneral._EtpPrec := #Transf._TransfCommun.CommunGeneral._Etp;
+	                //Reperer le niveau du grafcet
+	                #MajNiv := "Maj_Niv"(Num_Zone := #Transf._TransfCommun.CommunGeneral._NumZone, Num_Tache := #Transf._TransfCommun.CommunGeneral._Tache, Niveau := "TRANSF_Lancement_Niv");
+	                //Nomination l'etape en cours
+	                #Transf._TransfCommun.CommunGeneral._DescEtp := 'Etape Lancement';
+	                IF #Transf.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #Transf.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO LANCEMENT_DEF1;
+	                        2:
+	                            GOTO LANCEMENT_PROC_DEF2;
+	                            
+	                    END_CASE;
+	                END_IF;
+	                // Cellule initiale
+	                #Transf._Ptzs._DestInit := "Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._Ptdest);
+	                #Transf._FgMaskCtrlNh := FALSE;
+	                #Transf._FgChangDest := FALSE;
+	                #Ret_RD_Sys_T := RD_SYS_T(#Transf._TpsPicke);
+	                #Transf._TransfCommun.SUPTRANS.Commande._FgChangDest := FALSE;
+	                
+	            END_IF;
+	        END_REGION Traitement preliminaire 'Lancement'
+	        REGION Traitement cyclique "Lancement" 
+	            
+	            // recuperation d'origine destination et num circuit
+	            #Transf._PtCir.Origine := #Transf._Origine; //#Transf.TransfCommun.CommunGeneral._Orig[0];
+	            #Transf._PtCir.Destination := #Transf._TransfCommun.CommunGeneral._Ptdest;
+	            #Transf._PtCir.Num_Circuit := #Transf._NoCir;
+	            
+	            // Prise en compte critres de circuit 
+	            #i := 0;
+	            FOR #x := 0 TO "Nbr_Criteres" DO
+	                IF "Valid_Index"(#Transf._Ptzs._Criteres[#x]._Mobile) THEN
+	                    #Transf._PtCir.Criteres[#i].Mobile := #Transf._Ptzs._Criteres[#x]._Mobile;
+	                    #Transf._PtCir.Criteres[#i].Critere := #Transf._Ptzs._Criteres[#x]._Valeur;
+	                END_IF;
+	            END_FOR;
+	            
+	            //recherche du circuit
+	            #Ret_Int := "Rech_Cir"(Circuit := #Transf._PtCir);
+	            IF #Ret_Int = -1 THEN
+	                //appel dialogue defaut
+	                #Transf.Dial_Def.Num_Def_Etape := 1;
+	                #Transf.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := 'Circuit Introuvable',
+	                                                                 Type_Defaut := 2,
+	                                                                 Automatisme := #Transf._TransfCommun.CommunGeneral._Autom,
+	                                                                 Num_Lot := #Transf._Ptzs._NoLot,
+	                                                                 Origine_Defaut := 'Circuit Introuvable',
+	                                                                 Libelle_Origine := 'Circuit Introuvable',
+	                                                                 Acq1 := 'Relance',
+	                                                                 Acq2 := 'Cellule',
+	                                                                 Acq3 := 'Abandon',
+	                                                                 Acq4 := '',
+	                                                                 Acq5 := '',
+	                                                                 Acq6 := '',
+	                                                                 Acq7 := '',
+	                                                                 Acq8 := '',
+	                                                                 Acq_Choisi := -1,
+	                                                                 Date_Arrivee := #Transf._TpsPicke);
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                RETURN;
+	            END_IF;
+	        LANCEMENT_DEF1:
+	            
+	            //============ Traitement des reponses pour le defaut2 Etape lancement Recherche circuit  ====================================//
+	            IF #Transf.Dial_Def.Reponse_Def = 'Relance' THEN //Relance
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_Lancement;
+	                #Transf.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            IF #Transf.Dial_Def.Reponse_Def = 'Abandon' THEN
+	                #Transf.Dial_Def.Reponse_Def := '';
+	                #ResultProcCanceltrans := "Proc_Cancel_Transf"(IdTransf := #Transf._Ptzs._Id_Transf,
+	                                                               NumPoste := "Num_Poste",
+	                                                               Msg_Def => #Text_Def);
+	                IF #ResultProcCanceltrans = 'OK' THEN
+	                    #Transf._TransfCommun.CommunGeneral._Etp := #Etape_Fin_Lot;
+	                    
+	                    RETURN;
+	                END_IF;
+	                IF #ResultProcCanceltrans = 'NOK' THEN
+	                    #Transf.Dial_Def.Num_Def_Etape := 2;
+	                    #Transf.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := #Text_Def,
+	                                                                     Type_Defaut := 2,
+	                                                                     Automatisme := #Transf._TransfCommun.CommunGeneral._Autom,
+	                                                                     Num_Lot := #Transf._Ptzs._NoLot,
+	                                                                     Origine_Defaut := 'Base de donnees',
+	                                                                     Libelle_Origine := 'Base de donnees',
+	                                                                     Acq1 := 'Relance',
+	                                                                     Acq2 := 'Abandon',
+	                                                                     Acq3 := '',
+	                                                                     Acq4 := '',
+	                                                                     Acq5 := '',
+	                                                                     Acq6 := '',
+	                                                                     Acq7 := '',
+	                                                                     Acq8 := '',
+	                                                                     Acq_Choisi := -1,
+	                                                                     Date_Arrivee := #Transf._TpsPicke);
+	                    #Transf._TransfCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	            IF #Transf.Dial_Def.Reponse_Def = 'Cellule' THEN //cellule
+	                #Ret_Int := "Index_Mobile"(#Transf.Dial_Def.Text_Reponse);
+	                #Transf.Dial_Def.Reponse_Def := '';
+	                IF #Ret_Int = -1 THEN
+	                    // Cellule choisie est incorrecte
+	                    #Text_Def := CONCAT(IN1 := 'Cellule ', IN2 := #Transf.Dial_Def.Text_Reponse, IN3 := ' Inexistante');
+	                    #Transf.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := #Text_Def,
+	                                                                     Type_Defaut := 2,
+	                                                                     Automatisme := #Transf._TransfCommun.CommunGeneral._Autom,
+	                                                                     Num_Lot := #Transf._Ptzs._NoLot,
+	                                                                     Origine_Defaut := 'Recherche circuit ',
+	                                                                     Libelle_Origine := 'Cellule choisie inexistante',
+	                                                                     Acq1 := 'Relance',
+	                                                                     Acq2 := 'Cellule',
+	                                                                     Acq3 := '',
+	                                                                     Acq4 := '',
+	                                                                     Acq5 := '',
+	                                                                     Acq6 := '',
+	                                                                     Acq7 := '',
+	                                                                     Acq8 := '',
+	                                                                     Acq_Choisi := -1,
+	                                                                     Date_Arrivee := #Transf._TpsPicke);
+	                    #Transf._TransfCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                    RETURN;
+	                END_IF;
+	                //Cellule saisie existe dans la table cellule
+	                IF #Ret_Int > -1 THEN
+	                    #Transf._CelluleTrouve := 0;
+	                    #Transf._CelluleTrouve := "Controle_Cellule"(FgMaskNh := #Transf._FgMaskCtrlNh,
+	                                                                 NvCellule := #Transf.Dial_Def.Text_Reponse,
+	                                                                 TypeCelDest := #Transf._TypeCelDest,
+	                                                                 Cel := "DB_Mod_Cellule",
+	                                                                 NiveauHautDestNh => #Transf._NiveauHautDestNh);
+	                    IF #Transf._CelluleTrouve = 2 THEN
+	                        //#Ret := "Libere_Circuit"(#Transf._PtCir);              //liberer circuit
+	                        #Transf._TransfCommun.CommunGeneral._Ptdest := "Index_Mobile"(#Transf.Dial_Def.Text_Reponse);
+	                        #Transf._IndexDestEc := "RechIndexCel"("Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._Ptdest));
+	                        #Transf._TransfCommun.CommunGeneral._Etp := #Etape_Lancement;
+	                        RETURN;
+	                    END_IF;
+	                    //circuit impossible
+	                    IF #Transf._CelluleTrouve = -1 THEN
+	                        RETURN;
+	                    END_IF;
+	                END_IF;
+	            END_IF;
+	            //============================================  Fin traitement  ====================================================================//
+	            
+	            
+	            
+	            
+	        LANCEMENT_PROC_DEF2:
+	            //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Defaut Base  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+	            IF #Transf.Dial_Def.Reponse_Def = 'Relance' THEN
+	                #Transf.Dial_Def.Reponse_Def := '';
+	                #ResultProcCanceltrans := "Proc_Cancel_Transf"(IdTransf := #Transf._Ptzs._Id_Transf,
+	                                                               NumPoste := "Num_Poste",
+	                                                               Msg_Def => #Text_Def);
+	                IF #ResultProcCanceltrans = 'OK' THEN
+	                    #Transf._TransfCommun.CommunGeneral._Etp := #Etape_Fin_Lot;
+	                    RETURN;
+	                END_IF;
+	                IF #ResultProcCanceltrans = 'NOK' THEN
+	                    #Transf.Dial_Def.Num_Def_Etape := 2;
+	                    #Transf.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := #Text_Def,
+	                                                                     Type_Defaut := 2,
+	                                                                     Automatisme := #Transf._TransfCommun.CommunGeneral._Autom,
+	                                                                     Num_Lot := #Transf._Ptzs._NoLot,
+	                                                                     Origine_Defaut := 'Base de donnees',
+	                                                                     Libelle_Origine := 'Base de donnees',
+	                                                                     Acq1 := 'Relance',
+	                                                                     Acq2 := 'Abandon',
+	                                                                     Acq3 := '',
+	                                                                     Acq4 := '',
+	                                                                     Acq5 := '',
+	                                                                     Acq6 := '',
+	                                                                     Acq7 := '',
+	                                                                     Acq8 := '',
+	                                                                     Acq_Choisi := -1,
+	                                                                     Date_Arrivee := #Transf._TpsPicke);
+	                    #Transf._TransfCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	            IF #Transf.Dial_Def.Reponse_Def = 'Abandon' THEN
+	                #Transf.Dial_Def.Reponse_Def := '';
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_Fin_Lot;
+	                RETURN;
+	            END_IF;
+	            //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Defaut Base  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+	            
+	            
+	            
+	            
+	            
+	            
+	            
+	            
+	            #Transf._IndexDestEc := "RechIndexCel"("Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._Ptdest));
+	            
+	            // Test si changement de cellule sur Pb affectation ou recherche circuit
+	            IF #Transf._Ptzs._DestInit <> "Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._Ptdest) THEN
+	                #Transf._Ptzs._AncDest := #Transf._Ptzs._DestInit;
+	                #Transf._Ptzs._NouvDest := "Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._Ptdest);
+	                #Transf._Ptzs._FgChgDest := FALSE;
+	                //Appel proc changmt dest Proc_ChgDest(pt_zs);
+	            END_IF;
+	            #Transf._vitesseFosse := #Transf._Ptzs._Cons_TC; //consigne vitesse transporteur associé a la matiere
+	            // recherche de circuit est validé
+	            #Transf._TransfCommun.CommunGeneral._Etp := #Etape_prepositionnement;
+	            RETURN;
+	        END_REGION Traitement cyclique "Lancement"
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║      Etape "Prepositionnement"     ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** *************************************** 
+	*)
+	    #Etape_prepositionnement:
+	        REGION Traitement preliminaire 'Prepositionnement'
+	            IF (#Transf._TransfCommun.CommunGeneral._Etp <> #Transf._TransfCommun.CommunGeneral._EtpPrec) THEN
+	                //Memorisation de l'etape encours
+	                #Transf._TransfCommun.CommunGeneral._EtpPrec := #Transf._TransfCommun.CommunGeneral._Etp;
+	                //Reperer le niveau du grafcet
+	                #MajNiv := "Maj_Niv"(Num_Zone := #Transf._TransfCommun.CommunGeneral._NumZone, Num_Tache := #Transf._TransfCommun.CommunGeneral._Tache, Niveau := "TRANSF_Prepositionnement_Niv");
+	                //Nomination l'etape en cours
+	                #Transf._TransfCommun.CommunGeneral._DescEtp := 'Etape prepositionnement';
+	            END_IF;
+	        END_REGION Traitement preliminaire 'prepositionnement'
+	        
+	        REGION Traitement cyclique "Prepositionnement" 
+	            // Action ventuelle avant positionnement du circuit
+	            
+	            
+	            
+	            
+	            #Transf._TransfCommun.CommunGeneral._Etp := #Etape_attente_circuit_positionne;
+	            RETURN;
+	            
+	            
+	            
+	        END_REGION Traitement cyclique 'Prepositionnement'   
+	        
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║ Etape "Attente circuit positionne" ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                            
+	*)
+	        
+	    #Etape_attente_circuit_positionne:
+	        REGION Traitement preliminaire 'Attente circuit positionne'
+	            IF (#Transf._TransfCommun.CommunGeneral._Etp <> #Transf._TransfCommun.CommunGeneral._EtpPrec) THEN
+	                //Memorisation de l'etape encours
+	                #Transf._TransfCommun.CommunGeneral._EtpPrec := #Transf._TransfCommun.CommunGeneral._Etp;
+	                //Reperer le niveau du grafcet
+	                #MajNiv := "Maj_Niv"(Num_Zone := #Transf._TransfCommun.CommunGeneral._NumZone, Num_Tache := #Transf._TransfCommun.CommunGeneral._Tache, Niveau := "TRANSF_AttenteCircuitPositionne_Niv");
+	                //Nomination l'etape en cours
+	                #ret_string := "Proc_AffecT"(NumPoste := "Num_Poste",
+	                                             zone := "Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._Ptdest),
+	                                             CodeMat := #Transf._Ptzs._CdMat,
+	                                             Formule := #Temp_Char,
+	                                             LieuDos := '',
+	                                             Qte := 0,
+	                                             TypeMvmnt := '040',
+	                                             Procede := #Transf._TransfCommun.CommunGeneral._Autom,
+	                                             NoLotOrig := '',
+	                                             NoLotDest := #Transf._Ptzs._NoLot,
+	                                             Utilisateur := 'SAS',
+	                                             SCb := '0',
+	                                             Sof := #Transf._Ptzs._Cd_Transf, Msg_Def => #Text_Def);
+	                #Ret_Int := "Dem_Circuit"(#Transf._PtCir);
+	                #Transf._TransfCommun.CommunGeneral._DescEtp := 'Attente circuit positionne';
+	                #Ret_RD_Sys_T := RD_SYS_T(#Transf._TpsPicke);
+	            END_IF;
+	        END_REGION Traitement preliminaire 'Attente circuit positionne'
+	        
+	        REGION Traitement cyclique "Attente_circuit_positionne"
+	            #Transf._FgChangDest := false;
+	            #Transf._TransfCommun.SUPTRANS.Commande._FgChangDest := FALSE;
+	            #Transf._niveauHaut := #Transf._ptDestEc._NivHaut;
+	            #Transf._niveauBas := #Transf._ptOrig._NivBas;
+	            #Transf._HeureDeb := #Transf._TpsPicke;
+	            #Transf._FgAbandon := FALSE;
+	            IF NOT #Transf._PremierPassageDate THEN
+	                #Transf._debutCir := #Transf._TpsPicke;
+	                #Transf._PremierPassageDate := TRUE;
+	            END_IF;
+	            #Ret_Bool := "Test_Etat_Circuit"(Etat := "Pret", Debut := 0, CIRCUIT := #Transf._PtCir);
+	            // IF "DB_BIBLIOTHEQUE".Mobile."THIS"[#Transf._PtCir.Origine].Etat = 3 THEN
+	            IF #Ret_Bool THEN
+	                
+	                
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_attente_produit;
+	            END_IF;
+	        END_REGION Traitement cyclique "Attente_circuit_positionne"
+	        
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║       Etape "Attente Produit"      ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	    #Etape_attente_produit:
+	        REGION Traitement preliminaire 'Attente Produit'
+	            IF (#Transf._TransfCommun.CommunGeneral._Etp <> #Transf._TransfCommun.CommunGeneral._EtpPrec) THEN
+	                #Transf._niveauHaut := #Transf._ptDestEc._NivHaut;
+	                #Transf._niveauBas := #Transf._ptOrig._NivBas;
+	                IF #Transf.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #Transf.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO ATTENTE_PRODUIT_DEF1;
+	                    END_CASE;
+	                END_IF;
+	                //Memorisation de l'etape encours
+	                #Transf._TransfCommun.CommunGeneral._EtpPrec := #Transf._TransfCommun.CommunGeneral._Etp;
+	                //Reperer le niveau du grafcet
+	                #MajNiv := "Maj_Niv"(Num_Zone := #Transf._TransfCommun.CommunGeneral._NumZone, Num_Tache := #Transf._TransfCommun.CommunGeneral._Tache, Niveau := "TRANSF_AttenteProduit_Niv");
+	                //Nomination l'etape en cours
+	                #Transf._TransfCommun.CommunGeneral._DescEtp := 'Etape attente produit';
+	                //lecture du temps local 
+	                #Ret_RD_Sys_T := RD_SYS_T(#Transf._TpsPicke);
+	                #Transf._Ptzs._Nh := FALSE;
+	                // #Ret_Int := "RechIndexCel"("Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._PtOrig));
+	                // "Marche_Ext_Libere"(Origine := "DB_Mod_Cellule"._TabCel[#Ret_Int]);
+	                "MarcheExt"(Origine := #Transf._TransfCommun.CommunGeneral._PtOrig,
+	                            Position := #PosOuv,
+	                            Vitesse := 0);
+	                
+	                // Test si (produit deja vu) 
+	                IF #Transf._Ptzs._FgProduitVu THEN
+	                    #Transf._TransfCommun.CommunGeneral._Etp := #Etape_surveillance;
+	                END_IF;
+	                
+	                #Transf._Debut := #Transf._TpsPicke;
+	                #Transf._DebutPresPm := #Transf._TpsPicke;
+	            END_IF;
+	        END_REGION Traitement preliminaire 'Attente Produit'
+	        
+	        REGION Traitement cyclique "Attente_produit"
+	            // si passage de matiere non declare  or  test de pm est desactivee
+	            IF NOT #Transf._CaptPm OR NOT #Transf._FgTestPm THEN
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_surveillance;
+	                RETURN;
+	            END_IF;
+	            // le cas ou jai un capteur je teste le passage matiere   
+	            IF #Transf._pm = FALSE AND #Transf._pm2 = FALSE THEN
+	                //je recupere le temps du premier passage
+	                #Ret_RD_Sys_T := RD_SYS_T(#Transf._DebutPresPm);
+	            END_IF;
+	            #Return := "Tempo"(Duree := #Transf._tpPresPm, Tps_Picke := #Transf._DebutPresPm, Anticip := FALSE, Tps_Passe => #Tps_Passe);
+	            //
+	            IF #Return THEN
+	                #Transf._Ptzs._FgProduitVu := TRUE;
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_surveillance;
+	                RETURN;
+	            END_IF;
+	            // Test demande de suspension
+	            IF (#Transf._FgSusp = TRUE) THEN
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_suspension;
+	                RETURN;
+	            END_IF;
+	            // Test demande d'arret
+	            IF (#Transf._FgArret = TRUE) THEN
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_vidange;
+	                RETURN;
+	            END_IF;
+	            IF (#Transf._Ptzs._Fg_RincNet = FALSE) THEN
+	                #Return := "Tempo"(Duree := #Transf._tpDefPm, Tps_Picke := #Transf._Debut, Anticip := FALSE, Tps_Passe => #Tps_Passe);
+	                IF #Return THEN
+	                    // transf._Debut := transf._TpsPicke;
+	                    #Transf.Dial_Def.Num_Def_Etape := 1;
+	                    #Transf.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := 'Probleme detection du passage matiere',
+	                                                                     Type_Defaut := 2,
+	                                                                     Automatisme := #Transf._TransfCommun.CommunGeneral._Autom,
+	                                                                     Num_Lot := #Transf._Ptzs._NoLot,
+	                                                                     Origine_Defaut := 'Pas de presence du matiere',
+	                                                                     Libelle_Origine := 'Pas de presence du matiere',
+	                                                                     Acq1 := 'Relance',
+	                                                                     Acq2 := 'Abandon',
+	                                                                     Acq3 := '',
+	                                                                     Acq4 := '',
+	                                                                     Acq5 := '',
+	                                                                     Acq6 := '',
+	                                                                     Acq7 := '',
+	                                                                     Acq8 := '',
+	                                                                     Acq_Choisi := -1,
+	                                                                     Date_Arrivee := #Transf._TpsPicke);
+	                    #Transf._TransfCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	        ATTENTE_PRODUIT_DEF1:
+	            //============ Traitement des reponses pour le defaut1 Etape ATTENTE PRODUIT  PAS DE PM  ====================================//
+	            IF #Transf.Dial_Def.Reponse_Def = 'Abandon' THEN    //abandon
+	                #Transf.Dial_Def.Reponse_Def := '';
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_surveillance;
+	                #Transf._Ptzs._FgProduitVu := TRUE;
+	                RETURN;
+	            END_IF;
+	            IF #Transf.Dial_Def.Reponse_Def = 'Relance' THEN //relance
+	                #Transf.Dial_Def.Reponse_Def := '';
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_attente_produit;
+	                #Ret_RD_Sys_T := RD_SYS_T(#Transf._TpsPicke);
+	                RETURN;
+	            END_IF;
+	            //============================================  Fin traitement  ====================================================================//
+	            
+	            
+	            // Controle niveau haut destination;
+	            // #Ret_Int := "Controle_NH_Transf"(TempoAffNH := "TpDefNh", Transf := #Transf);
+	            IF (#Transf._niveauHaut AND NOT #Transf._FgMaskCtrlNh) OR #Transf._FgChangDest THEN
+	                #Transf._Ptzs._Nh := TRUE;
+	                "MAJ_Cumul_Dest"(Dest := "Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._Ptdest),
+	                                 Increment := FALSE,
+	                                 DestR := #Transf._Ptzs._DestR,
+	                                 PARCAL := #Transf._TransfCommun.CommunGeneral._ParCal);
+	                #Transf._Ptzs._DestR._Liste[#Transf._Ptzs._DestR._Index]._Nh := TRUE;
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_changement_destination;
+	                RETURN;
+	            END_IF;
+	            
+	            
+	        END_REGION Traitement cyclique "Attente_produit"
+	        RETURN;
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║         Etape "Surveillance"       ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                
+	*)
+	    #Etape_surveillance:
+	        
+	        REGION Traitement preliminaire 'Surveillance'
+	            IF (#Transf._TransfCommun.CommunGeneral._Etp <> #Transf._TransfCommun.CommunGeneral._EtpPrec) THEN
+	                //Memorisation de l'etape encours
+	                #Transf._TransfCommun.CommunGeneral._EtpPrec := #Transf._TransfCommun.CommunGeneral._Etp;
+	                //Reperer le niveau du grafcet
+	                #MajNiv := "Maj_Niv"(Num_Zone := #Transf._TransfCommun.CommunGeneral._NumZone, Num_Tache := #Transf._TransfCommun.CommunGeneral._Tache, Niveau := "TRANSF_Surveillance_Niv");
+	                //Nomination l'etape en cours
+	                #Transf._TransfCommun.CommunGeneral._DescEtp := 'Etape surveillance';
+	                IF #Transf.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #Transf.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO SURVEILLANCE_DEF1;
+	                        2:
+	                            GOTO SURVEILLANCE_DEF2;
+	                        3:
+	                            GOTO SURVEILLANCE_DEF3;
+	                        4:
+	                            GOTO SURVEILLANCE_DEF4;
+	                        5:
+	                            GOTO SURVEILLANCE_DEF5;
+	                    END_CASE;
+	                END_IF;
+	                // Si on relance le circuit sur la cellule, alors on remet le flag  Non
+	                #Transf._Ptzs._DestR._Liste[#Transf._Ptzs._DestR._Index]._Nh := FALSE;
+	                #Transf._FgDemCtrlExam := TRUE;
+	                #Transf._IndexDestEc := "RechIndexCel"("Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._Ptdest));
+	                #Transf._ptDestEc := "DB_Mod_Cellule"._TabCel[#Transf._IndexDestEc];
+	                // Niveau haut
+	                #Transf._niveauHaut := #Transf._ptDestEc._NivHaut;
+	                // Calcul debit massique transporteur
+	                "Debit_Massique"(SAV := #Transf._vitesseFosse,
+	                                 Densite := #Transf._Ptzs._Densite,
+	                                 PARCAL := #Transf._TransfCommun.CommunGeneral._ParCal);
+	                //Lancement Calcul quantité farine
+	                #Transf._TransfCommun.CommunGeneral._ParCal._FgCalFar := TRUE;
+	                //Lancement calcul temps de passage
+	                #Transf._TransfCommun.CommunGeneral._ParCal._FgCalTps := TRUE;
+	                //recuperation heure systeme
+	                #Ret_RD_Sys_T := RD_SYS_T(#Transf._Debut);
+	                #Ret_RD_Sys_T := RD_SYS_T(#Transf._debutMajSto);
+	                #Ret_RD_Sys_T := RD_SYS_T(#Transf._TpsPickeNB);
+	                #Transf._qtePasse := 0;
+	                // Test si mode valid
+	                IF #Transf._FgDialQte THEN
+	                    // Autorisation changement de consigne des que circuit pret
+	                    #Transf._fgDemQte := 1;
+	                END_IF;
+	                "MAJ_Cumul_Dest"(Dest := "Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._Ptdest),
+	                                 Increment := FALSE,
+	                                 DestR := #Transf._Ptzs._DestR,
+	                                 PARCAL := #Transf._TransfCommun.CommunGeneral._ParCal);
+	                
+	                
+	                
+	                
+	                //Initialisation des flags
+	                #Transf._Ptzs._FgChgDestNh := FALSE;
+	                
+	                
+	                
+	                
+	                
+	                
+	                
+	            END_IF;
+	        END_REGION Traitement preliminaire 'Surveillance'
+	        
+	        REGION Traitement cyclique "Surveillance"
+	            //Calcu debit massique  transporteur
+	            "Debit_Massique"(SAV := #Transf._vitesseFosse,
+	                             Densite := #Transf._Densite,
+	                             PARCAL := #Transf._TransfCommun.CommunGeneral._ParCal);
+	            "Supervision_Transf"(RAZ := FALSE,
+	                                 Transf := #Transf);
+	            //Controle NH destination
+	            #Ret_Int := "Controle_NH_Transf"(TempoAffNH := #Transf._TpDefNh, Transf := #Transf);
+	            
+	            
+	            //__________________________________________________________ Teste demande d'arret circuit par bouton ARRET supervision ______________________________________________________\\
+	            IF #Transf._FgArret THEN
+	                #Transf._FgArret := FALSE;
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_vidange;
+	                #Transf._Ptzs._ArretReel := 'O';
+	                RETURN;
+	            END_IF;
+	            
+	            //_____________________________________________________________ Teste demande d'arret immediat du circuit ______________________________________________________________________\\
+	            
+	            IF #Transf._FgArretImm THEN
+	                #Transf.Dial_Def.Num_Def_Etape := 4;
+	                #Transf.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := 'Confirmation arret immediat',
+	                                                                 Type_Defaut := 2,
+	                                                                 Automatisme := #Transf._TransfCommun.CommunGeneral._Autom,
+	                                                                 Num_Lot := #Transf._Ptzs._NoLot,
+	                                                                 Origine_Defaut := 'Supervision',
+	                                                                 Libelle_Origine := 'Confirmez vous arret immediat',
+	                                                                 Acq1 := 'Oui',
+	                                                                 Acq2 := 'Non',
+	                                                                 Acq3 := '',
+	                                                                 Acq4 := '',
+	                                                                 Acq5 := '',
+	                                                                 Acq6 := '',
+	                                                                 Acq7 := '',
+	                                                                 Acq8 := '',
+	                                                                 Acq_Choisi := -1,
+	                                                                 Date_Arrivee := #Transf._TpsPicke);
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                RETURN;
+	            END_IF;
+	            //============ Traitement des reponses pour le defaut4 Etape Surveillance  Confirmation arret immediat ====================================//
+	        SURVEILLANCE_DEF4:
+	            IF #Transf.Dial_Def.Reponse_Def = 'Non' THEN //non
+	                #Transf._FgArretImm := FALSE;
+	                #Transf._TransfCommun.SUPTRANS.Commande._ArretImmediat := FALSE;
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_surveillance;
+	                #Transf.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            ///le cas la reponse et oui et passage de matier
+	            IF #Transf.Dial_Def.Reponse_Def = 'Oui' THEN //oui
+	                #Transf.Dial_Def.Reponse_Def := '';
+	                #Ret_Int := "RechIndexCel"("Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._PtOrig));
+	                //"Arret_Ext_Libere"(Origine := "DB_Mod_Cellule"._TabCel[#Ret_Int]);
+	                "MarcheExt"(Origine := #Transf._TransfCommun.CommunGeneral._PtOrig,
+	                            Position := #PosFerm,
+	                            Vitesse := 0);
+	                
+	                
+	                #Ret_Int := "Arr_Imm_Circuit"(#Transf._PtCir);
+	                #Ret_Int := "Libere_Circuit"(#Transf._PtCir);
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_MAJ_Base;
+	                #Transf._Ptzs._ArretReel := 'O';
+	                RETURN;
+	            END_IF;
+	            //============================================ Fin Traitement =============================================================================//
+	            
+	            
+	            //______________________________________________________Teste niveau destination et demande d'arret sur NH ______________________________________________________________________\\
+	            IF #Ret_Int = 1 AND #Transf._Ptzs._TypeArret = 'H' THEN
+	                #Transf._Ptzs._Nh := TRUE;
+	                #Transf._Ptzs._DestR._Liste[#Transf._Ptzs._DestR._Index]._Nh := TRUE;
+	                #Transf._Ptzs._ArretReel := 'H';
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_vidange;
+	                RETURN;
+	            END_IF;
+	            
+	            //______________________________________________________Demande de changement de destination  ______________________________________________________________________\\
+	            
+	            IF #Transf._FgChangDest THEN
+	                #Transf._Ptzs._Nh := TRUE;
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_changement_destination;
+	                RETURN;
+	            END_IF;
+	            
+	            
+	            //______________________________________________________Destination en NH et type d'arret different de H ______________________________________________________________________\\
+	            
+	            IF #Ret_Int = 1 AND #Transf._Ptzs._TypeArret <> 'H' AND NOT #Transf._ControleBoucleExterieur THEN
+	                #Transf._Ptzs._Nh := TRUE;
+	                #Transf._Ptzs._DestR._Liste[#Transf._Ptzs._DestR._Index]._Nh := TRUE;
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_changement_destination;
+	                RETURN;
+	            END_IF;
+	            
+	            
+	            
+	            
+	            // Teste niveau bas origine
+	            #Ret_Int := "Controle_NB_Transf"(TempoAffNB := #Transf._tpVidOrg, Transf := #Transf);
+	            //______________________________________________________Teste niveau origine et demande d'arret sur NB ______________________________________________________________________\\
+	            
+	            IF #Ret_Int = 1 AND #Transf._Ptzs._TypeArret = 'B' THEN
+	                #Transf._Ptzs._ArretReel := 'B';
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_vidange;
+	                RETURN;
+	            END_IF;
+	            //______________________________________________________Origine en NB et fg testnivnb bas est a un  ______________________________________________________________________\\
+	            
+	            IF #Transf._FgTestNb AND #Ret_Int = 1 THEN
+	                // IF #Ret_Int = 1 AND NOT #Transf._FgDemVid THEN
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_defaut_origine; //defaut_origine
+	                RETURN;
+	            END_IF;
+	            //______________________________________________________Demande de vidange  ______________________________________________________________________\\
+	            
+	            IF #Transf._FgDemVid THEN
+	                #Transf.Dial_Def.Num_Def_Etape := 1;
+	                #Transf.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := 'Confirmation de vidange',
+	                                                                 Type_Defaut := 2,
+	                                                                 Automatisme := #Transf._TransfCommun.CommunGeneral._Autom,
+	                                                                 Num_Lot := #Transf._Ptzs._NoLot,
+	                                                                 Origine_Defaut := 'Confirmation de vidange',
+	                                                                 Libelle_Origine := 'Confirmation de vidange',
+	                                                                 Acq1 := 'Oui',
+	                                                                 Acq2 := 'Non',
+	                                                                 Acq3 := '',
+	                                                                 Acq4 := '',
+	                                                                 Acq5 := '',
+	                                                                 Acq6 := '',
+	                                                                 Acq7 := '',
+	                                                                 Acq8 := '',
+	                                                                 Acq_Choisi := -1,
+	                                                                 Date_Arrivee := #Transf._TpsPicke);
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                RETURN;
+	            END_IF;
+	            
+	            
+	        SURVEILLANCE_DEF1:
+	            //============ Traitement des reponses pour le defaut 1 Demande vidange  ====================================//
+	            IF #Transf.Dial_Def.Reponse_Def = 'Oui' THEN
+	                #Transf._FgDemVid := FALSE;
+	                #Transf._Ptzs._ArretReel := 'O';
+	                #Transf.Dial_Def.Reponse_Def := '';
+	                #Transf._TransfCommun.SUPTRANS.Commande._Vidange := FALSE;
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_vidange;
+	                RETURN;
+	            END_IF;
+	            IF #Transf.Dial_Def.Reponse_Def = 'Non' THEN
+	                #Transf._FgDemVid := FALSE;
+	                #Transf._TransfCommun.SUPTRANS.Commande._Vidange := FALSE;
+	                #Transf.Dial_Def.Reponse_Def := '';
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_surveillance;
+	                RETURN;
+	            END_IF;
+	            //============ Fin Traitement des reponses pour le defaut 1 Demande vidange  ====================================//
+	            
+	            
+	            //______________________________________________________Test temps de marche de l'installation et demande d'arret sur T ______________________________________________________________________\\
+	            
+	            IF #Transf._TransfCommun.CommunGeneral._ParCal._TpsTran > #Transf._Ptzs._TpsArretDem AND #Transf._Ptzs._TypeArret = 'T' THEN
+	                #Transf._Ptzs._ArretReel := 'T';
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_vidange;
+	                RETURN;
+	            END_IF;
+	            
+	            //______________________________________________________Test quantite passee et demande d'arret sur Q ______________________________________________________________________\\
+	            
+	            IF #Transf._Ptzs._TypeArret = 'Q' THEN
+	                // Calcul quantite restante possible dans la cellule 
+	                #Transf.CalQte.Capacite := #Transf._Volume * #Transf._Densite;// * 1000;
+	                #Transf.CalQte.Qte_Pos := #Transf.CalQte.Capacite - #Transf._Stock - #Transf._TransfCommun.CommunGeneral._ParCal._QteTrans;
+	                // Test mode demande de changement de consigne en cours de lot
+	                IF #Transf._FgDialQte THEN
+	                    #Transf.Dial_Def.Num_Def_Etape := 2;
+	                    #Text_Def := CONCAT(IN1 := 'Changement de la consigne de quantite a transferer ? Consigne actuelle: ', IN2 := REAL_TO_STRING(#Transf._Ptzs._QteArretDem), IN3 := ' Kg', IN4 := ' Capacite:', IN5 := REAL_TO_STRING(#Transf.CalQte.Capacite), IN6 := ' Kg ', IN7 := 'Qte en cours: ', IN8 := REAL_TO_STRING(#Transf._TransfCommun.CommunGeneral._ParCal._QteTrans));
+	                    
+	                    #Transf.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := #Text_Def,
+	                                                                     Type_Defaut := 2,
+	                                                                     Automatisme := #Transf._TransfCommun.CommunGeneral._Autom,
+	                                                                     Num_Lot := #Transf._Ptzs._NoLot,
+	                                                                     Origine_Defaut := 'Test quantite',
+	                                                                     Libelle_Origine := 'Test quantite',
+	                                                                     Acq1 := 'Oui',
+	                                                                     Acq2 := 'Non',
+	                                                                     Acq3 := '',
+	                                                                     Acq4 := '',
+	                                                                     Acq5 := '',
+	                                                                     Acq6 := '',
+	                                                                     Acq7 := '',
+	                                                                     Acq8 := '',
+	                                                                     Acq_Choisi := -1,
+	                                                                     Date_Arrivee := #Transf._TpsPicke);
+	                    #Transf._TransfCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                    RETURN;
+	                END_IF;
+	                // Controle consigne atteinte
+	                IF (#Transf._TransfCommun.CommunGeneral._ParCal._QteTrans > #Transf._Ptzs._QteArretDem AND NOT #Transf._FgColChute) OR
+	                    (#Transf._TransfCommun.CommunGeneral._ParCal._QteTrans > #Transf._Ptzs._QteArretDem - #Transf._Ptzs._Colchute AND #Transf._FgColChute)
+	                THEN
+	                    #Transf._Ptzs._ArretReel := 'Q';
+	                    #Transf._TransfCommun.CommunGeneral._Etp := #Etape_vidange;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	        SURVEILLANCE_DEF2:
+	            //============ Traitement des reponses pour le defaut 2 Changement de la consigne  ====================================//
+	            IF #Transf.Dial_Def.Reponse_Def = 'Oui' THEN
+	                #Transf.CalQte.Nouv_Qte_Dem := STRING_TO_REAL(#Transf.Dial_Def.Text_Reponse);
+	                #Transf.Dial_Def.Reponse_Def := '';
+	                IF #Transf.CalQte.Nouv_Qte_Dem > #Transf.CalQte.Qte_Pos THEN
+	                    #Transf.Dial_Def.Num_Def_Etape := 3;
+	                    #Text_Def := CONCAT(IN1 := 'Valeur saisie: ', IN2 := REAL_TO_STRING(#Transf.CalQte.Nouv_Qte_Dem), IN3 := ' Kg', IN4 := ' superieure a la quantite restante estime dans', IN5 := "Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._Ptdest), IN6 := REAL_TO_STRING(#Transf.CalQte.Qte_Pos), IN7 := ' Kg');
+	                    #Transf.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := #Text_Def,
+	                                                                     Type_Defaut := 2,
+	                                                                     Automatisme := #Transf._TransfCommun.CommunGeneral._Autom,
+	                                                                     Num_Lot := #Transf._Ptzs._NoLot,
+	                                                                     Origine_Defaut := 'Fosse pleine',
+	                                                                     Libelle_Origine := 'Fosse pleine',
+	                                                                     Acq1 := 'Quantite',
+	                                                                     Acq2 := 'Abandon',
+	                                                                     Acq3 := '',
+	                                                                     Acq4 := '',
+	                                                                     Acq5 := '',
+	                                                                     Acq6 := '',
+	                                                                     Acq7 := '',
+	                                                                     Acq8 := '',
+	                                                                     Acq_Choisi := -1,
+	                                                                     Date_Arrivee := #Transf._TpsPicke);
+	                    #Transf._TransfCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                ELSE
+	                    #Transf._Ptzs._FgChgConsQte := TRUE;
+	                    #Transf._RepQte := #Transf.CalQte.Nouv_Qte_Dem;
+	                    #Transf._Ptzs._QteArretDem := #Transf._RepQte;
+	                    #Transf._fgDemQte := 3;
+	                    #Transf.Dial_Def.Reponse_Def := '';
+	                    #Transf._FgDialQte := FALSE;
+	                END_IF;
+	                
+	            END_IF;
+	            IF #Transf.Dial_Def.Reponse_Def = 'Non' THEN
+	                #Transf._fgDemQte := 3;
+	                #Transf.Dial_Def.Reponse_Def := '';
+	                #Transf._FgDialQte := FALSE;
+	            END_IF;
+	            //============ Fin Traitement des reponses pour le defaut 2 Changement de la consigne  ====================================//
+	            
+	            
+	        SURVEILLANCE_DEF3:
+	            //============ Traitement des reponses pour le defaut 3 QTE saisie >qte possible  ====================================//
+	            IF #Transf.Dial_Def.Reponse_Def = 'Abandon' THEN
+	                #Transf._fgDemQte := 1;
+	                #Transf.Dial_Def.Reponse_Def := '';
+	                #Transf._FgDialQte := FALSE;
+	            END_IF;
+	            IF #Transf.Dial_Def.Reponse_Def = 'Quantite' THEN
+	                #Transf.Dial_Def.Reponse_Def := '';
+	                #Transf._FgDialQte := TRUE;
+	            END_IF;
+	            
+	            //============ Fin Traitement des reponses pour le defaut 3 QTE saisie >qte possible  ====================================//
+	            
+	            
+	            
+	            
+	            //______________________________________________________Test demande de suspension ______________________________________________________________________\\
+	            IF #Transf._FgSusp THEN
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_suspension;
+	                RETURN;
+	            END_IF;
+	            
+	            
+	            
+	            
+	            IF #Transf._CaptPm THEN
+	                IF #Transf._FgTestFinPm THEN
+	                    IF #Transf._pm OR #Transf._pm2 THEN
+	                        #Transf._Debut := #Transf._TpsPicke;
+	                    ELSE
+	                        // Test si fin passage matiere
+	                        #Return := "Tempo"(Duree := #Transf._tpDefPm, Tps_Picke := #Transf._Debut, Anticip := FALSE, Tps_Passe => #Tps_Passe);
+	                        IF #Return THEN
+	                            #Transf.Dial_Def.Num_Def_Etape := 5;
+	                            #Transf.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase,
+	                                                                             Msg_Defaut := 'Perte du passage matiere,Confirmez vous la vidange!',
+	                                                                             Type_Defaut := 1,
+	                                                                             Automatisme := #Transf._TransfCommun.CommunGeneral._Autom,
+	                                                                             Num_Lot := #Transf._Ptzs._NoLot,
+	                                                                             Origine_Defaut := 'Fin passage matiere',
+	                                                                             Libelle_Origine := 'Confirmez vous le vidange',
+	                                                                             Acq1 := 'Oui',
+	                                                                             Acq2 := 'Non',
+	                                                                             Acq3 := '',
+	                                                                             Acq4 := '',
+	                                                                             Acq5 := '',
+	                                                                             Acq6 := '',
+	                                                                             Acq7 := '',
+	                                                                             Acq8 := '',
+	                                                                             Acq_Choisi := -1,
+	                                                                             Date_Arrivee := #Transf._TpsPicke);
+	                            #Transf._TransfCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                            RETURN;
+	                        END_IF;
+	                    END_IF;
+	                END_IF;
+	            END_IF;
+	        SURVEILLANCE_DEF5:
+	            //============ Traitement des reponses pour le defaut1 Etape Surveillance  Confirmation de vidange ====================================//
+	            IF #Transf.Dial_Def.Reponse_Def = 'Oui' THEN //oui
+	                #Transf.Dial_Def.Reponse_Def := '';
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_vidange;
+	                RETURN;
+	            ELSIF #Transf.Dial_Def.Reponse_Def = 'Non' THEN //non
+	                #Transf.Dial_Def.Reponse_Def := '';
+	                #Ret_RD_Sys_T := RD_SYS_T(#Transf._Debut);
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_surveillance;
+	                RETURN;
+	            END_IF;
+	            //============================================  Fin traitement  ====================================================================//
+	            
+	            
+	            
+	            
+	            
+	            
+	            
+	            
+	            
+	            
+	            
+	            
+	        END_REGION 'Traitement cyclique'
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║         Etape defaut_origine       ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                
+	*)
+	    #Etape_defaut_origine:
+	        REGION Traitement preliminaire 'Defaut Origine'
+	            IF (#Transf._TransfCommun.CommunGeneral._Etp <> #Transf._TransfCommun.CommunGeneral._EtpPrec) THEN
+	                #Transf._TransfCommun.CommunGeneral._EtpPrec := #Transf._TransfCommun.CommunGeneral._Etp;
+	                #MajNiv := "Maj_Niv"(Num_Zone := #Transf._TransfCommun.CommunGeneral._NumZone, Num_Tache := #Transf._TransfCommun.CommunGeneral._Tache, Niveau := "TRANSF_DefOrigine_Niv");
+	                #Transf._TransfCommun.CommunGeneral._DescEtp := 'Etape defaut origine';
+	                #Ret_RD_Sys_T := RD_SYS_T(#Transf._TpsPicke);
+	                IF #Transf.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #Transf.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO DEF_ORIG_DEF1;
+	                            
+	                    END_CASE;
+	                END_IF;
+	                (* Test nouveau mode dialogue d'acquit vide
+	                IF(LireFgDialVid())
+	                    EcrireFgDemVid(1);
+	                    EcrireFgRepVid(0); *)
+	                
+	                //  #Ret_Int := "Arr_Imm_Mobile"("Index_Mobile"("DB_BIBLIOTHEQUE".Mobile."THIS"[#Transf._PtCir.Origine].Nom));
+	            END_IF;
+	        END_REGION Traitement preliminaire 'Attente Produit'
+	        
+	        
+	        REGION Traitement cyclique "defaut origine"
+	            // Arret source
+	            // #Ret_Int := "Arr_Imm_Mobile"("DB_BIBLIOTHEQUE".Mobile."THIS"[#Transf._PtCir.Origine].Mob_Suiv[0]);
+	            
+	            IF #Transf._fgValidEnchain = 2 THEN
+	                #Transf.Dial_Def.Num_Def_Etape := 1;
+	                #Transf.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := 'Confirmation de vidange',
+	                                                                 Type_Defaut := 2,
+	                                                                 Automatisme := #Transf._TransfCommun.CommunGeneral._Autom,
+	                                                                 Num_Lot := #Transf._Ptzs._NoLot,
+	                                                                 Origine_Defaut := 'Pas de presence du matiere',
+	                                                                 Libelle_Origine := 'Pas de presence du matiere',
+	                                                                 Acq1 := 'Oui',
+	                                                                 Acq2 := 'Non',
+	                                                                 Acq3 := '',
+	                                                                 Acq4 := '',
+	                                                                 Acq5 := '',
+	                                                                 Acq6 := '',
+	                                                                 Acq7 := '',
+	                                                                 Acq8 := '',
+	                                                                 Acq_Choisi := -1,
+	                                                                 Date_Arrivee := #Transf._TpsPicke);
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                RETURN;
+	                
+	            ELSE
+	                #Transf.Dial_Def.Num_Def_Etape := 1;
+	                #Transf.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := 'Confirmation de vidange',
+	                                                                 Type_Defaut := 2,
+	                                                                 Automatisme := #Transf._TransfCommun.CommunGeneral._Autom,
+	                                                                 Num_Lot := #Transf._Ptzs._NoLot,
+	                                                                 Origine_Defaut := 'Pas de presence du matiere',
+	                                                                 Libelle_Origine := 'Pas de presence du matiere',
+	                                                                 Acq1 := 'Oui',
+	                                                                 Acq2 := 'Non',
+	                                                                 Acq3 := '',
+	                                                                 Acq4 := '',
+	                                                                 Acq5 := '',
+	                                                                 Acq6 := '',
+	                                                                 Acq7 := '',
+	                                                                 Acq8 := '',
+	                                                                 Acq_Choisi := -1,
+	                                                                 Date_Arrivee := #Transf._TpsPicke);
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                RETURN;
+	            END_IF;
+	        DEF_ORIG_DEF1:
+	            
+	            IF #Transf.Dial_Def.Reponse_Def = 'Non' THEN
+	                //  #Ret_Int := "Dem_Mobile"("Index_Mobile"("DB_BIBLIOTHEQUE".Mobile."THIS"[#Transf._PtCir.Origine].Nom));
+	                #Transf.Dial_Def.Reponse_Def := '';
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_surveillance;
+	                
+	                RETURN;
+	            END_IF;
+	            
+	            IF #Transf.Dial_Def.Reponse_Def = 'Oui' THEN
+	                // #Ret_Int := "Dem_Mobile"("Index_Mobile"("DB_BIBLIOTHEQUE".Mobile."THIS"[#Transf._PtCir.Origine].Nom));
+	                #Transf._Ptzs._ArretReel := 'B';
+	                #Transf.Dial_Def.Reponse_Def := '';
+	                #Ret_Int := "RechIndexCel"("Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._PtOrig));
+	                //  "Arret_Ext_Libere"(Origine := "DB_Mod_Cellule"._TabCel[#Ret_Int]);
+	                
+	                "MarcheExt"(Origine := #Transf._TransfCommun.CommunGeneral._PtOrig,
+	                            Position := #PosFerm,
+	                            Vitesse := 0);
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_vidange;
+	                RETURN;
+	            END_IF;
+	            
+	        END_REGION Traitement cyclique
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║         Etape suspension           ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                
+	*)
+	    #Etape_suspension:
+	        REGION Traitement preliminaire 'suspension'
+	            IF (#Transf._TransfCommun.CommunGeneral._Etp <> #Transf._TransfCommun.CommunGeneral._EtpPrec) THEN
+	                //Memorisation de l'etape encours
+	                #Transf._TransfCommun.CommunGeneral._EtpPrec := #Transf._TransfCommun.CommunGeneral._Etp;
+	                //Reperer le niveau du grafcet
+	                #MajNiv := "Maj_Niv"(Num_Zone := #Transf._TransfCommun.CommunGeneral._NumZone, Num_Tache := #Transf._TransfCommun.CommunGeneral._Tache, Niveau := "TRANSF_Suspension_Niv");
+	                //Nomination l'etape en cours
+	                #Transf._TransfCommun.CommunGeneral._DescEtp := 'Etape suspension';
+	                //lecture du temps local 
+	                #Ret_RD_Sys_T := RD_SYS_T(#Transf._TpsPicke);
+	                //Appel fonction arret ext libere
+	                // Arret_Ext_Libere(_ptOrig,AVEC_ATTENTE);
+	                #Ret_Int := "RechIndexCel"("Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._PtOrig));
+	                // "Arret_Ext_Libere"(Origine := "DB_Mod_Cellule"._TabCel[#Ret_Int]);
+	                "MarcheExt"(Origine := #Transf._TransfCommun.CommunGeneral._PtOrig,
+	                            Position := #PosFerm,
+	                            Vitesse := 0);
+	                IF #Transf.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #Transf.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO SUSPENSION_DEF1;
+	                    END_CASE;
+	                END_IF;
+	                
+	                
+	                // #Ret_Int := "Vid_Circuit"(#Transf._PtCir);
+	            END_IF;
+	        END_REGION Traitement preliminaire 'suspension'
+	        
+	        
+	        REGION Traitement cyclique "suspension"
+	            (* IF "DB_BIBLIOTHEQUE".Mobile."THIS"[#Transf._PtCir.Destination].Etat = 6 THEN
+	                #Ret_Int := "Libere_Circuit"(#Transf._PtCir);
+	                IF #Transf._FgArret THEN
+	                    // Maj liste des cellules utilises
+	                    // "MAJ_Cumul_Dest"(_ptDest,0); 
+	                    #Transf.TransfCommun.CommunGeneral._Etp := #Etape_MAJ_Base;
+	                    RETURN;
+	                END_IF;
+	                //Attente fin suspension
+	                IF NOT #Transf._FgSusp THEN
+	                    #Transf.TransfCommun.CommunGeneral._Etp := #Etape_Lancement;
+	                    RETURN;
+	                END_IF;
+	            END_IF; *)
+	            
+	            #Return := "Tempo"(Duree := T#3m, Tps_Picke := #Transf._TpsPicke, Anticip := FALSE, Tps_Passe => #Tps_Passe);
+	            IF #Return = TRUE THEN
+	                IF #Transf._FgArret = TRUE THEN
+	                    #Transf.Dial_Def.Num_Def_Etape := 1;
+	                    #Transf.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := 'Arret immediat',
+	                                                                     Type_Defaut := 2,
+	                                                                     Automatisme := #Transf._TransfCommun.CommunGeneral._Autom,
+	                                                                     Num_Lot := #Transf._Ptzs._NoLot,
+	                                                                     Origine_Defaut := 'Pas d action durant la suspension',
+	                                                                     Libelle_Origine := 'Confirmez vous l arret',
+	                                                                     Acq1 := 'Confirmez',
+	                                                                     Acq2 := 'Annuler',
+	                                                                     Acq3 := '',
+	                                                                     Acq4 := '',
+	                                                                     Acq5 := '',
+	                                                                     Acq6 := '',
+	                                                                     Acq7 := '',
+	                                                                     Acq8 := '',
+	                                                                     Acq_Choisi := -1,
+	                                                                     Date_Arrivee := #Transf._TpsPicke);
+	                    #Transf._TransfCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	        SUSPENSION_DEF1:
+	            //======================== Traitement des reponses pour le defaut1 Etape Suspension  ====================================//  
+	            IF #Transf.Dial_Def.Reponse_Def = 'Confirmez' THEN
+	                #Ret_Int := "Arr_Imm_Circuit"(#Transf._PtCir);
+	                #Transf.Dial_Def.Reponse_Def := '';
+	                #Transf._Ptzs._ArretReel := 'O';
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_Fin_Lot;
+	                RETURN;
+	            END_IF;
+	            IF #Transf.Dial_Def.Reponse_Def = 'Annuler' THEN
+	                //Renitialiser la temporisation pour refaire le test
+	                #Ret_RD_Sys_T := RD_SYS_T(#Transf._TpsPicke);
+	                #Transf.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            //======================================  Fin traitement====================================//  
+	            //pas de dialogue pour Confirmez l'arret
+	            IF #Return AND NOT #Transf._FgArret THEN
+	                #Ret_Int := "Arr_Imm_Circuit"(#Transf._PtCir);
+	                #Transf._Ptzs._ArretReel := 'O';
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_Fin_Lot;
+	                RETURN;
+	            END_IF;
+	            IF (#Transf._FgArret = TRUE) THEN
+	                #Transf._Ptzs._QteLot := #Transf._TransfCommun.CommunGeneral._ParCal._QteTrans;
+	                
+	                "MAJ_Cumul_Dest"(Dest := "Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._Ptdest),
+	                                 Increment := FALSE,
+	                                 DestR := #Transf._Ptzs._DestR,
+	                                 PARCAL := #Transf._TransfCommun.CommunGeneral._ParCal);
+	                //Fin_Lot_Circuit(_ptCir, _ptCir->Origine.Mobile, _ptCir->Destination.Mobile, pt_zs->QteLot);  
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_MAJ_Base;
+	                RETURN;
+	            END_IF;
+	            IF #Transf._FgSusp = FALSE THEN
+	                //APPEL FCT MARCHE MOB
+	                //"DB_BIBLIOTHEQUE".Mobile."THIS"["DB_BIBLIOTHEQUE".Mobile."THIS"[#REC._PtCir.Origine].Mob_Suiv[0]].Ord := 0; // Appl fct arrt mob
+	                // #Ret_Int := "Dem_Mobile"("DB_BIBLIOTHEQUE".Mobile."THIS"[#Transf._PtCir.Origine].Mob_Suiv[0]);
+	                //#Ret_Int := "RechIndexCel"("Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._PtOrig));
+	                //"Marche_Ext_Libere"(Origine := "DB_Mod_Cellule"._TabCel[#Ret_Int]);
+	                "MarcheExt"(Origine := #Transf._TransfCommun.CommunGeneral._PtOrig,
+	                            Position := #PosOuv,
+	                            Vitesse := 0);
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_surveillance;
+	                RETURN;
+	            END_IF;
+	            IF (#Transf._FgDemVid = TRUE) THEN
+	                //#REC._FgSusp := FALSE;
+	                #Transf._Ptzs._ArretReel := 'O';
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_vidange;
+	                RETURN;
+	            END_IF;
+	            
+	            
+	            
+	            
+	            
+	            
+	        END_REGION Traitement cyclique      
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║         Etape Arret Source         ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                
+	*)
+	    #Etape_Arret_Source:
+	        REGION Traitement preliminaire 'Arret Source'
+	            IF (#Transf._TransfCommun.CommunGeneral._Etp <> #Transf._TransfCommun.CommunGeneral._EtpPrec) THEN
+	                //Memorisation de l'etape encours
+	                #Transf._TransfCommun.CommunGeneral._EtpPrec := #Transf._TransfCommun.CommunGeneral._Etp;
+	                //Reperer le niveau du grafcet
+	                #MajNiv := "Maj_Niv"(Num_Zone := #Transf._TransfCommun.CommunGeneral._NumZone, Num_Tache := #Transf._TransfCommun.CommunGeneral._Tache, Niveau := "TRANSF_ArretSource_Niv");
+	                //Nomination l'etape en cours
+	                #Transf._TransfCommun.CommunGeneral._DescEtp := 'Etape Arret Source';
+	                //lecture du temps local 
+	                #Ret_RD_Sys_T := RD_SYS_T(#Transf._TpsPicke);
+	                
+	                //Arret_Ext(_ptOrig,AVEC_ATTENTE);
+	                #Ret_Int := "RechIndexCel"("Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._PtOrig));
+	                // "Arret_Ext_Libere"(Origine := "DB_Mod_Cellule"._TabCel[#Ret_Int]);
+	                "MarcheExt"(Origine := #Transf._TransfCommun.CommunGeneral._PtOrig,
+	                            Position := #PosFerm,
+	                            Vitesse := 0);
+	            END_IF;
+	        END_REGION Traitement preliminaire 'Arret Source'
+	        
+	        
+	        REGION Traitement cyclique "Arret Source"
+	            //test niveau haut destination
+	            IF NOT #Transf._niveauHaut THEN
+	                #Transf._Ptzs._Nh := FALSE;
+	                //#Ret_Int := "RechIndexCel"("Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._PtOrig));
+	                // "Marche_Ext_Libere"(Origine := "DB_Mod_Cellule"._TabCel[#Ret_Int]);
+	                "MarcheExt"(Origine := #Transf._TransfCommun.CommunGeneral._PtOrig,
+	                            Position := #PosOuv,
+	                            Vitesse := 0);
+	                //  Marche_Ext(_ptOrig,AVEC_ATTENTE,pt_zs);
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_surveillance;
+	                RETURN;
+	            END_IF;
+	            
+	            //Test arret
+	            IF #Transf._FgArret THEN
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_vidange;
+	                RETURN;
+	            END_IF;
+	            
+	        END_REGION Traitement cyclique
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║         Etape Changement dest      ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                
+	*)
+	        
+	    #Etape_changement_destination:
+	        REGION Traitement preliminaire 'changement destination'
+	            IF (#Transf._TransfCommun.CommunGeneral._Etp <> #Transf._TransfCommun.CommunGeneral._EtpPrec) THEN
+	                //Memorisation de l'etape encours
+	                #Transf._TransfCommun.CommunGeneral._EtpPrec := #Transf._TransfCommun.CommunGeneral._Etp;
+	                //Reperer le niveau du grafcet
+	                #MajNiv := "Maj_Niv"(Num_Zone := #Transf._TransfCommun.CommunGeneral._NumZone, Num_Tache := #Transf._TransfCommun.CommunGeneral._Tache, Niveau := "TRANSF_ChangementDestination_Niv");
+	                //Nomination l'etape en cours
+	                #Transf._TransfCommun.CommunGeneral._DescEtp := 'Etape changement destination';
+	                //lecture du temps local 
+	                #Ret_RD_Sys_T := RD_SYS_T(#Transf._TpsPicke);
+	                
+	                #Transf.ChNoeud._Etp := 0; //Initialiser le grafcet changement sur noeud
+	                "Recup_Noeud"(Circuit := #Transf._PtCir,
+	                              ListeNoeuds => #Transf.ChNoeud._ListeNoeaudAnc);
+	                IF #Transf._FgChangDest = FALSE THEN
+	                    #Transf._Ptzs._DestR._Liste[#Transf._Ptzs._DestR._Index]._Nh := 1;
+	                END_IF;
+	                
+	                IF #Transf._TransfCommun.CommunGeneral._IndxDest > "NB_MAX_DEST" THEN
+	                    #Transf._CelluleTrouve := -1;
+	                ELSE
+	                    #Transf._CelluleTrouve := 0;
+	                END_IF;
+	                IF #Transf.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #Transf.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO CHANGEMENT_DEST_DEF1;
+	                        2:
+	                            GOTO CHANGEMENT_DEST_DEF2;
+	                            
+	                    END_CASE;
+	                END_IF;
+	                #Ret_RD_Sys_T := RD_SYS_T(#Transf._TpsPicke);
+	                
+	                #Ret_Int := "RechIndexCel"("Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._PtOrig));
+	                //"Arret_Ext_Libere"(Origine := "DB_Mod_Cellule"._TabCel[#Ret_Int]);
+	                "MarcheExt"(Origine := #Transf._TransfCommun.CommunGeneral._PtOrig,
+	                            Position := #PosFerm,
+	                            Vitesse := 0);
+	                
+	                // Arreter l'origine
+	                //   #Ret_Int := "Arr_Imm_Mobile"("Index_Mobile"( #Transf._orig.Nom));
+	                
+	                //memorisation ancienne destination 
+	                #Transf._TransfCommun.CommunGeneral._AncDest := #Transf._TransfCommun.CommunGeneral._Ptdest;
+	                "MAJ_Cumul_Dest"(Dest := "Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._AncDest),
+	                                 Increment := TRUE,
+	                                 DestR := #Transf._Ptzs._DestR,
+	                                 PARCAL := #Transf._TransfCommun.CommunGeneral._ParCal);
+	                
+	            END_IF;
+	        END_REGION Traitement preliminaire 'changement destination'
+	        
+	        
+	        REGION Traitement cyclique 'changement destination'
+	            IF #Transf._TransfCommun.CommunGeneral._IndxDest < 0 THEN
+	                #Transf._TransfCommun.CommunGeneral._IndxDest := 0;
+	            END_IF;
+	            // IF #Transf._CelluleTrouve = 0 AND #Transf.Dial_Def.Reponse_Def = '' THEN
+	            
+	            IF #Transf._CelluleTrouve = 0 THEN
+	                IF #Transf._TransfCommun.CommunGeneral._IndxDest >= "NB_MAX_DEST" THEN
+	                    #Transf._CelluleTrouve := -1;
+	                END_IF;
+	                //Boucle for qui parcoure la liste des destinations recuperes depuis la Base
+	                FOR #i := #Transf._TransfCommun.CommunGeneral._IndxDest TO "NB_MAX_DEST" DO
+	                    IF #i >= "NB_MAX_DEST" THEN
+	                        #Transf._CelluleTrouve := -1;
+	                        //#Transf.TransfCommun.CommunGeneral._IndxDest := #Transf.TransfCommun.CommunGeneral._IndxDest + 1;
+	                        #Transf._TransfCommun.CommunGeneral._IndxDest := #ListeDestParcourue;
+	                        EXIT;
+	                    END_IF;
+	                    IF (#Transf._TransfCommun.CommunGeneral._Dest[#i + 1] > -1) THEN
+	                        //#Transf._CelluleTrouve := "Controle_Cellule"(Indice := #i + 1, Cel := "DB_Mod_Cellule", R := #REC);
+	                        
+	                        #Transf._CelluleTrouve := "Controle_Cellule"(FgMaskNh := #Transf._FgMaskCtrlNh,
+	                                                                     NvCellule := "Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._Dest[#i + 1]),
+	                                                                     TypeCelDest := #Transf._TypeCelDest,
+	                                                                     Cel := "DB_Mod_Cellule",
+	                                                                     NiveauHautDestNh => #Transf._NiveauHautDestNh);
+	                        IF (#Transf._CelluleTrouve = 2) THEN //controle valide
+	                            #Transf._TransfCommun.CommunGeneral._IndxDest := #i + 1;
+	                            EXIT;
+	                        END_IF;
+	                    END_IF;
+	                END_FOR;
+	            END_IF;
+	            
+	            ////Test invalide de la destination recuperee de la Base cellule n'existe pas
+	            IF #Transf._CelluleTrouve = -1 THEN
+	                #Transf.Dial_Def.Num_Def_Etape := 1;
+	                #Transf.Dial_Def.Reponse_Def := '';
+	                #Transf.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := 'Veuillez saisir la nouvelle destination',
+	                                                                 Type_Defaut := 2,
+	                                                                 Automatisme := #Transf._TransfCommun.CommunGeneral._Autom,
+	                                                                 Num_Lot := #Transf._Ptzs._NoLot,
+	                                                                 Origine_Defaut := 'Circuit Impossible ',
+	                                                                 Libelle_Origine := 'Circuit Impossible ',
+	                                                                 Acq1 := 'Relance',
+	                                                                 Acq2 := 'Cellule',
+	                                                                 Acq3 := '',
+	                                                                 Acq4 := '',
+	                                                                 Acq5 := '',
+	                                                                 Acq6 := '',
+	                                                                 Acq7 := '',
+	                                                                 Acq8 := '',
+	                                                                 Acq_Choisi := -1,
+	                                                                 Date_Arrivee := #Transf._TpsPicke);
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                RETURN;
+	            END_IF;
+	        CHANGEMENT_DEST_DEF1:
+	            //============ Traitement des reponses pour le defaut1 Etape CHANGEMENT DE DESTINATION cellule introuvable  ====================================//
+	            IF "Index_Mobile"(#Transf.Dial_Def.Text_Reponse) = #Transf._TransfCommun.CommunGeneral._Ptdest THEN
+	                // #Ret_Int := "RechIndexCel"("Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._PtOrig));
+	                // "Marche_Ext_Libere"(Origine := "DB_Mod_Cellule"._TabCel[#Ret_Int]);
+	                "MarcheExt"(Origine := #Transf._TransfCommun.CommunGeneral._PtOrig,
+	                            Position := #PosOuv,
+	                            Vitesse := 0);
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_surveillance;
+	                RETURN;
+	            END_IF;
+	            
+	            IF #Transf.Dial_Def.Reponse_Def = 'Relance' AND #Transf.Dial_Def.Num_Def_Etape = 1 THEN //relance
+	                #Transf._FgChangDest := FALSE;
+	                #Transf._TransfCommun.SUPTRANS.Commande._FgChangDest := FALSE;
+	                #Transf._CelluleTrouve := 2;
+	                #Transf.Dial_Def.Reponse_Def := '';
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_changement_destination;
+	                RETURN;
+	            END_IF;
+	            
+	            IF #Transf.Dial_Def.Reponse_Def = 'Cellule' AND #Transf.Dial_Def.Num_Def_Etape = 1 THEN // cellule
+	                #Ret_Int := "Index_Mobile"(#Transf.Dial_Def.Text_Reponse);
+	                #Transf.Dial_Def.Reponse_Def := '';
+	                IF #Ret_Int <= -1 THEN
+	                    #Text_Def := CONCAT(IN1 := 'Cellule ', IN2 := #Transf.Dial_Def.Text_Reponse, IN3 := ' Inexistante');
+	                    #Transf.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := #Text_Def,
+	                                                                     Type_Defaut := 2,
+	                                                                     Automatisme := #Transf._TransfCommun.CommunGeneral._Autom,
+	                                                                     Num_Lot := #Transf._PtCir.Num_Lot,
+	                                                                     Origine_Defaut := #Text_Def,
+	                                                                     Libelle_Origine := 'Cellule inexistante',
+	                                                                     Acq1 := 'Relance',
+	                                                                     Acq2 := 'Cellule',
+	                                                                     Acq3 := '',
+	                                                                     Acq4 := '',
+	                                                                     Acq5 := '',
+	                                                                     Acq6 := '',
+	                                                                     Acq7 := '',
+	                                                                     Acq8 := '',
+	                                                                     Acq_Choisi := -1,
+	                                                                     Date_Arrivee := #Transf._TpsPicke);
+	                    #Transf._TransfCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                    #Transf.Dial_Def.Text_Reponse := '';
+	                    RETURN;
+	                ELSE
+	                    #Transf._CelluleTrouve := "Controle_Cellule"(FgMaskNh := #Transf._FgMaskCtrlNh,
+	                                                                 NvCellule := #Transf.Dial_Def.Text_Reponse,
+	                                                                 TypeCelDest := #Transf._TypeCelDest,
+	                                                                 Cel := "DB_Mod_Cellule",
+	                                                                 NiveauHautDestNh => #Transf._NiveauHautDestNh);
+	                END_IF;
+	            END_IF;
+	            //============ fIN Traitement des reponses pour le defaut1 Etape CHANGEMENT DE DESTINATION cellule introuvable  ===============================//    
+	            
+	            
+	            
+	            
+	            
+	            
+	            ////Test invalide de la destination recuperee de la Base, cellule est en nh
+	            IF #Transf._CelluleTrouve = 1 THEN
+	                #Transf.Dial_Def.Num_Def_Etape := 2;
+	                #Text_Def := CONCAT(IN1 := 'Cellule ', IN2 := #Transf.Dial_Def.Text_Reponse, IN3 := '  est en NH');
+	                #Transf.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := #Text_Def,
+	                                                                 Type_Defaut := 2,
+	                                                                 Automatisme := #Transf._TransfCommun.CommunGeneral._Autom,
+	                                                                 Num_Lot := #Transf._Ptzs._NoLot,
+	                                                                 Origine_Defaut := #Text_Def,
+	                                                                 Libelle_Origine := #Text_Def,
+	                                                                 Acq1 := 'Relance',
+	                                                                 Acq2 := 'Cellule',
+	                                                                 Acq3 := '', //'Forçage'
+	                                                                 Acq4 := '',
+	                                                                 Acq5 := '',
+	                                                                 Acq6 := '',
+	                                                                 Acq7 := '',
+	                                                                 Acq8 := '',
+	                                                                 Acq_Choisi := -1,
+	                                                                 Date_Arrivee := #Transf._TpsPicke);
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                RETURN;
+	            END_IF;
+	        CHANGEMENT_DEST_DEF2:
+	            //============ Traitement des reponses pour le defaut2 Etape CHANGEMENT DE DESTINATION cellule en nh  ====================================//
+	            IF #Transf.Dial_Def.Reponse_Def = 'Relance' AND #Transf.Dial_Def.Num_Def_Etape = 2 THEN
+	                #Transf._CelluleTrouve := "Controle_Cellule"(FgMaskNh := #Transf._FgMaskCtrlNh,
+	                                                             NvCellule := #Transf.Dial_Def.Text_Reponse,
+	                                                             TypeCelDest := #Transf._TypeCelDest,
+	                                                             Cel := "DB_Mod_Cellule",
+	                                                             NiveauHautDestNh => #Transf._NiveauHautDestNh);
+	                #Transf.Dial_Def.Text_Reponse := '';
+	                RETURN;
+	            END_IF;
+	            
+	            
+	            IF #Transf.Dial_Def.Reponse_Def = 'Forcage' AND #Transf.Dial_Def.Num_Def_Etape = 2 THEN
+	                #Transf._FgMaskCtrlNh := TRUE;
+	                #Transf._FgChangDest := FALSE;
+	                #Transf._TransfCommun.SUPTRANS.Commande._FgChangDest := FALSE;
+	                #Transf._Ptzs._DestR._Liste[#Transf._Ptzs._DestR._Index]._Nh := FALSE;
+	                #Transf._CelluleTrouve := 2;
+	                #Transf._TransfCommun.CommunGeneral._Ptdest := "Index_Mobile"(#Transf.Dial_Def.Text_Reponse);
+	                #Transf._IndexDestEc := "RechIndexCel"("Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._Ptdest));
+	                IF #Transf._IndexDestEc > -1 THEN
+	                    #Transf._ptDestEc := "DB_Mod_Cellule"._TabCel[#Transf._IndexDestEc];
+	                END_IF;
+	                (* "MAJ_Cumul_Dest"(Dest := "Nom_Mobile"(#Transf.TransfCommun.CommunGeneral._Ptdest),
+	                                  Increment := FALSE,
+	                                  DestR := #Transf._Ptzs._DestR,
+	                                  PARCAL := #Transf.TransfCommun.CommunGeneral._ParCal);
+	                 #Transf._CumulQteNh := #Transf._Ptzs._DestR._Liste[#Transf._Ptzs._DestR._Index]._CumulQte;
+	                 (* #Transf.transfCommun.CommunGeneral._Ptdest := "Index_Mobile"(#Transf.Dial_Def.Text_Reponse);
+	                 #Transf._IndexDestEc := "RechIndexCel"("Nom_Mobile"(#Transf.transfCommun.CommunGeneral._Ptdest)); *)
+	                "ChngDestNoeud_Transfert"(#Transf); *)
+	                #Transf.Dial_Def.Reponse_Def := '';
+	            END_IF;
+	            
+	            
+	            
+	            IF #Transf.Dial_Def.Reponse_Def = 'Cellule' AND #Transf.Dial_Def.Num_Def_Etape = 2 THEN // cellule
+	                #Ret_Int := "Index_Mobile"(#Transf.Dial_Def.Text_Reponse);
+	                #Transf.Dial_Def.Reponse_Def := '';
+	                IF #Ret_Int <= -1 THEN
+	                    #Transf._CelluleTrouve := 0;
+	                    #Transf.Dial_Def.Num_Def_Etape := 1;
+	                    #Text_Def := CONCAT(IN1 := 'Cellule ', IN2 := #Transf.Dial_Def.Text_Reponse, IN3 := '  inexistante');
+	                    #Transf.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := #Text_Def,
+	                                                                     Type_Defaut := 2,
+	                                                                     Automatisme := #Transf._TransfCommun.CommunGeneral._Autom,
+	                                                                     Num_Lot := #Transf._PtCir.Num_Lot,
+	                                                                     Origine_Defaut := 'Cellule inexistante',
+	                                                                     Libelle_Origine := 'Cellule inexistante',
+	                                                                     Acq1 := 'Relance',
+	                                                                     Acq2 := 'Cellule',
+	                                                                     Acq3 := '',
+	                                                                     Acq4 := '',
+	                                                                     Acq5 := '',
+	                                                                     Acq6 := '',
+	                                                                     Acq7 := '',
+	                                                                     Acq8 := '',
+	                                                                     Acq_Choisi := -1,
+	                                                                     Date_Arrivee := #Transf._TpsPicke);
+	                    #Transf._TransfCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                    #Transf.Dial_Def.Text_Reponse := '';
+	                    RETURN;
+	                ELSE
+	                    #Transf._CelluleTrouve := "Controle_Cellule"(FgMaskNh := #Transf._FgMaskCtrlNh,
+	                                                                 NvCellule := #Transf.Dial_Def.Text_Reponse,
+	                                                                 TypeCelDest := #Transf._TypeCelDest,
+	                                                                 Cel := "DB_Mod_Cellule",
+	                                                                 NiveauHautDestNh => #Transf._NiveauHautDestNh);
+	                END_IF;
+	            END_IF;
+	            
+	            //============ FIN Traitement des reponses pour le defaut2 Etape CHANGEMENT DE DESTINATION cellule en nh  ====================================// 
+	            
+	            
+	            
+	            IF #Transf._CelluleTrouve = 3 THEN // CELLULE RECUP VALID MAIS LA RECHERCHERCHE DU NV CIRC RETURN-1
+	                #Transf.Dial_Def.Num_Def_Etape := 1;
+	                #Text_Def := CONCAT(IN1 := 'Circuit de ', IN2 := "Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._PtOrig), IN3 := ' vers ', IN4 := #Transf.Dial_Def.Text_Reponse, IN5 := ' introuvable ou reserve ');
+	                #Transf.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := #Text_Def,
+	                                                                 Type_Defaut := 2,
+	                                                                 Automatisme := #Transf._TransfCommun.CommunGeneral._Autom,
+	                                                                 Num_Lot := #Transf._Ptzs._NoLot,
+	                                                                 Origine_Defaut := 'Circuit Introuvable',
+	                                                                 Libelle_Origine := 'Circuit Introuvable',
+	                                                                 Acq1 := 'Relance',
+	                                                                 Acq2 := 'Cellule',
+	                                                                 Acq3 := '',
+	                                                                 Acq4 := '',
+	                                                                 Acq5 := '',
+	                                                                 Acq6 := '',
+	                                                                 Acq7 := '',
+	                                                                 Acq8 := '',
+	                                                                 Acq_Choisi := -1,
+	                                                                 Date_Arrivee := #Transf._TpsPicke);
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                RETURN;
+	            END_IF;
+	            
+	            
+	            //Test valide de la destination recuperee 
+	            IF #Transf._CelluleTrouve = 2 THEN
+	                IF #Transf._TransfCommun.CommunGeneral._IndxDest <> #ListeDestParcourue THEN
+	                    #CdZoneDest := "Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._Dest[#Transf._TransfCommun.CommunGeneral._IndxDest]);
+	                ELSE
+	                    #CdZoneDest := #Transf.Dial_Def.Text_Reponse;
+	                END_IF;
+	                #Anc_Dest := "Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._AncDest);
+	                (* "ControleDestTransf"(fgbase := fgbase,
+	                                     "Return" => #Ret_Int,
+	                                     Transf := #Transf,
+	                                     NoLot := #Transf._Ptzs._NoLot,
+	                                     CdZoneDest := #CdZoneDest,
+	                                     Anc_Dest := #Anc_Dest,
+	                                     Nouv_Dest := #Transf._Ptzs._NouvDest,
+	                                     CdMat := #Transf._Ptzs._CdMat,
+	                                     NomAuto := #Transf.TransfCommun.CommunGeneral._Autom); *)
+	                
+	                "ControleDest"(fgbase := #fgbase,
+	                               TypeCelDest := #Transf._TypeCelDest,
+	                               FgMaskCtrlNh := #Transf._FgMaskCtrlNh,
+	                               "Return" => #Ret_Int,
+	                               FgLanc => #Transf._FgLanc,
+	                               NiveauHautDestNh => #Transf._NiveauHautDestNh,
+	                               CntlDest := #Transf.CntlDest,
+	                               Dial_Def := #Transf.Dial_Def,
+	                               NoLot := #Transf._Ptzs._NoLot,
+	                               CdZoneDest := #CdZoneDest,
+	                               Anc_Dest := #Anc_Dest,
+	                               Nouv_Dest := #Transf._Ptzs._NouvDest,
+	                               CdMat := #Transf._Ptzs._CdMat,
+	                               NomAuto := #Transf._TransfCommun.CommunGeneral._Autom);
+	                
+	                IF #Ret_Int = -1 THEN
+	                    #Transf._CelluleTrouve := 0;
+	                END_IF;
+	                IF #Ret_Int = 1 THEN
+	                    #Transf._CumulQteNh := #Transf._Ptzs._DestR._Liste[#Transf._Ptzs._DestR._Index]._CumulQte;
+	                    // IF #Transf.TransfCommun.CommunGeneral._IndxDest <= "NB_MAX_DEST" THEN //AND #Transf.Dial_Def.Num_Def_Etape = 0 THEN
+	                    IF #Transf._TransfCommun.CommunGeneral._IndxDest <> #ListeDestParcourue THEN
+	                        #Transf._TransfCommun.CommunGeneral._Ptdest := #Transf._TransfCommun.CommunGeneral._Dest[#Transf._TransfCommun.CommunGeneral._IndxDest];
+	                    ELSE
+	                        #Transf._TransfCommun.CommunGeneral._Ptdest := "Index_Mobile"(#Transf.Dial_Def.Text_Reponse);
+	                    END_IF;
+	                    #Transf._IndexDestEc := "RechIndexCel"("Nom_Mobile"(#Transf.#_TransfCommun.CommunGeneral._Ptdest));
+	                    IF #Transf._IndexDestEc > -1 THEN
+	                        #Transf._ptDestEc := "DB_Mod_Cellule"._TabCel[#Transf._IndexDestEc];
+	                    END_IF;
+	                    #Transf._TransfCommun.CommunGeneral._Etp := #Etape_ChgmtDestNoeud;
+	                    RETURN;
+	                    
+	                END_IF;
+	                
+	                
+	                (* #Transf._CumulQteNh := #Transf._Ptzs._DestR._Liste[#Transf._Ptzs._DestR._Index]._CumulQte;
+	                 // IF #Transf.TransfCommun.CommunGeneral._IndxDest <= "NB_MAX_DEST" THEN //AND #Transf.Dial_Def.Num_Def_Etape = 0 THEN
+	                 IF #Transf.TransfCommun.CommunGeneral._IndxDest <> #ListeDestParcourue THEN
+	                     #Transf.TransfCommun.CommunGeneral._Ptdest := #Transf.TransfCommun.CommunGeneral._Dest[#Transf.TransfCommun.CommunGeneral._IndxDest];
+	                 ELSE
+	                     #Transf.TransfCommun.CommunGeneral._Ptdest := "Index_Mobile"(#Transf.Dial_Def.Text_Reponse);
+	                 END_IF;
+	                 #Transf._IndexDestEc := "RechIndexCel"("Nom_Mobile"(#Transf.#TransfCommun.CommunGeneral._Ptdest));
+	                 IF #Transf._IndexDestEc > -1 THEN
+	                     #Transf._ptDestEc := "DB_Mod_Cellule"._TabCel[#Transf._IndexDestEc];
+	                 END_IF;
+	                 "ChngDestNoeud_Transfert"(#Transf); *)
+	            END_IF;
+	            
+	            
+	            
+	            
+	            
+	            
+	            
+	            (* IF #Transf.TransfCommun.CommunGeneral._IndxDest <> #ListeDestParcourue THEN
+	                 #CdZoneDest := "Nom_Mobile"(#Transf.TransfCommun.CommunGeneral._Dest[#Transf.TransfCommun.CommunGeneral._IndxDest]);
+	             ELSE
+	                 #CdZoneDest := #Transf.Dial_Def.Text_Reponse;
+	             END_IF;
+	             #Anc_Dest := "Nom_Mobile"(#Transf.TransfCommun.CommunGeneral._AncDest);
+	             "ControleDestTransf"(fgbase:=fgbase,
+	                                  "Return"=>#Ret_Int,
+	                                  Transf:=#Transf,
+	                                  NoLot:=#Transf._Ptzs._NoLot,
+	                                  CdZoneDest:= #CdZoneDest,
+	                                  Anc_Dest:= #Anc_Dest,
+	                                  Nouv_Dest:=#Transf._Ptzs._NouvDest,
+	                                  CdMat:=#Transf._Ptzs._CdMat,
+	                                  NomAuto:=#Transf.TransfCommun.CommunGeneral._Autom);
+	             IF #Ret_Int =1 THEN
+	                 #Transf._CelluleTrouve := 2 ;
+	             ELSE
+	                 #Transf._CelluleTrouve := -2;
+	             END_IF; *)
+	            
+	        END_REGION Traitement cyclique      
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║          ChgmtDestNoeud            ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                
+	*)
+	    #Etape_ChgmtDestNoeud:
+	        REGION Traitement preliminaire 'ChgmtDestNoeud'
+	            IF (#Transf._TransfCommun.CommunGeneral._Etp <> #Transf._TransfCommun.CommunGeneral._EtpPrec) THEN
+	                //Memorisation de l'etape encours
+	                #Transf._TransfCommun.CommunGeneral._EtpPrec := #Transf._TransfCommun.CommunGeneral._Etp;
+	                //Reperer le niveau du grafcet
+	                #MajNiv := "Maj_Niv"(Num_Zone := #Transf._TransfCommun.CommunGeneral._NumZone, Num_Tache := #Transf._TransfCommun.CommunGeneral._Tache, Niveau := "TRANSF_ChangementNoeud_Niv");
+	                //Nomination l'etape en cours
+	                #Transf._TransfCommun.CommunGeneral._DescEtp := 'Etape ChgmtDestNoeud';
+	                //lecture du temps local 
+	                #Ret_RD_Sys_T := RD_SYS_T(#Transf._TpsPicke);
+	                IF #Transf.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #Transf.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO ProcChangDest_DEF1;
+	                    END_CASE;
+	                END_IF;
+	            END_IF;
+	        END_REGION Traitement preliminaire 'ChgmtDestNoeud'   
+	        REGION Traitement cyclique 'ChgmtDestNoeud'
+	            #ReturnChngDest := "ChngDest"(NouvDest := #Transf._TransfCommun.CommunGeneral._Ptdest,
+	                                          AncDest := #Transf._TransfCommun.CommunGeneral._AncDest,
+	                                          IndxDestEncours := #Transf._TransfCommun.CommunGeneral._IndxDest,
+	                                          ChNoeud := #Transf.ChNoeud,
+	                                          AncCircuit := #Transf._PtCir,
+	                                          CelluleTrouve := #Transf._CelluleTrouve,
+	                                          FgChangementDest := #Transf._FgChangDest);
+	            IF #ReturnChngDest = -3 THEN //rech circ return -1 et
+	                #Transf._CelluleTrouve := 3;
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_changement_destination;
+	                RETURN;
+	            END_IF;
+	            IF #ReturnChngDest = -2 THEN //rech circ return -1
+	                #Transf._CelluleTrouve := 0;
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_changement_destination;
+	                RETURN;
+	            END_IF;
+	            IF #ReturnChngDest = 1 THEN // valide
+	                IF #fgbase THEN
+	                    IF #Transf._Ptzs._DestR._Index > 1 THEN
+	                        #ResultProcChangmtdesttransf := "Proc_Changement_Dest_TRANSF"(NumPoste := "Num_Poste", IdTransf := #Transf._Ptzs._Id_Transf,
+	                                                                                      AncDest := "Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._AncDest),
+	                                                                                      NvDest := "Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._Ptdest),
+	                                                                                      QTE := #Transf._Ptzs._DestR._Liste[#Transf._Ptzs._DestR._Index - 1]._Qte,
+	                                                                                      TpsMarche := #Transf._Ptzs._DestR._Liste[#Transf._Ptzs._DestR._Index - 1]._Tps / 1000,
+	                                                                                      MajStock := 'R', Msg_Def => #Text_Def);
+	                    ELSE
+	                        #ResultProcChangmtdesttransf := "Proc_Changement_Dest_TRANSF"(NumPoste := "Num_Poste", IdTransf := #Transf._Ptzs._Id_Transf,
+	                                                                                      AncDest := "Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._AncDest),
+	                                                                                      NvDest := "Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._Ptdest),
+	                                                                                      QTE := #Transf._TransfCommun.CommunGeneral._ParCal._QteTrans,
+	                                                                                      TpsMarche := #Transf._TransfCommun.CommunGeneral._ParCal._TpsTran / 1000,
+	                                                                                      MajStock := 'R', Msg_Def => #Text_Def);
+	                    END_IF;
+	                ELSE
+	                    #ResultProcChangmtdesttransf := 'OK';
+	                END_IF;
+	                
+	                
+	                
+	                IF #ResultProcChangmtdesttransf = 'OK' THEN
+	                    #ret_string := "Proc_AffecT"(NumPoste := "Num_Poste",
+	                                                 zone := "Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._Ptdest),
+	                                                 CodeMat := #Transf._Ptzs._CdMat,
+	                                                 Formule := #Temp_Char,
+	                                                 LieuDos := '',
+	                                                 Qte := 0,
+	                                                 TypeMvmnt := '040',
+	                                                 Procede := #Transf._TransfCommun.CommunGeneral._Autom,
+	                                                 NoLotOrig := '',
+	                                                 NoLotDest := #Transf._Ptzs._NoLot,
+	                                                 Utilisateur := 'SAS',
+	                                                 SCb := '0',
+	                                                 Sof := #Transf._Ptzs._Cd_Transf, Msg_Def => #Text_Def);
+	                    #Transf.Dial_Def.Reponse_Def := '';
+	                    #Transf.Dial_Def.Text_Reponse := '';
+	                    #Transf._CelluleTrouve := 0;
+	                    #Transf._FgChangDest := FALSE;
+	                    #Transf._TransfCommun.SUPTRANS.Commande._FgChangDest := FALSE;
+	                    IF #Transf._Ptzs._Fg_Produit_Vu = TRUE THEN
+	                        #Transf._TransfCommun.CommunGeneral._Etp := #Etape_surveillance;
+	                    ELSE
+	                        #Transf._TransfCommun.CommunGeneral._Etp := #Etape_attente_produit;
+	                    END_IF;
+	                    RETURN;
+	                END_IF;
+	                IF #ResultProcChangmtdesttransf = 'NOK' THEN
+	                    #Transf.Dial_Def.Num_Def_Etape := 1;
+	                    #Transf.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := #Text_Def,
+	                                                                     Type_Defaut := 2,
+	                                                                     Automatisme := #Transf._TransfCommun.CommunGeneral._Autom,
+	                                                                     Num_Lot := #Transf._Ptzs._NoLot,
+	                                                                     Origine_Defaut := 'Base de donnees',
+	                                                                     Libelle_Origine := 'Base de donnees',
+	                                                                     Acq1 := 'Abandon',
+	                                                                     Acq2 := 'Relance',
+	                                                                     Acq3 := '',
+	                                                                     Acq4 := '',
+	                                                                     Acq5 := '',
+	                                                                     Acq6 := '',
+	                                                                     Acq7 := '',
+	                                                                     Acq8 := '',
+	                                                                     Acq_Choisi := -1,
+	                                                                     Date_Arrivee := #Transf._TpsPicke);
+	                    #Transf._TransfCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	        ProcChangDest_DEF1:
+	            //============ Traitement des reponses pour le defaut1   Traitement_Badge=============================================================//
+	            IF #Transf.Dial_Def.Reponse_Def = 'Relance' THEN
+	                #Transf.Dial_Def.Reponse_Def := '';
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_ChgmtDestNoeud;
+	                RETURN;
+	            END_IF;
+	            IF #Transf.Dial_Def.Reponse_Def = 'Abandon' THEN
+	                IF #Transf._Ptzs._Fg_Produit_Vu = TRUE THEN
+	                    #Transf._TransfCommun.CommunGeneral._Etp := #Etape_surveillance;
+	                ELSE
+	                    #Transf._TransfCommun.CommunGeneral._Etp := #Etape_attente_produit;
+	                END_IF;
+	                #Transf.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            //============================================  Fin traitement  ====================================================================//
+	            
+	            
+	            
+	            
+	            
+	        END_REGION Traitement cyclique  
+	        
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║      Etape Changement origine      ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                
+	*)
+	        
+	        
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║           Etape Vidange            ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                
+	*)
+	    #Etape_vidange:
+	        REGION Traitement preliminaire 'Vidange'
+	            
+	            IF (#Transf._TransfCommun.CommunGeneral._Etp <> #Transf._TransfCommun.CommunGeneral._EtpPrec) THEN
+	                //Memorisation de l'etape encours
+	                #Transf._TransfCommun.CommunGeneral._EtpPrec := #Transf._TransfCommun.CommunGeneral._Etp;
+	                //Reperer le niveau du grafcet
+	                #MajNiv := "Maj_Niv"(Num_Zone := #Transf._TransfCommun.CommunGeneral._NumZone, Num_Tache := #Transf._TransfCommun.CommunGeneral._Tache, Niveau := "TRANSF_Vidange_Niv");
+	                //Nomination l'etape en cours
+	                #Transf._TransfCommun.CommunGeneral._DescEtp := 'Etape Vidange';
+	                // Memorise la quantit au dmarrage de la vidnage
+	                IF #Transf._Ptzs._ArretReel = 'Quantite' AND #Transf._FgColChute THEN
+	                    #Transf._QteAvVid := #Transf._TransfCommun.CommunGeneral._ParCal._QteTrans;
+	                END_IF;
+	                IF #Transf._FgValidMvmtSortie AND #Transf._Ptzs._ArretReel = 'Niveau bas' THEN
+	                    ///
+	                    //
+	                    ;
+	                END_IF;
+	                (* #Ret_Int := "RechIndexCel"("Nom_Mobile"("Index_Mobile"(#Transf._orig.Nom)));
+	               "Arret_Ext_Libere"(Origine := "DB_Mod_Cellule"._TabCel[#Ret_Int]); *)
+	                #Ret_Int := "RechIndexCel"("Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._PtOrig));
+	                // "Arret_Ext_Libere"(Origine := "DB_Mod_Cellule"._TabCel[#Ret_Int]);
+	                "MarcheExt"(Origine := #Transf._TransfCommun.CommunGeneral._PtOrig,
+	                            Position := #PosFerm,
+	                            Vitesse := 0);
+	                
+	                #Transf._FgDemVid := FALSE;
+	                
+	                
+	                #Transf._Ptzs._QteLot := #Transf._TransfCommun.CommunGeneral._ParCal._QteTrans;
+	                
+	                // #Ret_Int := "Fin_Pos_Circuit"(#Transf._PtCir);
+	            END_IF;
+	        END_REGION Traitement preliminaire 'Vidange'
+	        
+	        REGION Traitement cyclique "Vidange"
+	            #Ret_Bool := "Vid_Circuit_Cycl"(#Transf._PtCir);
+	            IF #Ret_Bool AND "Test_Etat_Circuit"(Etat := "Libre", Debut := 0, CIRCUIT := #Transf._PtCir) THEN
+	                //IF "Test_Etat_Circuit"(Etat := "Enc_Fin_Pos", Debut := 0, CIRCUIT := #Transf._PtCir) THEN
+	                #Ret_Int := "Libere_Circuit"(#Transf._PtCir);
+	                // Mise a jour de la colonne de chute
+	                IF #Transf._Ptzs._ArretReel = 'Quantite' AND #Transf._FgColChute THEN
+	                    #Transf._colChute := (#Transf._TransfCommun.CommunGeneral._ParCal._QteTrans - #Transf._QteAvVid);
+	                    IF #Transf._colChute > (#Transf._Ptzs._Colchute + #Transf._corColChute) AND #Transf._Ptzs._Colchute <> 0 THEN
+	                        #Transf._colChute := #Transf._Ptzs._Colchute + #Transf._corColChute;
+	                    ELSIF #Transf._colChute < (#Transf._Ptzs._Colchute + #Transf._corColChute) AND #Transf._Ptzs._Colchute <> 0 THEN
+	                        #Transf._colChute := #Transf._Ptzs._Colchute - #Transf._corColChute;
+	                    END_IF;
+	                    // appel Proc_MajColChute(pt_zs->OrigReel,_colChute);
+	                END_IF;
+	                "MAJ_Cumul_Dest"(Dest := "Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._Ptdest),
+	                                 Increment := FALSE,
+	                                 DestR := #Transf._Ptzs._DestR,
+	                                 PARCAL := #Transf._TransfCommun.CommunGeneral._ParCal);
+	                
+	                
+	                #Transf._CumulQteNh := #Transf._Ptzs._DestR._Liste[#Transf._Ptzs._DestR._Index]._CumulQte;
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_MAJ_Base;
+	            END_IF;
+	        END_REGION Traitement cyclique "Vidange"
+	        
+	        
+	        RETURN;
+	        
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║           Etape MAJ Base           ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                
+	*)
+	    #Etape_MAJ_Base:
+	        REGION Traitement preliminaire 'Maj Base'
+	            IF (#Transf._TransfCommun.CommunGeneral._Etp <> #Transf._TransfCommun.CommunGeneral._EtpPrec) THEN
+	                //Memorisation de l'etape encours
+	                #Transf._TransfCommun.CommunGeneral._EtpPrec := #Transf._TransfCommun.CommunGeneral._Etp;
+	                //Reperer le niveau du grafcet
+	                
+	                #MajNiv := "Maj_Niv"(Num_Zone := #Transf._TransfCommun.CommunGeneral._NumZone, Num_Tache := #Transf._TransfCommun.CommunGeneral._Tache, Niveau := "TRANSF_MajBase_Niv");
+	                //Nomination l'etape en cours
+	                #Transf._TransfCommun.CommunGeneral._DescEtp := 'Maj Base';
+	            END_IF;
+	        END_REGION Traitement preliminaire 'Maj Base'
+	        
+	        REGION Traitement cyclique "Maj Base"
+	            IF #Transf._FgGestDens THEN
+	                #ret_sint := "CorDensite"(QteReelle := #Transf._Ptzs._QtePrev,
+	                                          QteCalculee := #Transf._TransfCommun.CommunGeneral._ParCal._QteTrans,
+	                                          AncCoeff := #Transf._Ptzs._CoefDens,
+	                                          PasMaxCorCoeff := #Transf._PasMaxCorCoeff,
+	                                          DensCorMax := #Transf._DensMaxi,
+	                                          DensCorMin := #Transf._DensMini,
+	                                          DensInitial := #Transf._Ptzs._Densite,
+	                                          TolMax := #Transf._TolMax,
+	                                          TolMin := #Transf._TolMin,
+	                                          NvCoeff := #Transf._AffCoefCor,
+	                                          DensCor := #Transf._AffDensCours);
+	            END_IF;
+	            IF #fgbase AND #ret_sint = 0 THEN
+	                // Appel Proc RecrCoef Proc_RecrCoef(pt_zs->Cd_Mat,LireIdIdCoeffDens(),AnsiString(WLireProcede()).c_str(),_nouvCoef);
+	                ;
+	            END_IF;
+	            
+	            
+	            
+	            
+	            //*Maj_Etape(_ta, "fin_lot");
+	            #Transf._TransfCommun.CommunGeneral._Etp := #Etape_Fin_Lot;
+	        END_REGION Traitement cyclique "Maj Base"
+	        RETURN;
+	        
+	        
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║           Etape Fin Lot            ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                
+	*)
+	    #Etape_Fin_Lot:
+	        REGION Traitement preliminaire 'Fin Lot'
+	            IF (#Transf._TransfCommun.CommunGeneral._Etp <> #Transf._TransfCommun.CommunGeneral._EtpPrec) THEN
+	                //Memorisation de l'etape encours
+	                #Transf._TransfCommun.CommunGeneral._EtpPrec := #Transf._TransfCommun.CommunGeneral._Etp;
+	                //Nomination l'etape en cours
+	                #Transf._TransfCommun.CommunGeneral._DescEtp := 'Fin Lot';
+	                #Transf._FgArret := FALSE;
+	                IF #Transf.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #Transf.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO FinLot_DEF1;
+	                    END_CASE;
+	                END_IF;
+	                IF #fgbase THEN
+	                    #ResultProcFintransf := "Proc_Fin_Transf"(IdTransf := #Transf._Ptzs._Id_Transf,
+	                                                              CumulTps := #Transf._TransfCommun.CommunGeneral._ParCal._TpsTran / 1000,
+	                                                              CumulQte := #Transf._TransfCommun.CommunGeneral._ParCal._QteTrans,
+	                                                              CModArr := #Transf._Ptzs._TypeArret,
+	                                                              NumPoste := "Num_Poste", Msg_Def => #Text_Def);
+	                ELSE
+	                    #ResultProcFintransf := 'OK';
+	                END_IF;
+	                
+	                
+	            END_IF;
+	        END_REGION Traitement preliminaire 'Fin Lot'
+	        
+	        REGION Traitement cyclique "Fin Lot"
+	            IF #ResultProcFintransf = 'NOK' THEN
+	                #Transf.Dial_Def.Num_Def_Etape := 1;
+	                #Transf.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := #Text_Def,
+	                                                                 Type_Defaut := 2,
+	                                                                 Automatisme := #Transf._TransfCommun.CommunGeneral._Autom,
+	                                                                 Num_Lot := #Transf._Ptzs._NoLot,
+	                                                                 Origine_Defaut := 'Base de donnees',
+	                                                                 Libelle_Origine := 'Base de donnees',
+	                                                                 Acq1 := 'Abandon',
+	                                                                 Acq2 := 'Relance',
+	                                                                 Acq3 := '',
+	                                                                 Acq4 := '',
+	                                                                 Acq5 := '',
+	                                                                 Acq6 := '',
+	                                                                 Acq7 := '',
+	                                                                 Acq8 := '',
+	                                                                 Acq_Choisi := -1,
+	                                                                 Date_Arrivee := #Transf._TpsPicke);
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                RETURN;
+	            END_IF;
+	        FinLot_DEF1:
+	            //================================== Traitement des reponses pour le defaut1  =============================================================//
+	            IF #Transf.Dial_Def.Reponse_Def = 'Abandon' THEN
+	                #ResultProcFintransf := 'OK';
+	                #Transf.Dial_Def.Reponse_Def := '';
+	            END_IF;
+	            IF #Transf.Dial_Def.Reponse_Def = 'Relance' THEN
+	                #Transf.Dial_Def.Reponse_Def := '';
+	                #ResultProcFintransf := "Proc_Fin_Transf"(IdTransf := #Transf._Ptzs._Id_Transf,
+	                                                          CumulTps := #Transf._TransfCommun.CommunGeneral._ParCal._TpsTran / 1000,
+	                                                          CumulQte := #Transf._TransfCommun.CommunGeneral._ParCal._QteTrans,
+	                                                          CModArr := #Transf._Ptzs._TypeArret,
+	                                                          NumPoste := "Num_Poste", Msg_Def => #Text_Def);
+	            END_IF;
+	            //============================================  Fin traitement  ====================================================================//
+	            IF #ResultProcFintransf = 'OK' THEN
+	                #MajNiv := "Maj_Niv"(Num_Zone := #Transf._TransfCommun.CommunGeneral._NumZone, Num_Tache := #Transf._TransfCommun.CommunGeneral._Tache, Niveau := "TRANSF_FinLot_Niv");
+	                #Ret_Int := "Libere_Zone_Suiv_Lot"(Num_Zone := #Transf._TransfCommun.CommunGeneral._NumZone);
+	                #Transf._TransfCommun.SUPTRANS.Commande._Suspension := FALSE;
+	                #Transf._TransfCommun.SUPTRANS.Commande._Vidange := FALSE;
+	                #Transf._TransfCommun.SUPTRANS.Commande._ArretImmediat := FALSE;
+	                #Transf._TransfCommun.SUPTRANS.Commande._Depart := FALSE;
+	                "Supervision_Transf"(RAZ := TRUE,
+	                                     Transf := #Transf);
+	                //#Transf.TraitTransf.Etape := 0;
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Etape_Repos;
+	                RETURN;
+	            END_IF;
+	            
+	        END_REGION Traitement cyclique "Fin Lot"
+	        RETURN;
+	        
+	        
+	        
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║       Etape test ench orig         ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                
+	*)
+	        
+	        
+	        
+	        
+	        
+	        
+	        
+	        
+	        
+	        
+	        
+	        
+	        
+	        
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║ Etape "Attente Reponse Dialogue"   ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                    
+	*)
+	    #Etape_Attente_RepDial:
+	        REGION Preliminaire Attente Acquuitement
+	            IF #Transf._TransfCommun.CommunGeneral._Etp <> #Transf._TransfCommun.CommunGeneral._EtpPrec THEN
+	                //Memorisation de l'etape encours
+	                #Transf._TransfCommun.CommunGeneral._EtpMemo := #Transf._TransfCommun.CommunGeneral._EtpPrec;
+	                
+	                #Transf._TransfCommun.CommunGeneral._DescEtp := 'Etape_Attente_RepDial';
+	                #Transf._TransfCommun.CommunGeneral._EtpPrec := #Transf._TransfCommun.CommunGeneral._Etp;
+	                
+	            END_IF;
+	        END_REGION Preliminaire Attente Acquuitement
+	        REGION Cyclique Attente Acquitement
+	            #Transf.Dial_Def.Reponse_Def := "FC_Recup_Rep_Def"(Index_Def := #Transf.Dial_Def.Index_Defaut, Reponse_Ecrit => #Transf.Dial_Def.Text_Reponse);
+	            IF #Transf.Dial_Def.Reponse_Def <> '' THEN
+	                "FC_Raz_Def"(#Transf.Dial_Def.Index_Defaut);
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Transf._TransfCommun.CommunGeneral._EtpMemo;
+	                RETURN;
+	            END_IF;
+	        END_REGION Cyclique Attente Acquitement   
+	END_CASE;
+	
+END_FUNCTION
+

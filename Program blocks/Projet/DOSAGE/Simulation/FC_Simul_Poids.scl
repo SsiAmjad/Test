@@ -1,0 +1,41 @@
+﻿FUNCTION "FC_Simul_Poids" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      SAV : Real;
+   END_VAR
+
+   VAR_IN_OUT 
+      Simul : "Simul_Poids";
+      Poids_Incorp : Real;
+   END_VAR
+
+   VAR_TEMP 
+      Ret_RD_SYS_T : Int;
+      Tps_Ecoul : Time;
+   END_VAR
+
+
+BEGIN
+	//============================= Simulateur poids =============================//
+	IF NOT #Simul._PremFois THEN
+	    #Ret_RD_SYS_T := RD_SYS_T(#Simul._TpsPicke);
+	    #Simul._PremFois := TRUE;
+	END_IF;
+	IF "Tempo"(Duree := #Simul._TpsEvol, Tps_Picke := #Simul._TpsPicke, Anticip := FALSE, Tps_Passe => #Tps_Ecoul) THEN
+	    IF (#Simul._ValBascInc AND NOT #Simul._StopValBasc) THEN
+	        IF #SAV > 0 THEN
+	            #Poids_Incorp := #Poids_Incorp + (#Simul._PasInc * (#SAV / 100));
+	        ELSE
+	            #Poids_Incorp := #Poids_Incorp + #Simul._PasInc ;
+	        END_IF;
+	    END_IF;
+	    IF (#Simul._ValBascDec AND NOT #Simul._StopValBasc) THEN
+	        #Poids_Incorp := #Poids_Incorp - #Simul._PasDec;
+	    END_IF;
+	    #Ret_RD_SYS_T := RD_SYS_T(#Simul._TpsPicke);
+	END_IF;
+	//============================= Simulateur poids =============================//
+	
+END_FUNCTION
+

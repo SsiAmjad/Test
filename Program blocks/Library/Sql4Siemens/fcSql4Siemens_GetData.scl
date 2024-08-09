@@ -1,0 +1,45 @@
+﻿FUNCTION "fcSql4Siemens_GetData" : WString
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      diRow : DInt;
+      diColumn : DInt;
+   END_VAR
+
+   VAR_IN_OUT 
+      stSql4SiemensInterface : "utSql4SiemensInterface";
+   END_VAR
+
+   VAR_TEMP 
+      diOffset : DInt;
+      iLength : Int;
+      sValue : WString[6000];
+      xRet : Bool;
+   END_VAR
+
+
+BEGIN
+	// +------------------------------------------------------------------------------------------------------------------+
+	// | The method returns one value specified by the parameters "diRow" and "diCol". (PARAMETERS ARE ZERO BASED)        |
+	// +------------------------------------------------------------------------------------------------------------------+
+	
+	// +-------------+-------------+-------------+------------------------------------------------------------------------+
+	// | Version     | Date        | Author      | Comment                                                                |
+	// +-------------+-------------+-------------+------------------------------------------------------------------------+
+	// | 4.0.0.0     | 13.06.2019  | BaM         | Initial version                                                        |
+	// +-------------+-------------+-------------+------------------------------------------------------------------------+
+	
+	#sValue :=STRING_TO_WSTRING('');
+	IF (#diColumn >= 0) AND (#diColumn < #stSql4SiemensInterface.cdiResponseColumnSize) AND (#diRow >= 0) AND (#diRow < #stSql4SiemensInterface.cdiResponseRowSize) THEN
+	  // Read the offset position on the response buffer
+	    #diOffset := #stSql4SiemensInterface.adiResponseData[#diRow, #diColumn].diOffset;
+	  #iLength := #stSql4SiemensInterface.adiResponseData[#diRow, #diColumn].iLength;
+	  // Read the data value
+	  IF (#diOffset > 0) AND (#iLength >= 0) THEN
+	      #xRet := "fcSql4Siemens_ReadString"(diOffset := #diOffset, iLength := #iLength, WsValue => #sValue, stSql4SiemensInterface := #stSql4SiemensInterface);
+	END_IF;
+	END_IF;
+	// Return the result
+	#fcSql4Siemens_GetData := #sValue;
+END_FUNCTION
+

@@ -1,0 +1,1134 @@
+﻿FUNCTION "Ensachage" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      FgBase : Bool;
+      PtSuiv : "S_MODULE_SUIVI_COMMUNENSACH";
+   END_VAR
+
+   VAR_IN_OUT 
+      Ensachage : "S_ENSACHAGE";
+   END_VAR
+
+   VAR_TEMP 
+      Ret_RD_Sys_T : Int;
+      Ret_Sint : SInt;
+      Text_Def : String;
+      Ret_Bool : Bool;
+      Temp_Bool : Bool;
+      Temp2_Bool : Bool;
+      TPSPASSE : Time;
+      Ret_Usint : USInt;
+      Ret_Int : Int;
+   END_VAR
+
+   VAR CONSTANT 
+      Etape_Repos : SInt := 0;
+      Etape_AttCond : SInt := 1;
+      Etape_Attente_Amont : SInt := 2;
+      Etape_RechCircuit : SInt := 3;
+      Etape_DemCircuit : SInt := 4;
+      Etape_surveillance : SInt := 7;
+      Etape_DefArrProd : SInt := 20;   // PB ARRIVEE PRODUIT
+      Etape_DefNbProd : SInt := 9;   // DEFAUT NIVEAU BAS PRODUIT
+      Etape_ChangementOrigine : SInt := 10;
+      Etape_Suspension : SInt := 11;
+      Etape_Vidange : SInt := 13;
+      Etape_Fin_Lot : SInt := 15;
+      Etape_Attente_RepDial : SInt := 18;
+      ListeDestParcourue : SInt := 30;   // Constante pour lire prochainement a partir de texte reponse
+      PosOuv : SInt := 1;
+      PosFerm : SInt := 0;
+   END_VAR
+
+
+BEGIN
+	IF #Ensachage._FgRecupNivDest AND #Ensachage._EnsaCommun._PtTabDest._Cel <> '' THEN
+	    #Ensachage._EnsaCommun._NhTremie := #Ensachage._EnsaCommun._PtTabDest._NivHaut;
+	    #Ensachage._EnsaCommun._NiTremie := #Ensachage._EnsaCommun._PtTabDest._SeuilAppel;
+	    #Ensachage._EnsaCommun._NbTremie := #Ensachage._EnsaCommun._PtTabDest._SeuilAppel;
+	END_IF;
+	
+	
+	CASE #Ensachage._EnsaCommun.CommunGeneral._Etp OF
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║          Etape "Repos"             ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	    #Etape_Repos:
+	        REGION Traitement preliminaire "Repos"
+	            IF (#Ensachage._EnsaCommun.CommunGeneral._Etp <> #Ensachage._EnsaCommun.CommunGeneral._EtpPrec) THEN
+	                #Ensachage._EnsaCommun.CommunGeneral._EtpPrec := #Ensachage._EnsaCommun.CommunGeneral._Etp;
+	                #Ensachage._EnsaCommun.CommunGeneral._DescEtp := 'Etape repos';
+	                #Ret_RD_Sys_T := RD_SYS_T(#Ensachage._TpsPicke);
+	                #Ensachage._ValidPasArriveeProduit := TRUE;
+	                #Ensachage._FgsuspCircuit := FALSE;
+	                "RazTabIncmop"(#Ensachage._TabMobIncomp);
+	                "MajBtSupervtEns"(Type := 0,
+	                                  Ensachage := #Ensachage);
+	                
+	                #Ensachage._FgCgtOrg := 0;
+	                #Ensachage._MemoAppuiBP := 0;
+	                #Ensachage._CelOrgVide := 0;
+	                
+	            END_IF;
+	        END_REGION Traitement preliminaire "Repos"
+	        
+	        REGION Traitement Cyclique "Repos"
+	            
+	            #Ret_Sint := "Test_Lot_Att_Tache"(Num_Tache := #Ensachage._EnsaCommun.CommunGeneral._Tache, Num_Zone => #Ensachage._EnsaCommun.CommunGeneral._NumZone);
+	            IF #Ret_Sint = 1 THEN
+	                #Ensachage._FgEnsEnCours := TRUE;
+	                #Ensachage._Ptzs := #PtSuiv.Tab_Lots[#Ensachage._EnsaCommun.CommunGeneral._NumZone];//#PtSuiv.Tab_Lots[#Ensachage._EnsaCommun.CommunGeneral._NumZone];
+	                //Affichage du lot  Nolot CodeProd DestAff_Lot(Pt_Tac->Tab_Taches[_ta].No_Lot, Pt_Tac->Tab_Taches[_ta].Code_Prod, Pt_Tac->Tab_Taches[_ta].Dest,pt_zs->Cd_Mat,pt_zs->Lib_Mat,(char*)&pt_zs->No_Lot,pt_zs->Orig);
+	                #Ret_Sint := "Maj_Niv"(Num_Zone := #Ensachage._EnsaCommun.CommunGeneral._NumZone, Num_Tache := #Ensachage._EnsaCommun.CommunGeneral._Tache, Niveau := "N_DEBLOT");
+	                #Ensachage._Ptzs._QteArret := 0;
+	                "MajAffichage"(#Ensachage);
+	                #Ret_RD_Sys_T := RD_SYS_T(#Ensachage._debutEns);
+	                #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_AttCond;
+	            END_IF;
+	            
+	            
+	        END_REGION Traitement Cyclique "Repos"
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║          Etape "AttCond"           ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	    #Etape_AttCond:
+	        REGION Traitement preliminaire "AttCond"
+	            IF (#Ensachage._EnsaCommun.CommunGeneral._Etp <> #Ensachage._EnsaCommun.CommunGeneral._EtpPrec) THEN
+	                #Ensachage._EnsaCommun.CommunGeneral._EtpPrec := #Ensachage._EnsaCommun.CommunGeneral._Etp;
+	                #Ensachage._EnsaCommun.CommunGeneral._DescEtp := 'Etape Attente condition';
+	                #Ret_Sint := "Maj_Niv"(Num_Zone := #Ensachage._EnsaCommun.CommunGeneral._NumZone, Num_Tache := #Ensachage._EnsaCommun.CommunGeneral._Tache, Niveau := "NIV_ENS_ATT_DEM_CIR");
+	                //Recuperation des niveaux en fonction de la destination
+	                IF #Ensachage._FgRecupNivDest AND #Ensachage._EnsaCommun._PtTabDest._Cel <> '' THEN
+	                    #Ensachage._EnsaCommun._NhTremie := #Ensachage._EnsaCommun._PtTabDest._NivHaut;
+	                    #Ensachage._EnsaCommun._NiTremie := #Ensachage._EnsaCommun._PtTabDest._SeuilAppel;
+	                    #Ensachage._EnsaCommun._NbTremie := #Ensachage._EnsaCommun._PtTabDest._SeuilAppel;
+	                END_IF;
+	                "MajBtSupervtEns"(Type := 1,
+	                                  Ensachage := #Ensachage);
+	            END_IF;
+	        END_REGION Traitement preliminaire "AttCond"
+	        
+	        REGION Traitement Cyclique "AttCond"
+	            
+	            IF (#Ensachage._Ptzs._Abandon OR "LireActionBoutonEns"(#Ensachage) = "ABANDONENS") AND NOT #Ensachage._FgsuspCircuit THEN
+	                IF NOT #Ensachage._FgEnsEnCours THEN
+	                    #Ensachage._Ptzs._Abandon := TRUE;
+	                    #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_Fin_Lot;
+	                    RETURN;
+	                ELSE
+	                    #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_Vidange;
+	                    RETURN;
+	                END_IF;
+	                RETURN;
+	            END_IF;
+	            
+	            IF NOT #Ensachage._FgConfirmDebEns OR "LireActionBoutonEns"(#Ensachage) = "DEBCYCLE" THEN
+	                #Ensachage._BtDepCycle := 1;
+	                #Ensachage._MemoAppuiBP := 0;
+	                IF "CondEnsachage"(#Ensachage) AND "FC_Test_Niv_AmontAval"(Num_Zone := #Ensachage._EnsaCommun.CommunGeneral._NumZone, Lst_Taches := #Ensachage._ListeTaAttAutDemarrage) THEN
+	                    IF #FgBase THEN
+	                        IF #Ensachage._Ptzs._TypeArret <> "ARRET_NH" AND #Ensachage._Ptzs._TypeArret <> "ARRET_VID_NH" AND #Ensachage._Ptzs._TypeArret <> "ARRET_VIDE" THEN
+	                            // Appel Proc Debut Ensach
+	                            ;
+	                        END_IF;
+	                    END_IF;
+	                    #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_RechCircuit;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	            
+	        END_REGION Traitement Cyclique "AttCond"
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║          Etape "RechCirc"          ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	    #Etape_RechCircuit:
+	        REGION Traitement preliminaire "RechCircuit"
+	            IF (#Ensachage._EnsaCommun.CommunGeneral._Etp <> #Ensachage._EnsaCommun.CommunGeneral._EtpPrec) THEN
+	                #Ensachage._EnsaCommun.CommunGeneral._EtpPrec := #Ensachage._EnsaCommun.CommunGeneral._Etp;
+	                #Ensachage._EnsaCommun.CommunGeneral._DescEtp := 'Etape RechCircuit';
+	                #Ret_RD_Sys_T := RD_SYS_T(#Ensachage._TpsPicke);
+	                IF #Ensachage.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #Ensachage.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO RechCirc_DEF1;
+	                            
+	                    END_CASE;
+	                    
+	                END_IF;
+	                #Ensachage._FgsuspCircuit := FALSE;
+	                //Cas extract direct
+	                IF NOT "Valid_Index"(#Ensachage._Ptzs._PtcelOrig._Moborg) THEN
+	                    #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_surveillance;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	        END_REGION Traitement preliminaire "RechCircuit"
+	        
+	        REGION Traitement Cyclique "RechCircuit"
+	            (* IF "Valid_Index"(#Ensachage._MbTamis) THEN
+	                IF #Ensachage._Ptzs._ParEns._FgTamis = 'O' OR #Ensachage._Ptzs._ParEns._FgTamis = 'F' OR #Ensachage._Ptzs._ParEns._FgTamis = 'G' THEN
+	                    #Ensachage._PtCir.Criteres[0].Mobile := #Ensachage._MbTamis;
+	                    #Ensachage._PtCir.Criteres[0].Critere := "Mob_Preferentiel";
+	                ELSE
+	                    #Ensachage._PtCir.Criteres[0].Mobile := #Ensachage._MbTamis;
+	                    #Ensachage._PtCir.Criteres[0].Critere := "Mob_Exclu";
+	                END_IF;
+	            END_IF; *)
+	            
+	            
+	            // recuperation d'origine destination et num circuit
+	            #Ensachage._PtCir.Origine := #Ensachage._Ptzs._PtcelOrig._Moborg;
+	            (* IF "Valid_Index"(#Ensachage._Ptzs._PtcelOrig._Mobdest) THEN
+	                #Ensachage._PtCir.Destination := #Ensachage._Ptzs._PtcelOrig._Mobdest;
+	            ELSE
+	                #Ensachage._PtCir.Destination := #Ensachage._EnsaCommun._Destination;
+	            END_IF; *)
+	            #Ensachage._PtCir.Destination := #Ensachage._EnsaCommun._Destination;
+	            #Ensachage._PtCir.Num_Circuit := #Ensachage._EnsaCommun._NoCircuit;
+	            #Ret_Sint := "Rech_Cir"(Circuit := #Ensachage._PtCir);
+	            
+	            
+	            IF #Ret_Sint = -1 THEN
+	                //appel dialogue defaut
+	                #Ensachage.Dial_Def.Num_Def_Etape := 1;
+	                #Text_Def := CONCAT(IN1 := 'Circuit de ', IN2 := "Nom_Mobile"(#Ensachage._PtCir.Origine), IN3 := ' vers ', IN4 := "Nom_Mobile"(#Ensachage._PtCir.Destination), IN5 := ' introuvable ou reserve ');
+	                #Ensachage.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #FgBase, Msg_Defaut := #Text_Def,
+	                                                                    Type_Defaut := 3,
+	                                                                    Automatisme := #Ensachage._EnsaCommun.CommunGeneral._Autom,
+	                                                                    Num_Lot := #Ensachage._Ptzs._NoLot,
+	                                                                    Origine_Defaut := 'Circuit Introuvable ou reserve',
+	                                                                    Libelle_Origine := 'Circuit Introuvable ou reserve',
+	                                                                    Acq1 := 'Relance',
+	                                                                    Acq2 := 'Abandon',
+	                                                                    Acq3 := '',
+	                                                                    Acq4 := '',
+	                                                                    Acq5 := '',
+	                                                                    Acq6 := '',
+	                                                                    Acq7 := '',
+	                                                                    Acq8 := '',
+	                                                                    Acq_Choisi := -1,
+	                                                                    Date_Arrivee := #Ensachage._TpsPicke);
+	                #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                RETURN;
+	            ELSE
+	                IF #FgBase THEN
+	                    "TestIncompMobilesCircuit"(MobInc => #Ensachage._MbInc,
+	                                               TabMobIncomp := #Ensachage._TabMobIncomp,
+	                                               Circuit := #Ensachage._PtCir);
+	                    
+	                END_IF;
+	                #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_DemCircuit;
+	                RETURN;
+	            END_IF;
+	        RechCirc_DEF1:
+	            //============ Traitement des reponses pour le defaut2 Etape lancement Recherche circuit  ====================================//
+	            IF #Ensachage.Dial_Def.Reponse_Def = 'Relance' THEN //Relance
+	                #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_RechCircuit;
+	                #Ensachage.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            IF #Ensachage.Dial_Def.Reponse_Def = 'Abandon' THEN
+	                #Ensachage._Ptzs._Abandon := TRUE;
+	                //Message Operateur Abandon rech circuit
+	                #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_Fin_Lot;
+	                #Ensachage.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	        END_REGION Traitement Cyclique "RechCircuit"
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║          Etape "Demarrage"         ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	    #Etape_DemCircuit:
+	        REGION Traitement preliminaire "DemCircuit"
+	            IF (#Ensachage._EnsaCommun.CommunGeneral._Etp <> #Ensachage._EnsaCommun.CommunGeneral._EtpPrec) THEN
+	                #Ensachage._EnsaCommun.CommunGeneral._EtpPrec := #Ensachage._EnsaCommun.CommunGeneral._Etp;
+	                #Ensachage._EnsaCommun.CommunGeneral._DescEtp := 'Etape DemCircuit';
+	                #Ret_Sint := "Maj_Niv"(Num_Zone := #Ensachage._EnsaCommun.CommunGeneral._NumZone, Num_Tache := #Ensachage._EnsaCommun.CommunGeneral._Tache, Niveau := "NIV_ENS_DEM_CIR");
+	                #Ret_RD_Sys_T := RD_SYS_T(#Ensachage._TpsPicke);
+	                #Ret_Sint := "Dem_Circuit"(#Ensachage._PtCir);
+	            END_IF;
+	        END_REGION Traitement preliminaire "DemCircuit"
+	        
+	        REGION Traitement Cyclique "DemCircuit"
+	            "ActionAvantDemarCircuitEns"();
+	            #Ret_Bool := "Test_Etat_Circuit"(Etat := "Pret", Debut := 0, CIRCUIT := #Ensachage._PtCir);
+	            IF #Ret_Bool THEN
+	                //Affec Circuit
+	                #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_surveillance;
+	                RETURN;
+	            END_IF;
+	            
+	        END_REGION Traitement Cyclique "DemCircuit"
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║          Etape "Surveillance"      ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	    #Etape_surveillance:
+	        REGION Traitement preliminaire "Surveillance"
+	            IF (#Ensachage._EnsaCommun.CommunGeneral._Etp <> #Ensachage._EnsaCommun.CommunGeneral._EtpPrec) THEN
+	                #Ensachage._EnsaCommun.CommunGeneral._EtpPrec := #Ensachage._EnsaCommun.CommunGeneral._Etp;
+	                #Ensachage._EnsaCommun.CommunGeneral._DescEtp := 'Etape Demarrage Circuit';
+	                #Ret_Sint := "Maj_Niv"(Num_Zone := #Ensachage._EnsaCommun.CommunGeneral._NumZone, Num_Tache := #Ensachage._EnsaCommun.CommunGeneral._Tache, Niveau := "NIV_ENS_EC");
+	                #Ensachage._Ptzs._FgLancCir := TRUE;
+	                "MajBtSupervtEns"(Type := 2,
+	                                  Ensachage := #Ensachage);
+	                #Ensachage._NbRelDefArrProd := 0;
+	                #Ensachage._MemoVit := 0;
+	                #Ensachage._CelOrgVide := 1;
+	                #Ensachage._FgCgtOrg := 1;
+	                "MajAffichage"(#Ensachage);
+	                #Ret_RD_Sys_T := RD_SYS_T(#Ensachage._debutMarche);
+	            END_IF;
+	        END_REGION Traitement preliminaire "Surveillance"
+	        
+	        REGION Traitement Cyclique "Surveillance"
+	            #Ret_RD_Sys_T := RD_SYS_T(#Ensachage._TpsPicke);
+	            #Ensachage._Ptzs._TpsMarche := T_DIFF(IN1 := #Ensachage._TpsPicke, IN2 := #Ensachage._debutMarche);
+	            //_affichage->TpsDepuis =  pt_zs->TpsMarche;
+	            #Ensachage._Ptzs._TpEnsachage := T_DIFF(IN1 := #Ensachage._TpsPicke, IN2 := #Ensachage._debutEns);
+	            #Ensachage._Bouton := "LireActionBoutonEns"(#Ensachage);
+	            IF #Ensachage._MemoVit <> 2 THEN
+	                #Ret_Int := "Index_Mobile"(#Ensachage._Ptzs._PtcelOrig._Cel);
+	                "MarcheExt"(Origine := #Ret_Int,
+	                            Position := #PosOuv,
+	                            Vitesse := #Ensachage._Ptzs._vitGV);
+	                #Ensachage._MemoVit := 2;
+	                #Ensachage._CelOrgVide := 1;
+	            END_IF;
+	            
+	            
+	            //Demande suspension chargement
+	            IF #Ensachage._Bouton = "BTSUSPENS" THEN
+	                #Ensachage._BtSusp := 0;
+	                "ArretVibreur"(#Ensachage._Ptzs._PtcelOrig);
+	                #Ensachage._FgsuspCircuit := TRUE;
+	                #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_Suspension;
+	                RETURN;
+	            END_IF;
+	            
+	            
+	            //Demande  arret chargement 
+	            IF #Ensachage._Bouton = "ABANDONENS" THEN
+	                #Ensachage._BtFin := 0;
+	                "ArretVibreur"(#Ensachage._Ptzs._PtcelOrig);
+	                #Ensachage._Ptzs._TypeArret := "ARRET_OPER";
+	                #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_Vidange;
+	                RETURN;
+	            END_IF;
+	            
+	            
+	            //Suspension si NH tremie
+	            IF #Ensachage._EnsaCommun._NhTremie AND #Ensachage._FgValidVidNh THEN
+	                #Ensachage._BtFin := 1;
+	                "ArretVibreur"(#Ensachage._Ptzs._PtcelOrig);
+	                #Ensachage._Ptzs._TypeArret := "ARRET_NH";
+	                #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_Vidange;
+	                RETURN;
+	            END_IF;
+	            
+	            
+	            //Demande Changement d'origine par operateur
+	            IF #Ensachage._FgCgtOrg = 2 THEN
+	                "ArretVibreur"(#Ensachage._Ptzs._PtcelOrig);
+	                #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_ChangementOrigine;
+	                RETURN;
+	            END_IF;
+	            
+	            //RAZ defaut evolution poids si pas de controle evolution
+	            IF NOT #Ensachage._ValidPasArriveeProduit AND #Ensachage._EnsaCommun._DefEvol = -1 THEN
+	                #Ensachage._EnsaCommun._DefEvol := 1;
+	            END_IF;
+	            
+	            //Traitement Def Evol
+	            IF #Ensachage._EnsaCommun._DefEvol = -1 AND #Ensachage._ValidPasArriveeProduit THEN
+	                IF #Ensachage._NbRelDefArrProd >= 1 OR #Ensachage._Ptzs._PtcelOrig._FgVibreur THEN
+	                    "ArretVibreur"(#Ensachage._Ptzs._PtcelOrig);
+	                    #Ensachage._FgsuspCircuit := TRUE;
+	                    #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_DefArrProd;
+	                    RETURN;
+	                ELSE
+	                    "DemVibreur"(#Ensachage._Ptzs._PtcelOrig);
+	                    #Ensachage._EnsaCommun._DefEvol := 1;
+	                    #Ensachage._NbRelDefArrProd := #Ensachage._NbRelDefArrProd + 1;
+	                END_IF;
+	            END_IF;
+	            
+	            //Test Cellule Origine vide
+	            IF NOT #Ensachage._ValidSurvOrigVide AND #Ensachage._CelOrgVide = -1 THEN
+	                #Ensachage._CelOrgVide := 1;
+	            END_IF;
+	            
+	            IF #Ensachage._CelOrgVide = -1 AND #Ensachage._ValidSurvOrigVide THEN
+	                IF #Ensachage._NbRelDefArrProd >= 1 OR #Ensachage._Ptzs._PtcelOrig._FgVibreur THEN
+	                    "ArretVibreur"(#Ensachage._Ptzs._PtcelOrig);
+	                    #Ensachage._FgsuspCircuit := TRUE;
+	                    #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_DefNbProd;
+	                    RETURN;
+	                ELSE
+	                    "DemVibreur"(#Ensachage._Ptzs._PtcelOrig);
+	                    #Ensachage._CelOrgVide := 1;
+	                    #Ensachage._NbRelDefArrProd := #Ensachage._NbRelDefArrProd + 1;
+	                END_IF;
+	            END_IF;
+	            IF #Ensachage._EnsaCommun._DemVibrCel THEN
+	                #Ensachage._DemVib := TRUE;
+	                "DemVibreur"(#Ensachage._Ptzs._PtcelOrig);
+	            END_IF;
+	            IF "Valid_Index"(#Ensachage._Ptzs._PtcelOrig._Vibreur) AND #Ensachage._Ptzs._PtcelOrig._FgVibreur AND #Ensachage._DemVib THEN
+	                #Ensachage._DemVib := FALSE;
+	                "ArretVibreur"(#Ensachage._Ptzs._PtcelOrig);
+	            END_IF;
+	            
+	            
+	            
+	        END_REGION Traitement Cyclique "Surveillance"
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║          Etape "DefArrProd"        ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	    #Etape_DefArrProd:
+	        REGION Traitement preliminaire "DefArrProd"
+	            IF (#Ensachage._EnsaCommun.CommunGeneral._Etp <> #Ensachage._EnsaCommun.CommunGeneral._EtpPrec) THEN
+	                #Ensachage._EnsaCommun.CommunGeneral._EtpPrec := #Ensachage._EnsaCommun.CommunGeneral._Etp;
+	                #Ensachage._EnsaCommun.CommunGeneral._DescEtp := 'Etape DefArrProd';
+	                #Ret_RD_Sys_T := RD_SYS_T(#Ensachage._TpsPicke);
+	                IF #Ensachage.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #Ensachage.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO DefArrProd_DEF1;
+	                    END_CASE;
+	                END_IF;
+	                
+	                #Ret_Int := "Index_Mobile"(#Ensachage._Ptzs._PtcelOrig._Cel);
+	                "ArretExt"(Origine := #Ret_Int);
+	                
+	                
+	                //Pas d'autorisation de changement de cellule et d'abandon si remplissage en cours
+	                IF NOT #Ensachage._Ptzs._PtcelOrig._Remp THEN
+	                    ;
+	                    //Recup cellules
+	                END_IF;
+	            END_IF;
+	        END_REGION Traitement preliminaire "DefArrProd"
+	        
+	        REGION Traitement Cyclique "DefArrProd"
+	            ///Appel Dilogue Defaut  PB arrive de produit cellule
+	            #Ensachage.Dial_Def.Num_Def_Etape := 1;
+	            #Text_Def := CONCAT(IN1 := 'PB arrivee de produit cellule ', IN2 := #Ensachage._Ptzs._PtcelOrig._Cel);
+	            #Ensachage.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #FgBase,
+	                                                                Msg_Defaut := #Text_Def,
+	                                                                Type_Defaut := 3,
+	                                                                Automatisme := #Ensachage._EnsaCommun.CommunGeneral._Autom,
+	                                                                Num_Lot := #Ensachage._Ptzs._NoLot,
+	                                                                Origine_Defaut := 'Pas de presence du matiere',
+	                                                                Libelle_Origine := 'Pas de presence du matiere',
+	                                                                Acq1 := 'Relance',
+	                                                                Acq2 := 'Abandon',
+	                                                                Acq3 := 'ChngOrig',
+	                                                                Acq4 := '',
+	                                                                Acq5 := '',
+	                                                                Acq6 := '',
+	                                                                Acq7 := '',
+	                                                                Acq8 := '',
+	                                                                Acq_Choisi := -1,
+	                                                                Date_Arrivee := #Ensachage._TpsPicke);
+	            #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	            RETURN;
+	            
+	            
+	        DefArrProd_DEF1:
+	            //============ Traitement des reponses pour le defaut1 EtapeDefArrProd ===========================================================//
+	            IF #Ensachage.Dial_Def.Reponse_Def = 'Abandon' THEN    //abandon
+	                #Ensachage._Ptzs._TypeArret := "ARRET_EVOL";
+	                #Ensachage.Dial_Def.Reponse_Def := '';
+	                #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_Vidange;
+	                RETURN;
+	            END_IF;
+	            IF #Ensachage.Dial_Def.Reponse_Def = 'Relance' AND "CondEnsachage"(#Ensachage) THEN //relance
+	                #Ensachage.Dial_Def.Reponse_Def := '';
+	                #Ensachage._FgsuspCircuit := FALSE;
+	                #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_surveillance;
+	                #Ret_RD_Sys_T := RD_SYS_T(#Ensachage._TpsPicke);
+	                RETURN;
+	            END_IF;
+	            IF #Ensachage.Dial_Def.Reponse_Def = 'ChngOrig' THEN //relance
+	                #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_ChangementOrigine;
+	                #Ensachage.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            //============================================  Fin traitement  ====================================================================//
+	            
+	            
+	        END_REGION Traitement Cyclique "DefArrProd"
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║          Etape "DefNbProd"         ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	    #Etape_DefNbProd:
+	        REGION Traitement preliminaire "DefNbProd"
+	            IF (#Ensachage._EnsaCommun.CommunGeneral._Etp <> #Ensachage._EnsaCommun.CommunGeneral._EtpPrec) THEN
+	                #Ensachage._EnsaCommun.CommunGeneral._EtpPrec := #Ensachage._EnsaCommun.CommunGeneral._Etp;
+	                #Ensachage._EnsaCommun.CommunGeneral._DescEtp := 'Etape DefArrProd';
+	                #Ret_RD_Sys_T := RD_SYS_T(#Ensachage._TpsPicke);
+	                IF #Ensachage.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #Ensachage.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO DefNbProd_DEF1;
+	                    END_CASE;
+	                END_IF;
+	                #Ret_Int := "Index_Mobile"(#Ensachage._Ptzs._PtcelOrig._Cel);
+	                "ArretExt"(Origine := #Ret_Int);
+	                
+	                
+	                //Pas d'autorisation de changement de cellule et d'abandon si remplissage en cours
+	                IF NOT #Ensachage._Ptzs._PtcelOrig._Remp THEN
+	                    ;
+	                    //Recup cellules
+	                END_IF;
+	            END_IF;
+	        END_REGION Traitement preliminaire "DefNbProd"
+	        
+	        REGION Traitement Cyclique "DefNbProd"
+	            #Ensachage.Dial_Def.Num_Def_Etape := 1;
+	            #Text_Def := CONCAT(IN1 := 'Perte Niveau Bas cellule ', IN2 := #Ensachage._Ptzs._PtcelOrig._Cel);
+	            #Ensachage.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #FgBase,
+	                                                                Msg_Defaut := #Text_Def,
+	                                                                Type_Defaut := 3,
+	                                                                Automatisme := #Ensachage._EnsaCommun.CommunGeneral._Autom,
+	                                                                Num_Lot := #Ensachage._Ptzs._NoLot,
+	                                                                Origine_Defaut := 'Pas de presence du matiere',
+	                                                                Libelle_Origine := 'Pas de presence du matiere',
+	                                                                Acq1 := 'Relance',
+	                                                                Acq2 := 'Fin',
+	                                                                Acq3 := 'ChngOrig',
+	                                                                Acq4 := '',
+	                                                                Acq5 := '',
+	                                                                Acq6 := '',
+	                                                                Acq7 := '',
+	                                                                Acq8 := '',
+	                                                                Acq_Choisi := -1,
+	                                                                Date_Arrivee := #Ensachage._TpsPicke);
+	            #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	            RETURN;
+	            
+	        DefNbProd_DEF1:
+	            //============ Traitement des reponses pour le defaut1 EtapeDefnbProd ===========================================================//
+	            IF #Ensachage.Dial_Def.Reponse_Def = 'Fin' THEN    //abandon
+	                #Ensachage._FgsuspCircuit := FALSE;
+	                #Ensachage._Ptzs._TypeArret := "ARRET_NB";
+	                #Ensachage.Dial_Def.Reponse_Def := '';
+	                #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_Vidange;
+	                RETURN;
+	            END_IF;
+	            IF #Ensachage.Dial_Def.Reponse_Def = 'Relance' AND "CondEnsachage"(#Ensachage) THEN //relance
+	                #Ensachage.Dial_Def.Reponse_Def := '';
+	                #Ensachage._FgsuspCircuit := FALSE;
+	                #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_surveillance;
+	                RETURN;
+	            END_IF;
+	            IF #Ensachage.Dial_Def.Reponse_Def = 'ChngOrig' THEN //relance
+	                #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_ChangementOrigine;
+	                #Ensachage.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            //============================================  Fin traitement  ====================================================================//
+	            
+	            
+	        END_REGION Traitement Cyclique "DefNbProd"
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║        Etape "ChangementOrig"      ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	    #Etape_ChangementOrigine:
+	        REGION Traitement preliminaire "ChangementOrigine"
+	            IF (#Ensachage._EnsaCommun.CommunGeneral._Etp <> #Ensachage._EnsaCommun.CommunGeneral._EtpPrec) THEN
+	                #Ensachage._EnsaCommun.CommunGeneral._EtpPrec := #Ensachage._EnsaCommun.CommunGeneral._Etp;
+	                #Ensachage._EnsaCommun.CommunGeneral._DescEtp := 'Etape ChangementOrigine';
+	                #Ret_RD_Sys_T := RD_SYS_T(#Ensachage._TpsPicke);
+	                #Ensachage._CelOrgVide := 0;
+	                //Appel Fonction LireConfVide
+	                IF #Ensachage.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #Ensachage.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO ChangementOrig_DEF1;
+	                        2:
+	                            GOTO ChangementOrig_DEF2;
+	                            // 3:
+	                            //     GOTO ChangementOrig_DEF3;
+	                    END_CASE;
+	                END_IF;
+	                "MajAffichage"(#Ensachage);
+	                #Ensachage._EnsaCommun._PtTabOrg := #Ensachage._Ptzs._PtcelOrig;
+	                #Ensachage._EnsaCommun.CommunGeneral._AncDest := "Index_Mobile"(#Ensachage._Ptzs._PtcelOrig._Cel);
+	                #Ret_Int := "Index_Mobile"(#Ensachage._Ptzs._PtcelOrig._Cel);
+	                "ArretExt"(Origine := #Ret_Int);
+	            END_IF;
+	        END_REGION Traitement preliminaire "ChangementOrigine"
+	        
+	        REGION Traitement Cyclique "ChangementOrigine"
+	            IF NOT #Ensachage._Ptzs._PtcelOrig._NivBas THEN
+	                IF #Ensachage._EnsaCommun._FgConfVide <> 0 THEN
+	                    IF NOT #Ensachage._EnsaCommun._BpVide OR #Ensachage._EnsaCommun._FgConfVide = 2 THEN
+	                        #Ensachage.Dial_Def.Num_Def_Etape := 2;
+	                        #Text_Def := CONCAT(IN1 := 'Confirmez-vous l acquit vide de la cellule ', IN2 := #Ensachage._Ptzs._PtcelOrig._Cel);
+	                        #Ensachage.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #FgBase,
+	                                                                            Msg_Defaut := #Text_Def,
+	                                                                            Type_Defaut := 3,
+	                                                                            Automatisme := #Ensachage._EnsaCommun.CommunGeneral._Autom,
+	                                                                            Num_Lot := #Ensachage._Ptzs._NoLot,
+	                                                                            Origine_Defaut := 'Acquit Vide',
+	                                                                            Libelle_Origine := 'Acquit Vide',
+	                                                                            Acq1 := 'Oui',
+	                                                                            Acq2 := 'Non',
+	                                                                            Acq3 := '',
+	                                                                            Acq4 := '',
+	                                                                            Acq5 := '',
+	                                                                            Acq6 := '',
+	                                                                            Acq7 := '',
+	                                                                            Acq8 := '',
+	                                                                            Acq_Choisi := -1,
+	                                                                            Date_Arrivee := #Ensachage._TpsPicke);
+	                        #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                        RETURN;
+	                    END_IF;
+	                ELSIF #Ensachage._AcqVidePossible = 1 OR #Ensachage._Ptzs._TypeArret = "ARRET_NB" OR #Ensachage._Ptzs._TypeArret = "ARRET_EVOL" THEN
+	                    #Ensachage._FgVid := TRUE;
+	                ELSE
+	                    #Ensachage._FgVid := FALSE;
+	                END_IF;
+	            ELSE
+	                
+	                #Ensachage._FgVid := FALSE;
+	            END_IF;
+	        ChangementOrig_DEF2:
+	            //============ Traitement des reponses pour Acquit Vide ===========================================================//
+	            IF #Ensachage.Dial_Def.Reponse_Def = 'Oui' THEN
+	                #Ensachage._FgVid := TRUE;
+	                #Ensachage.Dial_Def.Reponse_Def := '';
+	            END_IF;
+	            IF #Ensachage.Dial_Def.Reponse_Def = 'Non' THEN //relance
+	                #Ensachage._FgVid := FALSE;
+	                #Ensachage.Dial_Def.Reponse_Def := '';
+	            END_IF;
+	            //============================================  Fin traitement  ====================================================================//
+	            
+	            
+	            
+	            
+	            
+	            
+	            IF #Ensachage._FgCgtOrg = 2 THEN
+	                #Ensachage.Dial_Def.Num_Def_Etape := 1;
+	                #Text_Def := CONCAT(IN1 := 'Changement d origine ', IN2 := #Ensachage._Ptzs._PtcelOrig._Cel, IN3 := 'veuillez saisir la nouvelle cellule');
+	                #Ensachage.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #FgBase,
+	                                                                    Msg_Defaut := #Text_Def,
+	                                                                    Type_Defaut := 3,
+	                                                                    Automatisme := #Ensachage._EnsaCommun.CommunGeneral._Autom,
+	                                                                    Num_Lot := #Ensachage._Ptzs._NoLot,
+	                                                                    Origine_Defaut := 'Changement Origine',
+	                                                                    Libelle_Origine := 'Changement Origine',
+	                                                                    Acq1 := 'Cellule',
+	                                                                    Acq2 := 'Annuler',
+	                                                                    Acq3 := '',
+	                                                                    Acq4 := '',
+	                                                                    Acq5 := '',
+	                                                                    Acq6 := '',
+	                                                                    Acq7 := '',
+	                                                                    Acq8 := '',
+	                                                                    Acq_Choisi := -1,
+	                                                                    Date_Arrivee := #Ensachage._TpsPicke);
+	                #Ensachage._FgCgtOrg := 1;
+	                #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                RETURN;
+	            END_IF;
+	        ChangementOrig_DEF1:
+	            //============ Traitement des reponses pour le defaut1 EtapeDefnbProd ===========================================================//
+	            IF #Ensachage.Dial_Def.Reponse_Def = 'Annuler' THEN    //abandon
+	                //"Marche_Ext_Libere"(#Ensachage._Ptzs._PtcelOrig);
+	                #Ret_Int := "Index_Mobile"(#Ensachage._Ptzs._PtcelOrig._Cel);
+	                "MarcheExt"(Origine := #Ret_Int,
+	                            Position := #PosOuv,
+	                            Vitesse := 0);
+	                
+	                #Ensachage.Dial_Def.Reponse_Def := '';
+	                #Ensachage._FgCgtOrg := 1;
+	                #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_surveillance;
+	                RETURN;
+	            END_IF;
+	            IF #Ensachage.Dial_Def.Reponse_Def = 'Cellule' THEN //relance
+	                #Ensachage._CelluleTrouve := 0;
+	                #Ensachage._CelluleTrouve := "Controle_Cellule"(FgMaskNh := #Temp_Bool,
+	                                                                NvCellule := #Ensachage.Dial_Def.Text_Reponse,
+	                                                                TypeCelDest := #Ensachage._EnsaCommun._TypeCelOrig,
+	                                                                Cel := "DB_Mod_Cellule",
+	                                                                NiveauHautDestNh => #Temp2_Bool);
+	                IF #Ensachage._CelluleTrouve = -1 THEN
+	                    #Ensachage.Dial_Def.Reponse_Def := '';
+	                    #Text_Def := CONCAT(IN1 := 'Cellule ', IN2 := #Ensachage.Dial_Def.Text_Reponse, IN3 := 'inexistante veuillez saisir la nouvelle cellule');
+	                    #Ensachage.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #FgBase,
+	                                                                        Msg_Defaut := #Text_Def,
+	                                                                        Type_Defaut := 2,
+	                                                                        Automatisme := #Ensachage._EnsaCommun.CommunGeneral._Autom,
+	                                                                        Num_Lot := #Ensachage._Ptzs._NoLot,
+	                                                                        Origine_Defaut := 'Cellule inexistante ',
+	                                                                        Libelle_Origine := 'Cellule inexistante ',
+	                                                                        Acq1 := 'Annuler',
+	                                                                        Acq2 := 'Cellule',
+	                                                                        Acq3 := '',
+	                                                                        Acq4 := '',
+	                                                                        Acq5 := '',
+	                                                                        Acq6 := '',
+	                                                                        Acq7 := '',
+	                                                                        Acq8 := '',
+	                                                                        Acq_Choisi := -1,
+	                                                                        Date_Arrivee := #Ensachage._TpsPicke);
+	                    #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                    RETURN;
+	                ELSE
+	                    #Ensachage.Dial_Def.Reponse_Def := '';
+	                END_IF;
+	            END_IF;
+	            
+	            
+	            
+	            IF #Ensachage._CelluleTrouve = 2 OR #Ensachage._CelluleTrouve = 1 THEN
+	                "ControleDest"(fgbase := #FgBase,
+	                               TypeCelDest := #Ensachage._EnsaCommun._TypeCelOrig,
+	                               FgMaskCtrlNh := #Temp_Bool,
+	                               "Return" => #Ret_Sint,
+	                               FgLanc => #Temp_Bool,
+	                               NiveauHautDestNh => #Temp2_Bool,
+	                               CntlDest := #Ensachage.CntlDest,
+	                               Dial_Def := #Ensachage.Dial_Def,
+	                               NoLot := #Ensachage._Ptzs._NoLot,
+	                               CdZoneDest := #Ensachage.Dial_Def.Text_Reponse,
+	                               Anc_Dest := #Ensachage._Ptzs._PtcelOrig._Cel,
+	                               Nouv_Dest := #Ensachage._Ptzs._NouvDest,
+	                               CdMat := #Ensachage._Ptzs._CdMatEmb,
+	                               NomAuto := #Ensachage._EnsaCommun.CommunGeneral._Autom);
+	            END_IF;
+	            
+	            IF #Ret_Sint = -1 THEN
+	                ;
+	            END_IF;
+	            IF #Ret_Sint = 1 THEN
+	                
+	                IF #Ensachage._Ptzs._PtcelOrig._Cel <> #Ensachage._Ptzs._NouvDest THEN
+	                    #Ensachage._EnsaCommun._VidCirChgCell := TRUE;
+	                END_IF;
+	                // #Ensachage._Ptzs._PtcelOrig := "DB_Mod_Cellule"._TabCel["RechIndexCel"(#Ensachage.Dial_Def.Text_Reponse)];
+	                IF #Ensachage._EnsaCommun._VidCirChgCell THEN
+	                    #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_Vidange;
+	                ELSE
+	                    #Ensachage._Ptzs._TypeArret := "ARRET_VIDE";
+	                    #Ensachage._Ptzs._PtcelOrig := "DB_Mod_Cellule"._TabCel["RechIndexCel"(#Ensachage._Ptzs._NouvDest)];
+	                    #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_AttCond;
+	                END_IF;
+	                //Mise a jour changement d'origine
+	                //Appel proc ChOrgEns ChgOrgEns(pt_zs,_ancDest,pt_zs->QteArret,AnsiString(_nouvCellule).c_str(),_fgVid);
+	                #Ensachage._Ptzs._QteArret := 0;
+	            END_IF;
+	            //============================================  Fin traitement  ====================================================================//
+	            // Demande Nombres de sac ensache
+	            (*  IF NOT #Ensachage._FgVid THEN
+	             #Ensachage.Dial_Def.Num_Def_Etape := 3;
+	             #Ensachage.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #FgBase,
+	                                                                 Msg_Defaut := 'Veuillez entrer la quantite ensachee',
+	                                                                 Type_Defaut := 3,
+	                                                                 Automatisme := #Ensachage._EnsaCommun.CommunGeneral._Autom,
+	                                                                 Num_Lot := #Ensachage._Ptzs._NoLot,
+	                                                                 Origine_Defaut := 'Saisie Qte ensachee',
+	                                                                 Libelle_Origine := 'Saisie Qte ensachee',
+	                                                                 Acq1 := 'Saisie',
+	                                                                 Acq2 := '',
+	                                                                 Acq3 := '',
+	                                                                 Acq4 := '',
+	                                                                 Acq5 := '',
+	                                                                 Acq6 := '',
+	                                                                 Acq7 := '',
+	                                                                 Acq8 := '',
+	                                                                 Acq_Choisi := -1,
+	                                                                 Date_Arrivee := #Ensachage._TpsPicke);
+	             #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	             RETURN;
+	         END_IF;
+	     ChangementOrig_DEF3:
+	         //============ Traitement des reponses pour Saisie ===========================================================//
+	         IF #Ensachage.Dial_Def.Reponse_Def = 'Saisie' THEN
+	             #Ensachage._Ptzs._QteArret:= STRING_TO_REAL(#Ensachage.Dial_Def.Text_Reponse);
+	             #Ensachage.Dial_Def.Reponse_Def := '';
+	         END_IF;
+	       //============================================  Fin traitement  ====================================================================//
+	         
+	         *)
+	            
+	            
+	        END_REGION Traitement Cyclique "ChangementOrigine"
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║        Etape "SuspEnsachage"       ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	    #Etape_Suspension:
+	        REGION Traitement preliminaire "SuspEnsachage"
+	            IF (#Ensachage._EnsaCommun.CommunGeneral._Etp <> #Ensachage._EnsaCommun.CommunGeneral._EtpPrec) THEN
+	                #Ensachage._EnsaCommun.CommunGeneral._EtpPrec := #Ensachage._EnsaCommun.CommunGeneral._Etp;
+	                #Ensachage._EnsaCommun.CommunGeneral._DescEtp := 'Etape SuspEnsachage';
+	                "MajBtSupervtEns"(Type := 3,
+	                                  Ensachage := #Ensachage);
+	                #Ensachage._MemoAppuiBP := 0;
+	                #Ensachage._CelOrgVide := 0;
+	                #Ret_Int := "Index_Mobile"(#Ensachage._Ptzs._PtcelOrig._Cel);
+	                "ArretExt"(Origine := #Ret_Int);
+	                //Origine,Dest
+	                IF "Valid_Index"(#Ensachage._Ptzs._PtcelOrig._Moborg) THEN
+	                    #Ret_Sint := "Fin_Pos_Circuit"(#Ensachage._PtCir);
+	                END_IF;
+	                
+	                
+	                IF #Ensachage._FgInitSynchroSuspGest THEN
+	                    //ATT  TestNivTachesAttFinTremEns
+	                    IF #FgBase THEN
+	                        // Appel Proc SuspEnsSpec
+	                        ;
+	                    END_IF;
+	                    "MajBtSupervtEns"(Type := 3,
+	                                      Ensachage := #Ensachage);
+	                    #Ret_Sint := "Maj_Niv"(Num_Zone := #Ensachage._EnsaCommun.CommunGeneral._NumZone, Num_Tache := #Ensachage._EnsaCommun.CommunGeneral._Tache, Niveau := "N_FINLOT");
+	                    //Appel Fonction EffLot
+	                    //MajAffichage
+	                    #Ensachage._Ptzs._FgLancCir := FALSE;
+	                    #Ensachage._FgEnsEnCours := FALSE;
+	                    #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_Repos;
+	                    RETURN;
+	                    
+	                END_IF;
+	                
+	                
+	            END_IF;
+	        END_REGION Traitement preliminaire "SuspEnsachage"
+	        
+	        REGION Traitement Cyclique "SuspEnsachage"
+	            #Ensachage._Bouton := "LireActionBoutonEns"(#Ensachage);
+	            
+	            IF "Valid_Index"(#Ensachage._Ptzs._PtcelOrig._Moborg) AND "Test_Etat_Circuit"(Etat := "Libre", Debut := 0, CIRCUIT := #Ensachage._PtCir) THEN
+	                IF #Ensachage._Bouton = "DEBCYCLE" AND "CondEnsachage"(#Ensachage) THEN
+	                    #Ensachage._FgsuspCircuit := FALSE;
+	                    IF "Valid_Index"(#Ensachage._Ptzs._PtcelOrig._Moborg) THEN
+	                        #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_RechCircuit;
+	                        RETURN;
+	                    ELSE
+	                        #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_surveillance;
+	                        RETURN;
+	                    END_IF;
+	                END_IF;
+	                
+	                IF #Ensachage._Bouton = "ABANDONENS" THEN
+	                    #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_Fin_Lot;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	            
+	            
+	            
+	            
+	            
+	        END_REGION Traitement Cyclique "ChangementOrigine"
+	        
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║          Etape "Vidange"           ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	    #Etape_Vidange:
+	        REGION Traitement preliminaire "Vidange"
+	            IF (#Ensachage._EnsaCommun.CommunGeneral._Etp <> #Ensachage._EnsaCommun.CommunGeneral._EtpPrec) THEN
+	                #Ensachage._EnsaCommun.CommunGeneral._EtpPrec := #Ensachage._EnsaCommun.CommunGeneral._Etp;
+	                #Ensachage._EnsaCommun.CommunGeneral._DescEtp := 'Etape Vidange';
+	                #Ret_Sint := "Maj_Niv"(Num_Zone := #Ensachage._EnsaCommun.CommunGeneral._NumZone, Num_Tache := #Ensachage._EnsaCommun.CommunGeneral._Tache, Niveau := "NIV_ENS_VID_CIR");
+	                #Ensachage._CelOrgVide := 0;
+	                
+	                #Ret_Int := "Index_Mobile"(#Ensachage._Ptzs._PtcelOrig._Cel);
+	                "ArretExt"(Origine := #Ret_Int);
+	                
+	            END_IF;
+	        END_REGION Traitement preliminaire "Vidange"
+	        
+	        REGION Traitement Cyclique "Vidange"
+	            #Ensachage._Bouton := "LireActionBoutonEns"(#Ensachage);
+	            
+	            IF #Ensachage._Bouton = "BTSUSPENS" THEN
+	                #Ensachage._BtSusp := 1;
+	                #Ensachage._MemoAppuiBP := 0;
+	                #Ensachage._FgsuspCircuit := TRUE;
+	            END_IF;
+	            IF #Ensachage._Bouton = "DEBCYCLE" THEN
+	                #Ensachage._BtDepCycle := 1;
+	                #Ensachage._MemoAppuiBP := 0;
+	                #Ensachage._FgsuspCircuit := FALSE;
+	            END_IF;
+	            //Vidange Cellule sur changement de cellule
+	            IF #Ensachage._EnsaCommun._VidCirChgCell OR #Ensachage._Ptzs._TypeArret = "ARRET_NH" THEN
+	                #Ensachage._EnsaCommun._DefEvol := 0;
+	                IF "Valid_Index"(#Ensachage._Ptzs._PtcelOrig._Moborg) THEN
+	                    #Ret_Bool := "Vid_Circuit_Cycl"(#Ensachage._PtCir);
+	                    IF #Ret_Bool AND "Test_Etat_Circuit"(Etat := "Libre", Debut := 0, CIRCUIT := #Ensachage._PtCir) THEN
+	                        #Ret_Sint := "Libere_Circuit"(#Ensachage._PtCir);
+	                        IF #Ensachage._EnsaCommun._VidCirChgCell THEN
+	                            #Ensachage._Ptzs._PtcelOrig := "DB_Mod_Cellule"._TabCel["RechIndexCel"(#Ensachage._Ptzs._NouvDest)];
+	                        END_IF;
+	                        #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_AttCond;
+	                        #Ensachage._EnsaCommun._VidCirChgCell := FALSE;
+	                        RETURN;
+	                    ELSE
+	                        RETURN;
+	                    END_IF;
+	                ELSE
+	                    #Ensachage._Ptzs._PtcelOrig := "DB_Mod_Cellule"._TabCel["RechIndexCel"(#Ensachage._Ptzs._NouvDest)];
+	                    #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_AttCond;
+	                    #Ensachage._EnsaCommun._VidCirChgCell := FALSE;
+	                    RETURN;
+	                    
+	                END_IF;
+	                RETURN;
+	            ELSIF #Ensachage._Ptzs._TypeArret = "ARRET_EVOL" THEN
+	                IF "Valid_Index"(#Ensachage._Ptzs._PtcelOrig._Moborg) THEN
+	                    #Ret_Sint := "Arr_Imm_Circuit"(#Ensachage._PtCir);
+	                END_IF;
+	            ELSE
+	                #Ensachage._EnsaCommun._DefEvol := 0;
+	                IF "Valid_Index"(#Ensachage._Ptzs._PtcelOrig._Moborg) THEN
+	                    #Ret_Bool := "Vid_Circuit_Cycl"(#Ensachage._PtCir);
+	                    IF #Ret_Bool AND "Test_Etat_Circuit"(Etat := "Libre", Debut := 0, CIRCUIT := #Ensachage._PtCir) THEN
+	                        #Ret_Sint := "Libere_Circuit"(#Ensachage._PtCir);
+	                       // #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_AttCond;
+	                        #Ensachage._EnsaCommun._VidCirChgCell := FALSE;
+	                       // RETURN;
+	                    ELSE
+	                        RETURN;
+	                    END_IF;
+	                END_IF;
+	            END_IF;
+	            #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_Fin_Lot;
+	            RETURN;
+	            
+	            
+	        END_REGION Traitement Cyclique "Vidange"
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║        Etape "FinLot"              ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	        
+	    #Etape_Fin_Lot:
+	        REGION Traitement preliminaire "FinLot"
+	            IF (#Ensachage._EnsaCommun.CommunGeneral._Etp <> #Ensachage._EnsaCommun.CommunGeneral._EtpPrec) THEN
+	                #Ensachage._EnsaCommun.CommunGeneral._EtpPrec := #Ensachage._EnsaCommun.CommunGeneral._Etp;
+	                #Ensachage._EnsaCommun.CommunGeneral._DescEtp := 'Etape FinLot';
+	                #Ret_Sint := "Maj_Niv"(Num_Zone := #Ensachage._EnsaCommun.CommunGeneral._NumZone, Num_Tache := #Ensachage._EnsaCommun.CommunGeneral._Tache, Niveau := "NIV_ENS_ATT_FINLOT");
+	                IF #Ensachage.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #Ensachage.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO FinLot_DEF1;
+	                        2:
+	                            GOTO FinLot_DEF2;
+	                            // 3:
+	                            //     GOTO ChangementOrig_DEF3;
+	                    END_CASE;
+	                END_IF;
+	                
+	            END_IF;
+	        END_REGION Traitement preliminaire "FinLot"
+	        
+	        REGION Traitement Cyclique "FinLot"
+	            IF "FC_Test_Niv_AmontAval"(Num_Zone := #Ensachage._EnsaCommun.CommunGeneral._NumZone, Lst_Taches := #Ensachage._ListeTaAttFinTremEns) THEN
+	                IF NOT #Ensachage._Ptzs._Abandon THEN
+	                    IF #FgBase THEN
+	                        // Appel Proc MajHist + Fonction ConfVidOrg
+	                        IF NOT #Ensachage._Ptzs._PtcelOrig._NivBas THEN
+	                            IF #Ensachage._EnsaCommun._FgConfVide <> 0 THEN
+	                                IF NOT #Ensachage._EnsaCommun._BpVide OR #Ensachage._EnsaCommun._FgConfVide = 2 THEN
+	                                    #Ensachage.Dial_Def.Num_Def_Etape := 1;
+	                                    #Text_Def := CONCAT(IN1 := 'Confirmez-vous l acquit vide de la cellule ', IN2 := #Ensachage._Ptzs._PtcelOrig._Cel);
+	                                    #Ensachage.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #FgBase,
+	                                                                                        Msg_Defaut := #Text_Def,
+	                                                                                        Type_Defaut := 3,
+	                                                                                        Automatisme := #Ensachage._EnsaCommun.CommunGeneral._Autom,
+	                                                                                        Num_Lot := #Ensachage._Ptzs._NoLot,
+	                                                                                        Origine_Defaut := 'Acquit Vide',
+	                                                                                        Libelle_Origine := 'Acquit Vide',
+	                                                                                        Acq1 := 'Oui',
+	                                                                                        Acq2 := 'Non',
+	                                                                                        Acq3 := '',
+	                                                                                        Acq4 := '',
+	                                                                                        Acq5 := '',
+	                                                                                        Acq6 := '',
+	                                                                                        Acq7 := '',
+	                                                                                        Acq8 := '',
+	                                                                                        Acq_Choisi := -1,
+	                                                                                        Date_Arrivee := #Ensachage._TpsPicke);
+	                                    #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                                    RETURN;
+	                                END_IF;
+	                            ELSIF #Ensachage._AcqVidePossible = 1 OR #Ensachage._Ptzs._TypeArret = "ARRET_NB" OR #Ensachage._Ptzs._TypeArret = "ARRET_EVOL" THEN
+	                                #Ensachage._FgVid := TRUE;
+	                            ELSE
+	                                #Ensachage._FgVid := FALSE;
+	                            END_IF;
+	                        ELSE
+	                            
+	                            #Ensachage._FgVid := FALSE;
+	                        END_IF;
+	                    END_IF;
+	                ELSE
+	                    //Abandon Ens //Proc
+	                    ;
+	                END_IF;
+	            END_IF;
+	            
+	        FinLot_DEF1:
+	            //============ Traitement des reponses pour Acquit Vide ===========================================================//
+	            IF #Ensachage.Dial_Def.Reponse_Def = 'Oui' THEN
+	                #Ensachage._FgVid := TRUE;
+	                #Ensachage.Dial_Def.Reponse_Def := '';
+	            END_IF;
+	            IF #Ensachage.Dial_Def.Reponse_Def = 'Non' THEN //relance
+	                #Ensachage._FgVid := FALSE;
+	                #Ensachage.Dial_Def.Reponse_Def := '';
+	            END_IF;
+	            //============================================  Fin traitement  ====================================================================//
+	            
+	            
+	            
+	            
+	            IF "FC_Test_Niv_AmontAval"(Num_Zone := #Ensachage._EnsaCommun.CommunGeneral._NumZone, Lst_Taches := #Ensachage._ListeTaAttFinTremEns) THEN
+	                IF NOT #Ensachage._Ptzs._Abandon THEN
+	                    IF #FgBase THEN
+	                        IF NOT #Ensachage._FgVid THEN
+	                            #Ensachage.Dial_Def.Num_Def_Etape := 2;
+	                            #Ensachage.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #FgBase,
+	                                                                                Msg_Defaut := 'Veuillez entrer la quantite ensachee',
+	                                                                                Type_Defaut := 3,
+	                                                                                Automatisme := #Ensachage._EnsaCommun.CommunGeneral._Autom,
+	                                                                                Num_Lot := #Ensachage._Ptzs._NoLot,
+	                                                                                Origine_Defaut := 'Saisie Qte ensachee',
+	                                                                                Libelle_Origine := 'Saisie Qte ensachee',
+	                                                                                Acq1 := 'Saisie',
+	                                                                                Acq2 := '',
+	                                                                                Acq3 := '',
+	                                                                                Acq4 := '',
+	                                                                                Acq5 := '',
+	                                                                                Acq6 := '',
+	                                                                                Acq7 := '',
+	                                                                                Acq8 := '',
+	                                                                                Acq_Choisi := -1,
+	                                                                                Date_Arrivee := #Ensachage._TpsPicke);
+	                            #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                            RETURN;
+	                        END_IF;
+	                    END_IF;
+	                END_IF;
+	                #Ret_Sint := "Maj_Niv"(Num_Zone := #Ensachage._EnsaCommun.CommunGeneral._NumZone, Num_Tache := #Ensachage._EnsaCommun.CommunGeneral._Tache, Niveau := "NIV_ENS_ATT_FINLOT");
+	                //Eff lot
+	                //MajAffichage
+	                #Ensachage._Ptzs._FgLancCir := FALSE;
+	                #Ensachage._FgEnsEnCours := FALSE;
+	                #Ensachage._EnsaCommun.CommunGeneral._Etp := #Etape_Repos;
+	                RETURN;
+	                
+	                
+	            END_IF;
+	            
+	            
+	            
+	            
+	        FinLot_DEF2:
+	            //============ Traitement des reponses pour Saisie ===========================================================//
+	            IF #Ensachage.Dial_Def.Reponse_Def = 'Saisie' THEN
+	                #Ensachage._Ptzs._QteArret := STRING_TO_REAL(#Ensachage.Dial_Def.Text_Reponse);
+	                #Ensachage.Dial_Def.Reponse_Def := '';
+	            END_IF;
+	            //============================================  Fin traitement  ====================================================================//
+	            
+	            
+	            
+	            
+	            
+	            
+	            
+	            
+	            
+	            
+	            
+	            
+	            
+	            
+	            
+	            
+	            
+	            
+	            
+	            
+	            
+	        END_REGION Traitement Cyclique "FinLot"
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║ Etape "Attente Reponse Dialogue"   ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                    
+	*)
+	    #Etape_Attente_RepDial:
+	        REGION Preliminaire Attente Acquuitement
+	            IF #Ensachage._EnsaCommun.CommunGeneral._Etp <> #Ensachage._EnsaCommun.CommunGeneral._EtpPrec THEN
+	                #Ensachage._EnsaCommun.CommunGeneral._EtpMemo := #Ensachage._EnsaCommun.CommunGeneral._EtpPrec;
+	                #Ensachage._EnsaCommun.CommunGeneral._EtpPrec := #Ensachage._EnsaCommun.CommunGeneral._Etp;
+	                #Ensachage._EnsaCommun.CommunGeneral._DescEtp := 'Attente_RepDial';
+	            END_IF;
+	        END_REGION Preliminaire Attente Acquuitement
+	        REGION Cyclique Attente Acquitement
+	            #Ensachage.Dial_Def.Reponse_Def := "FC_Recup_Rep_Def"(Index_Def := #Ensachage.Dial_Def.Index_Defaut, Reponse_Ecrit => #Ensachage.Dial_Def.Text_Reponse);
+	            IF #Ensachage.Dial_Def.Reponse_Def <> '' THEN
+	                "FC_Raz_Def"(#Ensachage.Dial_Def.Index_Defaut);
+	                #Ensachage._EnsaCommun.CommunGeneral._Etp := #Ensachage._EnsaCommun.CommunGeneral._EtpMemo;
+	                RETURN;
+	            END_IF;
+	        END_REGION Cyclique Attente Acquitement   
+	END_CASE;
+END_FUNCTION
+

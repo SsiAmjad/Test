@@ -1,0 +1,33 @@
+﻿FUNCTION "GestionVitIncorpo" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      ChCompo : "S_ChargCompo";
+   END_VAR
+
+   VAR_TEMP 
+      vitesse : Real;
+      debitDem : Real;
+   END_VAR
+
+
+BEGIN
+	(* IF #ChCompo._SeuilQteFinCharg> #ChCompo._Ptcompo._ConsQte - #ChCompo._Ptzs._QteNet OR "FC_Test_Niv_AmontAval"(Num_Zone := #ChCompo._ChargCommun._CommunGeneral._NumZone, Lst_Taches := #ChCompo._ListeTaAttFinLotCharg) THEN
+	    #vitesse:=#ChCompo._VitFinCharg ;
+	    
+	ELSIF #ChCompo._GestVitDebitTheo OR (#ChCompo._DebitPontMini>0 AND #ChCompo._DebitPont<#ChCompo._DebitPontMini) THEN
+	    #debitDem := #ChCompo._Ptzs._Compo[0]._DebitCel * (#ChCompo._Ptzs._QteTotMinComm / #ChCompo._Ptzs._ConsQteTot);
+	    #vitesse := (#debitDem / #ChCompo._DebitMaxVisCharg) * 100;
+	ELSE
+	    #debitDem := #ChCompo._DebitPont * (#ChCompo._Ptzs._QteTotMinComm / #ChCompo._Ptzs._ConsQteTot);
+	    #vitesse := (#debitDem / #ChCompo._DebitMaxVisCharg) * 100;
+	END_IF;
+	
+	"Min_Max"(Min:=#ChCompo._VitMinVisCharg,
+	          Max:=#ChCompo._VitMaxVisCharg,
+	          Val_Calc:=#vitesse,
+	          Sort_Ana:=#vitesse);
+	
+	#ChCompo._SavVisCharg := #vitesse; *)
+END_FUNCTION
+

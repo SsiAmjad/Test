@@ -1,0 +1,74 @@
+﻿FUNCTION "Initialisation_Verse_Sac" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+BEGIN
+	//---------------------  Verse Sac1 ---------------------//
+	"DB_Dosage".VS[0].Lieu_Pes := 'VS';
+	// "DB_Dosage".VS[0].Mob_Ecluse := ;
+	// "DB_Dosage".VS[0].Mob_Aspiration := ;
+	// "DB_Dosage".VS[0].Mob_Benne := ;
+	// "DB_Dosage".VS[0].Mob_Decolmatage := ;
+	"DB_Dosage".VS[0].Mob_Decomp := "Index_Mobile"('VN_DEC_VS');
+	// "DB_Dosage".VS[0].Mob_Dever_Volet := ;
+	// "DB_Dosage".VS[0].Mob_Trans := ;
+	"DB_Dosage".VS[0].Mob_Trappe1 := "Index_Mobile"('TRP_VID_VS');
+	// "DB_Dosage".VS[0].Mob_Trappe2 := ;
+	//"DB_Dosage".VS[0].Mob_Vanne_Air := ;
+	// "DB_Dosage".VS[0].Mob_Vibreur := ;
+	"DB_Dosage".VS[0].Mob_Volet := "Index_Mobile"('TRP_ET_VS');
+	"DB_Dosage".VS[0].Seuil_Grand_Plat_Benne := 20;
+	"DB_Dosage".VS[0].Seuil_Petit_Grand_Plat := 15;
+	//--------------------- SYNCHRONISATION GRAFCET Verse Sac1 ---------------------//
+	// "DB_Dosage".VS[0].Lst_Taches_Att_Aff_Compo[0]._Tache := "TAC_TREMSR_MLG1";
+	// "DB_Dosage".VS[0].Lst_Taches_Att_Aff_Compo[0]._Niv := "NIV_TREMIE_TRAPPE_FIN_LOT";
+	// "DB_Dosage".VS[0].Lst_Taches_Att_Aut_Dem[0]._Tache := "TAC_MELANG1";
+	// "DB_Dosage".VS[0].Lst_Taches_Att_Aut_Dem[0]._Niv := "NIV_MLG_DEBUT_LOT";
+	// "DB_Dosage".VS[0].Lst_Taches_Att_Aut_Dem[1]._Tache := "TAC_MELANG2";
+	// "DB_Dosage".VS[0].Lst_Taches_Att_Aut_Dem[1]._Niv := "NIV_MLG_DEBUT_LOT";
+	"DB_Dosage".VS[0].Lst_Taches_Att_Aut_Vidange[0]._Tache := "TAC_TREMSR_MLG1";
+	"DB_Dosage".VS[0].Lst_Taches_Att_Aut_Vidange[0]._Niv := "NIV_TREMIE_TRAPPE_FIN_LOT";
+	"DB_Dosage".VS[0].Lst_Taches_Att_Aut_Vidange[1]._Tache := "TAC_TREMSR_MLG2";
+	"DB_Dosage".VS[0].Lst_Taches_Att_Aut_Vidange[1]._Niv := "NIV_TREMIE_TRAPPE_FIN_LOT";
+	// "DB_Dosage".VS[0].Lst_Taches_Att_Aval_Vid_Part[0]._Tache := ;
+	// "DB_Dosage".VS[0].Lst_Taches_Att_Aval_Vid_Part[0]._Niv := ;
+	// "DB_Dosage".VS[0].Lst_Taches_Att_Fin_Circuit[0]._Tache :=;
+	// "DB_Dosage".VS[0].Lst_Taches_Att_Fin_Circuit[0]._Niv := ;
+	"DB_Dosage".VS[0].Lst_Taches_Att_Fin_Dosage[0]._Tache := "TAC_MELANG1";
+	"DB_Dosage".VS[0].Lst_Taches_Att_Fin_Dosage[0]._Niv := "NIV_MLG_MARCHE";
+	"DB_Dosage".VS[0].Lst_Taches_Att_Fin_Dosage[1]._Tache := "TAC_MELANG2";
+	"DB_Dosage".VS[0].Lst_Taches_Att_Fin_Dosage[1]._Niv := "NIV_MLG_MARCHE";
+	//---------------------  Verse Sac2 ---------------------//
+	"DB_Dosage".VS[1].Lieu_Pes := 'VS2';
+	// "DB_Dosage".VS[1].Mob_Ecluse := ;
+	// "DB_Dosage".VS[1].Mob_Aspiration := ;
+	// "DB_Dosage".VS[1].Mob_Benne := ;
+	// "DB_Dosage".VS[1].Mob_Decolmatage := ;
+	// "DB_Dosage".VS[1].Mob_Decomp := ;
+	// "DB_Dosage".VS[1].Mob_Dever_Volet := ;
+	// "DB_Dosage".VS[1].Mob_Trans := ;
+	// "DB_Dosage".VS[1].Mob_Trappe1 := ;
+	// "DB_Dosage".VS[1].Mob_Trappe2 := ;
+	// "DB_Dosage".VS[1].Mob_Vanne_Air := ;
+	// "DB_Dosage".VS[1].Mob_Vibreur := ;
+	// "DB_Dosage".VS[1].Mob_Volet := ;
+	"DB_Dosage".VS[1].Seuil_Grand_Plat_Benne := 20;
+	"DB_Dosage".VS[1].Seuil_Petit_Grand_Plat := 15;
+	
+	//--------------------- SYNCHRONISATION GRAFCET Verse Sac2 ---------------------//
+	"DB_Dosage".VS[1].Lst_Taches_Att_Aff_Compo[0]._Tache := "TAC_TREMSR_MLG2";
+	"DB_Dosage".VS[1].Lst_Taches_Att_Aff_Compo[0]._Niv := "NIV_TREMIE_TRAPPE_FIN_LOT";
+	"DB_Dosage".VS[1].Lst_Taches_Att_Aut_Dem[0]._Tache := "TAC_TREMSR_MLG2";
+	"DB_Dosage".VS[1].Lst_Taches_Att_Aut_Dem[0]._Niv := "NIV_TREMIE_TRAPPE_FIN_LOT";
+	// "DB_Dosage".VS[1].Lst_Taches_Att_Aut_Vidange[0]._Tache := ;
+	// "DB_Dosage".VS[1].Lst_Taches_Att_Aut_Vidange[0]._Niv := ;
+	// "DB_Dosage".VS[1].Lst_Taches_Att_Aut_Vidange[1]._Tache := ;
+	// "DB_Dosage".VS[1].Lst_Taches_Att_Aut_Vidange[1]._Niv := ;
+	// "DB_Dosage".VS[1].Lst_Taches_Att_Aval_Vid_Part[0]._Tache := ;
+	// "DB_Dosage".VS[1].Lst_Taches_Att_Aval_Vid_Part[0]._Niv := ;
+	// "DB_Dosage".VS[1].Lst_Taches_Att_Fin_Circuit[0]._Tache := ;
+	// "DB_Dosage".VS[1].Lst_Taches_Att_Fin_Circuit[0]._Niv := ;
+	"DB_Dosage".VS[1].Lst_Taches_Att_Fin_Dosage[0]._Tache := "TAC_MELANG2";
+	"DB_Dosage".VS[1].Lst_Taches_Att_Fin_Dosage[0]._Niv := "NIV_MLG_MARCHE";
+END_FUNCTION
+

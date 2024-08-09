@@ -1,0 +1,135 @@
+﻿FUNCTION "Initialisation_Circuit_Transfert" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+BEGIN
+	//=============================== CIRCUIT DE TRANSFERT VERS BROYEUR1 ===============================//
+	"DB_Dosage".TRANSF[0].Circuit.Num_Circuit := "Num_Cir_Trans_BB01";
+	"DB_Dosage".TRANSF[0].Circuit.Origine := "Index_Mobile"('E10');
+	"DB_Dosage".TRANSF[0].Circuit.Destination := "Index_Mobile"('BB01');
+	//=============================== CIRCUIT DE TRANSFERT VERS BROYEUR1 ===============================//
+	"DB_Dosage".TRANSF[0].Lst_Att_Aval_Libre[0]._Tache := "TAC_TREMSR_BR1";
+	"DB_Dosage".TRANSF[0].Lst_Att_Aval_Libre[0]._Niv := "NIV_TREMIE_TRAPPE_DEBUT_LOT";
+	// "DB_Dosage".TRANSF[0].Lst_Att_Aval_Libre[1]._Tache := "TAC_TREMSR_BR2";
+	// "DB_Dosage".TRANSF[0].Lst_Att_Aval_Libre[1]._Niv := "NIV_TREMIE_TRAPPE_DEBUT_LOT";
+	"DB_Dosage".TRANSF[0].Lst_Att_Auto_Demar[0]._Tache := "TAC_TREMSR_BR1";
+	"DB_Dosage".TRANSF[0].Lst_Att_Auto_Demar[0]._Niv := "NIV_TREMIE_TRAPPE_AUT_REMP";
+	"DB_Dosage".TRANSF[0].Lst_Att_Auto_Demar[1]._Tache := "TAC_TREMSS_BP1";
+	"DB_Dosage".TRANSF[0].Lst_Att_Auto_Demar[1]._Niv := "NIV_TREMIE_TRANS_PRES_PRD";
+	"DB_Dosage".TRANSF[0].Lst_Att_Auto_Demar[2]._Tache := "TAC_TREMSS_BP2";
+	"DB_Dosage".TRANSF[0].Lst_Att_Auto_Demar[2]._Niv := "NIV_TREMIE_TRANS_PRES_PRD";
+	"DB_Dosage".TRANSF[0].Lst_Att_Auto_Demar[3]._Tache := "TAC_TREMSR_BR1";
+	"DB_Dosage".TRANSF[0].Lst_Att_Auto_Demar[3]._Niv := "NIV_TREMIE_TRAPPE_AUT_REMP";
+	"DB_Dosage".TRANSF[0].Lst_Att_Fin_Amont[0]._Tache := "TAC_CIRSS_BP1";
+	"DB_Dosage".TRANSF[0].Lst_Att_Fin_Amont[0]._Niv := "NIV_CIRTRANS_CIR_FIN_LOT";
+	"DB_Dosage".TRANSF[0].Lst_Att_Fin_Amont[1]._Tache := "TAC_TREMSS_BP2";
+	"DB_Dosage".TRANSF[0].Lst_Att_Fin_Amont[1]._Niv := "NIV_TREMIE_TRANS_FIN_LOT";
+	"DB_Dosage".TRANSF[0].Lst_Taches_Amont_Qte[0] := "TAC_TREMSS_BP1";
+	"DB_Dosage".TRANSF[0].Lst_Taches_Amont_Qte[1] := "TAC_TREMSS_BP2";
+	//=============================== CIRCUIT DE TRANSFERT VERS BROYEUR1 ===============================//
+	//=============================== CIRCUIT DE TRANSFERT VERS BROYEUR2 ===============================//
+	"DB_Dosage".TRANSF[1].Circuit.Num_Circuit := "Num_Cir_Trans_BB02";
+	"DB_Dosage".TRANSF[1].Circuit.Origine := "Index_Mobile"('E10');
+	"DB_Dosage".TRANSF[1].Circuit.Destination := "Index_Mobile"('BB02');
+	//=============================== CIRCUIT DE TRANSFERT VERS BROYEUR2 ===============================//
+	"DB_Dosage".TRANSF[1].Lst_Att_Aval_Libre[0]._Tache := "TAC_TREMSR_BR2";
+	"DB_Dosage".TRANSF[1].Lst_Att_Aval_Libre[0]._Niv := "NIV_TREMIE_TRAPPE_DEBUT_LOT";
+	"DB_Dosage".TRANSF[1].Lst_Att_Aval_Libre[1]._Tache := "TAC_TREMSR_BR2";
+	"DB_Dosage".TRANSF[1].Lst_Att_Aval_Libre[1]._Niv := "NIV_TREMIE_TRAPPE_DEBUT_LOT";
+	"DB_Dosage".TRANSF[1].Lst_Att_Auto_Demar[0]._Tache := "TAC_TREMSR_BR2";
+	"DB_Dosage".TRANSF[1].Lst_Att_Auto_Demar[0]._Niv := "NIV_TREMIE_TRAPPE_AUT_REMP";
+	"DB_Dosage".TRANSF[1].Lst_Att_Auto_Demar[1]._Tache := "TAC_TREMSS_BP1";
+	"DB_Dosage".TRANSF[1].Lst_Att_Auto_Demar[1]._Niv := "NIV_TREMIE_TRANS_PRES_PRD";
+	"DB_Dosage".TRANSF[1].Lst_Att_Auto_Demar[2]._Tache := "TAC_TREMSS_BP2";
+	"DB_Dosage".TRANSF[1].Lst_Att_Auto_Demar[2]._Niv := "NIV_TREMIE_TRANS_PRES_PRD";
+	"DB_Dosage".TRANSF[1].Lst_Att_Auto_Demar[3]._Tache := "TAC_TREMSR_BR2";
+	"DB_Dosage".TRANSF[1].Lst_Att_Auto_Demar[3]._Niv := "NIV_TREMIE_TRAPPE_AUT_REMP";
+	"DB_Dosage".TRANSF[1].Lst_Att_Fin_Amont[0]._Tache := "TAC_CIRSS_BP1";
+	"DB_Dosage".TRANSF[1].Lst_Att_Fin_Amont[0]._Niv := "NIV_CIRTRANS_CIR_FIN_LOT";
+	"DB_Dosage".TRANSF[1].Lst_Att_Fin_Amont[1]._Tache := "TAC_TREMSS_BP2";
+	"DB_Dosage".TRANSF[1].Lst_Att_Fin_Amont[1]._Niv := "NIV_TREMIE_TRANS_FIN_LOT";
+	"DB_Dosage".TRANSF[1].Lst_Taches_Amont_Qte[0] := "TAC_TREMSS_BP1";
+	"DB_Dosage".TRANSF[1].Lst_Taches_Amont_Qte[1] := "TAC_TREMSS_BP2";
+	//=============================== CIRCUIT DE TRANSFERT VERS BROYEUR2 ===============================//
+	
+	
+	
+	//=============================== CIRCUIT DE TRANSFERT VERS MELANGEUSE1 ===============================//
+	"DB_Dosage".TRANSF[2].Circuit.Num_Circuit := "Num_Cir_Trans_TMEL";
+	"DB_Dosage".TRANSF[2].Circuit.Origine := "Index_Mobile"('E11');
+	"DB_Dosage".TRANSF[2].Circuit.Destination := "Index_Mobile"('TMEL');
+	//=============================== CIRCUIT DE TRANSFERT VERS MELANGEUSE1 ===============================//
+	"DB_Dosage".TRANSF[2].Lst_Att_Aval_Libre[0]._Tache := "TAC_TREMSR_MLG1";
+	"DB_Dosage".TRANSF[2].Lst_Att_Aval_Libre[0]._Niv := "NIV_TREMIE_TRAPPE_DEBUT_LOT";
+	"DB_Dosage".TRANSF[2].Lst_Att_Auto_Demar[0]._Tache := "TAC_TREMSR_MLG1";
+	"DB_Dosage".TRANSF[2].Lst_Att_Auto_Demar[0]._Niv := "NIV_TREMIE_TRAPPE_AUT_REMP";
+	"DB_Dosage".TRANSF[2].Lst_Att_Auto_Demar[1]._Tache := "TAC_TREMSS_BR1";
+	"DB_Dosage".TRANSF[2].Lst_Att_Auto_Demar[1]._Niv := "NIV_TREMIE_TRANS_PRES_PRD";
+	"DB_Dosage".TRANSF[2].Lst_Att_Auto_Demar[2]._Tache := "TAC_TREMSS_BR2";
+	"DB_Dosage".TRANSF[2].Lst_Att_Auto_Demar[2]._Niv := "NIV_TREMIE_TRANS_PRES_PRD";
+	"DB_Dosage".TRANSF[2].Lst_Att_Auto_Demar[3]._Tache := "TAC_TREMSS_BP3";
+	"DB_Dosage".TRANSF[2].Lst_Att_Auto_Demar[3]._Niv := "NIV_TREMIE_TRANS_PRES_PRD";
+	"DB_Dosage".TRANSF[2].Lst_Att_Auto_Demar[4]._Tache := "TAC_TREMSS_BP5";
+	"DB_Dosage".TRANSF[2].Lst_Att_Auto_Demar[4]._Niv := "NIV_TREMIE_TRANS_PRES_PRD";
+	"DB_Dosage".TRANSF[2].Lst_Att_Fin_Amont[0]._Tache := "TAC_TREMSS_BR1";
+	"DB_Dosage".TRANSF[2].Lst_Att_Fin_Amont[0]._Niv := "NIV_TREMIE_TRANS_FIN_LOT";
+	"DB_Dosage".TRANSF[2].Lst_Att_Fin_Amont[1]._Tache := "TAC_TREMSS_BR2";
+	"DB_Dosage".TRANSF[2].Lst_Att_Fin_Amont[1]._Niv := "NIV_TREMIE_TRANS_FIN_LOT";
+	"DB_Dosage".TRANSF[2].Lst_Att_Fin_Amont[2]._Tache := "TAC_TREMSS_BP3";
+	"DB_Dosage".TRANSF[2].Lst_Att_Fin_Amont[2]._Niv := "NIV_TREMIE_TRANS_FIN_LOT";
+	"DB_Dosage".TRANSF[2].Lst_Att_Fin_Amont[3]._Tache := "TAC_TREMSS_BP5";
+	"DB_Dosage".TRANSF[2].Lst_Att_Fin_Amont[3]._Niv := "NIV_TREMIE_TRANS_FIN_LOT";
+	"DB_Dosage".TRANSF[2].Lst_Taches_Amont_Qte[0] := "TAC_TREMSS_BP3";
+	"DB_Dosage".TRANSF[2].Lst_Taches_Amont_Qte[1] := "TAC_TREMSS_BP5";
+	"DB_Dosage".TRANSF[2].Lst_Taches_Amont_Qte[2] := "TAC_TREMSS_BR1";
+	"DB_Dosage".TRANSF[2].Lst_Taches_Amont_Qte[3] := "TAC_TREMSS_BR2";
+	//=============================== CIRCUIT DE TRANSFERT VERS MELANGEUSE1 ===============================//
+	//=============================== CIRCUIT DE TRANSFERT VERS MELANGEUSE2 ===============================//
+	"DB_Dosage".TRANSF[3].Circuit.Num_Circuit := "Num_Cir_Trans_TMEL2";
+	"DB_Dosage".TRANSF[3].Circuit.Origine := "Index_Mobile"('E11');
+	"DB_Dosage".TRANSF[3].Circuit.Destination := "Index_Mobile"('TMEL2');
+	//=============================== CIRCUIT DE TRANSFERT VERS MELANGEUSE2 ===============================//
+	"DB_Dosage".TRANSF[3].Lst_Att_Aval_Libre[0]._Tache := "TAC_TREMSR_MLG2";
+	"DB_Dosage".TRANSF[3].Lst_Att_Aval_Libre[0]._Niv := "NIV_TREMIE_TRAPPE_DEBUT_LOT";
+	"DB_Dosage".TRANSF[3].Lst_Att_Auto_Demar[0]._Tache := "TAC_TREMSR_MLG2";
+	"DB_Dosage".TRANSF[3].Lst_Att_Auto_Demar[0]._Niv := "NIV_TREMIE_TRAPPE_AUT_REMP";
+	"DB_Dosage".TRANSF[3].Lst_Att_Auto_Demar[1]._Tache := "TAC_TREMSS_BR1";
+	"DB_Dosage".TRANSF[3].Lst_Att_Auto_Demar[1]._Niv := "NIV_TREMIE_TRANS_PRES_PRD";
+	"DB_Dosage".TRANSF[3].Lst_Att_Auto_Demar[2]._Tache := "TAC_TREMSS_BR2";
+	"DB_Dosage".TRANSF[3].Lst_Att_Auto_Demar[2]._Niv := "NIV_TREMIE_TRANS_PRES_PRD";
+	"DB_Dosage".TRANSF[3].Lst_Att_Auto_Demar[3]._Tache := "TAC_TREMSS_BP3";
+	"DB_Dosage".TRANSF[3].Lst_Att_Auto_Demar[3]._Niv := "NIV_TREMIE_TRANS_PRES_PRD";
+	"DB_Dosage".TRANSF[3].Lst_Att_Auto_Demar[4]._Tache := "TAC_TREMSS_BP5";
+	"DB_Dosage".TRANSF[3].Lst_Att_Auto_Demar[4]._Niv := "NIV_TREMIE_TRANS_PRES_PRD";
+	"DB_Dosage".TRANSF[3].Lst_Att_Fin_Amont[0]._Tache := "TAC_TREMSS_BR1";
+	"DB_Dosage".TRANSF[3].Lst_Att_Fin_Amont[0]._Niv := "NIV_TREMIE_TRANS_FIN_LOT";
+	"DB_Dosage".TRANSF[3].Lst_Att_Fin_Amont[1]._Tache := "TAC_TREMSS_BR2";
+	"DB_Dosage".TRANSF[3].Lst_Att_Fin_Amont[1]._Niv := "NIV_TREMIE_TRANS_FIN_LOT";
+	"DB_Dosage".TRANSF[3].Lst_Att_Fin_Amont[2]._Tache := "TAC_TREMSS_BP3";
+	"DB_Dosage".TRANSF[3].Lst_Att_Fin_Amont[2]._Niv := "NIV_TREMIE_TRANS_FIN_LOT";
+	"DB_Dosage".TRANSF[3].Lst_Att_Fin_Amont[3]._Tache := "TAC_TREMSS_BP5";
+	"DB_Dosage".TRANSF[3].Lst_Att_Fin_Amont[3]._Niv := "NIV_TREMIE_TRANS_FIN_LOT";
+	"DB_Dosage".TRANSF[3].Lst_Taches_Amont_Qte[0] := "TAC_TREMSS_BP3";
+	"DB_Dosage".TRANSF[3].Lst_Taches_Amont_Qte[1] := "TAC_TREMSS_BP5";
+	"DB_Dosage".TRANSF[3].Lst_Taches_Amont_Qte[2] := "TAC_TREMSS_BR1";
+	"DB_Dosage".TRANSF[3].Lst_Taches_Amont_Qte[3] := "TAC_TREMSS_BR2";
+	//=============================== CIRCUIT DE TRANSFERT VERS MELANGEUSE2 ===============================//
+	
+	
+	
+	
+	//=============================== CIRCUIT DE TRANSFERT BP1 ===============================//
+	"DB_Dosage".TRANSF[4].Circuit.Num_Circuit := "Num_Cir_Trans_BP1";
+	"DB_Dosage".TRANSF[4].Circuit.Origine := "Index_Mobile"('E30');
+	"DB_Dosage".TRANSF[4].Circuit.Destination := "Index_Mobile"('T20');
+	//=============================== CIRCUIT DE TRANSFERT BP1 ===============================//
+	"DB_Dosage".TRANSF[4].Lst_Att_Aval_Libre[0]._Tache := "TAC_CIRREMP_BR1";
+	"DB_Dosage".TRANSF[4].Lst_Att_Aval_Libre[0]._Niv := "NIV_CIRTRANS_CIR_TRANS_PRET";
+	"DB_Dosage".TRANSF[4].Lst_Att_Auto_Demar[0]._Tache := "TAC_TREMSS_BP1";
+	"DB_Dosage".TRANSF[4].Lst_Att_Auto_Demar[0]._Niv := "NIV_TREMIE_TRANS_AUT_REMP";
+	"DB_Dosage".TRANSF[4].Lst_Att_Fin_Amont[0]._Tache := "TAC_TREMSS_BP1";
+	"DB_Dosage".TRANSF[4].Lst_Att_Fin_Amont[0]._Niv := "NIV_TREMIE_TRANS_FIN_LOT";
+	"DB_Dosage".TRANSF[4].Lst_Taches_Amont_Qte[0] := "TAC_TREMSS_BP1";
+	//=============================== CIRCUIT DE TRANSFERT BP1 ===============================//
+END_FUNCTION
+

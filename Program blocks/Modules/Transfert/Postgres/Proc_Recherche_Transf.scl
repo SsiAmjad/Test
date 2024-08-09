@@ -1,0 +1,148 @@
+﻿FUNCTION "Proc_Recherche_Transf" : String[254]
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Procede : String;
+      "Type" : String;
+      NumPoste : UInt;
+   END_VAR
+
+   VAR_OUTPUT 
+      Msg_Def : String;
+   END_VAR
+
+   VAR_IN_OUT 
+      SUIV_TRANS : "S_SUIVI_TRANSF";
+   END_VAR
+
+   VAR_TEMP 
+      parameters_value : Array[0..20] of String;
+      Resultat : String;
+      ErreurMessage : String;
+      Resultat_Decode : WString[300];
+      status : Int;
+      Rep_temp : String;
+   END_VAR
+
+
+BEGIN
+	//Insertion des parametres 
+	#parameters_value[0] := UINT_TO_STRING(#NumPoste);
+	#parameters_value[1] := #Procede;
+	#parameters_value[2] := #Type;
+	
+	
+	
+	
+	
+	
+	
+	//++++++++++++++++++++++++++++++++++++
+	
+	#Resultat_Decode := "COMBASE"(procedure_name := 'SP_TRANS_RechTrans',
+	                                 values_of_record := #parameters_value,
+	                                 parameters_number := 3,
+	                                 ERROR_MESSAGE => #ErreurMessage);
+	   
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := 'REPONSE:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Proc_Recherche_Transf);
+	
+	IF #Proc_Recherche_Transf = 'NOK' THEN
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := 'MESS:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Msg_Def);
+	    RETURN;
+	    
+	ELSIF #Proc_Recherche_Transf = 'OK' THEN
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := 'MESS:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Msg_Def);
+	    IF #Msg_Def = 'VIDE' THEN
+	        RETURN;
+	    END_IF;
+	ELSE
+	    RETURN;
+	END_IF;
+	    
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|ID:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	#SUIV_TRANS._Id_Transf := STRING_TO_ULINT(#Rep_temp);
+	
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|SCODETRA:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL =>  #SUIV_TRANS._Cd_Transf );
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|NORDRE:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	#SUIV_TRANS._NoOrdre := STRING_TO_INT(#Rep_temp);
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|NOLOT:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #SUIV_TRANS._NoLot);
+	
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|SCODEMAT:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #SUIV_TRANS._CdMat );
+	
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|LIBMAT:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #SUIV_TRANS._LbMat);
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|SCODEMATORG:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #SUIV_TRANS._CdMatOrg);
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|LIBMATORG:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #SUIV_TRANS._LbMatOrg);
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|NDENS:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	#SUIV_TRANS._Densite:= STRING_TO_REAL(#Rep_temp);
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|ORIG:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #SUIV_TRANS._Orig[0]);
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|DEST1:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #SUIV_TRANS._Dest[0]);
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|QTEPREV:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	#SUIV_TRANS._QtePrev:= #SUIV_TRANS._QteArretDem:= STRING_TO_REAL(#Rep_temp);
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|TPSPREV:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	#SUIV_TRANS._TpsArretDem:= INT_TO_TIME(STRING_TO_INT(#Rep_temp));
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|TYPETRA:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #SUIV_TRANS._TypeTransf);
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|PROCEDE:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #SUIV_TRANS._Procede);
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|SLOTORG:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #SUIV_TRANS._NoLotOrg );
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|MODARRET:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #SUIV_TRANS._TypeArret);
+	
+	
+END_FUNCTION
+

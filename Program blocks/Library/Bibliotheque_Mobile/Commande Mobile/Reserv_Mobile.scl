@@ -1,0 +1,39 @@
+﻿FUNCTION "Reserv_Mobile" : SInt
+TITLE = Reseravation Mobile
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : 'I.Daoudi'
+FAMILY : Mobile
+VERSION : 1.0
+//Reseravation Mobile
+   VAR_INPUT 
+      Index_Mobile : Int;
+      Num_Circuit : USInt;
+      Num_Lot : String;
+   END_VAR
+
+   VAR_TEMP 
+      Ret_Test_Valid_Index : SInt;
+   END_VAR
+
+
+BEGIN
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | Version | Date       | Autheur     | Ajouts/Modifications                                                   |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | V_1     | 26.10.2023 | I.DAOUDI    | Creation du block                                                      |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	//Test du Ret_Test_Valid_Index
+	IF NOT "Valid_Index"(#Index_Mobile) THEN
+	    #Reserv_Mobile := -1;
+	    RETURN;
+	END_IF;
+	// Monter le flag de la reservation pour le mobile
+	"DB_BIBLIOTHEQUE".Mobile[#Index_Mobile].Reserve := TRUE;
+	// Affectation du numero de circuit
+	"DB_BIBLIOTHEQUE".Mobile[#Index_Mobile].Num_Cir := #Num_Circuit;
+	// Affectation du numero de lot
+	"DB_BIBLIOTHEQUE".Mobile[#Index_Mobile].Num_Lot := #Num_Lot;
+	#Reserv_Mobile := 1;
+	RETURN;
+END_FUNCTION
+

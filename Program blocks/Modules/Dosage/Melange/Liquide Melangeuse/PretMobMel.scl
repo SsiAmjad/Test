@@ -1,0 +1,23 @@
+﻿FUNCTION "PretMobMel" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Index_Mlg : Int;
+   END_VAR
+
+   VAR_TEMP 
+      Etat_Mlg : USInt;
+      Ret_Test_Etat_Mobile : SInt;
+   END_VAR
+
+
+BEGIN
+	IF NOT "Test_Etat_Mobile"(Index_Mobile:= #Index_Mlg, Etat:="Pret") THEN
+	    #PretMobMel := FALSE;
+	    RETURN;
+	END_IF;
+	#PretMobMel := TRUE;
+	RETURN;
+	
+END_FUNCTION
+

@@ -1,0 +1,34 @@
+﻿FUNCTION "Valid_Index" : Bool
+TITLE = Test validite index mobile
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : 'I.Daoudi'
+FAMILY : Mobile
+VERSION : 1.0
+//*Test si l'index est dans l'intervalle [0,Nbr_Max_Mobiles]                                                        *Test du renseignement du mobile
+   VAR_INPUT 
+      Index_Mobile : Int;
+   END_VAR
+
+
+BEGIN
+	    // +---------+------------+-------------+------------------------------------------------------------------------+
+	    // | Version | Date       | Autheur     | Ajouts/Modifications                                                   |
+	    // +---------+------------+-------------+------------------------------------------------------------------------+
+	    // | V_1     | 26.10.2023 | I.DAOUDI    | Creation du block                                                      |
+	    // +---------+------------+-------------+------------------------------------------------------------------------+
+	    
+	    // Test de la validite de l'index mobile
+	    IF (#Index_Mobile < 0) OR (#Index_Mobile > "Nbr_Max_Mobiles") THEN
+	        #Valid_Index := FALSE;
+	        RETURN;
+	    END_IF;
+	    //Test si le mobile est renseigne
+	    IF "DB_BIBLIOTHEQUE".Mobile[#Index_Mobile].Nom = '' THEN
+	        #Valid_Index := FALSE;
+	        RETURN;
+	    END_IF;
+	    // Test valide
+	    #Valid_Index := TRUE;
+	    RETURN;
+END_FUNCTION
+

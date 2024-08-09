@@ -1,0 +1,804 @@
+﻿FUNCTION "Badge" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      fgbase : Bool;
+   END_VAR
+
+   VAR_IN_OUT 
+      Badge : "S_Badge";
+      REC : "S_REC";
+   END_VAR
+
+   VAR_TEMP 
+      Ret_RD_Sys_T : Int;
+      TpsPassé : Time;
+      RET : Bool;
+      Text_Def : String;
+      ResultProcRechRec : String[254];
+      RetFct : String;
+      ResultProcCancelRec : String;
+      ret_string : String;
+      Temp_Char : Char;
+   END_VAR
+
+   VAR CONSTANT 
+      REPOS : SInt := 0;
+      Attente_Rec : SInt := 1;
+      Rec_Lanc : SInt := 2;
+      Condition_Ench : SInt := 3;
+      Check_ok : SInt := 4;
+      MAJ_Dest : SInt := 5;
+      Traitement_badge : SInt := 6;
+      Traitement_reception : SInt := 7;
+      Attente_RepDial : SInt := 8;
+   END_VAR
+
+
+BEGIN
+	
+	CASE #Badge._Etp OF
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║            Etape "Repos"           ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	    #REPOS:
+	        REGION traitement preliminaire "Repos" 
+	            IF (#Badge._Etp <> #Badge._EtpPrec) THEN
+	                #Badge._EtpPrec := #Badge._Etp;
+	                #Badge._DescEtp := 'Etape repos';
+	                #Badge._MemoCpt := #Badge._PtScan._CptLecture;
+	                #Badge._MemoPresence := #Badge._PtScan._PresenceBadge;
+	                #Badge._TraitementEc := FALSE;
+	                
+	            END_IF;
+	        END_REGION traitement preliminaire "Repos" 
+	        
+	        REGION traitement cyclique "Repos" 
+	            #Badge._ptmodrec._FgLanc := #REC._FgLanc;
+	            //Attente lecture badge ou saisie en mode dégradé (supervision)
+	            #Badge._NoBadgeSaisi := #REC.RecCommun.SUPREC.Commande._Badge;
+	            (* IF #Badge._CodeBadge ='' OR #REC.RecCommun.SUPREC.Affichage._Badge <> #Badge._CodeBadge  THEN
+	                #Badge._NoBadgeSaisi := #REC.RecCommun.SUPREC.Affichage._Badge;
+	            END_IF; *)
+	            
+	            
+	            IF ((#Badge._MemoCpt <> #Badge._PtScan._CptLecture) AND (#Badge._MemoPresence <> #Badge._PtScan._PresenceBadge)) OR #Badge._NoBadgeSaisi <> '' THEN
+	                #Badge._TraitementEc := TRUE;
+	                IF #Badge._FgAm AND NOT #Badge._ptmodrec._FgLanc THEN
+	                    #Badge._Etp := #Attente_Rec;
+	                    RETURN;
+	                ELSIF #Badge._ptmodrec._FgLanc THEN
+	                    #Badge._Etp := #Rec_Lanc;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	            #Badge._MemoCpt := #Badge._PtScan._CptLecture;
+	            #Badge._MemoPresence := #Badge._PtScan._PresenceBadge;
+	            
+	            
+	        END_REGION traitement cyclique "repos" 
+	(*      
+	*************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                       ╔════════════════════════════════════╗
+	                                                                                       ║      Reception en attente          ║
+	                                                                                       ╚════════════════════════════════════╝
+	 //Controle reception en attente de lancement                                                                            
+	*************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	        
+	    #Attente_Rec:
+	        REGION traitement preliminaire
+	            IF (#Badge._Etp <> #Badge._EtpPrec) THEN
+	                #Badge._EtpPrec := #Badge._Etp;
+	                #Badge._DescEtp := 'Reception en attente';
+	            END_IF;
+	        END_REGION
+	        REGION traitement cyclique
+	            //Lecture du badge a partit de la supervision "Dégradé"
+	            IF #Badge._NoBadgeSaisi <> '' THEN
+	                #Badge._CodeBadge := #Badge._NoBadgeSaisi;
+	                #Badge._NoBadgeSaisi := '';
+	                #REC.RecCommun.SUPREC.Commande._Badge := '';
+	                //    #REC.RecCommun.SUPREC.Affichage._Badge := '';
+	            ELSE
+	                #Badge._CodeBadge := #Badge._PtScan._CodeBadge;
+	            END_IF;
+	            
+	            #Badge._Etp := #Traitement_badge;
+	            RETURN;
+	            
+	        END_REGION
+	(*      
+	*************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                       ╔════════════════════════════════════╗
+	                                                                                       ║       Reception en marche          ║
+	                                                                                       ╚════════════════════════════════════╝
+	 //Recherche réception associe au badge lu                                                                                
+	*************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	        
+	    #Rec_Lanc:
+	        REGION traitement preliminaire
+	            IF (#Badge._Etp <> #Badge._EtpPrec) THEN
+	                #Badge._EtpPrec := #Badge._Etp;
+	                #Badge._DescEtp := 'Rec Lanc';
+	                IF #Badge.Dial_Def.Reponse_Def <> '' THEN
+	                    
+	                    CASE #Badge.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO REC_Lanc_DEF1;
+	                    END_CASE;
+	                END_IF;
+	            END_IF;
+	        END_REGION
+	        REGION traitement cyclique
+	            //Lecture du badge a partit de la supervision "Dégradé"
+	            #Badge._NoBadgeSaisi := #REC.RecCommun.SUPREC.Commande._Badge;
+	            IF #Badge._NoBadgeSaisi <> '' THEN
+	                #Badge._CodeBadge := #Badge._NoBadgeSaisi;
+	                #Badge._NoBadgeSaisi := '';
+	                #REC.RecCommun.SUPREC.Commande._Badge := '';
+	            ELSE
+	                #Badge._CodeBadge := #Badge._PtScan._CodeBadge;
+	            END_IF;
+	            
+	            // Controle si enchainement valide et possible pour cette fosse
+	            // #Badge._ptmodrec._FgValidEnchain := #REC._FgValidEnchain;
+	            #Badge._ptmodrec._FgEnchainPossible := #REC._FgEnchainPossible;
+	            IF #Badge._ptmodrec._FgValidEnchain AND #Badge._ptmodrec._FgEnchainPossible THEN
+	                #Badge._ptmodrec._ProgScanSuiv._No_Badge := #Badge._CodeBadge;
+	                #ResultProcRechRec := "Proc_Recherche_Recep"(NumPoste:="Num_Poste", NoBadge := #Badge._ptmodrec._ProgScanSuiv._No_Badge,
+	                                                             Procede := #Badge._ptmodrec.RecCommun.CommunGeneral._Autom,
+	                                                             Fosse := #Badge._ptmodrec._NomFos,
+	                                                             SUIV_REC := #Badge._ptmodrec._ProgScanSuiv);
+	                IF #ResultProcRechRec = 'OK' THEN
+	                    #Badge._Etp := #Condition_Ench;
+	                    
+	                ELSE
+	                    #Badge._EtatVoyant := 3;  // Pas de réception prevu pour le badge
+	                    #Badge.Dial_Def.Num_Def_Etape := 1;
+	                    #Badge.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := #ResultProcRechRec,
+	                                                                    Type_Defaut := 2,
+	                                                                    Automatisme := #Badge._ptmodrec.RecCommun.CommunGeneral._Autom,
+	                                                                    Num_Lot := #Badge._ptmodrec._PtzsScan._NoLot,
+	                                                                    Origine_Defaut := 'Base de donnees',
+	                                                                    Libelle_Origine := 'Aucune reception attendue pour ce Badge',
+	                                                                    Acq1 := 'Abandon',
+	                                                                    Acq2 := '',
+	                                                                    Acq3 := '',
+	                                                                    Acq4 := '',
+	                                                                    Acq5 := '',
+	                                                                    Acq6 := '',
+	                                                                    Acq7 := '',
+	                                                                    Acq8 := '',
+	                                                                    Acq_Choisi := -1,
+	                                                                    Date_Arrivee := #Badge._TpsPicke);
+	                    #Badge._Etp := #Attente_RepDial;
+	                    RETURN;
+	                END_IF;
+	            ELSE
+	                // Pas d'enchainement possible
+	                #Badge._EtatVoyant := 5;
+	                #Badge._Etp := #REPOS;
+	            END_IF;
+	        REC_Lanc_DEF1:
+	            //============ Traitement des reponses pour le defaut1   Traitement_Badge=============================================================//
+	            IF #Badge.Dial_Def.Reponse_Def = 'Abandon' THEN
+	                #Badge._TraitementEc := FALSE;
+	                #Badge.Dial_Def.Reponse_Def := '';
+	                #Badge._EtatVoyant := 1;
+	                #Badge._Etp := #REPOS; // Etape Repos
+	                RETURN;
+	            END_IF;
+	            //============================================  Fin traitement  ====================================================================//
+	            
+	        END_REGION
+	(*      
+	*************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                       ╔════════════════════════════════════╗
+	                                                                                       ║  Controle condition enchainement   ║
+	                                                                                       ╚════════════════════════════════════╝
+	                                                                              
+	*************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	        
+	    #Condition_Ench:
+	        REGION traitement preliminaire
+	            IF (#Badge._Etp <> #Badge._EtpPrec) THEN
+	                #Badge._EtpPrec := #Badge._Etp;
+	                #Badge._DescEtp := 'Condition enchainement';
+	                #Ret_RD_Sys_T := RD_SYS_T(#Badge._TpsPicke);
+	                IF #Badge.Dial_Def.Reponse_Def <> '' THEN
+	                    
+	                    CASE #Badge.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO Condition_Ench_DEF1;
+	                        2:
+	                            GOTO Condition_Ench_DEF2;
+	                    END_CASE;
+	                END_IF;
+	            END_IF;
+	        END_REGION
+	        REGION traitement cyclique
+	            REGION Controle conditions d'enchainement 
+	                IF #Badge._ptmodrec._ProgScanSuiv._CdMat = #Badge._ptmodrec._PtzsScan._CdMat AND #Badge._ptmodrec._ProgScanSuiv._Dest[0] = "Nom_Mobile"(#REC.RecCommun.CommunGeneral._Ptdest) THEN
+	                    #Badge._EtatVoyant := 8;  //Prise en compte enchainement mais attente confirmation
+	                    #Badge._Etp := #Check_ok;
+	                    RETURN;
+	                ELSIF #Badge._ptmodrec._ProgScanSuiv._CdMat = #Badge._ptmodrec._PtzsScan._CdMat AND #Badge._ptmodrec._ProgScanSuiv._Dest[0] <> "Nom_Mobile"(#REC.RecCommun.CommunGeneral._Ptdest) THEN
+	                    #Badge._Etp := #MAJ_Dest;
+	                    RETURN;
+	                ELSE   //Controle conditions d'enchainement -> non autorisé
+	                    
+	                    #Badge._EtatVoyant := 2; //Pas d'enchainement 
+	                    //appel dialog def   Pas d'enchainement possible rception de la matire pt_mod_rec->prog_scan_suiv.Cd_Mat de (pt_mod_rec->prog_scan_suiv.Orig vers pt_mod_rec->prog_scan_suiv.Dest[0]) (Badge: (pt_mod_rec->prog_scan_suiv.No_Badge)
+	                    #Badge.Dial_Def.Num_Def_Etape := 1;
+	                    #Text_Def := CONCAT(IN1 := 'Pas d enchainement possible reception de la matiere ', IN2 := #Badge._ptmodrec._ProgScanSuiv._CdMat, IN3 := ' de ', IN4 := #Badge._ptmodrec._ProgScanSuiv._Orig[0], IN5 := ' vers ', IN6 := #Badge._ptmodrec._ProgScanSuiv._Dest[0], IN7 := '( ', IN8 := #Badge._ptmodrec._ProgScanSuiv._No_Badge, IN9 := ' )');
+	                    
+	                    #Badge.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := #Text_Def,
+	                                                                    Type_Defaut := 2,
+	                                                                    Automatisme := #Badge._ptmodrec.RecCommun.CommunGeneral._Autom,
+	                                                                    Num_Lot := #Badge._ptmodrec._PtzsScan._NoLot,
+	                                                                    Origine_Defaut := 'Conditions d enchainement',
+	                                                                    Libelle_Origine := 'Conditions d enchainement',
+	                                                                    Acq1 := 'Abandon',
+	                                                                    Acq2 := '',
+	                                                                    Acq3 := '',
+	                                                                    Acq4 := '',
+	                                                                    Acq5 := '',
+	                                                                    Acq6 := '',
+	                                                                    Acq7 := '',
+	                                                                    Acq8 := '',
+	                                                                    Acq_Choisi := -1,
+	                                                                    Date_Arrivee := #Badge._TpsPicke);
+	                    #Badge._Etp := #Attente_RepDial;
+	                    RETURN;
+	                END_IF;
+	            Condition_Ench_DEF1:
+	                //============ Traitement des reponses pour le defaut1  =============================================================//
+	                IF #Badge.Dial_Def.Reponse_Def = 'Abandon' THEN
+	                    #ResultProcCancelRec := "Proc_Cancel_REC"(IdRec:=#Badge._ptmodrec._ProgScanSuiv._Id_Rec, NumPoste:="Num_Poste", Msg_Def=>#Text_Def);
+	                    IF #Text_Def = 'OK' THEN
+	                        #Badge._TraitementEc := FALSE;
+	                        #Badge.Dial_Def.Reponse_Def := '';
+	                        #Badge._Etp := #REPOS;
+	                        RETURN;
+	                    ELSE
+	                        #Badge.Dial_Def.Num_Def_Etape :=2;
+	                        #Badge.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase,
+	                                                                        Msg_Defaut := #Text_Def,
+	                                                                        Type_Defaut := 2,
+	                                                                        Automatisme := #Badge._ptmodrec.RecCommun.CommunGeneral._Autom,
+	                                                                        Num_Lot := #Badge._ptmodrec._PtzsScan._NoLot,
+	                                                                        Origine_Defaut := 'Base de donnees',
+	                                                                        Libelle_Origine := 'Base de donnees',
+	                                                                        Acq1 := 'Abandon',
+	                                                                        Acq2 := 'Relance',
+	                                                                        Acq3 := '',
+	                                                                        Acq4 := '',
+	                                                                        Acq5 := '',
+	                                                                        Acq6 := '',
+	                                                                        Acq7 := '',
+	                                                                        Acq8 := '',
+	                                                                        Acq_Choisi := -1,
+	                                                                        Date_Arrivee := #Badge._TpsPicke);
+	                        #Badge._Etp := #Attente_RepDial;
+	                        RETURN;
+	                    END_IF;
+	                END_IF;
+	                //============================================  Fin traitement  ====================================================================//
+	                
+	                
+	                
+	            Condition_Ench_DEF2:
+	                
+	                //============ Def Base  =============================================================//
+	                IF #Badge.Dial_Def.Reponse_Def = 'Relance' THEN
+	                    #ResultProcCancelRec := "Proc_Cancel_REC"(IdRec := #Badge._ptmodrec._ProgScanSuiv._Id_Rec,
+	                                                              NumPoste := "Num_Poste",
+	                                                              Msg_Def => #Text_Def);
+	                    IF #Text_Def = 'OK' THEN
+	                        #Badge._TraitementEc := FALSE;
+	                        #Badge.Dial_Def.Reponse_Def := '';
+	                        #Badge._Etp := #REPOS;
+	                        RETURN;
+	                    ELSE
+	                        #Badge.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase,
+	                                                                        Msg_Defaut := #Text_Def,
+	                                                                        Type_Defaut := 2,
+	                                                                        Automatisme := #Badge._ptmodrec.RecCommun.CommunGeneral._Autom,
+	                                                                        Num_Lot := #Badge._ptmodrec._PtzsScan._NoLot,
+	                                                                        Origine_Defaut := 'Base de donnees',
+	                                                                        Libelle_Origine := 'Base de donnees',
+	                                                                        Acq1 := 'Abandon',
+	                                                                        Acq2 := 'Relance',
+	                                                                        Acq3 := '',
+	                                                                        Acq4 := '',
+	                                                                        Acq5 := '',
+	                                                                        Acq6 := '',
+	                                                                        Acq7 := '',
+	                                                                        Acq8 := '',
+	                                                                        Acq_Choisi := -1,
+	                                                                        Date_Arrivee := #Badge._TpsPicke);
+	                        #Badge._Etp := #Attente_RepDial;
+	                        RETURN;
+	                    END_IF;
+	                END_IF;
+	                IF #Badge.Dial_Def.Reponse_Def = 'Abandon' THEN
+	                    #Badge._TraitementEc := FALSE;
+	                    #Badge.Dial_Def.Reponse_Def := '';
+	                    #Badge._Etp := #REPOS;
+	                    RETURN;
+	                END_IF;
+	                //============================================  Fin traitement  ====================================================================//
+	                
+	                
+	                
+	                
+	                
+	                
+	            END_REGION Controle conditions d'enchainement 
+	        END_REGION
+	        
+	(*      
+	*************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                       ╔════════════════════════════════════╗
+	                                                                                       ║            Check ok                ║
+	                                                                                       ╚════════════════════════════════════╝
+	                                                                        
+	*************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	        
+	    #Check_ok:
+	        REGION traitement preliminaire
+	            IF (#Badge._Etp <> #Badge._EtpPrec) THEN
+	                #Badge._EtpPrec := #Badge._Etp;
+	                #Badge._DescEtp := 'check ok';
+	                #Ret_RD_Sys_T := RD_SYS_T(#Badge._TpsPicke);
+	                IF #Badge.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #Badge.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO Check_DEF1;
+	                            
+	                    END_CASE;
+	                END_IF;
+	                
+	            END_IF;
+	        END_REGION
+	        REGION traitement cyclique
+	            IF #Badge._ptmodrec._FgConfEnch THEN
+	                #Badge.Dial_Def.Num_Def_Etape := 1;
+	                #Text_Def := CONCAT(IN1 := 'Confirmation d enchainement reception de la matiere ', IN2 := #Badge._ptmodrec._ProgScanSuiv._CdMat, IN3 := ' de ', IN4 := #Badge._ptmodrec._ProgScanSuiv._Orig[0], IN5 := ' vers ', IN6 := #Badge._ptmodrec._ProgScanSuiv._Dest[0]);
+	                
+	                #Badge.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := #Text_Def,
+	                                                                Type_Defaut := 2,
+	                                                                Automatisme := #Badge._ptmodrec.RecCommun.CommunGeneral._Autom,
+	                                                                Num_Lot := #Badge._ptmodrec._PtzsScan._NoLot,
+	                                                                Origine_Defaut := 'Confirmation d enchainement',
+	                                                                Libelle_Origine := 'Confirmation d enchainement',
+	                                                                Acq1 := 'Oui',
+	                                                                Acq2 := 'Non',
+	                                                                Acq3 := '',
+	                                                                Acq4 := '',
+	                                                                Acq5 := '',
+	                                                                Acq6 := '',
+	                                                                Acq7 := '',
+	                                                                Acq8 := '',
+	                                                                Acq_Choisi := -1,
+	                                                                Date_Arrivee := #Badge._TpsPicke);
+	                #Badge._Etp := #Attente_RepDial;
+	                RETURN;
+	            ELSE
+	                #Badge.Dial_Def.Reponse_Def := 'Oui';
+	            END_IF;
+	        Check_DEF1:
+	            //============ Traitement des reponses pour le defaut1 Confirmation d'enchainement  ====================================//
+	            IF #Badge.Dial_Def.Reponse_Def = 'Oui' THEN //oui
+	                #REC.RecCommun.SUPREC.Affichage._Badge := #Badge._CodeBadge;
+	                #Badge._EtatVoyant := 7; // enchainement ok
+	                #Badge._TraitementEc := FALSE;
+	                #Badge._ptmodrec.RecCommun.CommunGeneral._ParCal._TpsTran := #REC.RecCommun.CommunGeneral._ParCal._TpsTran;
+	                #RetFct := "Proc_Fin_Recep"(NumPoste:="Num_Poste", IdRecep := #Badge._ptmodrec._PtzsScan._Id_Rec,
+	                                            CumulTps := #Badge._ptmodrec.RecCommun.CommunGeneral._ParCal._TpsTran / 1000, Msg_Def=>#Text_Def);
+	                
+	                //mise a jour des donnees de la zone de suivi pour affichage
+	                #Badge._ptmodrec._PtzsScan._Qte_Prev := #Badge._ptmodrec._PtzsScan._Qte_Prev + #Badge._ptmodrec._ProgScanSuiv._Qte_Prev;
+	                #Badge._ptmodrec._TheoTrans := #Badge._ptmodrec._PtzsScan._Qte_Prev;
+	                #Badge._ptmodrec._PtzsScan._NoLot := #Badge._ptmodrec._ProgScanSuiv._NoLot;
+	                #Badge._ptmodrec._PtzsScan._NoLotF := #Badge._ptmodrec._ProgScanSuiv._NoLotF;
+	                #Badge._ptmodrec._PtzsScan._NoLotOrg := #Badge._ptmodrec._ProgScanSuiv._NoLotOrg;
+	                #Badge._ptmodrec._PtzsScan._No_Badge := #Badge._ptmodrec._ProgScanSuiv._No_Badge;
+	                #Badge._ptmodrec._PtzsScan._Id_Rec := #Badge._ptmodrec._ProgScanSuiv._Id_Rec;
+	                #Badge._ptmodrec._PtzsScan._Dest := #Badge._ptmodrec._ProgScanSuiv._Dest;
+	                #REC.RecCommun.CommunGeneral._IndxDest := 0;
+	                #REC.RecCommun.CommunGeneral._Dest[0] := "Index_Mobile"(#Badge._ptmodrec._ProgScanSuiv._Dest[0]);
+	                #REC.RecCommun.CommunGeneral._Dest[1] := "Index_Mobile"(#Badge._ptmodrec._ProgScanSuiv._Dest[1]);
+	                ///Changement de dest recuperee de la base
+	                // #REC._Ptzs._Dest :=#Badge._ptmodrec._PtzsScan._Dest;
+	                IF #Badge._ptmodrec._ProgScanSuiv._Dest[0] <> "Nom_Mobile"(#REC.RecCommun.CommunGeneral._Ptdest) THEN
+	                    IF #fgbase THEN
+	                        #RetFct := "Proc_Debut_Recep"(NumPoste:="Num_Poste", IdRecep := #Badge._ptmodrec._PtzsScan._Id_Rec,
+	                                                      Dest := #Badge._ptmodrec._ProgScanSuiv._Dest[0], Msg_Def=>#Text_Def);
+	                        IF #REC._Ptzs._DestR._Index > 1 THEN
+	                            #RetFct := "Proc_Changement_Dest_REC"(NumPoste:="Num_Poste", IdRecep := #Badge._ptmodrec._PtzsScan._Id_Rec,
+	                                                                  AncDest := #Badge._ptmodrec._ProgScanSuiv._Dest[0],
+	                                                                  NvDest := "Nom_Mobile"(#REC.RecCommun.CommunGeneral._Ptdest)
+	                                                                  , QTE := #REC._Ptzs._DestR._Liste[#REC._Ptzs._DestR._Index - 1]._Qte,
+	                                                                  TpsMarche := #REC._Ptzs._DestR._Liste[#REC._Ptzs._DestR._Index - 1]._Tps / 1000, Msg_Def=>#Text_Def);
+	                        ELSE
+	                            #RetFct := "Proc_Changement_Dest_REC"(NumPoste:="Num_Poste", IdRecep := #Badge._ptmodrec._PtzsScan._Id_Rec,
+	                                                                  AncDest := #Badge._ptmodrec._ProgScanSuiv._Dest[0],
+	                                                                  NvDest := "Nom_Mobile"(#REC.RecCommun.CommunGeneral._Ptdest),
+	                                                                  QTE := #REC.RecCommun.CommunGeneral._ParCal._QteTrans,
+	                                                                  TpsMarche := #REC.RecCommun.CommunGeneral._ParCal._TpsTran / 1000, Msg_Def=>#Text_Def);
+	                            
+	                        END_IF;
+	                        #ret_string := "Proc_AffecT"(NumPoste := "Num_Poste",
+	                                                     zone := "Nom_Mobile"(#REC.RecCommun.CommunGeneral._Ptdest),
+	                                                     CodeMat := #Badge._ptmodrec._Ptzs._CdMat,
+	                                                     Formule := #Temp_Char,
+	                                                     LieuDos := '',
+	                                                     Qte := 0,
+	                                                     TypeMvmnt := '040',
+	                                                     Procede := #Badge._ptmodrec.RecCommun.CommunGeneral._Autom,
+	                                                     NoLotOrig := '',
+	                                                     NoLotDest := #Badge._ptmodrec._Ptzs._NoLot,
+	                                                     Utilisateur := 'SAS',
+	                                                     SCb := '0',
+	                                                     Sof := #Badge._ptmodrec._Ptzs._Cd_Rec, Msg_Def=>#Text_Def);
+	                        
+	                        
+	                        
+	                        
+	                    END_IF;
+	                    
+	                    #Badge._ptmodrec._ProgScanSuiv._Dest := #Badge._ptmodrec._PtzsScan._Dest;
+	                ELSE
+	                    IF #fgbase THEN
+	                        //Appel procedure debut de la nouvelle reception
+	                        #RetFct := "Proc_Debut_Recep"(NumPoste:="Num_Poste", IdRecep := #Badge._ptmodrec._PtzsScan._Id_Rec,
+	                                                      Dest := #Badge._ptmodrec._PtzsScan._Dest[0], Msg_Def=>#Text_Def);
+	                    END_IF;
+	                    
+	                END_IF;
+	                
+	                // #RetFct := "Proc_Debut_Recep"(IdRecep := #Badge._ptmodrec._PtzsScan._Id_Rec, Dest := #Badge._ptmodrec._PtzsScan._Dest[0], Text_Rep := #Badge._ptmodrec.RecCommun._ReponseBase);
+	                
+	                //////////////////////
+	                //////////////////////
+	                #REC._Ptzs._Qte_Prev := #Badge._ptmodrec._PtzsScan._Qte_Prev;
+	                #REC._Ptzs._Id_Rec := #Badge._ptmodrec._PtzsScan._Id_Rec;
+	                #REC._TheoTrans := #Badge._ptmodrec._TheoTrans;
+	                #REC._Ptzs._NoLot := #Badge._ptmodrec._PtzsScan._NoLot;
+	                #REC._Ptzs._NoLotF := #Badge._ptmodrec._PtzsScan._NoLotF;
+	                #REC._Ptzs._NoLotOrg := #Badge._ptmodrec._PtzsScan._NoLotOrg;
+	                #REC._Ptzs._No_Badge := #Badge._ptmodrec._PtzsScan._No_Badge;
+	                #REC._Ptzs._Dest := #Badge._ptmodrec._PtzsScan._Dest;
+	                //////////////////////
+	                ////////////////////// 
+	                #Badge.Dial_Def.Reponse_Def := '';
+	                #Badge._Etp := #REPOS;
+	                RETURN;
+	            END_IF;
+	            IF #Badge.Dial_Def.Reponse_Def = 'Non' THEN //non
+	                #ResultProcCancelRec := "Proc_Cancel_REC"(IdRec:=#Badge._ptmodrec._ProgScanSuiv._Id_Rec, NumPoste:="Num_Poste", Msg_Def=>#Text_Def);
+	                #Badge._EtatVoyant := 6; //Enchainement refusé par l'operateur
+	                #Badge.Dial_Def.Reponse_Def := '';
+	                #REC.RecCommun.SUPREC.Affichage._Badge := '';
+	                #Badge._Etp := #REPOS;
+	                RETURN;
+	            END_IF;
+	            
+	        END_REGION
+	(*      
+	*************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                       ╔════════════════════════════════════╗
+	                                                                                       ║     Proposition Nv destination     ║
+	                                                                                       ╚════════════════════════════════════╝
+	                                                                        
+	*************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	        
+	    #MAJ_Dest:
+	        REGION traitement preliminaire
+	            IF (#Badge._Etp <> #Badge._EtpPrec) THEN
+	                #Badge._EtpPrec := #Badge._Etp;
+	                #Badge._DescEtp := 'check ok';
+	                #Ret_RD_Sys_T := RD_SYS_T(#Badge._TpsPicke);
+	                IF #Badge.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #Badge.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO Maj_Dest_DEF1;
+	                        2:
+	                            GOTO Maj_Dest_DEF2;
+	                            
+	                    END_CASE;
+	                END_IF;
+	                
+	            END_IF;
+	        END_REGION
+	        REGION traitement cyclique
+	            #Badge.Dial_Def.Num_Def_Etape := 1;
+	            #Text_Def := CONCAT(IN1 := 'Voulez vous gardez la meme destination " ', IN2 := "Nom_Mobile"(#REC.RecCommun.CommunGeneral._Ptdest), IN3 := '"', IN4 := ' de la reception actuelle');
+	            
+	            #Badge.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := #Text_Def,
+	                                                            Type_Defaut := 2,
+	                                                            Automatisme := #Badge._ptmodrec.RecCommun.CommunGeneral._Autom,
+	                                                            Num_Lot := #Badge._ptmodrec._PtzsScan._NoLot,
+	                                                            Origine_Defaut := 'MAJ Destination',
+	                                                            Libelle_Origine := 'MAJ Destination',
+	                                                            Acq1 := 'Oui',
+	                                                            Acq2 := 'Non',
+	                                                            Acq3 := '',
+	                                                            Acq4 := '',
+	                                                            Acq5 := '',
+	                                                            Acq6 := '',
+	                                                            Acq7 := '',
+	                                                            Acq8 := '',
+	                                                            Acq_Choisi := -1,
+	                                                            Date_Arrivee := #Badge._TpsPicke);
+	            #Badge._Etp := #Attente_RepDial;
+	            RETURN;
+	            
+	        Maj_Dest_DEF1:
+	            //============ Traitement des reponses pour le defaut1 Confirmation d'enchainement  ====================================//
+	            IF #Badge.Dial_Def.Reponse_Def = 'Oui' THEN //oui
+	                // #Badge._ptmodrec._ProgScanSuiv._Dest:= #Badge._ptmodrec._PtzsScan._Dest ;
+	                #REC._Ptzs._Dest := #Badge._ptmodrec._PtzsScan._Dest;
+	                #Badge.Dial_Def.Reponse_Def := '';
+	                #Badge._EtatVoyant := 8;  //Prise en compte enchainement mais attente confirmation
+	                #Badge._Etp := #Check_ok;
+	                RETURN;
+	            END_IF;
+	            IF #Badge.Dial_Def.Reponse_Def = 'Non' THEN //non
+	                #Badge.Dial_Def.Reponse_Def := '';
+	                #Badge.Dial_Def.Num_Def_Etape := 2;
+	                #Badge.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := 'Enchainement impossible',
+	                                                                Type_Defaut := 2,
+	                                                                Automatisme := #Badge._ptmodrec.RecCommun.CommunGeneral._Autom,
+	                                                                Num_Lot := #Badge._ptmodrec._PtzsScan._NoLot,
+	                                                                Origine_Defaut := 'Destination Differente',
+	                                                                Libelle_Origine := 'Destination Differente',
+	                                                                Acq1 := 'Abandon',
+	                                                                Acq2 := '',
+	                                                                Acq3 := '',
+	                                                                Acq4 := '',
+	                                                                Acq5 := '',
+	                                                                Acq6 := '',
+	                                                                Acq7 := '',
+	                                                                Acq8 := '',
+	                                                                Acq_Choisi := -1,
+	                                                                Date_Arrivee := #Badge._TpsPicke);
+	                #Badge._Etp := #Attente_RepDial;
+	                RETURN;
+	                
+	                
+	            END_IF;
+	        Maj_Dest_DEF2:
+	            //============ Traitement des reponses pour le 2=============================================================//
+	            IF #Badge.Dial_Def.Reponse_Def = 'Abandon' THEN
+	                #Badge._TraitementEc := FALSE;
+	                #Badge.Dial_Def.Reponse_Def := '';
+	                #Badge._EtatVoyant := 0;
+	                #Badge._Etp := #REPOS; // Etape Repos
+	                RETURN;
+	            END_IF;
+	            //============================================  Fin traitement  ====================================================================//
+	            
+	        END_REGION
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║          Traitement Badge          ║
+	                                                                                 ╚════════════════════════════════════╝
+	 //Recherche réception associe au badge lu                                                                                
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	        
+	    #Traitement_badge:
+	        REGION traitement preliminaire
+	            IF (#Badge._Etp <> #Badge._EtpPrec) THEN
+	                
+	                #Badge._EtpPrec := #Badge._Etp;
+	                #Badge._DescEtp := 'Traitement Badge';
+	                #Ret_RD_Sys_T := RD_SYS_T(#Badge._TpsPicke);
+	                IF #Badge.Dial_Def.Reponse_Def <> '' THEN
+	                    
+	                    CASE #Badge.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO Traitement_Badge_DEF1;
+	                    END_CASE;
+	                END_IF;
+	                #Badge._ptmodrec._PtzsScan._No_Badge := #Badge._CodeBadge;
+	                
+	            END_IF;
+	        END_REGION
+	        REGION traitement cyclique
+	            //Appel proc rech rec
+	            IF #fgbase THEN
+	                #ResultProcRechRec := "Proc_Recherche_Recep"(NumPoste:="Num_Poste", NoBadge := #Badge._ptmodrec._PtzsScan._No_Badge,
+	                                                             Procede := #Badge._ptmodrec.RecCommun.CommunGeneral._Autom,
+	                                                             Fosse := #Badge._ptmodrec._NomFos,
+	                                                             SUIV_REC := #Badge._ptmodrec._PtzsScan);
+	            ELSE
+	                /////////////////+++++++++++++++++++++++++Simulation++++++++++\\\\\\\\\\\\\\\\\\\\\\\\\\\
+	                IF #Badge._ptmodrec._NomFos = 'Fosse01' THEN
+	                    #Badge._ptmodrec._PtzsScan := "DB_PTSUIV_REC"."THIS"[0].Tab_Lots[0];
+	                END_IF;
+	                IF #Badge._ptmodrec._NomFos = 'Fosse02' THEN
+	                    #Badge._ptmodrec._PtzsScan := "DB_PTSUIV_REC"."THIS"[3].Tab_Lots[0];
+	                END_IF;
+	                IF #Badge._ptmodrec._NomFos = 'Fosse03' THEN
+	                    #Badge._ptmodrec._PtzsScan := "DB_PTSUIV_REC"."THIS"[1].Tab_Lots[0];
+	                END_IF;
+	                IF #Badge._ptmodrec._NomFos = 'Fosse04' THEN
+	                    #Badge._ptmodrec._PtzsScan := "DB_PTSUIV_REC"."THIS"[2].Tab_Lots[0];
+	                END_IF;
+	                
+	                
+	                /////////////////+++++++++++++++++++++++++Simulation++++++++++\\\\\\\\\\\\\\\\\\\\\\\\\\\
+	                #ResultProcRechRec := 'OK';
+	            END_IF;
+	            IF #ResultProcRechRec = 'OK' THEN
+	                #Badge._Etp := #Traitement_reception;
+	                
+	            ELSE
+	                #Badge._EtatVoyant := 3;  // Pas de réception prevu pour le badge
+	                #Badge.Dial_Def.Num_Def_Etape := 1;
+	                #Badge.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := #ResultProcRechRec,
+	                                                                Type_Defaut := 2,
+	                                                                Automatisme := #Badge._ptmodrec.RecCommun.CommunGeneral._Autom,
+	                                                                Num_Lot := #Badge._ptmodrec._PtzsScan._NoLot,
+	                                                                Origine_Defaut := 'Base de donnees',
+	                                                                Libelle_Origine := 'Aucune reception attend ce Badge',
+	                                                                Acq1 := 'Abandon',
+	                                                                Acq2 := '',
+	                                                                Acq3 := '',
+	                                                                Acq4 := '',
+	                                                                Acq5 := '',
+	                                                                Acq6 := '',
+	                                                                Acq7 := '',
+	                                                                Acq8 := '',
+	                                                                Acq_Choisi := -1,
+	                                                                Date_Arrivee := #Badge._TpsPicke);
+	                #Badge._Etp := #Attente_RepDial;
+	                RETURN;
+	            END_IF;
+	        Traitement_Badge_DEF1:
+	            //============ Traitement des reponses pour le defaut1   Traitement_Badge=============================================================//
+	            IF #Badge.Dial_Def.Reponse_Def = 'Abandon' THEN
+	                #Badge._TraitementEc := FALSE;
+	                #Badge.Dial_Def.Reponse_Def := '';
+	                #Badge._EtatVoyant := 0;
+	                #Badge._Etp := #REPOS; // Etape Repos
+	                RETURN;
+	            END_IF;
+	            //============================================  Fin traitement  ====================================================================//
+	            
+	            
+	        END_REGION
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║         Traitement Reception       ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	    #Traitement_reception:
+	        REGION traitement preliminaire
+	            IF (#Badge._Etp <> #Badge._EtpPrec) THEN
+	                #Badge._EtpPrec := #Badge._Etp;
+	                #Badge._DescEtp := 'Traitement Badge';
+	                #Ret_RD_Sys_T := RD_SYS_T(#Badge._TpsPicke);
+	                IF #Badge.Dial_Def.Reponse_Def <> '' THEN
+	                    
+	                    CASE #Badge.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO Traitement_REC_DEF1;
+	                    END_CASE;
+	                END_IF;
+	            END_IF;
+	        END_REGION
+	        REGION Traitement cyclique
+	            //Controle d'origine
+	            
+	            IF #Badge._ptmodrec._PtzsScan._Orig[0] <> #Badge._ptmodrec._NomFos THEN
+	                #Badge._EtatVoyant := 4;
+	                //appl dial def Cette matire n'est pas prvue sur cette fosse (%s): Fosse prévue: %s
+	                #Badge.Dial_Def.Num_Def_Etape := 1;
+	                #Text_Def := CONCAT(IN1 := 'Cette matiere n est pas prevue sur cette fosse: ', IN2 := #Badge._ptmodrec._NomFos, IN3 := ' la fosse prevue est  ', IN4 := #Badge._ptmodrec._PtzsScan._Orig[0]);
+	                
+	                #Badge.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := #Text_Def,
+	                                                                Type_Defaut := 2,
+	                                                                Automatisme := #Badge._ptmodrec.RecCommun.CommunGeneral._Autom,
+	                                                                Num_Lot := #Badge._ptmodrec._PtzsScan._NoLot,
+	                                                                Origine_Defaut := 'Controle d origine',
+	                                                                Libelle_Origine := 'Controle d origine',
+	                                                                Acq1 := 'Abandon',
+	                                                                Acq2 := '',
+	                                                                Acq3 := '',
+	                                                                Acq4 := '',
+	                                                                Acq5 := '',
+	                                                                Acq6 := '',
+	                                                                Acq7 := '',
+	                                                                Acq8 := '',
+	                                                                Acq_Choisi := -1,
+	                                                                Date_Arrivee := #Badge._TpsPicke);
+	                #Badge._Etp := #Attente_RepDial;
+	                RETURN;
+	            ELSIF NOT #Badge._ptmodrec._FgLanc THEN
+	                #Badge._TraitementEc := FALSE;
+	                #Badge._ptmodrec._FgLanc := TRUE;
+	                #REC.RecCommun.SUPREC.Affichage._Badge := #Badge._CodeBadge;
+	                /////////////////
+	                ////////////////
+	                #REC._FgLanc := TRUE;
+	                /////////////////
+	                ////////////////
+	                #Badge._EtatVoyant := 1;  // LANCEMENT OK
+	                #Badge._Etp := #REPOS;
+	                RETURN;
+	            ELSE
+	                #Badge._TraitementEc := FALSE;
+	                #Badge._ptmodrec._FgLanc := TRUE;
+	                /////////////////
+	                ////////////////
+	                #REC._FgLanc := TRUE;
+	                /////////////////
+	                ////////////////
+	                #ResultProcCancelRec := "Proc_Cancel_REC"(IdRec:=#Badge._ptmodrec._PtzsScan._Id_Rec, NumPoste:="Num_Poste", Msg_Def=>#Text_Def);
+	                #Badge._EtatVoyant := 8;
+	                #Badge._Etp := #REPOS;
+	                RETURN;
+	            END_IF;
+	        Traitement_REC_DEF1:
+	            //============ Traitement des reponses pour le defaut1   Traitement_Badge=============================================================//
+	            IF #Badge.Dial_Def.Reponse_Def = 'Abandon' THEN
+	                //appel proc abandon
+	                #ResultProcCancelRec := "Proc_Cancel_REC"(IdRec:=#Badge._ptmodrec._PtzsScan._Id_Rec, NumPoste:="Num_Poste", Msg_Def=>#Text_Def);
+	                #Badge._TraitementEc := FALSE;
+	                #Badge.Dial_Def.Reponse_Def := '';
+	                #Badge._Etp := #REPOS; // Etape Repos
+	                RETURN;
+	            END_IF;
+	            //============================================  Fin traitement  ====================================================================//
+	            
+	            
+	        END_REGION
+	(*      
+	*************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                             ╔════════════════════════════════════╗
+	                                                                             ║ Etape "Attente Reponse Dialogue"   ║
+	                                                                             ╚════════════════════════════════════╝
+	*************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                    
+	*)
+	    #Attente_RepDial:
+	        REGION Preliminaire Attente Acquuitement
+	            IF (#Badge._Etp <> #Badge._EtpPrec) THEN
+	                #Badge._Etp_Memo := #Badge._EtpPrec;
+	                #Badge._EtpPrec := #Badge._Etp;
+	                #Badge._DescEtp := 'Attente RepDial';
+	            END_IF;
+	            
+	        END_REGION Preliminaire Attente Acquuitement
+	        REGION Cyclique Attente Acquitement
+	            
+	            #Badge.Dial_Def.Reponse_Def := "FC_Recup_Rep_Def"(Index_Def := #Badge.Dial_Def.Index_Defaut, Reponse_Ecrit => #Badge.Dial_Def.Text_Reponse);
+	            IF #Badge.Dial_Def.Reponse_Def <> '' THEN
+	                "FC_Raz_Def"(#Badge.Dial_Def.Index_Defaut);
+	                #Badge._Etp := #Badge._Etp_Memo;
+	                RETURN;
+	            END_IF;
+	        END_REGION Cyclique Attente Acquitement   
+	        
+	END_CASE;
+	
+	
+	
+	
+END_FUNCTION
+

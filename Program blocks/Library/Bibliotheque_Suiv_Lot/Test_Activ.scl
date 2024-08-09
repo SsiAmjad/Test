@@ -1,0 +1,61 @@
+﻿FUNCTION "Test_Activ" : SInt
+TITLE = Test etat du flag activation tache
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : 'I.Daoudi'
+FAMILY : Suiv_Lot
+VERSION : 1.0
+//Cette fonction récupère l'état du flag d'activation d'une tache dans une zone de suivi
+//- Paramètres d'entrés : + L'index de la zone libre
+//                        + Nom de la tache
+//- Paramètre de sortie : + Etat du flag
+//- Valeurs de retour : + 1 si la  fonction a récupéré l'etat du flag
+//                      + -1 si la zone de suivi ou la tahe n'existe pas
+   VAR_INPUT 
+      Num_Zone : SInt;
+      Num_Tache : SInt;
+   END_VAR
+
+   VAR_OUTPUT 
+      Etat_Activ : Bool;
+   END_VAR
+
+   VAR_TEMP 
+      Ret_Test_Valid_Zone : SInt;
+      Ret_Test_Valid_Tache : SInt;
+   END_VAR
+
+
+BEGIN
+	(*
+	===================================================  Documentation  ===================================================
+	Cette fonction récupère l'état du flag d'activation d'une tache dans une zone de suivi
+	- Paramètres d'entrés : + L'index de la zone libre
+	                        + Nom de la tache
+	- Paramètre de sortie : + Etat du flag
+	- Valeurs de retour : + 1 si la  fonction a récupéré l'etat du flag
+	                      + -1 si la zone de suivi ou la tache n'existe pas
+	===================================================  Documentation  ===================================================
+	*)
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | Version | Date       | Autheur     | Ajouts/Modifications                                                   |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | V_1     | 12.10.2023 | I.DAOUDI    | Creation du block                                                      |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// Test de la validite du numero de la zone
+	#Ret_Test_Valid_Zone := "Test_Valid_Zone"(#Num_Zone);
+	IF #Ret_Test_Valid_Zone = -1 THEN
+	    #Test_Activ := -1;
+	    RETURN;
+	END_IF;
+	// Test de la validite du numero de la tache
+	#Ret_Test_Valid_Tache := "Test_Valid_Tache"(Num_Tache := #Num_Tache, Num_Zone := #Num_Zone);
+	IF #Ret_Test_Valid_Tache = -1 THEN
+	    #Test_Activ := -1;
+	    RETURN;
+	END_IF;
+	// Recuperation de l'etat d'activation de la tache
+	#Etat_Activ := "DB_BIBLIOTHEQUE".Zones_Suivi[#Num_Zone].Taches[#Num_Tache].Activ;
+	#Test_Activ := 1;
+	RETURN;
+END_FUNCTION
+

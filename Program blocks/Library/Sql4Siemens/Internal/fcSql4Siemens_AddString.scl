@@ -1,0 +1,59 @@
+﻿FUNCTION "fcSql4Siemens_AddString" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      sValue : String[254];
+      xAddNul : Bool;
+   END_VAR
+
+   VAR_IN_OUT 
+      stSql4SiemensInterface : "utSql4SiemensInterface";
+   END_VAR
+
+   VAR_TEMP 
+      abValue : Array[0..253] of Byte;
+      uiSourceLen : UInt;
+      diTargetLen : DInt;
+      uiCopyLen : UInt;
+      iRet : Int;
+   END_VAR
+
+
+BEGIN
+	// +------------------------------------------------------------------------------------------------------------------+
+	// | Adds a string to the request buffer                                                                              |
+	// +------------------------------------------------------------------------------------------------------------------+
+	
+	// +-------------+-------------+-------------+------------------------------------------------------------------------+
+	// | Version     | Date        | Author      | Comment                                                                |
+	// +-------------+-------------+-------------+------------------------------------------------------------------------+
+	// | 4.0.0.0     | 08.05.2019  | BaM         | Initial version                                                        |
+	// +-------------+-------------+-------------+------------------------------------------------------------------------+
+	
+	// Convert string to char array
+	Strg_TO_Chars(Strg := #sValue,
+	              pChars := 0,
+	              Cnt => #uiSourceLen,
+	              Chars := #abValue);
+	
+	// Check free space on request buffer
+	#diTargetLen := "fcGetArrayElementCount"(#stSql4SiemensInterface.abRequestData) - #stSql4SiemensInterface.diRequestDataSize;
+	IF (#diTargetLen < 0) THEN
+	  #diTargetLen := 0;
+	END_IF;
+	IF (#uiSourceLen < #diTargetLen) THEN
+	  #uiCopyLen := #uiSourceLen;
+	ELSE
+	  #uiCopyLen := DINT_TO_UINT(#diTargetLen);
+	END_IF;
+	// Move data
+	#iRet := MOVE_BLK_VARIANT(SRC := #abValue, COUNT := #uiCopyLen, SRC_INDEX := 0, DEST_INDEX := #stSql4SiemensInterface.diRequestDataSize, DEST => #stSql4SiemensInterface.abRequestData);
+	// Calculate new data size
+	#stSql4SiemensInterface.diRequestDataSize := #stSql4SiemensInterface.diRequestDataSize + #uiCopyLen;
+	// Add null?
+	IF (#xAddNul = TRUE) AND (#uiCopyLen < #diTargetLen) THEN
+	  #stSql4SiemensInterface.abRequestData[#stSql4SiemensInterface.diRequestDataSize] := 0; // <NUL>
+	  #stSql4SiemensInterface.diRequestDataSize := #stSql4SiemensInterface.diRequestDataSize + 1;
+	END_IF;
+END_FUNCTION
+

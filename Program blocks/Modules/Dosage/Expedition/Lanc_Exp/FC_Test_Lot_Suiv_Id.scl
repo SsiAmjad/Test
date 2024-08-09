@@ -1,0 +1,44 @@
+﻿FUNCTION "FC_Test_Lot_Suiv_Id" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Tache : SInt;
+      Pt_Zs_Enc : "S_Suivi_Dosage";
+   END_VAR
+
+
+BEGIN
+	// Abscence Lot Suivant
+	IF "FC_Lot_Suiv"(#Tache) < 0 THEN
+	    #FC_Test_Lot_Suiv_Id := FALSE;
+	    RETURN;
+	END_IF;
+	// Test Cellule Destination Identique
+	IF "DB_Data_Dosage"."THIS"["FC_Lot_Suiv"(#Tache)]._Cel_Dest <> #Pt_Zs_Enc._Cel_Dest THEN
+	    #FC_Test_Lot_Suiv_Id := FALSE;
+	    RETURN;
+	END_IF;
+	// Test Code Matiere Identique
+	IF "DB_Data_Dosage"."THIS"["FC_Lot_Suiv"(#Tache)]._SuiviCommun._CdMat <> #Pt_Zs_Enc._SuiviCommun._CdMat THEN
+	    #FC_Test_Lot_Suiv_Id := FALSE;
+	    RETURN;
+	END_IF;
+	// Test Code Formule Identique
+	IF "DB_Data_Dosage"."THIS"["FC_Lot_Suiv"(#Tache)]._SuiviCommun._CdForm <> #Pt_Zs_Enc._SuiviCommun._CdForm THEN
+	    #FC_Test_Lot_Suiv_Id := FALSE;
+	    RETURN;
+	END_IF;
+	// Test Version Identique
+	IF "DB_Data_Dosage"."THIS"["FC_Lot_Suiv"(#Tache)]._SuiviCommun._Version <> #Pt_Zs_Enc._SuiviCommun._Version THEN
+	    #FC_Test_Lot_Suiv_Id := FALSE;
+	    RETURN;
+	END_IF;
+	// Test Repartition Identique
+	IF "DB_Data_Dosage"."THIS"["FC_Lot_Suiv"(#Tache)]._SuiviCommun._Repart <> #Pt_Zs_Enc._SuiviCommun._Repart THEN
+	    #FC_Test_Lot_Suiv_Id := FALSE;
+	    RETURN;
+	END_IF;
+	#FC_Test_Lot_Suiv_Id := TRUE;
+	RETURN;
+END_FUNCTION
+

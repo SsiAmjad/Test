@@ -1,0 +1,59 @@
+﻿FUNCTION "CalcDebitPont" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Chpont : "S_ChargPont";
+   END_VAR
+
+   VAR_TEMP 
+      Tpspasse : Time;
+      i : Int;
+      ret_lint : LInt;
+      Ret_RD_SYS_T : Int;
+   END_VAR
+
+
+BEGIN
+	IF NOT #Chpont.CalcDebit._PremFois AND #Chpont._Ptzs._TareOk <> 0 THEN
+	    #Ret_RD_SYS_T := RD_SYS_T(#Chpont.CalcDebit._TpsPicke);
+	    #Chpont.CalcDebit._PremFois := TRUE;
+	    #Chpont._PoidsPont := #Chpont._ChargCommun._Vbasc;
+	END_IF;
+	
+	
+	
+	IF #Chpont._Ptzs._TareOk <> 0 THEN
+	    //#Chpont._PoidsPont := #Chpont._ChargCommun._Vbasc;
+	    IF "Tempo"(Duree := #Chpont.CalcDebit._TpCalcDebit, Tps_Picke := #Chpont.CalcDebit._TpsPicke, Anticip := FALSE, Tps_Passe => #Tpspasse) THEN
+	        
+	        IF #Chpont.CalcDebit._NbPoidsCalcDebit > 10 THEN
+	            #Chpont.CalcDebit._NbPoidsCalcDebit := 10;
+	        END_IF;
+	        IF #Chpont.CalcDebit._NbPoidsCalcDebit < 1 THEN
+	            #Chpont.CalcDebit._NbPoidsCalcDebit := 1;
+	        END_IF;
+	        //Calcul Ecart poids
+	        #Chpont.CalcDebit._Ecart := "Test_Neg"(#Chpont._ChargCommun._Vbasc - #Chpont._PoidsPont);
+	        FOR #i := 0 TO #Chpont.CalcDebit._NbPoidsCalcDebit DO
+	            #Chpont.CalcDebit._TabPoids[#i + 1] := #Chpont.CalcDebit._TabPoids[#i];
+	        END_FOR;
+	        #Chpont.CalcDebit._TabPoids[0] := #Chpont.CalcDebit._Ecart;
+	        #Chpont.CalcDebit._Ecart := 0;
+	        FOR #i := 0 TO #Chpont.CalcDebit._NbPoidsCalcDebit DO
+	            #Chpont.CalcDebit._Ecart := #Chpont.CalcDebit._Ecart+ #Chpont.CalcDebit._TabPoids[#i ];
+	        END_FOR;
+	       
+	        #ret_lint := TIME_TO_LINT(#Chpont.CalcDebit._TpCalcDebit)/1000;
+	        #Chpont.CalcDebit._DebitPont := (#Chpont.CalcDebit._Ecart/(#ret_lint*#Chpont.CalcDebit._NbPoidsCalcDebit))*3600/1000;
+	        #Ret_RD_SYS_T := RD_SYS_T(#Chpont.CalcDebit._TpsPicke);
+	        #Chpont._PoidsPont := #Chpont._ChargCommun._Vbasc;
+	    END_IF;
+	ELSE
+	    #Ret_RD_SYS_T := RD_SYS_T(#Chpont.CalcDebit._TpsPicke);
+	    FOR #i := 0 TO #Chpont.CalcDebit._NbPoidsCalcDebit DO
+	        #Chpont.CalcDebit._TabPoids[#i ] :=0;
+	    END_FOR;
+	END_IF;
+	
+END_FUNCTION
+

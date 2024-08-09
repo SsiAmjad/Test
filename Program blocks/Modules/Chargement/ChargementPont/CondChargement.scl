@@ -1,0 +1,19 @@
+﻿FUNCTION "CondChargement" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      ChPont : "S_ChargPont";
+   END_VAR
+
+
+BEGIN
+	IF #ChPont._Ptzs._TareOk =0 AND #ChPont._PriseTareAvDem THEN
+	    #CondChargement:=FALSE ;
+	    RETURN;
+	ELSE
+	    #CondChargement := TRUE;
+	    RETURN;
+	END_IF;
+	
+END_FUNCTION
+

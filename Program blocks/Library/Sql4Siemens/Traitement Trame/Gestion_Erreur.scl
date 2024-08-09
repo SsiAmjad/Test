@@ -1,0 +1,68 @@
+﻿FUNCTION_BLOCK "Gestion_Erreur"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      diResultState : DInt;
+   END_VAR
+
+   VAR_OUTPUT 
+      erreur : String;
+   END_VAR
+
+   VAR_IN_OUT 
+      stSql4SiemensInterface : "utSql4SiemensInterface";
+   END_VAR
+
+
+BEGIN
+	CASE #diResultState OF
+	    0:
+	        #erreur := '';
+	        "dbSql4SiemensInterface".stSql4SiemensInterface.Observer.xTimeout := FALSE;
+	       
+	    1:
+	        #erreur := 'Unknown SQL command';
+	    2:
+	        #erreur := 'Query returns more records than defined with MaxRows. Adjust Query OR increase MaxRows';
+	    3:
+	        #erreur := 'Query returns more columns than defined with MaxColumns, adjust query or increase MaxColumns';
+	    4:
+	        #erreur := 'Query returns more data than the defined puffer size. Adjust query *OR increase the buffer size in the Connector AND the control';
+	    5:
+	        #erreur := 'Query returns at least one value, which is bigger than defined with MaxStringLength. *Adjust query OR increase MaxStringLength';
+	    10:
+	        #erreur := 'Internal Connector error';
+	    11:
+	        #erreur := 'Internal Connector error, database cannot be opened';
+	    21:
+	        #erreur := 'No IP address defined';
+	    22:
+	        #erreur := 'No port number defined';
+	    23:
+	        #erreur := 'Request string is empty';
+	    24:
+	        #erreur := 'Number of MaxRows not defined';
+	    25:
+	        #erreur := 'Number of MaxColumns not defined';
+	    29:
+	        #erreur := 'Size of MaxStringLength invalid';
+	    41:
+	        #erreur := 'No connection to SQL4automation-Connector established. Turn off firewall, check IP address and remote port';
+	    51:
+	        #erreur := 'Error in sending the query. Turn off firewall, check IP address and remote port';
+	    91:
+	        #erreur := 'Timeout error. No response from the Connector within the time frame.';
+	        "dbSql4SiemensInterface".stSql4SiemensInterface.Observer.xTimeout := TRUE;
+	        
+	    95:
+	        #erreur := 'Error in receiving the data';
+	    4002:
+	        #erreur := 'General error during the SQL query. Request string is invalid';
+	    ELSE
+	        #erreur := 'Error numbers OF the ODBC database connection';
+	END_CASE;
+	
+	
+	
+END_FUNCTION_BLOCK
+

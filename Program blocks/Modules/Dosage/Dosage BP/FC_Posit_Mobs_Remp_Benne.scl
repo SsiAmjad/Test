@@ -1,0 +1,77 @@
+﻿FUNCTION "FC_Posit_Mobs_Remp_Benne" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Benne : "S_Benne";
+   END_VAR
+
+   VAR_TEMP 
+      Ret_Arr_Imm_Mobile : SInt;
+      Ret_Test_Etat_Mobile : SInt;
+      Etat_Mobile : USInt;
+   END_VAR
+
+   VAR CONSTANT 
+      Position_Fermeture : USInt := 0;
+      Position_Ouverture : USInt := 1;
+   END_VAR
+
+
+BEGIN
+	// Test du renseignement de mobile
+	IF #Benne.Mob_Decomp > 0 AND #Benne.Mob_Decomp <= "Nbr_Max_Mobiles" THEN
+	    // Verification Fermeture de decompression
+	    IF NOT "FC_Test_Pos_Trappe"(Index_Trappe := #Benne.Mob_Decomp, Pos := #Position_Fermeture) THEN
+	        // Fermeture de decompression
+	        "FC_Posit_Mob"(Index_Mob := #Benne.Mob_Decomp,
+	                          Position := #Position_Fermeture);
+	        #FC_Posit_Mobs_Remp_Benne := FALSE;
+	        RETURN;
+	    END_IF;
+	END_IF;
+	// Test du renseignement de mobile
+	IF #Benne.Mob_VanneAir > 0 AND #Benne.Mob_VanneAir <= "Nbr_Max_Mobiles"  THEN
+	    // Verification Ouverture de la vanne d'air
+	    IF NOT "FC_Test_Pos_Trappe"(Index_Trappe := #Benne.Mob_VanneAir, Pos := #Position_Ouverture) THEN
+	        // Ouverture de la vanne d'air
+	        "FC_Posit_Mob"(Index_Mob := #Benne.Mob_VanneAir,
+	                          Position := #Position_Ouverture);
+	        #FC_Posit_Mobs_Remp_Benne := FALSE;
+	        RETURN;
+	    END_IF;
+	END_IF;
+	// Test du renseignement de mobile
+	IF #Benne.Mob_Trappe1 > 0 AND #Benne.Mob_Trappe1 <= "Nbr_Max_Mobiles" THEN
+	    // Verification Fermeture trappe eventuelle sous Benne
+	    IF NOT "FC_Test_Pos_Trappe"(Index_Trappe := #Benne.Mob_Trappe1, Pos := #Position_Fermeture) THEN
+	        // Fermeture trappes eventuelles sous Benne
+	        "FC_Posit_Mob"(Index_Mob := #Benne.Mob_Trappe1,
+	                          Position := #Position_Fermeture);
+	        #FC_Posit_Mobs_Remp_Benne := FALSE;
+	        RETURN;
+	    END_IF;
+	END_IF;
+	// Test du renseignement de mobile
+	IF #Benne.Mob_Trappe2 > 0 AND #Benne.Mob_Trappe2 <= "Nbr_Max_Mobiles" THEN
+	    // Verification Fermeture trappe eventuelle sous Benne
+	    IF NOT "FC_Test_Pos_Trappe"(Index_Trappe := #Benne.Mob_Trappe2, Pos := #Position_Fermeture) THEN
+	        // Fermeture trappes eventuelles sous Benne
+	        "FC_Posit_Mob"(Index_Mob := #Benne.Mob_Trappe2,
+	                          Position := #Position_Fermeture);
+	        #FC_Posit_Mobs_Remp_Benne := FALSE;
+	        RETURN;
+	    END_IF;
+	END_IF;
+	// Test du renseignement de mobile
+	IF #Benne.Mob_Trans > 0 AND #Benne.Mob_Trans <= "Nbr_Max_Mobiles" THEN
+	    // Verification transporteur eventuel arrete
+	    IF NOT "Test_Etat_Mobile"("Index_Mobile" := #Benne.Mob_Trans, Etat:="Libre") THEN
+	        // Arret transporteur eventuel 
+	        #Ret_Arr_Imm_Mobile := "Arr_Imm_Mobile"(#Benne.Mob_Trans);
+	        #FC_Posit_Mobs_Remp_Benne := FALSE;
+	        RETURN;
+	    END_IF;
+	END_IF;
+	#FC_Posit_Mobs_Remp_Benne := TRUE;
+END_FUNCTION
+

@@ -1,0 +1,19 @@
+﻿FUNCTION "ControleChgtCase" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Chpont : "S_ChargPont";
+   END_VAR
+
+
+BEGIN
+	IF #Chpont._DemChgtCase>0 THEN
+	    "MemoPoidsCase"(IndexNouvCase:=#Chpont._DemChgtCase - 1,
+	                    Chpont:=#Chpont);
+	    #Chpont._DemChgtCase:=0;
+	    //#Chpont._ChargCommun._PtAff.Cases := #Chpont._Ptzs._Cases;
+	    #Chpont._ChargCommun._PtAff._NumCaseEc := #Chpont._Commande._Case;
+	END_IF;
+	
+END_FUNCTION
+

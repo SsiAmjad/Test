@@ -1,0 +1,126 @@
+﻿FUNCTION "Surveillance_AlertIntensite" : Void
+TITLE = Fonction de la gestion module reception
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : SAS
+VERSION : 1.0
+   VAR_INPUT 
+      fgbase : Bool;
+   END_VAR
+
+   VAR_IN_OUT 
+      CntrlIntens : "S_Cntrl_Intensite";
+   END_VAR
+
+   VAR_TEMP 
+      Ret_RD_Sys_T : Int;
+      Mess_Defaut : String;
+      Reponse_Ecrite : String;
+      Tps_Act : Date_And_Time;
+   END_VAR
+
+
+BEGIN
+	#Ret_RD_Sys_T := RD_SYS_T(#Tps_Act);
+	CASE #CntrlIntens._EtpAl OF
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║            Etape REPOS             ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                    
+	*)
+	    0:
+	        REGION Traitement preliminaire 'REPOS'
+	            IF (#CntrlIntens._EtpAl <> #CntrlIntens._EtpPrecAl) THEN
+	                //Memorisation de l'etape encours
+	                #CntrlIntens._EtpPrecAl := #CntrlIntens._EtpAl;
+	            END_IF;
+	            #CntrlIntens._FgAcqDefaut := FALSE;
+	        END_REGION Traitement preliminaire 'REPOS'
+	        
+	        REGION Traitement cyclique 'REPOS'
+	            IF #CntrlIntens._FgAlerte AND NOT #CntrlIntens._FgAcqAlerte THEN
+	                #CntrlIntens._EtpAl := 1;
+	            END_IF;
+	        END_REGION Traitement cyclique 'REPOS'
+	        RETURN;
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║       Etape "Surveillance"         ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                    
+	*)
+	    1:
+	        REGION Traitement preliminaire 'Surveillance'
+	            IF (#CntrlIntens._EtpAl <> #CntrlIntens._EtpPrecAl) THEN
+	                #CntrlIntens._EtpPrecAl := #CntrlIntens._EtpAl;
+	                IF #CntrlIntens.Dial_Alerte.Reponse_Def <> '' THEN
+	                    CASE #CntrlIntens.Dial_Alerte.Num_Def_Etape OF
+	                        1:
+	                            GOTO DB_DEF1;
+	                    END_CASE;
+	                END_IF;
+	            END_IF;
+	        END_REGION Traitement preliminaire 'SURVEILLANCE'
+	        
+	        REGION Traitement cyclique 'SURVEILLANCE'
+	            #CntrlIntens.Dial_Alerte.Num_Def_Etape := 1;
+	            #Mess_Defaut := CONCAT(IN1 := 'Alerte surintensite du mobile ',
+	                                   IN2 := "Nom_Mobile"(#CntrlIntens._Mobile));
+	            #CntrlIntens.Dial_Alerte.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase,
+	                                                                     Msg_Defaut := #Mess_Defaut,
+	                                                                     Type_Defaut := 2,
+	                                                                     Automatisme := '',
+	                                                                     Num_Lot := '',
+	                                                                     Origine_Defaut := 'surintensite mobile',
+	                                                                     Libelle_Origine := 'surintensite mobile',
+	                                                                     Acq1 := 'Acquittement',
+	                                                                     Acq2 := '',
+	                                                                     Acq3 := '',
+	                                                                     Acq4 := '',
+	                                                                     Acq5 := '',
+	                                                                     Acq6 := '',
+	                                                                     Acq7 := '',
+	                                                                     Acq8 := '',
+	                                                                     Acq_Choisi := -1,
+	                                                                     Date_Arrivee := #Tps_Act);
+	            #CntrlIntens._EtpAl := 2;
+	            RETURN;
+	        DB_DEF1:
+	            //======================= Traitement des reponses pour le defaut1 Deport de bande  ======================================//
+	            IF #CntrlIntens.Dial_Alerte.Reponse_Def = 'Acquittement' THEN
+	                #CntrlIntens._FgAcqAlerte := TRUE;
+	                #CntrlIntens._EtpAl := 0;
+	                #CntrlIntens.Dial_Alerte.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	        END_REGION Traitement cyclique 'SURVEILLANCE'
+	        RETURN;
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║ Etape "Attente Reponse Dialogue"   ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                    
+	*)
+	    2:
+	        REGION Preliminaire Attente Acquuitement
+	            IF #CntrlIntens._EtpAl <> #CntrlIntens._EtpPrecAl THEN
+	                //Memorisation de l'etape encours
+	                #CntrlIntens._EtpMemoAl := #CntrlIntens._EtpPrecAl;
+	                #CntrlIntens._EtpPrecAl := #CntrlIntens._EtpAl;
+	            END_IF;
+	        END_REGION Preliminaire Attente Acquuitement
+	        REGION Cyclique Attente Acquitement
+	            #CntrlIntens.Dial_Alerte.Reponse_Def := "FC_Recup_Rep_Def"(Index_Def := #CntrlIntens.Dial_Alerte.Index_Defaut, Reponse_Ecrit => #Reponse_Ecrite);
+	            IF #CntrlIntens.Dial_Alerte.Reponse_Def <> '' THEN
+	                "FC_Raz_Def"(#CntrlIntens.Dial_Alerte.Index_Defaut);
+	                #CntrlIntens._EtpAl := #CntrlIntens._EtpMemoAl;
+	                RETURN;
+	            END_IF;
+	        END_REGION Cyclique Attente Acquitement   
+	END_CASE;
+	
+END_FUNCTION
+

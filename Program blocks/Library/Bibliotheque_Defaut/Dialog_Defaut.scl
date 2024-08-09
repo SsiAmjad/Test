@@ -1,0 +1,108 @@
+﻿FUNCTION "Dialog_Defaut" : USInt
+TITLE = Dialogue defaut
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : 'I.Daoudi'
+VERSION : 1.0
+   VAR_INPUT 
+      Fg_Base : Bool;
+      Msg_Defaut : String;   // Message defaut
+      Type_Defaut : USInt;   // Le degre de gravite du defaut
+      Automatisme : String;   // Quel est l'automatisme qui a genere ce defaut
+      Num_Lot : String;   // Le defaut est genere pour quel numero de lot
+      Origine_Defaut : String;   // Defaut mobile, Defaut tache, Defaut process ...
+      Libelle_Origine : String;   // Libelle de l'origine defaut
+      Acq1 : String;   // Le libelle du bouton d'acquitement 1
+      Acq2 : String;   // Le libelle du bouton d'acquitement 2
+      Acq3 : String;   // Le libelle du bouton d'acquitement 3
+      Acq4 : String;   // Le libelle du bouton d'acquitement 4
+      Acq5 : String;   // Le libelle du bouton d'acquitement 5
+      Acq6 : String;   // Le libelle du bouton d'acquitement 6
+      Acq7 : String;   // Le libelle du bouton d'acquitement 7
+      Acq8 : String;   // Le libelle du bouton d'acquitement 8
+      Acq_Choisi : SInt;   // L'acquitement choisi par l'operateur
+      Date_Arrivee : Date_And_Time;   // Date et heure d'arrivee du defaut
+   END_VAR
+
+   VAR_TEMP 
+      parameters_value : Array[0..20] of String;
+      Point_Index_Defaut : USInt;   // Pointeur de recherche de la premiere ligne vide pour inserer le defaut actuel
+      Point_Orig_Defaut : USInt;
+      ErreurMessage : String;
+      Resultat_Decode : WString;
+      status : Int;
+      Rep_temp : String;
+   END_VAR
+
+
+BEGIN
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | Version | Date       | Autheur     | Ajouts/Modifications                                                   |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | V_1     | 01.08.2023 | I.DAOUDI    | Creation du block                                                      |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	////----------------------------------------   HISTORIQUE DES VERSIONS  ------------------------------------------
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | Version | Date       | Autheur     | Commentaire                                                            |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | V_1     | 01.08.2023 | I.DAOUDI    | Version initiale                                                       |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// Recherche de la premiere ligne vide pour inserer le defaut actuel
+	FOR #Point_Index_Defaut := 0 TO 49 DO
+	    // Une ligne sans message de defaut = ligne vide
+	    IF "DB_BIBLIOTHEQUE".Defaut[#Point_Index_Defaut].Msg_Defaut = '' THEN
+	        // Recuperation des elements du defaut pour les inseres dans le DB_Defaut
+	        "DB_BIBLIOTHEQUE".Defaut[#Point_Index_Defaut].Msg_Defaut := #Msg_Defaut;
+	        "DB_BIBLIOTHEQUE".Defaut[#Point_Index_Defaut].Type_Defaut := #Type_Defaut;
+	        "DB_BIBLIOTHEQUE".Defaut[#Point_Index_Defaut].Automatisme := #Automatisme;
+	        "DB_BIBLIOTHEQUE".Defaut[#Point_Index_Defaut].Num_Lot := #Num_Lot;
+	        "DB_BIBLIOTHEQUE".Defaut[#Point_Index_Defaut].Origine_Defaut := #Origine_Defaut;
+	        "DB_BIBLIOTHEQUE".Defaut[#Point_Index_Defaut].Libelle_Origine := #Libelle_Origine;
+	        "DB_BIBLIOTHEQUE".Defaut[#Point_Index_Defaut].Acq1 := #Acq1;
+	        "DB_BIBLIOTHEQUE".Defaut[#Point_Index_Defaut].Acq2 := #Acq2;
+	        "DB_BIBLIOTHEQUE".Defaut[#Point_Index_Defaut].Acq3 := #Acq3;
+	        "DB_BIBLIOTHEQUE".Defaut[#Point_Index_Defaut].Acq4 := #Acq4;
+	        "DB_BIBLIOTHEQUE".Defaut[#Point_Index_Defaut].Acq5 := #Acq5;
+	        "DB_BIBLIOTHEQUE".Defaut[#Point_Index_Defaut].Acq6 := #Acq6;
+	        "DB_BIBLIOTHEQUE".Defaut[#Point_Index_Defaut].Acq7 := #Acq7;
+	        "DB_BIBLIOTHEQUE".Defaut[#Point_Index_Defaut].Acq8 := #Acq8;
+	        "DB_BIBLIOTHEQUE".Defaut[#Point_Index_Defaut].Date_Arrivee := #Date_Arrivee;
+	        "DB_BIBLIOTHEQUE".Defaut[#Point_Index_Defaut].Reponse_Lue := FALSE;
+	        
+	        // Appel la procedure stockée sp_ajoutdef 
+	        #parameters_value[0] := #Msg_Defaut;
+	        #parameters_value[1] := 'D';
+	        #parameters_value[2] := #Automatisme;
+	        #parameters_value[3] := #Libelle_Origine;
+	        #parameters_value[4] := #Num_Lot;
+	        #parameters_value[5] := #Acq1;
+	        #parameters_value[6] := #Acq2;
+	        #parameters_value[7] := #Acq3;
+	        #parameters_value[8] := #Acq4;
+	        #parameters_value[9] := #Acq5;
+	        #parameters_value[10] := #Acq6;
+	        #parameters_value[11] := #Acq7;
+	        #parameters_value[12] := #Acq8;
+	        #parameters_value[13] := '';
+	        #parameters_value[14] := '';
+	        #parameters_value[15] := '';
+	        // Insertion message de défaut et récupératiuon de l'id de la ligne
+	        IF #Fg_Base THEN
+	            #Resultat_Decode := "COMBASE"(procedure_name := 'SP_General_AjoutDef',
+	                                          values_of_record := #parameters_value,
+	                                          parameters_number := 16,
+	                                          ERROR_MESSAGE => #ErreurMessage);
+	            #status := "FCT_DECODE_TRAME"(KEYWORD := 'IDDEF:',
+	                                          BUFFER := #Resultat_Decode,
+	                                          Retour_VAL => #Rep_temp);
+	            "DB_BIBLIOTHEQUE".Defaut[#Point_Index_Defaut].ID_Base := STRING_TO_ULINT(#Rep_temp);
+	        END_IF;
+	        
+	        
+	        EXIT;
+	    END_IF;
+	END_FOR;
+	// Recuperation de l'index du defaut et le transmettre a l'origine approprie
+	#Dialog_Defaut := #Point_Index_Defaut;
+	RETURN;
+END_FUNCTION
+

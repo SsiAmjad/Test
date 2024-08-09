@@ -1,0 +1,498 @@
+﻿FUNCTION "Initialisation_Cellules_Rec_Superv" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+BEGIN
+	//---------------- Cellulle1 ----------------//
+	//"DB_Anim_Cell"."THIS"[0].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[0].Zone := 'S01';
+	// "DB_Anim_Cell"."THIS"[0].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[0].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[0].T_Remplissage :=;
+	"DB_Anim_Cell"."THIS"[0].Niveau_H := "ADR_RNH_S1";
+	//"DB_Anim_Cell"."THIS"[0].Niveau_B :="ADR_RN_S1";
+	//------------------------------------------//
+	//---------------- Cellulle2 ----------------//
+	//"DB_Anim_Cell"."THIS"[1].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[1].Zone := 'S02';
+	// "DB_Anim_Cell"."THIS"[1].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[1].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[1].T_Remplissage :=;
+	"DB_Anim_Cell"."THIS"[1].Niveau_H := "ADR_RNH_S2";
+	// "DB_Anim_Cell"."THIS"[1].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle3 ----------------//
+	//"DB_Anim_Cell"."THIS"[2].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[2].Zone := 'S03';
+	// "DB_Anim_Cell"."THIS"[2].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[2].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[2].T_Remplissage :=;
+	"DB_Anim_Cell"."THIS"[2].Niveau_H := "ADR_RNH_S3";
+	// "DB_Anim_Cell"."THIS"[2].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle4 ----------------//
+	//"DB_Anim_Cell"."THIS"[3].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[3].Zone := 'S04';
+	// "DB_Anim_Cell"."THIS"[3].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[3].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[3].T_Remplissage :=;
+	"DB_Anim_Cell"."THIS"[3].Niveau_H := "ADR_RNH_S4";
+	// "DB_Anim_Cell"."THIS"[3].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle5 ----------------//
+	//"DB_Anim_Cell"."THIS"[4].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[4].Zone := 'S05';
+	// "DB_Anim_Cell"."THIS"[4].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[4].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[4].T_Remplissage :=;
+	"DB_Anim_Cell"."THIS"[4].Niveau_H := "ADR_RNH_S5";
+	// "DB_Anim_Cell"."THIS"[4].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle6 ----------------//
+	//"DB_Anim_Cell"."THIS"[5].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[5].Zone := 'S06';
+	// "DB_Anim_Cell"."THIS"[5].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[5].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[5].T_Remplissage :=;
+	"DB_Anim_Cell"."THIS"[5].Niveau_H := "ADR_RNH_S6";
+	// "DB_Anim_Cell"."THIS"[5].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle11 ----------------//
+	//"DB_Anim_Cell"."THIS"[6].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[6].Zone := 'S11';
+	// "DB_Anim_Cell"."THIS"[6].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[6].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[6].T_Remplissage :=;
+	"DB_Anim_Cell"."THIS"[6].Niveau_H := "ADR_RNH_S11";
+	// "DB_Anim_Cell"."THIS"[6].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle12 ----------------//
+	//"DB_Anim_Cell"."THIS"[7].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[7].Zone := 'S12';
+	// "DB_Anim_Cell"."THIS"[7].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[7].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[7].T_Remplissage :=;
+	"DB_Anim_Cell"."THIS"[7].Niveau_H := "ADR_RNH_S12";
+	// "DB_Anim_Cell"."THIS"[7].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle13 ----------------//
+	//"DB_Anim_Cell"."THIS"[8].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[8].Zone := 'S13';
+	// "DB_Anim_Cell"."THIS"[8].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[8].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[8].T_Remplissage :=;
+	// "DB_Anim_Cell"."THIS"[8].Niveau_H :=;
+	// "DB_Anim_Cell"."THIS"[8].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle14 ----------------//
+	//"DB_Anim_Cell"."THIS"[9].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[9].Zone := 'S14';
+	// "DB_Anim_Cell"."THIS"[9].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[9].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[9].T_Remplissage :=;
+	"DB_Anim_Cell"."THIS"[9].Niveau_H := "ADR_RNH_S14";
+	// "DB_Anim_Cell"."THIS"[9].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle15 ----------------//
+	//"DB_Anim_Cell"."THIS"[10].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[10].Zone := 'S15';
+	// "DB_Anim_Cell"."THIS"[10].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[10].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[10].T_Remplissage :=;
+	"DB_Anim_Cell"."THIS"[10].Niveau_H := "ADR_RNH_S15";
+	// "DB_Anim_Cell"."THIS"[10].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle16 ----------------//
+	//"DB_Anim_Cell"."THIS"[11].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[11].Zone := 'S16';
+	// "DB_Anim_Cell"."THIS"[11].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[11].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[11].T_Remplissage :=;
+	"DB_Anim_Cell"."THIS"[11].Niveau_H := "ADR_RNH_S16";
+	// "DB_Anim_Cell"."THIS"[11].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle17 ----------------//
+	//"DB_Anim_Cell"."THIS"[12].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[12].Zone := 'S17';
+	// "DB_Anim_Cell"."THIS"[12].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[12].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[12].T_Remplissage :=;
+	"DB_Anim_Cell"."THIS"[12].Niveau_H := "ADR_RNH_S17";
+	// "DB_Anim_Cell"."THIS"[12].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle18 ----------------//
+	//"DB_Anim_Cell"."THIS"[13].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[13].Zone := 'S18';
+	// "DB_Anim_Cell"."THIS"[13].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[13].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[13].T_Remplissage :=;
+	"DB_Anim_Cell"."THIS"[13].Niveau_H := "ADR_RNH_S18";
+	// "DB_Anim_Cell"."THIS"[13].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle19 ----------------//
+	//"DB_Anim_Cell"."THIS"[14].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[14].Zone := 'S19';
+	// "DB_Anim_Cell"."THIS"[14].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[14].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[14].T_Remplissage :=;
+	"DB_Anim_Cell"."THIS"[14].Niveau_H := "ADR_RNH_S19";
+	// "DB_Anim_Cell"."THIS"[14].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle20 ----------------//
+	//"DB_Anim_Cell"."THIS"[15].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[15].Zone := 'S20';
+	// "DB_Anim_Cell"."THIS"[15].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[15].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[15].T_Remplissage :=;
+	"DB_Anim_Cell"."THIS"[15].Niveau_H := "ADR_RNH_S20";
+	// "DB_Anim_Cell"."THIS"[15].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle30 ----------------//
+	//"DB_Anim_Cell"."THIS"[16].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[16].Zone := 'S30';
+	// "DB_Anim_Cell"."THIS"[16].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[16].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[16].T_Remplissage :=;
+	"DB_Anim_Cell"."THIS"[16].Niveau_H := "ADR_RNH_S30";
+	// "DB_Anim_Cell"."THIS"[16].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle31 ----------------//
+	//"DB_Anim_Cell"."THIS"[17].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[17].Zone := 'S31';
+	// "DB_Anim_Cell"."THIS"[17].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[17].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[17].T_Remplissage :=;
+	"DB_Anim_Cell"."THIS"[17].Niveau_H := "ADR_RNH_S31";
+	// "DB_Anim_Cell"."THIS"[17].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle32 ----------------//
+	//"DB_Anim_Cell"."THIS"[18].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[18].Zone := 'S32';
+	// "DB_Anim_Cell"."THIS"[18].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[18].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[18].T_Remplissage :=;
+	"DB_Anim_Cell"."THIS"[18].Niveau_H := "ADR_RNH_S32";
+	// "DB_Anim_Cell"."THIS"[18].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle33 ----------------//
+	//"DB_Anim_Cell"."THIS"[19].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[19].Zone := 'S33';
+	// "DB_Anim_Cell"."THIS"[19].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[19].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[19].T_Remplissage :=;
+	"DB_Anim_Cell"."THIS"[19].Niveau_H := "ADR_RNH_S33";
+	// "DB_Anim_Cell"."THIS"[19].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle34 ----------------//
+	//"DB_Anim_Cell"."THIS"[20].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[20].Zone := 'S34';
+	// "DB_Anim_Cell"."THIS"[20].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[20].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[20].T_Remplissage :=;
+	"DB_Anim_Cell"."THIS"[20].Niveau_H := "ADR_RNH_S34";
+	// "DB_Anim_Cell"."THIS"[20].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle35 ----------------//
+	//"DB_Anim_Cell"."THIS"[21].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[21].Zone := 'S35';
+	// "DB_Anim_Cell"."THIS"[21].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[21].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[21].T_Remplissage :=;
+	"DB_Anim_Cell"."THIS"[21].Niveau_H := "ADR_RNH_S35";
+	// "DB_Anim_Cell"."THIS"[21].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle36 ----------------//
+	//"DB_Anim_Cell"."THIS"[22].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[22].Zone := 'S36';
+	// "DB_Anim_Cell"."THIS"[22].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[22].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[22].T_Remplissage :=;
+	"DB_Anim_Cell"."THIS"[22].Niveau_H := "ADR_RNH_S36";
+	// "DB_Anim_Cell"."THIS"[22].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle37 ----------------//
+	//"DB_Anim_Cell"."THIS"[23].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[23].Zone := 'S37';
+	// "DB_Anim_Cell"."THIS"[23].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[23].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[23].T_Remplissage :=;
+	"DB_Anim_Cell"."THIS"[23].Niveau_H := "ADR_RNH_S37";
+	// "DB_Anim_Cell"."THIS"[23].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle38 ----------------//
+	//"DB_Anim_Cell"."THIS"[24].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[24].Zone := 'S38';
+	// "DB_Anim_Cell"."THIS"[24].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[24].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[24].T_Remplissage :=;
+	"DB_Anim_Cell"."THIS"[24].Niveau_H := "ADR_RNH_S38";
+	// "DB_Anim_Cell"."THIS"[24].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle39 ----------------//
+	//"DB_Anim_Cell"."THIS"[25].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[25].Zone := 'S39';
+	// "DB_Anim_Cell"."THIS"[25].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[25].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[25].T_Remplissage :=;
+	"DB_Anim_Cell"."THIS"[25].Niveau_H := "ADR_RNH_S39";
+	// "DB_Anim_Cell"."THIS"[25].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle40 ----------------//
+	//"DB_Anim_Cell"."THIS"[26].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[26].Zone := 'S40';
+	// "DB_Anim_Cell"."THIS"[26].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[26].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[26].T_Remplissage :=;
+	"DB_Anim_Cell"."THIS"[26].Niveau_H := "ADR_RNH_S40";
+	// "DB_Anim_Cell"."THIS"[26].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle41 ----------------//
+	//"DB_Anim_Cell"."THIS"[27].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[27].Zone := 'S41';
+	// "DB_Anim_Cell"."THIS"[27].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[27].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[27].T_Remplissage :=;
+	"DB_Anim_Cell"."THIS"[27].Niveau_H := "ADR_RNH_S41";
+	// "DB_Anim_Cell"."THIS"[27].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- CellulleS21 ----------------//
+	
+	"DB_Anim_Cell"."THIS"[28].Zone := 'S21';
+	"DB_Anim_Cell"."THIS"[28].Niveau_H := "ADR_RNH_S21";
+	"DB_Anim_Cell"."THIS"[28].Niveau_B := "ADR_RNB_S21";
+	//------------------------------------------//
+	////------------------------------------------//
+	//---------------- Cellulle22 ----------------//
+	
+	"DB_Anim_Cell"."THIS"[29].Zone := 'S22';
+	"DB_Anim_Cell"."THIS"[29].Niveau_H := "ADR_RNH_S22";
+	"DB_Anim_Cell"."THIS"[29].Niveau_B := "ADR_RNB_S22";
+	//------------------------------------------//
+	////---------------- CellulleS23 ----------------//
+	
+	"DB_Anim_Cell"."THIS"[30].Zone := 'S23';
+	"DB_Anim_Cell"."THIS"[30].Niveau_H := "ADR_RNH_S23";
+	"DB_Anim_Cell"."THIS"[30].Niveau_B := "ADR_RNB_S23";
+	
+	//------------------------------------------//
+	////------------------------------------------//
+	//---------------- Cellulle24 ----------------//
+	
+	"DB_Anim_Cell"."THIS"[31].Zone := 'S24';
+	"DB_Anim_Cell"."THIS"[31].Niveau_H := "ADR_RNH_S24";
+	"DB_Anim_Cell"."THIS"[31].Niveau_B := "ADR_RNB_S24";
+	//------------------------------------------//
+	//////---------------- Cellulle B1 ----------------//
+	
+	"DB_Anim_Cell"."THIS"[32].Zone := 'B01';
+	"DB_Anim_Cell"."THIS"[32].Niveau_H := "ADR_RNH_B01";
+	"DB_Anim_Cell"."THIS"[32].Niveau_B := "ADR_RNB_B01";
+	//------------------------------------------//
+	////------------------------------------------//
+	//---------------- Cellulle B2----------------//
+	
+	"DB_Anim_Cell"."THIS"[33].Zone := 'B02';
+	"DB_Anim_Cell"."THIS"[33].Niveau_H := "ADR_RNH_B02";
+	"DB_Anim_Cell"."THIS"[33].Niveau_B := "ADR_RNB_B02";
+	//------------------------------------------//
+	//---------------- Cellulle BT01 ----------------//
+	//"DB_Anim_Cell"."THIS"[34].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[34].Zone := 'BT01';
+	// "DB_Anim_Cell"."THIS"[34].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[34].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[34].T_Remplissage :=;
+	//"DB_Anim_Cell"."THIS"[34].Niveau_H :="ADR_RNH_BT01";
+	// "DB_Anim_Cell"."THIS"[34].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle BT02 ----------------//
+	//"DB_Anim_Cell"."THIS"[35].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[35].Zone := 'BT02';
+	// "DB_Anim_Cell"."THIS"[35].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[35].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[35].T_Remplissage :=;
+	//"DB_Anim_Cell"."THIS"[35].Niveau_H :="ADR_RNH_BT02";
+	// "DB_Anim_Cell"."THIS"[35].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle BT03 ----------------//
+	//"DB_Anim_Cell"."THIS"[36].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[36].Zone := 'BT03';
+	// "DB_Anim_Cell"."THIS"[36].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[36].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[36].T_Remplissage :=;
+	//"DB_Anim_Cell"."THIS"[36].Niveau_H :="ADR_RNH_BT03";
+	// "DB_Anim_Cell"."THIS"[36].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle BT04 ----------------//
+	//"DB_Anim_Cell"."THIS"[37].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[37].Zone := 'BT04';
+	// "DB_Anim_Cell"."THIS"[37].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[37].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[37].T_Remplissage :=;
+	//"DB_Anim_Cell"."THIS"[37].Niveau_H :="ADR_RNH_BT04";
+	// "DB_Anim_Cell"."THIS"[37].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle BT06 ----------------//
+	//"DB_Anim_Cell"."THIS"[38].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[38].Zone := 'BT06';
+	// "DB_Anim_Cell"."THIS"[38].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[38].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[38].T_Remplissage :=;
+	//"DB_Anim_Cell"."THIS"[38].Niveau_H :="ADR_RNH_BT06";
+	// "DB_Anim_Cell"."THIS"[38].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle BT07 ----------------//
+	//"DB_Anim_Cell"."THIS"[39].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[39].Zone := 'BT07';
+	// "DB_Anim_Cell"."THIS"[39].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[39].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[39].T_Remplissage :=;
+	//"DB_Anim_Cell"."THIS"[39].Niveau_H :="ADR_RNH_BT07";
+	// "DB_Anim_Cell"."THIS"[39].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle BT08 ----------------//
+	//"DB_Anim_Cell"."THIS"[40].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[40].Zone := 'BT08';
+	// "DB_Anim_Cell"."THIS"[40].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[40].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[40].T_Remplissage :=;
+	//"DB_Anim_Cell"."THIS"[40].Niveau_H :="ADR_RNH_BT08";
+	// "DB_Anim_Cell"."THIS"[40].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle BT09 ----------------//
+	//"DB_Anim_Cell"."THIS"[41].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[41].Zone := 'BT09';
+	// "DB_Anim_Cell"."THIS"[41].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[41].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[41].T_Remplissage :=;
+	//"DB_Anim_Cell"."THIS"[41].Niveau_H :="ADR_RNH_BT09";
+	// "DB_Anim_Cell"."THIS"[41].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle BT10 ----------------//
+	//"DB_Anim_Cell"."THIS"[42].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[42].Zone := 'BT10';
+	// "DB_Anim_Cell"."THIS"[42].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[42].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[42].T_Remplissage :=;
+	//"DB_Anim_Cell"."THIS"[42].Niveau_H :="ADR_RNH_BT10";
+	// "DB_Anim_Cell"."THIS"[42].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle BT11 ----------------//
+	//"DB_Anim_Cell"."THIS"[43].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[43].Zone := 'BT11';
+	// "DB_Anim_Cell"."THIS"[43].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[43].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[43].T_Remplissage :=;
+	//"DB_Anim_Cell"."THIS"[43].Niveau_H :="ADR_RNH_BT11";
+	// "DB_Anim_Cell"."THIS"[43].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle BT12 ----------------//
+	//"DB_Anim_Cell"."THIS"[44].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[44].Zone := 'BT12';
+	// "DB_Anim_Cell"."THIS"[44].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[44].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[44].T_Remplissage :=;
+	//"DB_Anim_Cell"."THIS"[44].Niveau_H :="ADR_RNH_BT12";
+	// "DB_Anim_Cell"."THIS"[44].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle BT13 ----------------//
+	//"DB_Anim_Cell"."THIS"[45].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[45].Zone := 'BT13';
+	// "DB_Anim_Cell"."THIS"[45].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[45].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[45].T_Remplissage :=;
+	//"DB_Anim_Cell"."THIS"[45].Niveau_H :="ADR_RNH_BT13";
+	// "DB_Anim_Cell"."THIS"[45].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle BT14 ----------------//
+	//"DB_Anim_Cell"."THIS"[46].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[46].Zone := 'BT14';
+	// "DB_Anim_Cell"."THIS"[46].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[46].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[46].T_Remplissage :=;
+	//"DB_Anim_Cell"."THIS"[46].Niveau_H :="ADR_RNH_BT14";
+	// "DB_Anim_Cell"."THIS"[46].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle BT15 ----------------//
+	//"DB_Anim_Cell"."THIS"[47].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[47].Zone := 'BT15';
+	// "DB_Anim_Cell"."THIS"[47].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[47].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[47].T_Remplissage :=;
+	//"DB_Anim_Cell"."THIS"[47].Niveau_H :="ADR_RNH_BT15";
+	// "DB_Anim_Cell"."THIS"[47].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle BT16 ----------------//
+	//"DB_Anim_Cell"."THIS"[48].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[48].Zone := 'BT16';
+	// "DB_Anim_Cell"."THIS"[48].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[48].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[48].T_Remplissage :=;
+	//"DB_Anim_Cell"."THIS"[48].Niveau_H :="ADR_RNH_BT16";
+	// "DB_Anim_Cell"."THIS"[48].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle BT17 ----------------//
+	//"DB_Anim_Cell"."THIS"[49].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[49].Zone := 'BT17';
+	// "DB_Anim_Cell"."THIS"[49].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[49].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[49].T_Remplissage :=;
+	//"DB_Anim_Cell"."THIS"[49].Niveau_H :="ADR_RNH_BT17";
+	// "DB_Anim_Cell"."THIS"[49].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle BT18 ----------------//
+	//"DB_Anim_Cell"."THIS"[50].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[50].Zone := 'BT18';
+	// "DB_Anim_Cell"."THIS"[50].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[50].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[50].T_Remplissage :=;
+	//"DB_Anim_Cell"."THIS"[50].Niveau_H :="ADR_RNH_BT18";
+	// "DB_Anim_Cell"."THIS"[50].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle BT19 ----------------//
+	//"DB_Anim_Cell"."THIS"[51].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[51].Zone := 'BT19';
+	// "DB_Anim_Cell"."THIS"[51].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[51].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[51].T_Remplissage :=;
+	//"DB_Anim_Cell"."THIS"[51].Niveau_H :="ADR_RNH_BT19";
+	// "DB_Anim_Cell"."THIS"[51].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle BT20 ----------------//
+	//"DB_Anim_Cell"."THIS"[52].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[52].Zone := 'BT20';
+	// "DB_Anim_Cell"."THIS"[52].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[52].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[52].T_Remplissage :=;
+	//"DB_Anim_Cell"."THIS"[52].Niveau_H :="ADR_RNH_BT20";
+	// "DB_Anim_Cell"."THIS"[52].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle BT21 ----------------//
+	//"DB_Anim_Cell"."THIS"[53].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[53].Zone := 'BT21';
+	// "DB_Anim_Cell"."THIS"[53].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[53].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[53].T_Remplissage :=;
+	//"DB_Anim_Cell"."THIS"[53].Niveau_H :="ADR_RNH_BT21";
+	// "DB_Anim_Cell"."THIS"[53].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle TRM_ENS1 ----------------//
+	//"DB_Anim_Cell"."THIS"[54].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[54].Zone := 'TRM_ENS1';
+	// "DB_Anim_Cell"."THIS"[54].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[54].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[54].T_Remplissage :=;
+	//"DB_Anim_Cell"."THIS"[54].Niveau_H :="ADR_RNH_TRM_ENS1";
+	// "DB_Anim_Cell"."THIS"[54].Niveau_B :=;
+	//------------------------------------------//
+	//---------------- Cellulle TRM_ENS2 ----------------//
+	//"DB_Anim_Cell"."THIS"[55].Code_Mat :=; 
+	"DB_Anim_Cell"."THIS"[55].Zone := 'TRM_ENS2';
+	// "DB_Anim_Cell"."THIS"[55].Libelle_Mat :=;
+	// "DB_Anim_Cell"."THIS"[55].Code_Couleur :=;
+	// "DB_Anim_Cell"."THIS"[55].T_Remplissage :=;
+	//"DB_Anim_Cell"."THIS"[55].Niveau_H :="ADR_RNH_TRM_ENS2";
+	// "DB_Anim_Cell"."THIS"[55].Niveau_B :=;
+	//------------------------------------------//
+	
+END_FUNCTION
+

@@ -1,0 +1,28 @@
+﻿FUNCTION "FC_Test_Circuit_Libre" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Cir : "S_Circuit";
+   END_VAR
+
+   VAR_TEMP 
+      i : USInt;
+      Ret_Test_Etat_Mobile : SInt;
+      Etat_Mob : USInt;
+   END_VAR
+
+
+BEGIN
+	FOR #i := 0 TO "Nbr_Mob_Circuit" DO
+	    IF #Cir.Mob_Circuit[#i].Mobile = -1 THEN
+	        EXIT;
+	    END_IF;
+	    IF NOT "Test_Etat_Mobile"("Index_Mobile":=#Cir.Mob_Circuit[#i].Mobile, Etat:="Libre") THEN
+	        #FC_Test_Circuit_Libre := FALSE;
+	        RETURN;
+	    END_IF;
+	END_FOR;
+	#FC_Test_Circuit_Libre := TRUE;
+	RETURN;
+END_FUNCTION
+

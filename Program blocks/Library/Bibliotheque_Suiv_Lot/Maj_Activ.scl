@@ -1,0 +1,68 @@
+﻿FUNCTION "Maj_Activ" : SInt
+TITLE = Activation d'une tache pour une zone de suivi
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : 'I.Daoudi'
+FAMILY : Suiv_Lot
+VERSION : 1.0
+//Cette fonction sert à activer une tache pour une zone de suivi et initialiser son niveau 
+//- Paramètres d'entrés : + Numéro de la zone
+//                        + Nom de la tache 
+//- Valeurs de retour : + 1 si l'activation est effectuée avec succes
+//                                     + -1 si la tache ou la zone de suivi est introuvable
+   VAR_INPUT 
+      Num_Zone : SInt;
+      Num_Tache : SInt;
+   END_VAR
+
+   VAR_TEMP 
+      i : SInt;
+      Ret_Test_Valid_Zone : SInt;
+      Ret_Test_Valid_Tache : SInt;
+      Index_Acquit : Int;
+      Sys_T : Date_And_Time;
+      Ret_RD_Sys_T : Int;
+   END_VAR
+
+
+BEGIN
+	(*
+	===========================================  Documentation  ===========================================
+	Cette fonction sert à activer une tache pour une zone de suivi et initialiser son niveau 
+	- Paramètres d'entrés : + Numéro de la zone
+	                        + Nom de la tache 
+	- Valeurs de retour : + 1 si l'activation est effectuée avec succes
+	              + -1 si la tache ou la zone de suivi est introuvable
+	===========================================  Documentation  ===========================================
+	*)
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | Version | Date       | Autheur     | Ajouts/Modifications                                                   |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | V_1     | 12.10.2023 | I.DAOUDI    | Creation du block                                                      |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	#Ret_RD_Sys_T := RD_SYS_T(#Sys_T);
+	// Test de la validite du numero de la zone
+	#Ret_Test_Valid_Zone := "Test_Valid_Zone"(#Num_Zone);
+	IF #Ret_Test_Valid_Zone = -1 THEN
+	    #Maj_Activ := -1;
+	    RETURN;
+	END_IF;
+	// Test de la validite du numero de la tache
+	#Ret_Test_Valid_Tache := "Test_Valid_Tache"(Num_Tache := #Num_Tache, Num_Zone := #Num_Zone);
+	IF #Ret_Test_Valid_Tache = -1 THEN
+	    #Maj_Activ := -1;
+	    RETURN;
+	END_IF;
+	"DB_BIBLIOTHEQUE".Zones_Suivi[#Num_Zone].Taches[#Num_Tache].Activ := TRUE;
+	"DB_BIBLIOTHEQUE".Zones_Suivi[#Num_Zone].Taches[#Num_Tache].Niveau := 0;
+	// Maj des lots tache
+	FOR #i := 0 TO "Nbr_Max_Lots" DO
+	    IF "DB_BIBLIOTHEQUE".Lots_Taches[#Num_Tache].Zones_Suiv[#i] = -1 THEN
+	        "DB_BIBLIOTHEQUE".Lots_Taches[#Num_Tache].Zones_Suiv[#i] := #Num_Zone;
+	        #Maj_Activ := 1;
+	        RETURN;
+	    END_IF;
+	END_FOR;
+	#Maj_Activ := -1;
+	RETURN;
+END_FUNCTION
+

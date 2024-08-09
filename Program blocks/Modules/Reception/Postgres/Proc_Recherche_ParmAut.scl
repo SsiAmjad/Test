@@ -1,0 +1,75 @@
+﻿FUNCTION "Proc_Recherche_ParmAut" : String[254]
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      NumPoste : UInt;
+      Article : String;
+      Procede : String;
+      Section : String;
+   END_VAR
+
+   VAR_OUTPUT 
+      Msg_Def : String;
+   END_VAR
+
+   VAR_IN_OUT 
+      SUIV_REC : "S_SUIVI_RECEPTION";
+   END_VAR
+
+   VAR_TEMP 
+      parameters_value : Array[0..20] of String;
+      ErreurMessage : String;
+      Resultat_Decode : WString[300];
+      status : Int;
+      Rep_temp : String;
+   END_VAR
+
+
+BEGIN
+	//Insertion des parametres 
+	#parameters_value[0] := ULINT_TO_STRING(#NumPoste);
+	#parameters_value[1] := #Article;
+	#parameters_value[2] := #Procede;
+	#parameters_value[3] := #Section;
+	
+	
+	
+	
+	//++++++++++++++++++++++++++++++++++++
+	#Resultat_Decode := "COMBASE"(procedure_name :='Sp_parauto_rechparam',
+	                             values_of_record := #parameters_value,
+	                             parameters_number := 4,
+	                             ERROR_MESSAGE => #ErreurMessage);
+	#status := "FCT_DECODE_TRAME"(KEYWORD := 'REPONSE:',
+	                             BUFFER := #Resultat_Decode,
+	                             Retour_VAL => #Proc_Recherche_ParmAut);
+	
+	IF #Proc_Recherche_ParmAut = 'NOK' THEN
+	   #status := "FCT_DECODE_TRAME"(KEYWORD := 'MESS:',
+	                                 BUFFER := #Resultat_Decode,
+	                                 Retour_VAL => #Msg_Def);
+	   
+	ELSIF #Proc_Recherche_ParmAut = 'OK' THEN
+	   #status := "FCT_DECODE_TRAME"(KEYWORD := 'MESS:',
+	                                 BUFFER := #Resultat_Decode,
+	                                 Retour_VAL => #Msg_Def);
+	   IF #Msg_Def = 'VIDE' THEN
+	       RETURN;
+	   END_IF;
+	ELSE
+	   RETURN;
+	END_IF;
+	
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := 'PARAM:',
+	                          BUFFER := #Resultat_Decode,
+	                          Retour_VAL => #Rep_temp);
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|Val:',
+	                          BUFFER := #Resultat_Decode,
+	                          Retour_VAL => #Rep_temp);
+	#SUIV_REC._VitesseTC:=STRING_TO_REAL(#Rep_temp);
+	
+	
+END_FUNCTION
+

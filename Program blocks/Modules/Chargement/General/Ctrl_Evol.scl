@@ -1,0 +1,90 @@
+﻿FUNCTION "Ctrl_Evol" : Void
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : 'Amjad Sas'
+VERSION : 0.1
+//Boucle Controle evolution poids
+   VAR_IN_OUT 
+      Chpont : "S_ChargPont";
+   END_VAR
+
+   VAR_TEMP 
+      Ret_RD_Sys_T : Int;
+      Tps_Passe : Time;
+      Ret_Bool : Bool;
+      Ecart : Real;
+   END_VAR
+
+
+BEGIN
+	IF #Chpont._ChargCommun._DefEvol>0 THEN //Attente demande de controle
+	    // IF #Chpont._PtCompo._PtcelOrig._ELT._Cel<>'' AND  #Chpont._ChargCommun._DefEvol =1 THEN //AND //pt_comp->pt_celOrig->tp_evol_initiale
+	    //     #Chpont.CtrlEvol._FgDef := 0;
+	    //     IF  #Chpont._ChargCommun._TestMob AND #Chpont._PtCompo._PtcelOrig._Moborg<>-1 THEN
+	    //         IF NOT  "Test_Etat_Mobile"(Index_Mobile := #Chpont._PtCompo._PtcelOrig._Moborg, Etat := "Pret") AND "Test_Mobile_Auto"(Index_Mobile := #Chpont._PtCompo._PtcelOrig._Moborg)   THEN
+	    //             #Chpont.CtrlEvol._FgDef := 1;
+	    //         END_IF;
+	    //     END_IF;
+	    //     IF  #Chpont.CtrlEvol._FgDef THEN
+	    //       ///?  ;
+	    //         ;
+	    //   END_IF;
+	    //     #Ret_RD_Sys_T := RD_SYS_T(#Chpont.CtrlEvol._Debut);
+	    //     //TEMPO(*pt_comp->pt_celOrig->tp_evol_initiale*TIC,0,!LireDefEvol(),0,&Ret_Tempo,&Temps_Restant,0);
+	    // END_IF;
+	    // #Ret_RD_Sys_T := RD_SYS_T(#Chpont.CtrlEvol._Debut);
+	    // #Ecart := 0;
+	    // // Memorisation poids au debut de la tempo
+	    // #Chpont.CtrlEvol._PoidsPrec := #Chpont._ChargCommun._Vbasc;
+	    
+	    
+	    IF #Chpont._ChargCommun._DefEvol > 0 OR #Chpont._ChargCommun._DefEvol = -2 THEN
+	        // #Chpont.CtrlEvol._FgDef := 0;
+	        // IF NOT #Chpont._ChargCommun._TestMob AND #Chpont._PtCompo._PtcelOrig._Moborg <> -1 THEN
+	        //     IF NOT "Test_Etat_Mobile"(Index_Mobile := #Chpont._PtCompo._PtcelOrig._Moborg, Etat := "Pret") AND "Test_Mobile_Auto"(Index_Mobile := #Chpont._PtCompo._PtcelOrig._Moborg) THEN
+	        //         #Chpont.CtrlEvol._FgDef := 1;
+	        //     END_IF;
+	        // END_IF;
+	        // IF #Chpont.CtrlEvol._FgDef THEN
+	        //     #Chpont.CtrlEvol._PoidsPrec := #Chpont._ChargCommun._Vbasc;
+	        //     #Ret_RD_Sys_T := RD_SYS_T(#Chpont.CtrlEvol._Debut);
+	        // END_IF;
+	        // Tempo de controle evolution du poids
+	        #Ret_Bool := "Tempo"(Duree := #Chpont._ChargCommun._TpEvolPoids, Tps_Picke := #Chpont.CtrlEvol._Debut, Anticip := FALSE, Tps_Passe => #Tps_Passe);
+	        IF #Ret_Bool THEN
+	            // Test evolution du poids
+	            IF #Chpont._ChargCommun._Depesee THEN
+	                #Ecart := "Test_Neg"(#Chpont.CtrlEvol._PoidsPrec - #Chpont._ChargCommun._Vbasc);
+	            ELSE
+	                #Ecart := "Test_Neg"(#Chpont._ChargCommun._Vbasc - #Chpont.CtrlEvol._PoidsPrec);
+	            END_IF;
+	            
+	            IF #Chpont._ChargCommun._DefEvol <> 0 AND #Ecart < #Chpont._ChargCommun._VdEvol THEN
+	                #Chpont._ChargCommun._DefEvol := -1;
+	            END_IF;
+	            #Ret_RD_Sys_T := RD_SYS_T(#Chpont.CtrlEvol._Debut);
+	            #Chpont.CtrlEvol._PoidsPrec := #Chpont._ChargCommun._Vbasc;
+	        END_IF;
+	    END_IF;
+	    
+	    IF #Chpont._ChargCommun._DefEvol > 0 OR #Chpont._ChargCommun._DefEvol = -2 THEN
+	       
+	        #Ret_Bool := "Tempo"(Duree := #Chpont._ChargCommun._TpVidAuto, Tps_Picke := #Chpont.CtrlEvol._Debut, Anticip := FALSE, Tps_Passe => #Tps_Passe);
+	        IF #Ret_Bool THEN
+	            // Test evolution du poids
+	            IF #Chpont._ChargCommun._Depesee THEN
+	                #Ecart := "Test_Neg"(#Chpont.CtrlEvol._PoidsPrec - #Chpont._ChargCommun._Vbasc);
+	            ELSE
+	                #Ecart := "Test_Neg"(#Chpont._ChargCommun._Vbasc - #Chpont.CtrlEvol._PoidsPrec);
+	            END_IF;
+	            
+	            IF #Chpont._ChargCommun._DefEvol <> 0 AND #Ecart < #Chpont._ChargCommun._VdEvol THEN
+	                #Chpont._ChargCommun._DefEvol := -2;//Autorisation vidange cellule automatique
+	            END_IF;
+	            #Ret_RD_Sys_T := RD_SYS_T(#Chpont.CtrlEvol._Debut);
+	            #Chpont.CtrlEvol._PoidsPrec := #Chpont._ChargCommun._Vbasc;
+	        END_IF;
+	    END_IF;
+	END_IF;
+	
+END_FUNCTION
+

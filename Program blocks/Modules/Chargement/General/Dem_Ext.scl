@@ -1,0 +1,80 @@
+﻿FUNCTION "Dem_Ext" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Nature : SInt;   // 0= PV 1=GV
+   END_VAR
+
+   VAR_IN_OUT 
+      Commande : "S_ComLign";
+      ChargCommun : "S_ChargCommun";
+      Ptcel : "S_Cellule";
+   END_VAR
+
+   VAR_TEMP 
+      i : USInt;
+      Ret_Sint : SInt;
+      Tempo : Real;
+   END_VAR
+
+   VAR CONSTANT 
+      PosOuv : SInt := 1;
+      PosFerm : SInt := 0;
+   END_VAR
+
+
+BEGIN
+	//Fonction Demarrage extracteur SI
+	//Nature =0 DONC PV
+	// Nature=1 DONC GV
+	
+	FOR #i := 0 TO "NB_MOB_EXT" DO
+	    IF #Ptcel._Extrac[#i]._IndexMob < 0 THEN
+	        EXIT;
+	    END_IF;
+	    "FC_Posit_Mob"(Index_Mob := #Ptcel._Extrac[#i]._IndexMob,
+	                   Position := #PosOuv);
+	END_FOR;
+	IF #Nature = 0 THEN
+	    //extraction en petite vitesse*/
+	    IF #Commande._VitPV > 0 THEN
+	        #Ptcel._SAV := #Commande._VitPV;
+	    ELSE
+	        #Ptcel._SAV  := #Commande._VitPV:=100;
+	    END_IF;
+	END_IF;
+	IF #Nature = 1 THEN
+	    //extraction en Grande vitesse*/
+	    IF #Commande._VitGV > 0 THEN
+	        #Ptcel._SAV := #Commande._VitGV;
+	    ELSE
+	        #Ptcel._SAV := #Commande._VitGV := 100;
+	    END_IF;
+	   
+	END_IF;
+	
+	IF #Ptcel._FgDosageDebit THEN
+	    #ChargCommun._CommunGeneral._ParCal._SAV_TRANS := #Ptcel._SAV;
+	    "Debit_Massique"(SAV:=#ChargCommun._CommunGeneral._ParCal._SAV_TRANS,
+	                     Densite:=#Commande._Densite,
+	                     PARCAL:=#ChargCommun._CommunGeneral._ParCal);
+	END_IF;
+	IF #ChargCommun._FgPresPont THEN
+	    IF NOT #ChargCommun._Depesee THEN
+	        //Icrementation poids pour simulation
+	        #ChargCommun._Simul._ValBascInc := TRUE;
+	        #ChargCommun._Simul._ValBascDec := FALSE;
+	        
+	    ELSE
+	        #ChargCommun._Simul._ValBascDec := TRUE;
+	        #ChargCommun._Simul._ValBascInc := FALSE;
+	    END_IF;
+	END_IF;
+	
+	
+	
+	
+	
+	
+END_FUNCTION
+

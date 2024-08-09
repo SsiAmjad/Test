@@ -1,0 +1,875 @@
+﻿FUNCTION "GEST_TOUR" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Fgbase : Bool;
+      Raz_Ptzs : "S_SuiviCommande";
+   END_VAR
+
+   VAR_IN_OUT 
+      ChPont : "S_ChargPont";
+      PtSuivCharg : "S_MODULE_SUIVI_COMMUNCHARG";
+      GesTour : "S_GEST_TOUR";
+   END_VAR
+
+   VAR_TEMP 
+      CompoTemp : Array[0.."MAX_COMPO_CHARG"] of "S_Compo_char";
+      Ret_RD_Sys_T : Int;
+      Ret : USInt;
+      Ret_Bool : Bool;
+      Ret_Sint : SInt;
+      Tps_Passe : Time;
+      i : USInt;
+      j : USInt;
+      Text_Def : String;
+      k : USInt;
+      MajNiv : Int;
+      l : Int;
+      Proc_RechTour : String[254];
+      Mess_Def : String;
+      Ret_string : String;
+      X : Int;
+   END_VAR
+
+   VAR CONSTANT 
+      Etape_Repos : SInt := 0;
+      Etape_RecupTournee : SInt := 1;
+      Etape_RecupCommande_Tache_EC : SInt := 2;
+      Etape_RecupCommande_Tache_X : SInt := 3;
+      Etape_EnvoieCommande : SInt := 4;
+      Etape_AttFinCommande : SInt := 5;
+      Etape_FinLot : SInt := 6;
+      Etape_Attente_RepDial : SInt := 7;
+   END_VAR
+
+
+BEGIN
+	CASE #GesTour._ChargCommun._CommunGeneral._Etp OF
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                        ╔════════════════════════════════════╗
+	                                                                        ║          Etape "repos"             ║
+	                                                                        ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	    #Etape_Repos:
+	        REGION Traitement preliminaire "repos"
+	            IF (#GesTour._ChargCommun._CommunGeneral._Etp <> #GesTour._ChargCommun._CommunGeneral._EtpPrec) THEN
+	                #GesTour._ChargCommun._CommunGeneral._EtpPrec := #GesTour._ChargCommun._CommunGeneral._Etp;
+	                #GesTour._ChargCommun._CommunGeneral._DescEtp := 'Etape repos';
+	                IF #GesTour.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #GesTour.Dial_Def.Num_Def_Etape OF
+	                        1, 2, 3, 4:
+	                            GOTO Repos_DEF;
+	                    END_CASE;
+	                END_IF;
+	                #GesTour._DemTour := 0;
+	                #GesTour._ValidTourAuto := FALSE;
+	                #Ret_RD_Sys_T := RD_SYS_T(#GesTour._DebutLecPlan);
+	                #Ret_RD_Sys_T := RD_SYS_T(#GesTour._TpsPicke);
+	                IF #GesTour._ValidBadge THEN
+	                    #GesTour._ChargCommun._PtAff._MessOper := 'Attente lecture badge';
+	                ELSE
+	                    #GesTour._ChargCommun._PtAff._MessOper := 'Attente Chargement a traiter';
+	                END_IF;
+	               // #GesTour._ptzs := #Raz_Tournee;
+	            END_IF;
+	        END_REGION Traitement preliminaire
+	        
+	        
+	        REGION Traitement cyclique "repos" 
+	            IF #GesTour._ValidLecPlan THEN
+	                IF #GesTour._ValidLecPlanAuto THEN
+	                    #Ret_Bool := "Tempo"(Duree := #GesTour._TpLecPlanAuto, Tps_Picke := #GesTour._DebutLecPlan, Anticip := FALSE, Tps_Passe => #Tps_Passe);
+	                    IF #Ret_Bool THEN
+	                        // #TOUR._ValidTourAuto:=RechTour(_cdTour)
+	                        #Ret_RD_Sys_T := RD_SYS_T(#GesTour._DebutLecPlan);
+	                    END_IF;
+	                END_IF;
+	                IF #GesTour._ValidBadge THEN
+	                    IF #Fgbase THEN
+	                        IF #GesTour._Badge <> '' AND #GesTour._Badge <> #GesTour._SauveBadge THEN
+	                            #Proc_RechTour := "Proc_RechTour"(NumPoste := "Num_Poste",
+	                                                              NoBadge := '',
+	                                                              CodeCamion := 'FM41588',
+	                                                              Pont := #GesTour._ChargCommun._Pont,
+	                                                              Msg_Def => #Mess_Def,
+	                                                              Ptzs := #GesTour._Ptzs,
+	                                                              Resultat_Decode := "ResultProc".ResulRechInfoZoneREC);
+	                            //#TOUR._DemTour = RecupTour(LireBadge(), L"", L"", L"", Tournee);
+	                            IF ("dbSql4SiemensInterface".stSql4SiemensInterface.Observer.xTimeout) THEN
+	                                #Text_Def := 'Connexion avec la base interrompue';
+	                            ELSIF #Proc_RechTour = 'NOK' THEN
+	                                #Text_Def := #Mess_Def;
+	                                #GesTour.Dial_Def.Num_Def_Etape := 1;
+	                                #Text_Def := CONCAT(IN1 := 'Aucune tournee associe recuperee: ', IN2 := #GesTour._Badge);
+	                                #GesTour.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fgbase,
+	                                                                                  Msg_Defaut := #Text_Def,
+	                                                                                  Type_Defaut := 2,
+	                                                                                  Automatisme := #GesTour._ChargCommun._CommunGeneral._Autom,
+	                                                                                  Num_Lot := #GesTour._Ptzs._InfoTour._NoLot,
+	                                                                                  Origine_Defaut := #Text_Def,
+	                                                                                  Libelle_Origine := #Text_Def,
+	                                                                                  Acq1 := 'ABANDON',
+	                                                                                  Acq2 := '',
+	                                                                                  Acq3 := '',
+	                                                                                  Acq4 := '',
+	                                                                                  Acq5 := '',
+	                                                                                  Acq6 := '',
+	                                                                                  Acq7 := '',
+	                                                                                  Acq8 := '',
+	                                                                                  Acq_Choisi := -1,
+	                                                                                  Date_Arrivee := #GesTour._TpsPicke);
+	                                #GesTour._ChargCommun._CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                                RETURN;
+	                            END_IF;
+	                        END_IF;
+	                        #GesTour._SauveBadge := #GesTour._Badge;
+	                    ELSE
+	                        "SimulCharg"(Ptzs:=#GesTour._Ptzs);
+	                        IF #GesTour._Ptzs._NbCommande > 0 THEN
+	                            #GesTour._DemTour := 1;
+	                        END_IF;
+	                    END_IF;
+	                ELSE
+	                    IF #GesTour._DemLectCharg OR #GesTour._ValidTourAuto THEN
+	                        IF #Fgbase THEN
+	                            IF #GesTour._DemLectCharg THEN
+	                                #Proc_RechTour := "Proc_RechTour"(NumPoste := "Num_Poste",
+	                                                                  NoBadge := '',
+	                                                                  CodeCamion := 'FM41588',
+	                                                                  Pont :=  #GesTour._ChargCommun._Pont,
+	                                                                  Msg_Def => #Mess_Def,
+	                                                                  Ptzs:=#GesTour._Ptzs,
+	                                                                  Resultat_Decode:="ResultProc".ResulRechInfoZoneREC);
+	                                //   #TOUR._DemTour = RecupTour(L"", LireCamion(), LireChauffeur(), LireNoTour(), Tournee); ;
+	                            ELSE
+	                                ;
+	                                // #TOUR._DemTour = RecupTour(L"", L"", L"", _cdTour, Tournee);
+	                            END_IF;
+	                            #GesTour._ValidTourAuto := FALSE;
+	                            #GesTour._DemLectCharg := FALSE;
+	                            IF ("dbSql4SiemensInterface".stSql4SiemensInterface.Observer.xTimeout) THEN
+	                                #Text_Def := 'Connexion avec la base interrompue';
+	                            ELSIF #Proc_RechTour = 'NOK' THEN
+	                                #Text_Def := #Mess_Def;
+	                                #GesTour.Dial_Def.Num_Def_Etape := 2;
+	                                #Text_Def := CONCAT(IN1 := 'Aucune tournee associe recuperee: ', IN2 := #GesTour._Badge);
+	                                #GesTour.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fgbase,
+	                                                                                 Msg_Defaut := #Text_Def,
+	                                                                                 Type_Defaut := 2,
+	                                                                                 Automatisme := #GesTour._ChargCommun._CommunGeneral._Autom,
+	                                                                                 Num_Lot := #GesTour._Ptzs._InfoTour._NoLot,
+	                                                                                 Origine_Defaut := #Text_Def,
+	                                                                                 Libelle_Origine := #Text_Def,
+	                                                                                 Acq1 := 'ABANDON',
+	                                                                                 Acq2 := '',
+	                                                                                 Acq3 := '',
+	                                                                                 Acq4 := '',
+	                                                                                 Acq5 := '',
+	                                                                                 Acq6 := '',
+	                                                                                 Acq7 := '',
+	                                                                                 Acq8 := '',
+	                                                                                 Acq_Choisi := -1,
+	                                                                                 Date_Arrivee := #GesTour._TpsPicke);
+	                                #GesTour._ChargCommun._CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                                RETURN;
+	                            END_IF;
+	                        ELSE
+	                            "SimulCharg"(Ptzs:=#GesTour._Ptzs );
+	                            #GesTour._DemTour := 1;
+	                        END_IF;
+	                    END_IF;
+	                END_IF;
+	                FOR #X := 0 TO "NB_COMM" DO
+	                    IF  #GesTour._Ptzs._ComLig[#X]._CdMat<>'' THEN
+	                        #GesTour._Ptzs._NbCommande := #GesTour._Ptzs._NbCommande + 1;
+	                    ELSE
+	                        EXIT;
+	                    END_IF;
+	                END_FOR;
+	                
+	                
+	                
+	                
+	                
+	                IF #Proc_RechTour = 'OK' OR #GesTour._DemTour = 1 THEN //#GeTour._DemTour = 1 THEN
+	                    IF #GesTour._Ptzs._NbCommande = 0 THEN
+	                        #GesTour.Dial_Def.Num_Def_Etape := 3;
+	                        #Text_Def := CONCAT(IN1 := 'Aucune commande associe a la tourne ', IN2 := #GesTour._Ptzs._InfoTour._NoFeuilleRoute);
+	                        #GesTour.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fgbase,
+	                                                                         Msg_Defaut := #Text_Def,
+	                                                                         Type_Defaut := 2,
+	                                                                         Automatisme := #GesTour._ChargCommun._CommunGeneral._Autom,
+	                                                                         Num_Lot := #GesTour._Ptzs._InfoTour._NoLot,
+	                                                                         Origine_Defaut := #Text_Def,
+	                                                                         Libelle_Origine := #Text_Def,
+	                                                                         Acq1 := 'ABANDON',
+	                                                                         Acq2 := '',
+	                                                                         Acq3 := '',
+	                                                                         Acq4 := '',
+	                                                                         Acq5 := '',
+	                                                                         Acq6 := '',
+	                                                                         Acq7 := '',
+	                                                                         Acq8 := '',
+	                                                                         Acq_Choisi := -1,
+	                                                                         Date_Arrivee := #GesTour._TpsPicke);
+	                        #GesTour._ChargCommun._CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                        RETURN;
+	                    END_IF;
+	                    //Controle si commande a charger sur ce pont
+	                    #Ret := 0;
+	                    FOR #i := 0 TO #GesTour._Ptzs._NbCommande DO
+	                        IF NOT #GesTour._Ptzs._ComLig[#i]._AutrePont  THEN
+	                            #Ret := 1;
+	                            EXIT;
+	                        END_IF;
+	                    END_FOR;
+	                    // Test si commande a charger sur ce pont
+	                    IF #Ret = 1 THEN
+	                        IF #GesTour._Ptzs._InfoTour._PoidsMax < 1 THEN
+	                            #GesTour._Ptzs._InfoTour._PoidsMax := #GesTour._PoidsMaxCamions;//(65000)
+	                        END_IF;
+	                        #GesTour._ChargCommun._CommunGeneral._Etp := #Etape_RecupTournee;
+	                       // #PtSuivCharg.Tournee[#GesTour._ChargCommun._IndexTournee]:=#GesTour._Ptzs;
+	                        RETURN;
+	                    ELSE
+	                        #GesTour.Dial_Def.Num_Def_Etape := 4;
+	                        #Text_Def := CONCAT(IN1 := #GesTour._Ptzs._InfoTour._NoFeuilleRoute, IN2 := ' Aucune commande a charger sur ce pont');
+	                        #GesTour.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fgbase,
+	                                                                         Msg_Defaut := #Text_Def,
+	                                                                         Type_Defaut := 2,
+	                                                                         Automatisme := #GesTour._ChargCommun._CommunGeneral._Autom,
+	                                                                         Num_Lot := #GesTour._Ptzs._InfoTour._NoLot,
+	                                                                         Origine_Defaut := #Text_Def,
+	                                                                         Libelle_Origine := #Text_Def,
+	                                                                         Acq1 := 'ABANDON',
+	                                                                         Acq2 := '',
+	                                                                         Acq3 := '',
+	                                                                         Acq4 := '',
+	                                                                         Acq5 := '',
+	                                                                         Acq6 := '',
+	                                                                         Acq7 := '',
+	                                                                         Acq8 := '',
+	                                                                         Acq_Choisi := -1,
+	                                                                         Date_Arrivee := #GesTour._TpsPicke);
+	                        #GesTour._ChargCommun._CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                        RETURN;
+	                    END_IF;
+	                END_IF;
+	            END_IF;
+	        Repos_DEF:
+	            //============ Traitement des reponses pour le defaut  Etape repos  ====================================//
+	            IF #GesTour.Dial_Def.Reponse_Def = 'ABANDON' THEN
+	                #GesTour._DemTour := 0;
+	                #GesTour._ChargCommun._CommunGeneral._Etp := #Etape_FinLot;
+	                #GesTour.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            //============================================  Fin traitement  ====================================================================//
+	        END_REGION Traitement cyclique "repos" 
+	        
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                        ╔════════════════════════════════════╗
+	                                                                        ║       Etape "RecupTournee"         ║
+	                                                                        ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	    #Etape_RecupTournee:
+	        REGION Traitement preliminaire "RecupTournee"
+	            IF (#GesTour._ChargCommun._CommunGeneral._Etp <> #GesTour._ChargCommun._CommunGeneral._EtpPrec) THEN
+	                #GesTour._ChargCommun._CommunGeneral._EtpPrec := #GesTour._ChargCommun._CommunGeneral._Etp;
+	                #GesTour._ChargCommun._CommunGeneral._DescEtp := 'Etape RecupTournee';
+	                #Ret_RD_Sys_T := RD_SYS_T(#GesTour._TpsPicke);
+	                #GesTour._Ptzs._NumCommande := 0;
+	                IF #GesTour.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #GesTour.Dial_Def.Num_Def_Etape OF
+	                        1, 2:
+	                            GOTO RecupTourn_DEF;
+	                        3:
+	                            GOTO RecupTourn_DEF2;
+	                    END_CASE;
+	                END_IF;
+	            END_IF;
+	        END_REGION Traitement preliminaire "RecupTournee"
+	        
+	        REGION Traitement cyclique "RecupTournee"
+	            //Appel Fonction AfficheTour
+	            "AfficheTour"(#GesTour);
+	            #ChPont._ChargCommun._PtAff.Tournee := #GesTour._ChargCommun._PtAff.Tournee;
+	            IF #Fgbase THEN
+	                #Ret_string := "Proc_LancTour"(NumPoste := "Num_Poste",
+	                                               IdTour := #GesTour._Ptzs._InfoTour._IdTourn,
+	                                               Msg_Def => #Mess_Def);
+	                
+	            ELSE
+	                #Ret_string := 'OK';
+	                "SimulCase"(GeTour := #GesTour);
+	            END_IF;
+	            
+	            IF #Ret_string = 'NOK' THEN
+	                #Text_Def := #Mess_Def;
+	                #GesTour.Dial_Def.Num_Def_Etape := 3;
+	                #GesTour.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fgbase,
+	                                                                 Msg_Defaut := #Text_Def,
+	                                                                 Type_Defaut := 2,
+	                                                                 Automatisme := #GesTour._ChargCommun._CommunGeneral._Autom,
+	                                                                 Num_Lot := #GesTour._ChargCommun._CommunGeneral._NumLot,
+	                                                                 Origine_Defaut := 'Recup Tour',
+	                                                                 Libelle_Origine := 'BD Lanc Tour',
+	                                                                 Acq1 := 'ABANDON',
+	                                                                 Acq2 := 'RELANCE',
+	                                                                 Acq3 := '',
+	                                                                 Acq4 := '',
+	                                                                 Acq5 := '',
+	                                                                 Acq6 := '',
+	                                                                 Acq7 := '',
+	                                                                 Acq8 := '',
+	                                                                 Acq_Choisi := -1,
+	                                                                 Date_Arrivee := #ChPont._TpsPicke);
+	               #GesTour._ChargCommun._CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                RETURN;
+	            END_IF;
+	            
+	            
+	            
+	            
+	            
+	            
+	            
+	        SansProcDebut:
+	            
+	            FOR #i := #GesTour._Ptzs._NumCommande TO #GesTour._Ptzs._NbCommande-1 DO
+	              
+	                // Commande a charge sur autre pont
+	                IF #GesTour._Ptzs._ComLig[#i]._AutrePont THEN
+	                    // #Ret_Sint := "Controle_Cellule"(FgMaskNh := FALSE,
+	                    //                                 NvCellule := #GeTour._Tournee._Commande[#i]._Cel,
+	                    //                                 TypeCelDest := #GeTour._ChargCommun._TypeZoneOrig,
+	                    //                                 Cel := "DB_Mod_Cellule",
+	                    //                                 NiveauHautDestNh => #Ret_Bool);
+	                    IF #Ret_Sint <>-1 THEN
+	                        ;
+	                      //  FOR #l := 0 TO 9 DO
+	                            // IF "DB_Mod_Cellule"._TabCel["RechIndexCel"(#GeTour._Tournee._Commande[#i]._Cel)]._NumPont = #GeTour.NumAutrePont[#l] THEN
+	                            //     EXIT;
+	                            // END_IF;
+	                            // IF #GeTour.NumAutrePont[#l] =-1 THEN
+	                            //     #GeTour.NumAutrePont[#l] := "DB_Mod_Cellule"._TabCel["RechIndexCel"(#GeTour._Tournee._Commande[#i]._Cel)]._NumPont;
+	                            // END_IF;
+	                       // END_FOR;
+	                    END_IF;
+	                END_IF;
+	                    //Recherche zone de suivi libre
+	                    #Ret_Sint := "Rech_Zone_Suivi_Libre"(#GesTour._ChargCommun._CommunGeneral._NumZone);
+	                    IF #Ret_Sint = 1 THEN
+	                        //#GeTour._Ptzs := #PtSuivCharg.Tab_Lots[#GeTour._ChargCommun._CommunGeneral._NumZone];
+	                        IF NOT #Fgbase THEN
+	                            "SimulCommande"(NumCommande := #i,
+	                                            GeTour:=#GesTour);
+	                            #Ret := 1;
+	                        ELSE
+	                            #Ret := 1;
+	                            // Lecture planning de chargement vrac
+	                            // #Ret = RechCommExpVrac(Tournee->Commande[i].NoCommande, Tournee->Commande[i].NoLigne, pt_zs);
+	                        END_IF;
+	                        // Commande non trouve
+	                        IF #Ret = 0 THEN
+	                            EXIT;
+	                        END_IF;
+	                        
+	                        (* // aucun composant associe a la commande
+	                        IF #GesTour._Ptzs._NbCommande = 0 THEN
+	                            #GesTour.Dial_Def.Num_Def_Etape := 1;
+	                            #Text_Def := CONCAT(IN1 := 'Aucune matiere associee a la commande ( ', IN2 := #GesTour._Ptzs._ComLig[#GesTour._Ptzs._NumCommande]._NoCommande, IN3 := ' - ', IN4 := INT_TO_STRING(#GesTour._Ptzs._ComLig[#GesTour._Ptzs._NumCommande]._NoLigne), IN5 := ' )');
+	                            #GesTour.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fgbase,
+	                                                                             Msg_Defaut := #Text_Def,
+	                                                                             Type_Defaut := 2,
+	                                                                             Automatisme := #GesTour._ChargCommun._CommunGeneral._Autom,
+	                                                                             Num_Lot := #GesTour._Ptzs._InfoTour._NoLot,
+	                                                                             Origine_Defaut := #Text_Def,
+	                                                                             Libelle_Origine := #Text_Def,
+	                                                                             Acq1 := 'ABANDON',
+	                                                                             Acq2 := '',
+	                                                                             Acq3 := '',
+	                                                                             Acq4 := '',
+	                                                                             Acq5 := '',
+	                                                                             Acq6 := '',
+	                                                                             Acq7 := '',
+	                                                                             Acq8 := '',
+	                                                                             Acq_Choisi := -1,
+	                                                                             Date_Arrivee := #GesTour._TpsPicke);
+	                            #GesTour._ChargCommun._CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                            RETURN;
+	                        END_IF; *) 
+	                        
+	                        // aucun case associe a la commande
+	                        IF #GesTour._Ptzs._ComLig[#i]._NbCase = 0 THEN
+	                            #GesTour.Dial_Def.Num_Def_Etape := 2;
+	                            #Text_Def := CONCAT(IN1 := 'Aucune case associee a la commande ( ', IN2 :=#GesTour._Ptzs._ComLig[#GesTour._Ptzs._NumCommande]._NoCommande, IN3 := ' - ', IN4 := INT_TO_STRING(#GesTour._Ptzs._ComLig[#GesTour._Ptzs._NumCommande]._NoLigne), IN5 := ' )');
+	                            #GesTour.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fgbase,
+	                                                                             Msg_Defaut := #Text_Def,
+	                                                                             Type_Defaut := 2,
+	                                                                             Automatisme := #GesTour._ChargCommun._CommunGeneral._Autom,
+	                                                                             Num_Lot := #GesTour._Ptzs._InfoTour._NoLot,
+	                                                                             Origine_Defaut := #Text_Def,
+	                                                                             Libelle_Origine := #Text_Def,
+	                                                                             Acq1 := 'ABANDON',
+	                                                                             Acq2 := '',
+	                                                                             Acq3 := '',
+	                                                                             Acq4 := '',
+	                                                                             Acq5 := '',
+	                                                                             Acq6 := '',
+	                                                                             Acq7 := '',
+	                                                                             Acq8 := '',
+	                                                                             Acq_Choisi := -1,
+	                                                                             Date_Arrivee := #GesTour._TpsPicke);
+	                            #GesTour._ChargCommun._CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                            RETURN;
+	                        END_IF;
+	                        
+	                        
+	                        //P: Principal
+	                        (* IF #GeTour._Ptzs._Compo[0]._Type <> 'P' THEN
+	                            #j := 0;
+	                            #CompoTemp := #GeTour._Ptzs._Compo;
+	                            //Tri des composants
+	                            FOR #k := 0 TO #GeTour._Ptzs._Nbcompo DO
+	                                IF #CompoTemp[#k]._Type = 'P' THEN
+	                                    #GeTour._Ptzs._Compo[#j] := #CompoTemp[#k];
+	                                    #j := #j + 1;
+	                                END_IF;
+	                            END_FOR;
+	                            FOR #k := 0 TO #GeTour._Ptzs._Nbcompo DO
+	                                IF #CompoTemp[#k]._Type <> 'P' THEN
+	                                    #GeTour._Ptzs._Compo[#j] := #CompoTemp[#k];
+	                                    #j := #j + 1;
+	                                END_IF;
+	                            END_FOR;
+	                        END_IF; *)
+	                        
+	                       (* // Calcul quantitee mineraux total
+	                        FOR #k := 0 TO #GeTour._Ptzs._Nbcompo DO
+	                            IF #CompoTemp[#k]._Type = 'R' THEN //mineraux
+	                                #GeTour._Ptzs._QteTotMinComm := #GeTour._Ptzs._QteTotMinComm + #GeTour._Ptzs._Compo[#k]._ConsQte;
+	                            END_IF;
+	                        END_FOR;
+	                        *)
+	                        //Affichage QteMin
+	                       // #GeTour._ChargCommun._PtAff.Commande[#i]._QteMin := #GeTour._Ptzs._QteTotMinComm;
+	                        
+	                        //Mise a jour du nom du pont dans la zone de suivi
+	                        #GesTour._Ptzs._ComLig[#GesTour._Ptzs._NumCommande]._NumPont := #GesTour._ChargCommun._NumCharg;
+	                        
+	                       (* // Gestion des composants
+	                        #GeTour._Tournee._Commande[#i]._NbCompo := #GeTour._Ptzs._Nbcompo; *)
+	                       
+	                        
+	                        IF #GesTour._PreDosCompo THEN
+	                            IF #GesTour._TaChargCompo <> 255 AND #GesTour._Ptzs._NumCommande > 1 THEN
+	                                #Ret_Sint := "Maj_Activ"(Num_Zone := #GesTour._ChargCommun._CommunGeneral._NumZone, Num_Tache := #GesTour._TaChargCompo);
+	                                // Chargement compo 2
+	                            END_IF;
+	                            IF #GesTour._TaDosCompo <> 255 AND #GesTour._Ptzs._NumCommande > 1 THEN
+	                                #Ret_Sint := "Maj_Activ"(Num_Zone := #GesTour._ChargCommun._CommunGeneral._NumZone, Num_Tache := #GesTour._TaDosCompo);
+	                                // dosage compo 2
+	                            END_IF;
+	                        END_IF;
+	                        
+	                        // Pr-initialisation des flag arret meme produit
+	                        
+	                       (* IF #GeTour._Ptzs._SuiviCommun._CdMatOrg = #GeTour._PtzsPrec._SuiviCommun._CdMatOrg  AND #GeTour._Ptzs._Nbcompo <= 1 AND #GeTour._PtzsPrec._Nbcompo <= 1 AND #GeTour._Ptzs._Compo._Cel =#GeTour._PtzsPrec._Compo._Cel THEN
+	                            IF #GeTour._PtzsPrec._FgDemArrImm THEN
+	                                #GeTour._PtzsPrec1._FgDemArrImmCmdSuiv := TRUE;
+	                            END_IF;
+	                            #GeTour._PtzsPrec._ConsQteCmdSuiv := #GeTour._Ptzs._ConsQteCmdSuiv;
+	                        END_IF; *)
+	                        
+	                        #GesTour._PtzsPrec1 := #GesTour._PtzsPrec;
+	                        #GesTour._PtzsPrec := #GesTour._Ptzs; 
+	                        #GesTour._Ptzs._NumCommande := #GesTour._Ptzs._NumCommande + 1;
+	                        #PtSuivCharg.Tab_Lots[#GesTour._ChargCommun._CommunGeneral._NumZone]:=#GesTour._Ptzs;
+	                        #Ret_Sint := "Maj_Activ"(Num_Zone := #GesTour._ChargCommun._CommunGeneral._NumZone, Num_Tache := #GesTour._ChargCommun._CommunGeneral._Tache); // Gestion tourne
+	                      //  EXIT;
+	                    END_IF;
+	                END_FOR;
+	                #GesTour._Ptzs._NumCommande := 0;
+	                #GesTour._ChargCommun._CommunGeneral._Etp := #Etape_RecupCommande_Tache_EC;
+	                RETURN;
+	            
+	        RecupTourn_DEF:
+	            //============ Traitement des reponses pour le defaut  Etape repos  ====================================//
+	            IF #GesTour.Dial_Def.Reponse_Def = 'ABANDON' THEN
+	                #GesTour._ChargCommun._CommunGeneral._Etp := #Etape_FinLot;
+	                #GesTour.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            //============================================  Fin traitement  ====================================================================//
+	        RecupTourn_DEF2:
+	            //================================== Traitement des reponses pour le defaut1  =============================================================//
+	            IF #GesTour.Dial_Def.Reponse_Def = 'ABANDON' THEN
+	                GOTO SansProcDebut;
+	                #GesTour.Dial_Def.Reponse_Def := '';
+	            END_IF;
+	            IF #GesTour.Dial_Def.Reponse_Def = 'RELANCE' THEN
+	                #GesTour._ChargCommun._CommunGeneral._Etp := #Etape_RecupTournee;
+	                #GesTour.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            //============================================  Fin traitement  ====================================================================//
+	           
+	            
+	            
+	        END_REGION Traitement cyclique "RecupTournee"
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                        ╔════════════════════════════════════╗
+	                                                                        ║   Etape "RecupCommande_Tache_EC"   ║
+	                                                                        ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	    #Etape_RecupCommande_Tache_EC:
+	        REGION Traitement preliminaire "RecupCommande"
+	            IF (#GesTour._ChargCommun._CommunGeneral._Etp <> #GesTour._ChargCommun._CommunGeneral._EtpPrec) THEN
+	                #GesTour._ChargCommun._CommunGeneral._EtpPrec := #GesTour._ChargCommun._CommunGeneral._Etp;
+	                #GesTour._ChargCommun._CommunGeneral._DescEtp := 'Etape RecupCommande';
+	            END_IF;
+	        END_REGION Traitement preliminaire "RecupCommande"
+	        
+	        REGION Traitement cyclique "RecupCommande" 
+	            #Ret_Sint := "Test_Lot_Att_Tache"(Num_Tache := #GesTour._ChargCommun._CommunGeneral._Tache, Num_Zone => #GesTour._ChargCommun._CommunGeneral._NumZone);
+	            IF #Ret_Sint = 1 THEN
+	                "AfficheTour"(#GesTour);
+	               
+	                
+	                #ChPont._ChargCommun._PtAff.Tournee := #GesTour._ChargCommun._PtAff.Tournee;
+	                #ChPont._ChargCommun._PtAff.Commande := #GesTour._ChargCommun._PtAff.Commande;
+	                
+	                
+	                
+	                
+	                // Recherche de la commande suivante a charger
+	                #Ret_Sint := "Rech_Zone_Suivi_Libre"(#GesTour._ZoneSuiv);
+	                // verification si produit suivant est le meme et la cellule est la meme
+	                
+	                (* IF #GeTour._Ptzs._SuiviCommun._CdMatOrg = #PtSuivCharg.Tab_Lots[#GeTour._ZoneSuiv]._SuiviCommun._CdMatOrg AND #GeTour._Ptzs._Nbcompo <= 1 AND #PtSuivCharg.Tab_Lots[#GeTour._ZoneSuiv]._Nbcompo <= 1 AND #GeTour._Ptzs._Compo._Cel = #PtSuivCharg.Tab_Lots[#GeTour._ZoneSuiv]._Compo._Cel THEN
+	                    #GeTour._Ptzs._FgDemArrImm := TRUE;
+	                END_IF; *)
+	               
+	                IF #GesTour._Ptzs._TolSup = 0 THEN
+	                    #GesTour._Ptzs._TolSup := #GesTour._TolSup;
+	                END_IF;
+	                IF #GesTour._Ptzs._TolInf = 0 THEN
+	                    #GesTour._Ptzs._TolInf := #GesTour._TolInf;
+	                END_IF;
+	                #PtSuivCharg.Tab_Lots[#GesTour._ChargCommun._CommunGeneral._NumZone] := #GesTour._Ptzs;
+	                #GesTour._ChargCommun._CommunGeneral._Etp := #Etape_EnvoieCommande;
+	                RETURN;
+	            ELSE
+	                #GesTour._ChargCommun._CommunGeneral._Etp := #Etape_RecupCommande_Tache_X;
+	                RETURN;
+	            END_IF;
+	        END_REGION Traitement cyclique "RecupCommande"
+	        
+	        
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                        ╔════════════════════════════════════╗
+	                                                                        ║   Etape "RecupCommande_Tache_X"    ║
+	                                                                        ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	    #Etape_RecupCommande_Tache_X:
+	        REGION Traitement preliminaire "RecupCommande"
+	            IF (#GesTour._ChargCommun._CommunGeneral._Etp <> #GesTour._ChargCommun._CommunGeneral._EtpPrec) THEN
+	                #GesTour._ChargCommun._CommunGeneral._EtpPrec := #GesTour._ChargCommun._CommunGeneral._Etp;
+	                #GesTour._ChargCommun._CommunGeneral._DescEtp := 'Etape RecupCommande';
+	                #Ret_RD_Sys_T := RD_SYS_T(#GesTour._TpsPicke);
+	                IF #GesTour.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #GesTour.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO RecupComma_DEF1;
+	                        2:
+	                            GOTO RecupComma_DEF2;
+	                    END_CASE;
+	                END_IF;
+	            END_IF;
+	        END_REGION Traitement preliminaire "RecupCommande"
+	        
+	        REGION Traitement cyclique "RecupCommande" 
+	            IF #GesTour.NumAutrePont[0] <>-1 THEN
+	                // FOR (int i = 0; #i < 10; #i++)
+	                //    {
+	                //    IF (!NomAutrePont[i][0])
+	                //        {
+	                //        break;
+	                //        }
+	                //    ELSE
+	                //        {
+	                //        IF (#i == 0)
+	                //            {
+	                //            Wstrcpy(_wTxt, NomAutrePont[#i]);
+	                //            }
+	                //        ELSE
+	                //            {
+	                //            Wsprintf(wTxt1, L"%s", _wTxt);
+	                //            Wsprintf(_wTxt, L"%s, %s", wTxt1, NomAutrePont[#i]);
+	                //            }
+	                //            }
+	                //            }; 
+	                IF #GesTour._AffMessAutrePont THEN
+	                    #GesTour.Dial_Def.Num_Def_Etape := 1;
+	                    #Text_Def := CONCAT(IN1 := 'Chargement sur autre pont ', IN2 := '');
+	                    #GesTour.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fgbase,
+	                                                                     Msg_Defaut := #Text_Def,
+	                                                                     Type_Defaut := 2,
+	                                                                     Automatisme := #GesTour._ChargCommun._CommunGeneral._Autom,
+	                                                                     Num_Lot := #GesTour._Ptzs._InfoTour._NoLot,
+	                                                                     Origine_Defaut := #Text_Def,
+	                                                                     Libelle_Origine := #Text_Def,
+	                                                                     Acq1 := 'ACQUIT',
+	                                                                     Acq2 := '',
+	                                                                     Acq3 := '',
+	                                                                     Acq4 := '',
+	                                                                     Acq5 := '',
+	                                                                     Acq6 := '',
+	                                                                     Acq7 := '',
+	                                                                     Acq8 := '',
+	                                                                     Acq_Choisi := -1,
+	                                                                     Date_Arrivee := #GesTour._TpsPicke);
+	                    #GesTour._ChargCommun._CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	        RecupComma_DEF1:
+	            //============ Traitement des reponses pour le defaut  Etape repos  ====================================//
+	            IF #GesTour.Dial_Def.Reponse_Def = 'ACQUIT' THEN
+	                #GesTour._ChargCommun._CommunGeneral._Etp := #Etape_Repos;
+	                //#GeTour._Tournee := #Tournee;
+	                #GesTour.Dial_Def.Reponse_Def := '';
+	            END_IF;
+	            
+	            //============================================  Fin traitement  ====================================================================//
+	            IF #GesTour._Ptzs._ResteSac = 'N' THEN
+	                IF #GesTour._ValideClotureTournee THEN
+	                    #GesTour.Dial_Def.Num_Def_Etape := 2;
+	                    #Text_Def := CONCAT(IN1 := 'Souhaitez-vous cloturer la tournee', IN2 := '');
+	                    #GesTour.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fgbase,
+	                                                                     Msg_Defaut := #Text_Def,
+	                                                                     Type_Defaut := 2,
+	                                                                     Automatisme := #GesTour._ChargCommun._CommunGeneral._Autom,
+	                                                                     Num_Lot := #GesTour._Ptzs._InfoTour._NoLot,
+	                                                                     Origine_Defaut := #Text_Def,
+	                                                                     Libelle_Origine := #Text_Def,
+	                                                                     Acq1 := 'Oui',
+	                                                                     Acq2 := 'Non',
+	                                                                     Acq3 := '',
+	                                                                     Acq4 := '',
+	                                                                     Acq5 := '',
+	                                                                     Acq6 := '',
+	                                                                     Acq7 := '',
+	                                                                     Acq8 := '',
+	                                                                     Acq_Choisi := -1,
+	                                                                     Date_Arrivee := #GesTour._TpsPicke);
+	                    #GesTour._ChargCommun._CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                    RETURN;
+	                ELSE
+	                    #GesTour.Dial_Def.Reponse_Def := 'Oui';
+	                END_IF;
+	            END_IF;
+	        RecupComma_DEF2:
+	            //============ Traitement des reponses pour le defaut  Etape repos  ====================================//
+	            IF #GesTour.Dial_Def.Reponse_Def = 'Oui' THEN
+	                IF #Fgbase THEN
+	                    ;
+	                    //  ClotureTournee(Tournee);;
+	                END_IF;
+	                #GesTour.Dial_Def.Reponse_Def := '';
+	            END_IF;
+	            
+	            //============================================  Fin traitement  ====================================================================//
+	            #GesTour._ChargCommun._CommunGeneral._Etp := #Etape_Repos;
+	            RETURN;
+	            
+	            
+	        END_REGION Traitement cyclique "RecupCommande"
+	        
+	        
+	        
+	     
+	        
+	        
+	        
+	        
+	        
+	        
+	        
+	        
+	        
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                        ╔════════════════════════════════════╗
+	                                                                        ║       Etape "EnvoieCommande"       ║
+	                                                                        ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	    #Etape_EnvoieCommande:
+	        REGION Traitement preliminaire "EnvoieCommande"
+	            IF (#GesTour._ChargCommun._CommunGeneral._Etp <> #GesTour._ChargCommun._CommunGeneral._EtpPrec) THEN
+	                #GesTour._ChargCommun._CommunGeneral._EtpPrec := #GesTour._ChargCommun._CommunGeneral._Etp;
+	                #GesTour._ChargCommun._CommunGeneral._DescEtp := 'Etape EnvoieCommande';
+	            END_IF;
+	        END_REGION Traitement preliminaire "EnvoieCommande"
+	        
+	        REGION Traitement cyclique  "EnvoieCommande"
+	        (*    "AfficheCommande"(#GesTour,
+	                              #ChPont:=_s_chargpont_inout_,
+	                              ChargCommun:=_s_chargcommun_inout_,
+	                              Ptzs:=_s_suivicommande_inout_); *)
+	            ///
+	            #ChPont._ChargCommun._PtAff.Commande := #GesTour._ChargCommun._PtAff.Commande;
+	            //
+	            IF #GesTour._TaCharg1 <> "N_FINLOT" THEN
+	                #Ret_Sint := "Maj_Activ"(Num_Zone := #GesTour._ChargCommun._CommunGeneral._NumZone, Num_Tache := #GesTour._TaCharg1);
+	                
+	                #ChPont._Ptzs := #GesTour._Ptzs;
+	                
+	                #GesTour._ChargCommun._CommunGeneral._Etp := #Etape_AttFinCommande;
+	            END_IF;
+	            
+	           (* IF #GeTour._TaChargCompo <> "N_FINLOT" AND #GeTour._Ptzs._Nbcompo > 1 AND NOT #GeTour._PreDosCompo THEN
+	                #Ret_Sint := "Maj_Activ"(Num_Zone := #GeTour._ChargCommun._CommunGeneral._NumZone, Num_Tache := #GeTour._TaChargCompo);
+	            END_IF;
+	            
+	            IF #GeTour._TaPositCam <> "N_FINLOT" THEN
+	                #Ret_Sint := "Maj_Activ"(Num_Zone := #GeTour._ChargCommun._CommunGeneral._NumZone, Num_Tache := #GeTour._TaPositCam);
+	            END_IF; *)
+	            
+	            // /* maj Tab_Taches: no de lot a traiter par chaque boucle activee */
+	            // Tache(_ni);
+	            
+	            
+	            
+	            //#GeTour._ChargCommun._CommunGeneral._Etp := #Etape_AttFinCommande;
+	            
+	            
+	        END_REGION Traitement cyclique  "EnvoieCommande"
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                        ╔════════════════════════════════════╗
+	                                                                        ║       Etape "AttFinCommande"       ║
+	                                                                        ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	    #Etape_AttFinCommande:
+	        REGION Traitement preliminaire "AttFinCommande"
+	            IF (#GesTour._ChargCommun._CommunGeneral._Etp <> #GesTour._ChargCommun._CommunGeneral._EtpPrec) THEN
+	                #GesTour._ChargCommun._CommunGeneral._EtpPrec := #GesTour._ChargCommun._CommunGeneral._Etp;
+	                #GesTour._ChargCommun._CommunGeneral._DescEtp := 'Etape AttFinCommande';
+	                #MajNiv := "Maj_Niv"(Num_Zone := #GesTour._ChargCommun._CommunGeneral._NumZone, Num_Tache := #GesTour._ChargCommun._CommunGeneral._Tache, Niveau := "NIV_GTOUR_DEM_CHARG");
+	            END_IF;
+	        END_REGION Traitement preliminaire "AttFinCommande"
+	        
+	        
+	        REGION Traitement cyclique  "AttFinCommande"
+	            IF #GesTour._ChargBenne THEN
+	                //Appel Fonction MAJAFFICHE PoidsBenne
+	                ;
+	            ELSE
+	                //"AffichePoids"(#GeTour);
+	                "AffichePoids1"(ChargCommun:=#GesTour._ChargCommun,
+	                                Ptzs:=#GesTour._Ptzs,
+	                                Commande := #ChPont._Commande);
+	                //#ChPont._ChargCommun._PtAff:=#GeTour._ChargCommun._PtAff;
+	               // #ChPont._ChargCommun :=#GeTour._ChargCommun;
+	            END_IF;
+	            "AfficheTour"(#GesTour);
+	            
+	         (*   IF "FC_Test_Niv_AmontAval"(Num_Zone := #GeTour._ChargCommun._CommunGeneral._NumZone, Lst_Taches := #GeTour._ListeTaFinChargCommande)  AND #ChPont._Ptzs._NoCompoEc= 0  THEN
+	                IF #GeTour._Ptzs._Abandon THEN
+	                    #GeTour._Ptzs._EtatChar := 'N';
+	                END_IF;
+	                IF #GeTour._Ptzs._NumCommande <= #GeTour._Tournee._NbCommande-1 THEN
+	                   // #ChPont._PtCompo := #PtCompo;
+	                    #GeTour._Ptzs._Compo := #CompoTemp;
+	                    #GeTour._ChargCommun._CommunGeneral._Etp := #Etape_RecupTournee;
+	                   #MajNiv := "Maj_Niv"(Num_Zone := #GeTour._ChargCommun._CommunGeneral._NumZone, Num_Tache := #GeTour._ChargCommun._CommunGeneral._Tache, Niveau := "N_FINLOT");
+	                   #Ret_Sint := "Libere_Zone_Suiv_Lot"(#GeTour._ChargCommun._CommunGeneral._NumZone);
+	                    RETURN;
+	                ELSE
+	                    "InitTourne"(#GeTour);
+	                    "InitComm"(#GeTour);
+	                    #GeTour._ChargCommun._CommunGeneral._Etp := #Etape_FinLot;
+	                    #GeTour._Ptzs._NumCommande := 0;
+	                    
+	                    RETURN;
+	                END_IF;
+	            END_IF; *)
+	            IF "FC_Test_Niv_AmontAval"(Num_Zone := #GesTour._ChargCommun._CommunGeneral._NumZone, Lst_Taches := #GesTour._ListeTaFinChargCommande) AND #ChPont._Ptzs._NumCommande >= #ChPont._Ptzs._NbCommande    THEN
+	                "InitAffTour"(#GesTour._ChargCommun._PtAff.Tournee);
+	                
+	                IF #GesTour._Ptzs._Abandon THEN
+	                    #GesTour._Ptzs._EtatChar := 'N';
+	                END_IF;
+	                #GesTour._ChargCommun._CommunGeneral._Etp := #Etape_FinLot;
+	                #GesTour._Ptzs._NumCommande := 0;
+	            END_IF;
+	          
+	         
+	            
+	        END_REGION Traitement cyclique  "AttFinCommande"
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                        ╔════════════════════════════════════╗
+	                                                                        ║         Etape "FinLot"             ║
+	                                                                        ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	    #Etape_FinLot:
+	        
+	        REGION Traitement preliminaire "AttFinLot"
+	            IF (#GesTour._ChargCommun._CommunGeneral._Etp <> #GesTour._ChargCommun._CommunGeneral._EtpPrec) THEN
+	                #GesTour._ChargCommun._CommunGeneral._EtpPrec := #GesTour._ChargCommun._CommunGeneral._Etp;
+	                #GesTour._ChargCommun._CommunGeneral._DescEtp := 'Etape FinLot';
+	                
+	            END_IF;
+	        END_REGION Traitement preliminaire "FinLot"
+	        REGION Traitement cyclique  "FinLot"
+	            #MajNiv := "Maj_Niv"(Num_Zone := #GesTour._ChargCommun._CommunGeneral._NumZone, Num_Tache := #GesTour._ChargCommun._CommunGeneral._Tache, Niveau := "N_FINLOT");
+	            #Ret_Sint:="Libere_Zone_Suiv_Lot"(#GesTour._ChargCommun._CommunGeneral._NumZone);
+	            #GesTour._ChargCommun._CommunGeneral._Etp := #Etape_Repos;
+	            #GesTour._Ptzs:= #Raz_Ptzs;
+	           RETURN;
+	        END_REGION Traitement cyclique  "FinLot"   
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║ Etape "Attente Reponse Dialogue"   ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                    
+	*)
+	    #Etape_Attente_RepDial:
+	        REGION Preliminaire Attente Acquuitement
+	            IF #GesTour._ChargCommun._CommunGeneral._Etp <> #GesTour._ChargCommun._CommunGeneral._EtpPrec THEN
+	                //Memorisation de l'etape encours
+	                #GesTour._ChargCommun._CommunGeneral._EtpMemo := #GesTour._ChargCommun._CommunGeneral._EtpPrec;
+	                
+	                #GesTour._ChargCommun._CommunGeneral._DescEtp := 'Etape_Attente_RepDial';
+	                #GesTour._ChargCommun._CommunGeneral._EtpPrec := #GesTour._ChargCommun._CommunGeneral._Etp;
+	                
+	            END_IF;
+	        END_REGION Preliminaire Attente Acquuitement
+	        REGION Cyclique Attente Acquitement
+	            #GesTour.Dial_Def.Reponse_Def := "FC_Recup_Rep_Def"(Index_Def := #GesTour.Dial_Def.Index_Defaut, Reponse_Ecrit => #GesTour.Dial_Def.Text_Reponse);
+	            IF #GesTour.Dial_Def.Reponse_Def <> '' THEN
+	                "FC_Raz_Def"(#GesTour.Dial_Def.Index_Defaut);
+	                #GesTour._ChargCommun._CommunGeneral._Etp := #GesTour._ChargCommun._CommunGeneral._EtpMemo;
+	                RETURN;
+	            END_IF;
+	        END_REGION Cyclique Attente Acquitement          
+	        
+	END_CASE;
+	
+END_FUNCTION
+

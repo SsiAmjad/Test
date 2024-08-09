@@ -1,0 +1,65 @@
+﻿FUNCTION "MajBtSupervChPont" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      "Type" : USInt;
+   END_VAR
+
+   VAR_IN_OUT 
+      ChPont : "S_ChargPont";
+   END_VAR
+
+
+BEGIN
+	CASE #Type OF
+	    0: //Chargement a l'arret
+	        #ChPont._ChargCommun._BtFinChar := 0;
+	        #ChPont._BtAjout := 0;
+	        #ChPont._BtSusp := 0;
+	        #ChPont._BtDepCycle := 0;
+	        #ChPont._ChargCommun._DefEvol := 0;
+	        #ChPont._BtDemTare := 0;
+	        #ChPont._BtChgCellule := 0;
+	        RETURN;
+	    1: //Attente demarrage chargement
+	        #ChPont._ChargCommun._BtFinChar := 1;
+	        #ChPont._BtAjout := 0;
+	        #ChPont._BtSusp := 0;
+	        IF #ChPont._Ptzs._TareOk = 0 AND #ChPont._ChargCommun._FgPresPont THEN
+	            #ChPont._BtDemTare := 1;
+	        END_IF;
+	        #ChPont._BtDepCycle := 1;
+	        #ChPont._BtChgCellule := 0;
+	        RETURN;
+	    2: // chargement en cours
+	        #ChPont._ChargCommun._BtFinChar := 1;
+	        IF #ChPont._BtAjout<>2 THEN
+	            #ChPont._BtAjout := 0;
+	        END_IF;
+	        #ChPont._BtSusp := 1;
+	       // #ChPont._BtDepCycle := 1;
+	        #ChPont._BtDepCycle := 0;
+	        #ChPont._BtDemTare := 0;
+	        #ChPont._BtChgCellule := 1;
+	        RETURN;
+	    3: // Suspension
+	        #ChPont._ChargCommun._BtFinChar := 1;
+	        #ChPont._BtAjout := 0;
+	        #ChPont._BtSusp := 0;
+	        #ChPont._BtDepCycle := 1;
+	        #ChPont._BtDemTare := 0;
+	        #ChPont._BtChgCellule := 0;
+	        RETURN;
+	    4: // Attente acquit fin chargement
+	        #ChPont._ChargCommun._BtFinChar := 1;
+	        #ChPont._BtAjout := 1;
+	        #ChPont._BtSusp := 0;
+	        #ChPont._BtDepCycle := 0;
+	        #ChPont._BtDemTare := 0;
+	        #ChPont._BtChgCellule := 0;
+	        RETURN;
+	        
+	END_CASE;
+	#ChPont._MemoAppuiBP:=0;
+END_FUNCTION
+

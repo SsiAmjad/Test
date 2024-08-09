@@ -1,0 +1,56 @@
+﻿FUNCTION "Supervision_Transf" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      RAZ : Bool;
+   END_VAR
+
+   VAR_IN_OUT 
+      Transf : "S_Transfert";
+   END_VAR
+
+   VAR_TEMP 
+      RET2 : Real;
+      Tempcomplet : Time;
+   END_VAR
+
+
+BEGIN
+	IF #RAZ THEN
+	    #Transf._TransfCommun.SUPTRANS.Affichage._Circuit := '';
+	    #Transf._TransfCommun.SUPTRANS.Affichage._Origine := '';
+	    #Transf._TransfCommun.SUPTRANS.Affichage._Destination := '';
+	    #Transf._TransfCommun.SUPTRANS.Affichage._NumLot := '';
+	    #Transf._TransfCommun.SUPTRANS.Affichage._Matiere := '';
+	    #Transf._TransfCommun.SUPTRANS.Affichage._QteTheorique := 0;
+	    #Transf._TransfCommun.SUPTRANS.Affichage._QteReelle := 0;
+	    #Transf._TransfCommun.SUPTRANS.Affichage._Debit := 0;
+	    #Transf._TransfCommun.SUPTRANS.Affichage._TpsDepuis := T#0s;
+	    #Transf._TransfCommun.SUPTRANS.Affichage._TpsRestant := T#0s;
+	    #Transf._TransfCommun.SUPTRANS.Affichage._TypeDarret := '';
+	ELSE
+	    #Transf._TransfCommun.SUPTRANS.Affichage._Circuit := #Transf._TransfCommun.CommunGeneral._Autom;
+	    #Transf._TransfCommun.SUPTRANS.Affichage._Origine := "Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._PtOrig);
+	    #Transf._TransfCommun.SUPTRANS.Affichage._Destination := "Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._Ptdest);
+	    #Transf._TransfCommun.SUPTRANS.Affichage._NumLot := #Transf._Ptzs._NoLot;
+	    #Transf._TransfCommun.SUPTRANS.Affichage._Matiere :=   #Transf._Ptzs._CdMat;
+	    #Transf._TransfCommun.SUPTRANS.Affichage._QteTheorique :=#Transf._Ptzs._QtePrev;
+	    #Transf._TransfCommun.SUPTRANS.Affichage._QteReelle := #Transf._TransfCommun.CommunGeneral._ParCal._QteTrans;
+	    #Transf._TransfCommun.SUPTRANS.Affichage._Debit := #Transf._TransfCommun.CommunGeneral._ParCal._DebMasTrans;
+	    #Transf._TransfCommun.SUPTRANS.Affichage._TypeDarret := #Transf._Ptzs._TypeArret;
+	    #Transf._TransfCommun.SUPTRANS.Affichage._TpsDepuis := #Transf._TransfCommun.CommunGeneral._ParCal._TpsTran;
+	    IF #Transf._Ptzs._QtePrev <=0 OR #Transf._TransfCommun.CommunGeneral._ParCal._DebMasTrans<=0 THEN
+	        #Transf._TransfCommun.SUPTRANS.Affichage._TpsRestant :=T#0s;
+	    ELSE
+	        #RET2 := (#Transf._Ptzs._QtePrev / 1000) / (#Transf._TransfCommun.CommunGeneral._ParCal._DebMasTrans / 3600);
+	        #Tempcomplet := DINT_TO_TIME(REAL_TO_DINT(#RET2) * 1000);
+	        #Transf._TransfCommun.SUPTRANS.Affichage._TpsRestant := #Tempcomplet - #Transf._TransfCommun.CommunGeneral._ParCal._TpsTran;
+	    END_IF;
+	    
+	    
+	 
+	END_IF;
+	
+	
+END_FUNCTION
+

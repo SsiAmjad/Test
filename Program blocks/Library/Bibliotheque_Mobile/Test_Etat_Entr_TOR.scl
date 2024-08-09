@@ -1,0 +1,51 @@
+﻿FUNCTION "Test_Etat_Entr_TOR" : SInt
+TITLE = Test Entrees Tor
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : 'I.Daoudi'
+VERSION : 1.0
+   VAR_INPUT 
+      Etat_Bool : Bool;
+      Tbl : Array[0.."Nbr_Entr_Pos"] of Int;
+   END_VAR
+
+   VAR_IN_OUT 
+      Point_Tbl : USInt;
+   END_VAR
+
+   VAR_TEMP 
+      Ret : Int;
+   END_VAR
+
+
+BEGIN
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | Version | Date       | Autheur     | Ajouts/Modifications                                                   |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | V_1     | 06.07.2023 | I.DAOUDI    | Creation du block                                                      |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	////----------------------------------------   HISTORIQUE DES VERSIONS  ------------------------------------------
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | Version | Date       | Autheur     | Commentaire                                                            |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | V_1     | 06.07.2023 | I.DAOUDI    | Version initiale                                                       |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	
+	FOR #Point_Tbl := 0 TO "Nbr_Entr_Pos" DO
+	        // Test du renseignement de l'entree
+	    IF #Tbl[#Point_Tbl] < 0 THEN
+	        EXIT;
+	    END_IF;
+	    //Test du masquage de l'entree
+	    IF "DB_BIBLIOTHEQUE".D_IO[#Tbl[#Point_Tbl]].Masque THEN
+	        CONTINUE;
+	    END_IF;
+	    // Test de l'etat de l'entree
+	    IF "DB_BIBLIOTHEQUE".D_IO[#Tbl[#Point_Tbl]].Etat <> #Etat_Bool THEN
+	        #Test_Etat_Entr_TOR := -1;
+	        RETURN;
+	    END_IF;
+	END_FOR;
+	#Test_Etat_Entr_TOR := 1;
+	RETURN;
+END_FUNCTION
+

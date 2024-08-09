@@ -1,0 +1,40 @@
+﻿ORGANIZATION_BLOCK "obCyclicInterrupt"
+TITLE = "Cyclic Interrupt"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+BEGIN
+	// +------------------------------------------------------------------------------------------------------------------+
+	// | Cyclic interrupt with SQL4Siemens instance                                                                       |
+	// +------------------------------------------------------------------------------------------------------------------+
+	
+	// +-------------+-------------+-------------+------------------------------------------------------------------------+
+	// | Version     | Date        | Author      | Comment                                                                |
+	// +-------------+-------------+-------------+------------------------------------------------------------------------+
+	// | 4.0.0.0     | 08.05.2019  | BaM         | Initial version                                                        |
+	// +-------------+-------------+-------------+------------------------------------------------------------------------+
+	
+	// SQL4Siemens instance
+	"idbSql4Siemens"(iIP1 := 10,
+	                 iIP2 := 10,
+	                 iIP3 := 10,
+	                 iIP4 := 1,
+	                 iRemotePort := "Num_Poste",
+	                 iLocalPort := 2001,
+	                 tTimeout := T#1500ms,
+	                 iConnectionID := 100,
+	                 wHardwareID := 120,
+	                 tFbExecTimeLimit := T#100ms,
+	                 stSql4SiemensInterface := "dbSql4SiemensInterface".stSql4SiemensInterface);
+	
+	 //SQL4Siemens connection observer (Optional module TO close the connection in CASE OF inactivity OR TO hold open the connection)
+	// "idbSql4SiemensConnectionObserver3"(tTimeout := T#9s, // Set the time 1 second below the connector timeout
+	//                                    xCloseConnection := TRUE,
+	//                                    stSql4SiemensInterface := "dbSql4SiemensInterface".stSql4SiemensInterface);
+	
+	(* "fbSql4SiemensConnectionObserver3_DB"(tTimeout:=T#9s,
+	                                      xCloseConnection:=true,
+	                                      stSql4SiemensInterface:="dbSql4SiemensInterface".stSql4SiemensInterface); *)
+	
+END_ORGANIZATION_BLOCK
+

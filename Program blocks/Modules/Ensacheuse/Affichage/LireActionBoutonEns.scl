@@ -1,0 +1,46 @@
+﻿FUNCTION "LireActionBoutonEns" : USInt
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Ensachage : "S_ENSACHAGE";
+   END_VAR
+
+
+BEGIN
+	IF #Ensachage._EnsaCommun.CommunGeneral._Etp <> #Ensachage._MemoEtapeBt THEN
+	    #Ensachage._MemoAppuiBP := 0;
+	END_IF;
+	#Ensachage._MemoEtapeBt := #Ensachage._EnsaCommun.CommunGeneral._Etp;
+	IF #Ensachage._BtAdandonLigne = 2 OR #Ensachage._EnsaCommun._BpFinEns OR #Ensachage._BtFin = 2 THEN
+	    #Ensachage._BtFin := 1;
+	    #Ensachage._MemoAppuiBP := "ABANDONENS";
+	END_IF;
+	IF  #Ensachage._BpDepCycle OR #Ensachage._BtDepCycle = 2 THEN
+	    #Ensachage._BtDepCycle := 1;
+	    #Ensachage._MemoAppuiBP := "DEBCYCLE";
+	END_IF;
+	IF #Ensachage._BpSusp OR #Ensachage._BtSusp = 2 THEN
+	    #Ensachage._MemoAppuiBP := "BTSUSPENS";
+	END_IF;
+	
+	
+	#Ensachage._AttRelBt := #Ensachage._BpSusp OR #Ensachage._EnsaCommun._BpFinEns OR #Ensachage._BpDepCycle ;
+	IF NOT #Ensachage._AttRelBt THEN
+	    #LireActionBoutonEns := #Ensachage._MemoAppuiBP;
+	ELSE
+	    #LireActionBoutonEns := 0;
+	END_IF; 
+	//#LireActionBouton := #ChPont._MemoAppuiBP;
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+END_FUNCTION
+

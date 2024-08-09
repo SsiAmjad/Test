@@ -1,0 +1,197 @@
+﻿FUNCTION "Calcul_Quantité" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      ParCal : "S_CAL_FAR";
+   END_VAR
+
+   VAR_TEMP 
+      Ret_RD_Sys_T : Int;
+      TpsPassé : Time;
+      RET : Bool;
+      UDINTDureeCalFar : UDInt;
+   END_VAR
+
+   VAR CONSTANT 
+      REPOS_Q : SInt := 0;
+      Att_Marche_Trans : SInt := 1;
+      Test_Tempo : SInt := 2;
+      Calcule_Qte : SInt := 3;
+   END_VAR
+
+
+BEGIN
+	//CASE ParCal._EtpQ OF
+	//
+	
+	IF "Valid_Index"(#ParCal._MbTrans) THEN
+	    #ParCal._PM := "DB_BIBLIOTHEQUE".Mobile[#ParCal._MbTrans].Pass_Mat;
+	END_IF;
+	
+	CASE #ParCal._EtpQ OF
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║            Etape "Repos"           ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	    #REPOS_Q:
+	        REGION traitement preliminaire
+	            IF (#ParCal._EtpQ <> #ParCal._EtpMemoQ) THEN
+	                //Memorisation de l'etape encours
+	                #ParCal._EtpMemoQ := #ParCal._EtpQ;
+	                #Ret_RD_Sys_T := RD_SYS_T(#ParCal._TpPicke);
+	                //att ;
+	                (* ParCal._FgCalFar
+	            ParCal._TpsTran
+	            ParCal._MbTrans
+	            ParCal._DebMasTrans *)
+	            END_IF;
+	        END_REGION
+	        
+	        REGION traitement cyclique
+	            //attente lancement
+	            IF #ParCal._FgCalFar THEN
+	                #ParCal._DebutCalFar := #ParCal._TpPicke;
+	                #ParCal._EtpQ := #Att_Marche_Trans; // Att_March_Trans
+	                RETURN;
+	            END_IF;
+	        END_REGION
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║Etape "Attente Marche Transporteur" ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	        
+	    #Att_Marche_Trans:
+	        REGION traitement preliminaire
+	            IF (#ParCal._EtpQ <> #ParCal._EtpMemoQ) THEN
+	                //Memorisation de l'etape encours
+	                #ParCal._EtpMemoQ := #ParCal._EtpQ;
+	                #Ret_RD_Sys_T := RD_SYS_T(#ParCal._TpPicke);
+	                IF #ParCal._PM THEN
+	                    //indexesv:= rechindex(pm , ptesv)
+	                    //libelPm := libelle
+	                    ;
+	                END_IF;
+	                IF #ParCal._PM2 THEN
+	                    //indexesv:= rechindex(pm2, ptesv)
+	                    //libelPm2 := libelle
+	                    ;
+	                END_IF;
+	                ///  A VERIFIER
+	            END_IF;
+	        END_REGION
+	        REGION traitement cyclique
+	            //test arret calcul
+	            IF #ParCal._FgCalFar = FALSE THEN
+	                #ParCal._EtpQ := #REPOS_Q; //repos
+	                RETURN;
+	            END_IF;
+	            //test marche transporteur
+	            IF NOT "Test_Etat_Mobile"(Index_Mobile:=#ParCal._MbTrans, Etat:="Pret") AND NOT "Test_Etat_Mobile"(Index_Mobile:=#ParCal._MbTrans, Etat:="Vid") THEN
+	                #ParCal._DebutCalFar := #ParCal._TpPicke;
+	                RETURN;
+	            END_IF;
+	            //test passage matiere 
+	            // verifier test est ce ou ou bien and
+	            IF #ParCal._PM = FALSE AND #ParCal._PM2 = FALSE THEN
+	                #ParCal._DebutCalFar := #ParCal._TpPicke;
+	                RETURN;
+	            END_IF;
+	            #ParCal._EtpQ := #Test_Tempo;
+	            RETURN;
+	        END_REGION
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║          Etape "Test Tempo"        ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	    #Test_Tempo:
+	        REGION traitement preliminaire
+	            IF (#ParCal._EtpQ <> #ParCal._EtpMemoQ) THEN
+	                //Memorisation de l'etape encours
+	                #ParCal._EtpMemoQ := #ParCal._EtpQ;
+	                #Ret_RD_Sys_T := RD_SYS_T(#ParCal._TpPicke);
+	            END_IF;
+	        END_REGION
+	        REGION Traitement cyclique
+	            //test arret calcul
+	            IF #ParCal._FgCalFar = FALSE THEN
+	                #ParCal._EtpQ := #REPOS_Q;
+	                RETURN;
+	            END_IF;
+	            //SORTIE Anticipee si arret transporteurn ou fin  pm eventuel
+	            IF NOT "Test_Etat_Mobile"(Index_Mobile:=#ParCal._MbTrans, Etat:="Pret") THEN
+	                #ParCal._EtpQ := #Calcule_Qte;
+	                RETURN;
+	            END_IF;
+	            IF #ParCal._PM = FALSE AND #ParCal._PM2 = FALSE THEN
+	                #ParCal._EtpQ := #Att_Marche_Trans;
+	                RETURN;
+	            END_IF;
+	            //Test Fin Tempo
+	            #RET := "Tempo"(Duree := #ParCal._TpCalFar, Tps_Picke := #ParCal._TpPicke, Anticip := FALSE, Tps_Passe => #TpsPassé);
+	            IF #RET THEN
+	                #ParCal._EtpQ := #Calcule_Qte;
+	                RETURN;
+	            END_IF;
+	        END_REGION
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║      Etape "Calcule Quantité"      ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	    #Calcule_Qte:
+	        REGION traitement preliminaire
+	            IF (#ParCal._EtpQ <> #ParCal._EtpMemoQ) THEN
+	                //Memorisation de l'etape encours
+	                #ParCal._EtpMemoQ := #ParCal._EtpQ;
+	                #Ret_RD_Sys_T := RD_SYS_T(#ParCal._TpPicke);
+	                #ParCal._DebutCalFar := #ParCal._TpPicke;
+	                #ParCal.PrFois := TRUE;
+	                // Initialisation QTE suivi
+	                #ParCal._QteSuivi := 0;
+	            END_IF;
+	        END_REGION
+	        REGION Traitement cyclique
+	            #Ret_RD_Sys_T := RD_SYS_T(#ParCal._TpPicke);
+	            #ParCal._DureeCalFar := T_DIFF(IN1 := #ParCal._TpPicke, IN2 := #ParCal._DebutCalFar);
+	            //Quantité en kgs = débit en t/h *1000/3600 *duree/1000
+	            #UDINTDureeCalFar := TIME_TO_UDINT(#ParCal._DureeCalFar);
+	            //#UDINTDureeCalFar := SINT_TO_UDINT(#IntDureeCalFar);
+	            #ParCal._QteCalFar := #ParCal._DebMasTrans / 3600 * UDINT_TO_REAL(#UDINTDureeCalFar);
+	            IF #ParCal.PrFois THEN
+	                // Si changement
+	                //Memo du QTE de transfert
+	                #ParCal._QteSuivi := #ParCal._QteTrans;
+	                // RAZ Qte de transfert
+	                #ParCal._QteTrans := 0;
+	                // Si changement
+	                #ParCal.PrFois := FALSE;
+	            END_IF;
+	            #ParCal._QteTrans := #ParCal._QteSuivi + #ParCal._QteCalFar;
+	            IF #ParCal._FgCalFar = FALSE THEN
+	                #ParCal._EtpQ := #REPOS_Q;
+	                RETURN;
+	            END_IF;
+	            //test marche transporteur
+	            IF NOT "Test_Etat_Mobile"(Index_Mobile:=#ParCal._MbTrans, Etat:="Pret") AND NOT "Test_Etat_Mobile"(Index_Mobile:=#ParCal._MbTrans, Etat:="Vid") THEN
+	                #ParCal._EtpQ := #Att_Marche_Trans;
+	                RETURN;
+	            END_IF;
+	            IF #ParCal._PM = FALSE AND #ParCal._PM2 = FALSE THEN
+	                #ParCal._EtpQ := #Att_Marche_Trans;
+	                RETURN;
+	            END_IF;
+	        END_REGION
+	END_CASE;
+END_FUNCTION
+

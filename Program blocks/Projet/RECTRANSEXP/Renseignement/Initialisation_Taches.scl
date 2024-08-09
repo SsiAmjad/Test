@@ -1,0 +1,47 @@
+﻿FUNCTION "Initialisation_Taches" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_TEMP 
+      i : SInt;
+   END_VAR
+
+
+BEGIN
+	//--------- Initialisation des taches de reception ---------//
+	"DB_REC".REC[0].RecCommun.CommunGeneral._Tache := "TAC_REC1";
+	"DB_REC".REC[0].RecCommun.CommunGeneral._NomTache := 'Reception 1';
+	"DB_REC".REC[1].RecCommun.CommunGeneral._Tache := "TAC_REC3";
+	"DB_REC".REC[1].RecCommun.CommunGeneral._NomTache := 'Reception 3';
+	"DB_REC".REC[2].RecCommun.CommunGeneral._Tache := "TAC_REC4";
+	"DB_REC".REC[2].RecCommun.CommunGeneral._NomTache := 'Reception 4';
+	"DB_REC".REC[3].RecCommun.CommunGeneral._Tache := "TAC_REC2";
+	"DB_REC".REC[3].RecCommun.CommunGeneral._NomTache := 'Reception 2';
+	//--------- Initialisation des taches de  transfert ---------//
+	"DB_TRANSFERT".TRANSF[0]._TransfCommun.CommunGeneral._Tache := "TAC_TRANSF";
+	"DB_TRANSFERT".TRANSF[0]._TransfCommun.CommunGeneral._NomTache := 'Transfert MP';
+	//--------- Initialisation des taches gestion de tourne ---------//
+	"DB_GestTournee".GestTour[0]._ChargCommun._CommunGeneral._Tache := "TAC_GTOUR";
+	"DB_GestTournee".GestTour[0]._ChargCommun._CommunGeneral._NomTache := 'Gestion Tournee';
+	//--------- Initialisation des taches chargement pont ---------//
+	"DB_ChPont".ChPont[0]._ChargCommun._CommunGeneral._Tache := "TAC_PONT1";
+	"DB_ChPont".ChPont[0]._ChargCommun._CommunGeneral._NomTache := 'Chargement Pont';
+	//--------- Initialisation des taches Vidange cellules ---------//
+	"DB_ChPont".ChPont[0]._ChargCommun._CommunGeneral._Tache := "TAC_PONT1";
+	"DB_ChPont".ChPont[0]._ChargCommun._CommunGeneral._NomTache := 'Chargement Pont';
+	//--------- Initialisation des taches Ensachage ---------//
+	"DB_ChPont".ChPont[0]._ChargCommun._CommunGeneral._Tache := "TAC_ENSA1";
+	"DB_ChPont".ChPont[0]._ChargCommun._CommunGeneral._NomTache := 'GesT ensachage';
+	//--------- Nomination des taches dans les zones de suivi ---------//
+	FOR #i := 0 TO "Nbr_Max_Lots" DO
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_REC1"].Nom := 'Reception 1';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_REC2"].Nom := 'Reception 2';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_REC3"].Nom := 'Reception 3';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_REC4"].Nom := 'Reception 4';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_TRANSF"].Nom := 'Transfert MP';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_GTOUR"].Nom := 'Gestion Tournee';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_PONT1"].Nom := 'Chargement Pont';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_VIDCEL"].Nom := 'Vidange Cellule';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_ENSA1"].Nom := 'GesT ensachage';
+	END_FOR;
+END_FUNCTION
+

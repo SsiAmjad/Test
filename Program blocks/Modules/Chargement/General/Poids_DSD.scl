@@ -1,0 +1,46 @@
+﻿FUNCTION "Poids_DSD" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Simul : Bool;
+      Cas : Int;
+   END_VAR
+
+   VAR_IN_OUT 
+      ChPont : "S_ChargPont";
+   END_VAR
+
+   VAR_TEMP 
+      DSDOK : Int;
+   END_VAR
+
+
+BEGIN
+	#DSDOK := 0;
+	IF #Simul OR NOT #ChPont._ChargCommun._PresIndic THEN
+	    IF  #ChPont._ChargCommun._PtDmPont._NoDSDSimul = 0 THEN
+	        #ChPont._ChargCommun._PtDmPont._NoDSDSimul := #ChPont._ChargCommun._PtDmPont._NoDSDSimul + 1;
+	    END_IF;
+	    IF #Cas = "TARE" THEN
+	        // prise en compte tare
+	        IF #ChPont._ChargCommun._PtDmPont._NoDSDSimul = 0 THEN
+	            #ChPont._ChargCommun._PtDmPont._NoDSDSimul := #ChPont._ChargCommun._PtDmPont._NoDSDSimul + 1;
+	        END_IF;
+	        #ChPont._Ptzs._NoPeseeTare := #ChPont._ChargCommun._PtDmPont._NoDSDSimul;
+	        #ChPont. _Commande._QteTare := #ChPont._ChargCommun._Vbasc;
+	        #ChPont._ChargCommun._PtDmPont._NoDSDSimul := #ChPont._ChargCommun._PtDmPont._NoDSDSimul + 1;
+	    ELSE
+	        // prise en compte poids brute
+	        #ChPont._Ptzs._NoPeseeBrut := #ChPont._ChargCommun._PtDmPont._NoDSDSimul;
+	        #ChPont._Ptzs._QteBrut := #ChPont._ChargCommun._Vbasc;
+	        #ChPont._ChargCommun._PtDmPont._NoDSDSimul := #ChPont._ChargCommun._PtDmPont._NoDSDSimul + 1;
+	    END_IF;
+	    #DSDOK := 1;
+	    #Poids_DSD := TRUE;
+	END_IF;
+	#Poids_DSD := FALSE;
+	
+	
+	
+END_FUNCTION
+

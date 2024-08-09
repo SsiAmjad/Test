@@ -1,0 +1,138 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Document>
+  <Engineering version="V17" />
+  <DocumentInfo>
+    <Created>2024-08-09T12:50:41.9449587Z</Created>
+    <ExportSetting>WithDefaults</ExportSetting>
+    <InstalledProducts>
+      <Product>
+        <DisplayName>Totally Integrated Automation Portal</DisplayName>
+        <DisplayVersion>V17 Update 7</DisplayVersion>
+      </Product>
+      <OptionPackage>
+        <DisplayName>TIA Portal Openness</DisplayName>
+        <DisplayVersion>V17 Update 7</DisplayVersion>
+      </OptionPackage>
+      <OptionPackage>
+        <DisplayName>TIA Portal Version Control Interface</DisplayName>
+        <DisplayVersion>V17</DisplayVersion>
+      </OptionPackage>
+      <Product>
+        <DisplayName>STEP 7 Professional</DisplayName>
+        <DisplayVersion>V17 Update 7</DisplayVersion>
+      </Product>
+      <OptionPackage>
+        <DisplayName>STEP 7 Safety</DisplayName>
+        <DisplayVersion>V17 Update 6</DisplayVersion>
+      </OptionPackage>
+      <Product>
+        <DisplayName>WinCC Professional</DisplayName>
+        <DisplayVersion>V17 Update 7</DisplayVersion>
+      </Product>
+    </InstalledProducts>
+  </DocumentInfo>
+  <SW.Blocks.InstanceDB ID="0">
+    <AttributeList>
+      <AutoNumber>true</AutoNumber>
+      <DBAccessibleFromOPCUA>true</DBAccessibleFromOPCUA>
+      <DBAccessibleFromWebserver>true</DBAccessibleFromWebserver>
+      <HeaderAuthor />
+      <HeaderFamily />
+      <HeaderName />
+      <HeaderVersion>0.1</HeaderVersion>
+      <InstanceOfName>Gestion_Erreur</InstanceOfName>
+      <InstanceOfType>FB</InstanceOfType>
+      <Interface><Sections xmlns="http://www.siemens.com/automation/Openness/SW/Interface/v5">
+  <Section Name="Input">
+    <Member Name="diResultState" Datatype="DInt" Remanence="NonRetain" Accessibility="Public"><AttributeList><BooleanAttribute Name="ExternalAccessible" SystemDefined="true">true</BooleanAttribute><BooleanAttribute Name="ExternalVisible" SystemDefined="true">true</BooleanAttribute><BooleanAttribute Name="ExternalWritable" SystemDefined="true">true</BooleanAttribute></AttributeList></Member>
+  </Section>
+  <Section Name="Output">
+    <Member Name="erreur" Datatype="String" Remanence="NonRetain" Accessibility="Public"><AttributeList><BooleanAttribute Name="ExternalAccessible" SystemDefined="true">true</BooleanAttribute><BooleanAttribute Name="ExternalVisible" SystemDefined="true">true</BooleanAttribute><BooleanAttribute Name="ExternalWritable" SystemDefined="true">true</BooleanAttribute></AttributeList></Member>
+  </Section>
+  <Section Name="InOut">
+    <Member Name="stSql4SiemensInterface" Datatype="&quot;utSql4SiemensInterface&quot;" Accessibility="Public">
+      <Sections>
+        <Section Name="None">
+          <Member Name="Observer" Datatype="Struct">
+            <Member Name="Dial_Def" Datatype="&quot;S_DIALOG_DEF&quot;">
+              <Sections>
+                <Section Name="None">
+                  <Member Name="Index_Defaut" Datatype="USInt" />
+                  <Member Name="Num_Def_Etape" Datatype="USInt" />
+                  <Member Name="Reponse_Def" Datatype="String[20]" />
+                  <Member Name="Text_Reponse" Datatype="String[30]" />
+                </Section>
+              </Sections>
+            </Member>
+            <Member Name="_Etp" Datatype="SInt" />
+            <Member Name="_EtpPrec" Datatype="SInt" />
+            <Member Name="_EtpMemo" Datatype="SInt" />
+            <Member Name="_TpsPicke" Datatype="Date_And_Time" />
+            <Member Name="xTimeout" Datatype="Bool" />
+          </Member>
+          <Member Name="xExecute" Datatype="Bool" />
+          <Member Name="xHoldConnection" Datatype="Bool" />
+          <Member Name="xUseMrpParameter" Datatype="Bool" />
+          <Member Name="diRequestDataSize" Datatype="DInt" />
+          <Member Name="CutString" Datatype="DInt" />
+          <Member Name="abRequestData" Datatype="Array[0..10000] of Byte" />
+          <Member Name="diResponseDataSize" Datatype="DInt" />
+          <Member Name="abResponseData" Datatype="Array[0..10000] of Byte" />
+          <Member Name="cdiResponseReturnParamSize" Datatype="DInt" />
+          <Member Name="adiResponseReturnParam" Datatype="Array[0..49] of Struct">
+            <Member Name="diOffset" Datatype="DInt" />
+            <Member Name="iLength" Datatype="Int" />
+          </Member>
+          <Member Name="cdiResponseRowSize" Datatype="DInt" />
+          <Member Name="cdiResponseColumnSize" Datatype="DInt" />
+          <Member Name="adiResponseColumnName" Datatype="Array[0..19] of Struct">
+            <Member Name="diOffset" Datatype="DInt" />
+            <Member Name="iLength" Datatype="Int" />
+          </Member>
+          <Member Name="adiResponseData" Datatype="Array[0..49, 0..19] of Struct">
+            <Member Name="diOffset" Datatype="DInt" />
+            <Member Name="iLength" Datatype="Int" />
+          </Member>
+          <Member Name="cdiResponseMaxStringSize" Datatype="DInt" />
+          <Member Name="xReady" Datatype="Bool" />
+          <Member Name="xBusy" Datatype="Bool" />
+          <Member Name="xDone" Datatype="Bool" />
+          <Member Name="xError" Datatype="Bool" />
+          <Member Name="diResultState" Datatype="DInt" />
+          <Member Name="diResultReturnParams" Datatype="DInt" />
+          <Member Name="diResultRows" Datatype="DInt" />
+          <Member Name="diResultColumns" Datatype="DInt" />
+        </Section>
+      </Sections>
+    </Member>
+  </Section>
+  <Section Name="Static" />
+</Sections></Interface>
+      <Name>Gestion_Erreur_DB</Name>
+      <Number>26</Number>
+      <ProgrammingLanguage>DB</ProgrammingLanguage>
+    </AttributeList>
+    <ObjectList>
+      <MultilingualText ID="1" CompositionName="Comment">
+        <ObjectList>
+          <MultilingualTextItem ID="2" CompositionName="Items">
+            <AttributeList>
+              <Culture>en-US</Culture>
+              <Text />
+            </AttributeList>
+          </MultilingualTextItem>
+        </ObjectList>
+      </MultilingualText>
+      <MultilingualText ID="3" CompositionName="Title">
+        <ObjectList>
+          <MultilingualTextItem ID="4" CompositionName="Items">
+            <AttributeList>
+              <Culture>en-US</Culture>
+              <Text />
+            </AttributeList>
+          </MultilingualTextItem>
+        </ObjectList>
+      </MultilingualText>
+    </ObjectList>
+  </SW.Blocks.InstanceDB>
+</Document>

@@ -1,0 +1,87 @@
+﻿FUNCTION "MarcheExt" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Origine : Int;
+      Position : SInt;   // 0 Fermeture 1 Ouverture
+      Vitesse : USInt;
+   END_VAR
+
+   VAR_TEMP 
+      Ret_String : String;
+      Ret_Int : Int;
+      Cellule : Bool;
+      i : USInt;
+      j : USInt;
+      k : USInt;
+      Extract : Int;
+      NmbPos : USInt;
+      PosActuel : USInt;
+      MobOrig : Int;
+      Ret_Sint : SInt;
+   END_VAR
+
+
+BEGIN
+	//Origine : cellule d'origine  ou bien le mobile extracteur
+	//Position : 0 fermeture 1 ouverture
+	
+	//Je cherche si l'origine est de type cellule 
+	#Ret_String := "Nom_Mobile"(#Origine);
+	IF #Ret_String <> '' THEN
+	    #Ret_Int := "RechIndexCel"(#Ret_String);
+	END_IF;
+	//Je teste si le mobile est de type cellule pour lancer le dmarrage sur les extracteurs de la cellule sinon je demarre le mobile 
+	IF #Ret_Int > -1 AND #Ret_Int <= "NB_CEL_MAX" THEN
+	    #Cellule := TRUE;
+	ELSE
+	    #Cellule := FALSE;
+	END_IF;
+	//Cas d'une cellule
+	IF #Cellule THEN
+	    FOR #i := 0 TO "NB_MOB_EXT" DO
+	        #Extract := "DB_Mod_Cellule"._TabCel[#Ret_Int]._Extrac[#i]._IndexMob;
+	        #MobOrig := "DB_Mod_Cellule"._TabCel[#Ret_Int]._Moborg;
+	        IF "Valid_Index"(#Extract) THEN
+	            //Je recupre le nombre des positions renseignees
+	            #NmbPos := "DB_BIBLIOTHEQUE".Mobile[#Extract].Nbr_Pos;
+	            IF #NmbPos > 0 THEN
+	                // Le mobile a plus d'une position
+	                "DB_BIBLIOTHEQUE".Mobile[#Extract].Pos_Dmd := #Position;
+	            ELSE
+	                "DB_BIBLIOTHEQUE".Mobile[#Extract].Pos_Dmd := 0;
+	            END_IF;
+	            
+	            IF #i < "NB_MOB_EXT" THEN
+	                IF "Valid_Index"("DB_Mod_Cellule"._TabCel[#Ret_Int]._Extrac[#i + 1]._IndexMob) THEN
+	                    "DB_BIBLIOTHEQUE".Mobile[#Extract].Pos[#Position].Suiv_Enc := "DB_Mod_Cellule"._TabCel[#Ret_Int]._Extrac[#i + 1]._IndexMob;
+	                ELSE
+	                    IF "Valid_Index"(#MobOrig) THEN
+	                        "DB_BIBLIOTHEQUE".Mobile[#Extract].Pos[#Position].Suiv_Enc := #MobOrig;
+	                    END_IF;
+	                END_IF;
+	            ELSE
+	                IF "Valid_Index"(#MobOrig) THEN
+	                    "DB_BIBLIOTHEQUE".Mobile[#Extract].Pos[#Position].Suiv_Enc := #MobOrig;
+	                END_IF;
+	            END_IF;
+	        ELSE
+	            EXIT;
+	        END_IF;
+	        (* IF #i>0  THEN
+	             "DB_BIBLIOTHEQUE".Mobile[#Extract].Mob_Prec_Ec[0] := "DB_Mod_Cellule"._TabCel[#Ret_Int]._Extrac[#i-1]._IndexMob;
+	         END_IF; *)
+	        #Ret_Sint := "Dem_Mobile"(#Extract);
+	    END_FOR;
+	    IF #Vitesse > 0 THEN
+	        "DB_Mod_Cellule"._TabCel[#Ret_Int]._SAV := #Vitesse;
+	    ELSE
+	        "DB_Mod_Cellule"._TabCel[#Ret_Int]._SAV := 100;
+	    END_IF;
+	ELSE
+	    "FC_Posit_Mob"(Index_Mob := #Extract,
+	                   Position := #Position);
+	END_IF;
+	
+END_FUNCTION
+

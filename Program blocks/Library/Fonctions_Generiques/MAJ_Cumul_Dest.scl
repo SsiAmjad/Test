@@ -1,0 +1,42 @@
+﻿FUNCTION "MAJ_Cumul_Dest" : Void
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : SAS
+VERSION : 0.1
+   VAR_INPUT 
+      Dest : String;
+      Increment : Bool;
+   END_VAR
+
+   VAR_IN_OUT 
+      DestR : "S_DEST_REELLES";
+      PARCAL : "S_CAL_FAR";
+   END_VAR
+
+
+BEGIN
+	#DestR._Liste[#DestR._Index]._Dest := #Dest;
+	IF #DestR._Index > "NB_MAX_DESTR" THEN
+	    #DestR._Index := 0;
+	END_IF;
+	
+	IF #DestR._Index >= 1 THEN
+	    #DestR._Liste[#DestR._Index]._Tps := #PARCAL._TpsTran - #DestR._Liste[#DestR._Index - 1]._CumulTps;
+	    #DestR._Liste[#DestR._Index]._Qte := #PARCAL._QteTrans - #DestR._Liste[#DestR._Index - 1]._CumulQte;
+	    #DestR._Liste[#DestR._Index]._CumulTps := #DestR._Liste[#DestR._Index - 1]._CumulTps + #DestR._Liste[#DestR._Index]._Tps;
+	    #DestR._Liste[#DestR._Index]._CumulQte := #DestR._Liste[#DestR._Index - 1]._CumulQte + #DestR._Liste[#DestR._Index]._Qte;
+	ELSE
+	    #DestR._Liste[#DestR._Index]._Tps := #PARCAL._TpsTran;
+	    #DestR._Liste[#DestR._Index]._Qte := #PARCAL._QteTrans;
+	    #DestR._Liste[#DestR._Index]._CumulTps := #DestR._Liste[#DestR._Index]._Tps;
+	    #DestR._Liste[#DestR._Index]._CumulQte := #DestR._Liste[#DestR._Index]._Qte;
+	END_IF;
+	IF #Increment THEN
+	    #DestR._Index := #DestR._Index + 1;
+	    RETURN;
+	END_IF;
+	
+	
+	
+	
+END_FUNCTION
+

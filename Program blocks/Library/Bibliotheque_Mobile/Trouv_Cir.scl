@@ -1,0 +1,80 @@
+﻿FUNCTION "Trouv_Cir" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Noeuds_Circuit : Array[0.."Nbr_Noeuds"] of Int;
+      Index_Circuit : USInt;
+   END_VAR
+
+   VAR_TEMP 
+      Circuit : Array[0.."Nbr_Mob_Circuit"] of Int;
+      i : USInt;
+      j : UInt;
+      k : UInt;
+      l : UInt;
+      n : UInt;
+      Dern_Mobile_Trouv : Int;
+      Pt_Circuit : UInt;
+      TEST : UInt;
+   END_VAR
+
+
+BEGIN
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | Version | Date       | Autheur     | Ajouts/Modifications                                                   |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | V_1     | 16.08.2023 | I.DAOUDI    | Creation du block
+	// |         | 30.05.2024 | A.SAS       | Adaptation a la nouvelle forme de DB noeud                      
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	FOR #i := 0 TO "Nbr_Mob_Circuit" DO
+	    #Circuit[#i] := -1;
+	END_FOR;
+	// Recuperer l'origine de ce circuit
+	#Circuit[0] := #Noeuds_Circuit[0];
+	
+	// Memoriser le dernier mobile trouve 
+	#Dern_Mobile_Trouv := #Circuit[0];
+	#Pt_Circuit := 0;
+	FOR #i := 1 TO "Nbr_Noeuds" DO
+	    // Sortir de la boucle des noeuds une fois #Noeuds_Circuit[#i] non renseigne 
+	    IF #Noeuds_Circuit[#i] = -1 THEN
+	        FOR #k := #Pt_Circuit + 1 TO "Nbr_Mob_Circuit" DO
+	            #Circuit[#k] := -1;
+	        END_FOR;
+	        EXIT;
+	    END_IF;
+	    FOR #j := #Pt_Circuit + 1 TO #Pt_Circuit + 10 DO
+	        IF #Dern_Mobile_Trouv < 0 THEN
+	            EXIT;
+	        END_IF;
+	        // Importer tous les mobiles suivants entre le dernier noeud et le prochain
+	        IF #Dern_Mobile_Trouv <> #Noeuds_Circuit[#i] THEN
+	            // Importer le suivant du noeud et le suivant de son suivant .... jusqu'a le prochain noeud
+	            #Circuit[#j] := "DB_BIBLIOTHEQUE".Mobile[#Dern_Mobile_Trouv].Mob_Suiv[0];
+	            #Dern_Mobile_Trouv := #Circuit[#j];
+	            #Pt_Circuit := #j;
+	        ELSE
+	            IF #Noeuds_Circuit[#i + 1] <> -1 THEN
+	                #TEST := "Suiv_Noeud"(Noeud_Dep := "Nom_Mobile"(#Noeuds_Circuit[#i]), Noeud_Arriv := "Nom_Mobile"(#Noeuds_Circuit[#i + 1]));
+	                #Circuit[#j] := "DB_BIBLIOTHEQUE".Mobile[#Dern_Mobile_Trouv].Mob_Suiv["Suiv_Noeud"(Noeud_Dep := "Nom_Mobile"(#Noeuds_Circuit[#i]), Noeud_Arriv := "Nom_Mobile"(#Noeuds_Circuit[#i + 1]))];
+	                #Dern_Mobile_Trouv := #Circuit[#j];
+	                #Pt_Circuit := #j;
+	                EXIT;
+	            END_IF;
+	            
+	        END_IF;
+	        
+	    END_FOR;
+	END_FOR;
+	"CirTrouv".Circuit := #Circuit;
+	FOR #l := 0 TO "Nbr_Mob_Circuit" DO
+	    IF #Circuit[#l] = -1 THEN
+	        EXIT;
+	    ELSE
+	        "CirTrouv".Circuits_Trouves[#Index_Circuit, #l] := #Circuit[#l];
+	    END_IF;
+	END_FOR;
+	"CirTrouv".Circuits_Trouves[#Index_Circuit + 1, 0] := -1;
+	RETURN;
+END_FUNCTION
+

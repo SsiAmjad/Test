@@ -1,0 +1,52 @@
+﻿FUNCTION "AfficheCommande_1" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Chpont : "S_ChargPont";
+      ChargCommun : "S_ChargCommun";
+      Ptzs : "S_SuiviCommande";
+   END_VAR
+
+   VAR_TEMP 
+      i : USInt;
+   END_VAR
+
+
+BEGIN
+	#Chpont._ChargCommun._PtAff._NumCommandeEc := #Chpont._Ptzs._NumCommande;
+	#Chpont._ChargCommun._PtAff.Cases := #Chpont._Ptzs._Cases;
+	#Chpont._ChargCommun._PtAff.CasesReelles := #Chpont._Ptzs._CasesRelle;
+	#Chpont._ChargCommun._PtAff._NumCaseEc := #Chpont._Commande._Case ;
+	
+	
+	
+	#Chpont._ChargCommun._PtAff.CommandeEc._Commande:=#Chpont._Commande._NoCommande;
+	#Chpont._ChargCommun._PtAff.CommandeEc._CdClient := #Chpont._Commande._CdClient;
+	#Chpont._ChargCommun._PtAff.CommandeEc._NomClient := #Chpont._Commande._NomClient;
+	//#Chpont._ChargCommun._PtAff.CommandeEc._NoLot := #Chpont._Commande._NoLot;
+	#Chpont._ChargCommun._PtAff.CommandeEc._NoLot := #Chpont._Ptzs._InfoTour._NoLot;
+	
+	#Chpont._ChargCommun._PtAff._TolSup := #Chpont._Ptzs._TolSup;
+	#Chpont._ChargCommun._PtAff._TolInf:= #Chpont._Ptzs._TolInf;
+	
+	
+	
+	
+	
+	FOR #i := 0 TO #Chpont._Ptzs._NbCommande DO
+	   // ChargCommun._PtAff.Commande[#i]._Pf := Ptzs._ComLig[#i]._CdMatComm;
+	    //ChargCommun._PtAff.Commande[#i]._LibPf := Ptzs._ComLig[#i]._LbMatComm;
+	   // ChargCommun._PtAff.Commande[#i]._Orig := Ptzs._ComLig[#i]._Cel;
+	    //ChargCommun._PtAff.Commande[#i]._ConsQte := Ptzs._ComLig[#i]._QteCommande;
+	    //ChargCommun._PtAff.Commande[#i]._NbCompo := Ptzs._NbCommande;
+	    #Chpont._ChargCommun._PtAff.Commande[#i]._CdClient := #Chpont._Ptzs._ComLig[#i]._CdClient;
+	    #Chpont._ChargCommun._PtAff.Commande[#i]._NomClient := #Chpont._Ptzs._ComLig[#i]._NomClient;
+	    #Chpont._ChargCommun._PtAff.Commande[#i]._Ville := #Chpont._Ptzs._ComLig[#i]._Ville;
+	   // ChargCommun._PtAff.Commande[#i]._CdPost := Ptzs._ComLig[#i]._CdPost;
+	    #Chpont._ChargCommun._PtAff.Commande[#i]._Case := #Chpont._Ptzs._ComLig[#i]._Case;
+	    #Chpont._ChargCommun._PtAff.Commande[#i]._Commande := #Chpont._Ptzs._ComLig[#i]._NoCommande;
+	    //ChargCommun._PtAff.Commande[#i]._AutrePont := Ptzs._ComLig[#i]._AutrePont;
+	    //ChargCommun._PtAff.Commande[#i]._NoCommande := Ptzs._ComLig[#i]._NoCommande;
+	END_FOR;
+END_FUNCTION
+

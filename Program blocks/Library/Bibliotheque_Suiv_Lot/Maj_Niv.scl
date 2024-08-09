@@ -1,0 +1,64 @@
+﻿FUNCTION "Maj_Niv" : SInt
+TITLE = Mise à jour du niveau d'une tache
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : 'I.Daoudi'
+FAMILY : Suiv_Lot
+VERSION : 1.0
+//Cette fonction met à jour le niveau d'une tache pour une zone de suivi donnée
+//- Paramètres d'entrés : + Numéro de la zone de suivi
+//                        + Nom de la tache
+//                        + La valeur de niveau
+//- Valeurs de retour :   + 1 si la mise à jour est effectuée avec succes
+//                        + -1 si niveau de la tache est hors interval ou numéro de la zone ou nom de la tache introuvable
+   VAR_INPUT 
+      Num_Zone : SInt;
+      Num_Tache : SInt;
+      Niveau : USInt;
+   END_VAR
+
+   VAR_TEMP 
+      Ret_Test_Valid_Zone : SInt;
+      Ret_Test_Valid_Tache : SInt;
+   END_VAR
+
+
+BEGIN
+	(*
+	===================================================  Documentation  ===================================================
+	Cette fonction met à jour le niveau d'une tache pour une zone de suivi donnée
+	- Paramètres d'entrés : + Numéro de la zone de suivi
+	                        + Nom de la tache
+	                        + La valeur de niveau
+	- Valeurs de retour :   + 1 si la mise à jour est effectuée avec succes
+	                        + -1 si niveau de la tache est hors interval ou numéro de la zone ou nom de la tache introuvable
+	===================================================  Documentation  ===================================================                        
+	*)
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | Version | Date       | Autheur     | Ajouts/Modifications                                                   |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | V_1     | 12.10.2023 | I.DAOUDI    | Creation du block                                                      |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// Test de la validite du numero de la zone
+	#Ret_Test_Valid_Zone := "Test_Valid_Zone"(#Num_Zone);
+	IF #Ret_Test_Valid_Zone = -1 THEN
+	    #Maj_Niv := -1;
+	    RETURN;
+	END_IF;
+	// Test de la validite du numero de la tache
+	#Ret_Test_Valid_Tache := "Test_Valid_Tache"(Num_Tache := #Num_Tache, Num_Zone := #Num_Zone);
+	IF #Ret_Test_Valid_Tache = -1 THEN
+	    #Maj_Niv := -1;
+	    RETURN;
+	END_IF;
+	// Recuperation du niveau de la tache
+	"DB_BIBLIOTHEQUE".Zones_Suivi[#Num_Zone].Taches[#Num_Tache].Niveau := #Niveau;
+	// Maj lots tache si niveau atteint son niveau max
+	IF #Niveau = "Niv_Tache_Max" THEN
+	    "Maj_Lots_Tache"(Num_Tache:=#Num_Tache);
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#Num_Zone].Taches[#Num_Tache].Activ := FALSE;
+	END_IF;
+	// La mise a jour est effectue avec succes
+	#Maj_Niv := 1;
+	RETURN;
+END_FUNCTION
+

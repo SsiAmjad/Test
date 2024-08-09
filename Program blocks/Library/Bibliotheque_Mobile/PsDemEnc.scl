@@ -1,0 +1,28 @@
+﻿FUNCTION "PsDemEnc" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      CIRCUIT : "S_Circuit";
+   END_VAR
+
+   VAR_TEMP 
+      i : USInt;
+   END_VAR
+
+
+BEGIN
+	FOR #i := 0 TO "Nbr_Mob_Circuit" DO
+	    IF #CIRCUIT.Mob_Circuit[#i].Mobile = -1 THEN
+	        EXIT;
+	    END_IF;
+	    IF "DB_BIBLIOTHEQUE".Mobile[#CIRCUIT.Mob_Circuit[#i].Mobile].Pos_Dmd <> "DB_BIBLIOTHEQUE".Mobile[#CIRCUIT.Mob_Circuit[#i].Mobile].Pos_Enc THEN
+	        #PsDemEnc := FALSE;
+	        RETURN;
+	    ELSE
+	        #PsDemEnc := TRUE;
+	        CONTINUE;
+	    END_IF;
+	END_FOR;
+	#PsDemEnc := TRUE;
+END_FUNCTION
+

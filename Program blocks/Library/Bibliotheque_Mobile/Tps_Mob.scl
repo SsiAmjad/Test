@@ -1,0 +1,17 @@
+﻿FUNCTION "Tps_Mob" : UInt
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Index_Mob : Int;
+   END_VAR
+
+
+BEGIN
+	IF NOT "Valid_Index"(#Index_Mob) THEN
+	    #Tps_Mob := 0;
+	    RETURN;
+	END_IF;
+	#Tps_Mob := "DB_BIBLIOTHEQUE".Mobile[#Index_Mob].TpMarcheNet;
+	RETURN;
+END_FUNCTION
+

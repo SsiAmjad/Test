@@ -1,0 +1,112 @@
+﻿FUNCTION "CalculConsArret" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      ArrCirPlein : Bool;
+   END_VAR
+
+   VAR_IN_OUT 
+      ChPont : "S_ChargPont";
+   END_VAR
+
+   VAR_TEMP 
+      Tamis : Bool;
+      i : USInt;
+   END_VAR
+
+
+BEGIN
+	        #Tamis := #ChPont._Ptzs._ParVrac._FgTamis = 'O' OR #ChPont._Ptzs._ParVrac._FgTamis = 'F' OR #ChPont._Ptzs._ParVrac._FgTamis = 'G';
+	        
+	        // // Cumul de quantite minraux
+	        // IF #ChPont._Ptzs._QteTotMinComm <= 0 THEN
+	        //     #ChPont._Ptzs._QteTotMinComm := 0;
+	        //     FOR #i := 0 TO #ChPont._Ptzs._Nbcompo-1 DO
+	        //         IF #ChPont._Ptzs._Compo[#i]._Type = 'R' THEN
+	        //             #ChPont._Ptzs._QteTotMinComm := #ChPont._Ptzs._QteTotMinComm + #ChPont._Ptzs._Compo[#i]._ConsQte;
+	        //         END_IF;
+	        //     END_FOR;
+	        // END_IF;
+	        // #ChPont._Ptzs._ConsQteTot := #ChPont._Ptzs._ConsQte + #ChPont._Ptzs._QteTotMinComm;
+	        //++++++++++++++++++++++++++++++++++++
+	        
+	        // // Cumul de toutes les colonnes de chute
+	        // #ChPont._Ptzs._ColChuteTotal := 0;
+	        // FOR #i := 0 TO #ChPont._Ptzs._Nbcompo-1 DO
+	        //     #ChPont._Ptzs._ColChuteTotal := #ChPont._Ptzs._ColChuteTotal + #ChPont._Ptzs._Compo[#i]._ChuteCel;
+	        // END_FOR;
+	        
+	        IF NOT #ChPont._Ptzs._HorsPont OR NOT #ChPont._CtrlPoidsHorsPont THEN
+	            IF NOT #ChPont. _Commande._FgaVider THEN
+	                // Controle si chargement en Debit
+	                IF #ChPont. _Commande._ChuteCel < #ChPont. _Commande._ConsQteTot - #ChPont. _Commande._QteNet THEN
+	                    #ChPont._ChargDebit := FALSE;
+	                    // Controle si arret  mi consigne
+	                    IF (#ChPont. _Commande._ChuteCel < #ChPont._MinChute OR (#ChPont. _Commande._ChuteCel > #ChPont._MaxChute)) AND (#ChPont. _Commande._QteNet = 0 OR #ChPont._MemoDemChgCel) THEN
+	                        //(#ChPont. _Commande._ChuteCel > #ChPont._MaxChute AND NOT #Tamis) OR (#ChPont. _Commande._ChuteCel > #ChPont._MaxChuteTamis AND #Tamis)
+	                        #ChPont._Ptzs._FgStopMiPesee := TRUE;
+	                    ELSE
+	                        #ChPont._Ptzs._FgStopMiPesee := FALSE;
+	                    END_IF;
+	                ELSE
+	                    IF #ChPont._FgTypeLancColChute = 0 THEN
+	                        // Chargement sur Debit
+	                        //IF #ChPont._ChargCommun._CommunGeneral._ParCal._FgCalFar AND #ChPont._ChargCommun._CommunGeneral._ParCal._QteTrans > 0 THEN
+	                        //IF (!Pt_Suiv_Charg->ArrCirPlein)
+	                        #ChPont._ChargDebit := TRUE;
+	                        //end if 
+	                        #ChPont._Ptzs._FgStopMiPesee := FALSE;
+	                        #ChPont._ChargCycle := FALSE;
+	                        // END_IF;
+	                    END_IF;
+	                    
+	                    IF #ChPont._FgTypeLancColChute = 1 THEN
+	                        // Chargement manuel avec le bouton Ajout
+	                        #ChPont._ChargDebit := FALSE;
+	                        #ChPont._ChargCycle := FALSE;
+	                    END_IF;
+	                    
+	                    IF #ChPont._FgTypeLancColChute = 3 THEN
+	                        // Cycle d'ouverture de la trappe
+	                        #ChPont._ChargCycle := TRUE;
+	                        #ChPont._ChargDebit := FALSE;
+	                    END_IF;
+	                END_IF;
+	            ELSE
+	                #ChPont._Ptzs._FgStopMiPesee := FALSE;
+	            END_IF;
+	        ELSE
+	            #ChPont._Ptzs._FgStopMiPesee := FALSE;
+	        END_IF;
+	        
+	        
+	        
+	        //Calcul de la consigne d'arret
+	        IF #ChPont._Ptzs._FgStopMiPesee AND #ChPont. _Commande._QteNet < (#ChPont. _Commande._ConsQteTot / 2) THEN
+	            IF #ChPont._MemoDemChgCel THEN
+	                IF #ChPont._ConsArrCalcColChute+#ChPont. _Commande._QteNet < #ChPont. _Commande._ConsQteTot THEN
+	                    #ChPont. _Commande._ConsArret := #ChPont._ConsArrCalcColChute +#ChPont. _Commande._QteNet; /// Modif Ajout de la tare a verifier+ #ChPont._Ptzs._QteTare
+	                ELSE
+	                    #ChPont. _Commande._ConsArret := #ChPont. _Commande._ConsQteTot / 2;
+	                END_IF;
+	            ELSE
+	                IF #ChPont._ConsArrCalcColChute < #ChPont. _Commande._ConsQteTot THEN
+	                    #ChPont. _Commande._ConsArret := #ChPont._ConsArrCalcColChute; /// Modif Ajout de la tare a verifier+ #ChPont._Ptzs._QteTare
+	                ELSE
+	                    #ChPont. _Commande._ConsArret := #ChPont. _Commande._ConsQteTot / 2;
+	                END_IF;
+	                
+	            END_IF;
+	            
+	        ELSE
+	            IF #ChPont. _Commande._FgaVider THEN
+	                #ChPont. _Commande._ConsArret := "Test_Neg"(#ChPont. _Commande._ConsQteTot + #ChPont._TolVideCel);
+	            ELSE
+	                #ChPont. _Commande._ConsArret :="Test_Neg"( #ChPont. _Commande._ConsQteTot - #ChPont. _Commande._ChuteCel);
+	            END_IF;
+	        END_IF;
+	        
+	        
+	        
+END_FUNCTION
+

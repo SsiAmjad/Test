@@ -1,0 +1,52 @@
+﻿FUNCTION "Initialisation_Circuit_Expedition" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+BEGIN
+	"DB_Dosage".DEROUT.Lst_Taches_Att_Deb_Mel[0]._Tache := "TAC_MELANG1";
+	"DB_Dosage".DEROUT.Lst_Taches_Att_Deb_Mel[0]._Niv := "NIV_MLG_FIN_PREMELANG";
+	"DB_Dosage".DEROUT.Lst_Taches_Att_Deb_Mel[1]._Tache := "TAC_MELANG2";
+	"DB_Dosage".DEROUT.Lst_Taches_Att_Deb_Mel[1]._Niv := "NIV_MLG_FIN_PREMELANG";
+	"DB_Dosage".DEROUT.Lst_Taches_Att_Fin_Mel[0]._Tache := "TAC_MELANG1";
+	"DB_Dosage".DEROUT.Lst_Taches_Att_Fin_Mel[0]._Niv := "NIV_MLG_OUVERTE";
+	"DB_Dosage".DEROUT.Lst_Taches_Att_Fin_Mel[1]._Tache := "TAC_MELANG2";
+	"DB_Dosage".DEROUT.Lst_Taches_Att_Fin_Mel[1]._Niv := "NIV_MLG_OUVERTE";
+	//"DB_Dosage".DEROUT.Lst_Taches_Maj_Cel_Suiv[0]._Tache := ;
+	//"DB_Dosage".DEROUT.Lst_Taches_Maj_Cel_Suiv[0]._Niv := ;
+	
+	"DB_Dosage".LANC_EXP.Tac_Exp_Dos1 :="TAC_EXP1";
+	//"DB_Dosage".LANC_EXP.Lst_Taches_Att_Chg_Exp[0]._Tache := ;
+	//"DB_Dosage".LANC_EXP.Lst_Taches_Att_Chg_Exp[0]._Niv := ;
+	"DB_Dosage".LANC_EXP.Lst_Taches_Att_Fin_NB_Sous_Mel[0]._Tache := "TAC_TREMSS_MLG1";
+	"DB_Dosage".LANC_EXP.Lst_Taches_Att_Fin_NB_Sous_Mel[0]._Niv := "NIV_TREMIE_TRANS_NIVEAU_BAS";
+	"DB_Dosage".LANC_EXP.Lst_Taches_Att_Fin_NB_Sous_Mel[1]._Tache := "TAC_TREMSS_MLG2";
+	"DB_Dosage".LANC_EXP.Lst_Taches_Att_Fin_NB_Sous_Mel[1]._Niv := "NIV_TREMIE_TRANS_NIVEAU_BAS";
+	"DB_Dosage".LANC_EXP.Lst_Taches_Att_Fin_Prd_Sous_Mel[0]._Tache := "TAC_TREMSS_MLG1";
+	"DB_Dosage".LANC_EXP.Lst_Taches_Att_Fin_Prd_Sous_Mel[0]._Niv := "NIV_TREMIE_TRANS_FIN_PM";
+	"DB_Dosage".LANC_EXP.Lst_Taches_Att_Fin_Prd_Sous_Mel[1]._Tache := "TAC_TREMSS_MLG2";
+	"DB_Dosage".LANC_EXP.Lst_Taches_Att_Fin_Prd_Sous_Mel[1]._Niv := "NIV_TREMIE_TRANS_FIN_PM";
+	//"DB_Dosage".LANC_EXP.Lst_Taches_Aut_Ench[0]._Tache := ;
+	//"DB_Dosage".LANC_EXP.Lst_Taches_Aut_Ench[0]._Niv := ;
+	
+	"DB_Dosage".EXP_DOS[0].Cir.Num_Circuit := "Num_Cir_Exp1";
+	"DB_Dosage".EXP_DOS[0].Orig_Sans_Mls := 'O_Exp_Fict';
+	"DB_Dosage".EXP_DOS[0].Lst_Taches_Aut_Dem[0]._Tache := "TAC_TREMSS_MLG1";
+	"DB_Dosage".EXP_DOS[0].Lst_Taches_Aut_Dem[0]._Niv := "NIV_TREMIE_TRANS_AUT_REMP";
+	"DB_Dosage".EXP_DOS[0].Lst_Taches_Aut_Dem[1]._Tache := "TAC_MELANG1";
+	"DB_Dosage".EXP_DOS[0].Lst_Taches_Aut_Dem[1]._Niv := "NIV_MLG_PRESQ_FINI";
+	"DB_Dosage".EXP_DOS[0].Lst_Taches_Aut_Dem[2]._Tache := "TAC_TREMSS_MLG2";
+	"DB_Dosage".EXP_DOS[0].Lst_Taches_Aut_Dem[2]._Niv := "NIV_TREMIE_TRANS_AUT_REMP";
+	"DB_Dosage".EXP_DOS[0].Lst_Taches_Aut_Dem[3]._Tache := "TAC_MELANG2";
+	"DB_Dosage".EXP_DOS[0].Lst_Taches_Aut_Dem[3]._Niv := "NIV_MLG_PRESQ_FINI";
+	//"DB_Dosage".EXP_DOS[0].Lst_Taches_Arret_Test_NH[0]._Tache := ;
+	//"DB_Dosage".EXP_DOS[0].Lst_Taches_Arret_Test_NH[0]._Niv := ;
+	"DB_Dosage".EXP_DOS[0].Lst_Taches_Att_Fin_Amont[0]._Tache := "TAC_TREMSS_MLG1";
+	"DB_Dosage".EXP_DOS[0].Lst_Taches_Att_Fin_Amont[0]._Niv := "NIV_TREMIE_TRANS_FIN_LOT";
+	"DB_Dosage".EXP_DOS[0].Lst_Taches_Att_Fin_Amont[1]._Tache := "TAC_TREMSS_MLG2";
+	"DB_Dosage".EXP_DOS[0].Lst_Taches_Att_Fin_Amont[1]._Niv := "NIV_TREMIE_TRANS_FIN_LOT";
+	// Qte Lot
+	"DB_Dosage".EXP_DOS[0].Lst_Taches_Amont_Qte[0] := "TAC_TREMSS_MLG1";
+	"DB_Dosage".EXP_DOS[0].Lst_Taches_Amont_Qte[1] := "TAC_TREMSS_MLG2";
+	
+END_FUNCTION
+

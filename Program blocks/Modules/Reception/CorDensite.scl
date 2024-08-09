@@ -1,0 +1,70 @@
+﻿FUNCTION "CorDensite" : SInt
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      QteReelle : Real;   // Quantite reelle farine
+      QteCalculee : Real;   // Quantite calcule a partir du debit
+      AncCoeff : Real;   // Coefficient initial
+      PasMaxCorCoeff : Real;   // Pas de correction coefficient
+      DensCorMax : Real;   // Densite max apres correction
+      DensCorMin : Real;   //  Densite min apres correction
+      DensInitial : Real;   // Densite initiale 
+      TolMax : Real;   // Ecart maxi en %
+      TolMin : Real;   // Ecart mini en %
+   END_VAR
+
+   VAR_IN_OUT 
+      NvCoeff : Real;   //  Nouveau coefficient
+      DensCor : Real;
+   END_VAR
+
+   VAR_TEMP 
+      Delta : Real;
+      CoefTemp : Real;
+   END_VAR
+
+
+BEGIN
+	//Calcul Delta quantite en %
+	#Delta := ((#QteCalculee - #QteReelle) / #QteReelle)*100  ;
+	
+	IF #Delta > #TolMax OR #Delta < - #TolMax THEN
+	    // Pas de correction
+	    #DensCor := #DensInitial * #AncCoeff;
+	    #CorDensite := -1;
+	    RETURN;
+	END_IF;
+	
+	IF #Delta > #TolMin OR #Delta < - #TolMin THEN
+	    
+	    #CoefTemp := #AncCoeff *( #QteReelle / #QteCalculee);
+	    // Je teste les limites je depasse pas le pas max de correction soit sup soit inf
+	    IF #CoefTemp > #AncCoeff + #PasMaxCorCoeff THEN
+	        #CoefTemp := #AncCoeff + #PasMaxCorCoeff;
+	    END_IF;
+	    
+	    IF #CoefTemp < #AncCoeff - #PasMaxCorCoeff THEN
+	        #CoefTemp := #AncCoeff - #PasMaxCorCoeff;
+	    END_IF;
+	    
+	    // De meme je teste les limites de la densite 
+	    IF (#CoefTemp * #DensInitial) > #DensCorMax THEN
+	        #CoefTemp := #DensCorMax / #DensInitial;
+	    END_IF;
+	    IF (#CoefTemp * #DensInitial) < #DensCorMin THEN
+	        #CoefTemp := #DensCorMin / #DensInitial;
+	    END_IF;
+	    
+	    #NvCoeff := #CoefTemp;
+	    #DensCor := #CoefTemp * #DensInitial;
+	    #CorDensite :=0;
+	    RETURN;
+	END_IF;
+	#CorDensite := -1;
+	
+	
+	
+	
+	
+END_FUNCTION
+

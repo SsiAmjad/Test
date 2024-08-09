@@ -1,0 +1,16 @@
+﻿FUNCTION "InitAffTour" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Tournee : "InfoTournee";
+   END_VAR
+
+   VAR_TEMP 
+      RazTournee : "InfoTournee";
+   END_VAR
+
+
+BEGIN
+	#Tournee := #RazTournee;
+END_FUNCTION
+

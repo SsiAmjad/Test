@@ -1,0 +1,583 @@
+﻿FUNCTION "ChngDest" : SInt
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      NouvDest : Int;
+      AncDest : Int;
+      IndxDestEncours : Int;
+   END_VAR
+
+   VAR_IN_OUT 
+      ChNoeud : "S_ChngNoeud";
+      AncCircuit : "S_Circuit";
+      CelluleTrouve : SInt;
+      FgChangementDest : Bool;
+   END_VAR
+
+   VAR_TEMP 
+      ret : Int;
+      i : USInt;
+      n : USInt;
+      x : USInt;
+      l : USInt;
+      j : USInt;
+      k : USInt;
+      retu : Bool;
+      Ret_RD_Sys_T : Int;
+      Tpspasse : Time;
+      debutboucle : USInt;
+      Ret_Bool : Bool;
+      Ret_sint : SInt;
+   END_VAR
+
+
+BEGIN
+	(*//______________________________________________________Les Retours de la fontion  ______________________________________________________________________\\
+	*-*  -3 Si la recherche du nouveau circuit est invalide et que jai parcourue tt la liste des dest recuperees de la base
+	*-*  -2 Si la recherche du nouveau circuit est invalide , l'etape prochaine c'est que je check les autres des recup de la base
+	*-*   1 Si le grafcet est execute completement sans defaut 
+	*-*   0 en cours d'execution
+	*-*
+	*)
+	
+	
+	
+	
+	
+	
+	
+	CASE #ChNoeud._Etp OF
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║            Etape "Repos"           ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	    0:
+	        REGION traitement preliminaire
+	            IF (#ChNoeud._Etp <> #ChNoeud._EtpPrec) THEN
+	                #ChNoeud._EtpPrec := #ChNoeud._Etp;
+	                #ChNoeud._DescEtp := 'repos';
+	            END_IF;
+	        END_REGION
+	        REGION TRAITEMENT CYCLIQUE
+	            IF #NouvDest = #AncDest THEN
+	                #ChNoeud._NouvCircuit := #AncCircuit;
+	                #ret := "Dem_Circuit"(#ChNoeud._NouvCircuit);
+	                #CelluleTrouve := 0;
+	                #ChngDest := 1;
+	                (* #ChNoeud._Etp := 7;
+	                #ChngDest := 0; *)
+	                RETURN;
+	            END_IF;
+	            //Attente un chngmt de destination
+	            IF #CelluleTrouve = 2 AND #ChNoeud._ListeNoeaudAnc[0] <> -1 THEN
+	                #ret := "Libere_Circuit"(#ChNoeud._CircuitTemp);
+	                #ret := "Libere_Circuit"(#ChNoeud._NouvCircuit);
+	                FOR #i := 0 TO "Nbr_Mob_Circuit" DO
+	                    #ChNoeud._CircuitTemp.Mob_Circuit[#i].Mobile := -1;
+	                    #ChNoeud._NouvCircuit.Mob_Circuit[#i].Mobile := -1;
+	                END_FOR;
+	                FOR #i := 0 TO 19 DO
+	                    #ChNoeud._ListeNoeaudnouv[#i] := -1;
+	                    #ChNoeud._ListeNoeaudCommun[#i] := -1;
+	                END_FOR;
+	                #ChNoeud._NmbMob := 0;
+	                
+	                #ChNoeud._Premier := FALSE;
+	                #ChNoeud._Deuxieme := FALSE;
+	                #ChNoeud._NouvCircuit.Origine := #AncCircuit.Origine;
+	                #ChNoeud._NouvCircuit.Destination := #NouvDest;
+	                #ChNoeud._NouvCircuit.Num_Circuit := #AncCircuit.Num_Circuit;
+	                #ret := "Rech_Cir_SansReserve"(#ChNoeud._NouvCircuit);
+	                IF #ret = -1 THEN
+	                    IF #IndxDestEncours < "NB_MAX_DEST" THEN
+	                        #CelluleTrouve := 0;
+	                        #ChngDest := -2;
+	                        RETURN;
+	                    ELSE
+	                        #CelluleTrouve := 3;
+	                        #ChngDest := -3;
+	                        RETURN;
+	                    END_IF;
+	                ELSE
+	                    "Recup_Noeud"(Circuit := #ChNoeud._NouvCircuit,
+	                                  ListeNoeuds => #ChNoeud._ListeNoeaudnouv);
+	                    
+	                    IF #ChNoeud._ListeNoeaudnouv[0] <> -1 THEN
+	                        #ChNoeud._Etp := 1;
+	                    ELSE
+	                        #ChNoeud._Etp := 0;
+	                    END_IF;
+	                    
+	                    
+	                END_IF;
+	            END_IF;
+	            
+	        END_REGION
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║            NOEUDS COMMUNS          ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	    1:
+	        REGION traitement preliminaire
+	            IF (#ChNoeud._Etp <> #ChNoeud._EtpPrec) THEN
+	                #ChNoeud._EtpPrec := #ChNoeud._Etp;
+	                #ChNoeud._DescEtp := 'Noeuds Communs';
+	            END_IF;
+	        END_REGION
+	        REGION TRAITEMENT CYCLIQUE
+	            FOR #i := 0 TO "Nbr_Noeuds" DO
+	                IF #ChNoeud._ListeNoeaudnouv[#i] = -1 OR #ChNoeud._ListeNoeaudAnc[#i] = -1 THEN
+	                    EXIT;
+	                END_IF;
+	                IF #ChNoeud._ListeNoeaudnouv[#i] = #ChNoeud._ListeNoeaudAnc[#i] THEN
+	                    #ChNoeud._ListeNoeaudCommun[#i] := #ChNoeud._ListeNoeaudnouv[#i];
+	                    #ChNoeud._DernierNoeudCommun := #ChNoeud._ListeNoeaudCommun[#i]; // recupere le dernier noeud detecté
+	                ELSE
+	                    #ChNoeud._ListeNoeaudCommun[#i] := -1;
+	                    EXIT;
+	                END_IF;
+	            END_FOR;
+	            //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
+	            #ChNoeud._Etp := 2;
+	            
+	            
+	        END_REGION
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║         NOMBRE DE MOBILES          ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	    2:
+	        REGION traitement preliminaire
+	            IF (#ChNoeud._Etp <> #ChNoeud._EtpPrec) THEN
+	                #ChNoeud._EtpPrec := #ChNoeud._Etp;
+	                #ChNoeud._DescEtp := 'Nmb Mob circ';
+	            END_IF;
+	        END_REGION
+	        REGION TRAITEMENT CYCLIQUE
+	            //recuperation du nombre des mobiles du circuit 
+	            FOR #i := 0 TO "Nbr_Mob_Circuit" DO
+	                IF #AncCircuit.Mob_Circuit[#i].Mobile = -1 THEN
+	                    EXIT;
+	                ELSE
+	                    #ChNoeud._NmbMob := #i + 1; //comptage du nombre des mobiles declare dans ptcir 
+	                END_IF;
+	                IF #AncCircuit.Mob_Circuit[#i].Mobile = #ChNoeud._DernierNoeudCommun THEN
+	                    #ChNoeud._IndiceDernNoeaud := #i; //recuperer l'index du dernier noeaud commun dans ptcir mobile
+	                END_IF;
+	            END_FOR;
+	            // Recuperation du mobile qui suit le dernier noeud commun dans lancien circuit
+	            #ChNoeud._MobSuivNoeaudCommunAnc := #AncCircuit.Mob_Circuit[#ChNoeud._IndiceDernNoeaud + 1].Mobile;
+	            #ChNoeud._Etp := 3;
+	            
+	            
+	        END_REGION
+	        
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║         DESASSERVISEEMENT          ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	    3:
+	        REGION traitement preliminaire
+	            IF (#ChNoeud._Etp <> #ChNoeud._EtpPrec) THEN
+	                #ChNoeud._EtpPrec := #ChNoeud._Etp;
+	                #ChNoeud._DescEtp := 'desasservissement';
+	            END_IF;
+	        END_REGION
+	        REGION TRAITEMENT CYCLIQUE
+	            "DB_BIBLIOTHEQUE".Mobile[#ChNoeud._DernierNoeudCommun].Tjr_Desasservi := TRUE;
+	            "DB_BIBLIOTHEQUE".Mobile[#AncCircuit.Mob_Circuit[#ChNoeud._IndiceDernNoeaud - 1].Mobile].Tjr_Desasservi := TRUE;
+	            #ChNoeud._Etp := 4;
+	            
+	        END_REGION
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║         RECHERCHE CIRCUIT          ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	    4:
+	        REGION traitement preliminaire
+	            IF (#ChNoeud._Etp <> #ChNoeud._EtpPrec) THEN
+	                #ChNoeud._EtpPrec := #ChNoeud._Etp;
+	                #ChNoeud._DescEtp := 'Renseignement';
+	                #ChNoeud._NouvCircuit.Origine := #AncCircuit.Origine;
+	                #ChNoeud._NouvCircuit.Destination := #NouvDest;
+	                #ChNoeud._NouvCircuit.Num_Circuit := #AncCircuit.Num_Circuit;
+	                #Ret_RD_Sys_T := RD_SYS_T(#ChNoeud._TpsPicke);
+	                #x := 0;
+	            END_IF;
+	        END_REGION
+	        REGION TRAITEMENT CYCLIQUE
+	            #ret := "Rech_Cir_SansReserve"(#ChNoeud._NouvCircuit);
+	            IF #ret = -1 THEN
+	                #CelluleTrouve := 3;
+	                #ChngDest := -3;
+	                #ChNoeud._Etp := 0;
+	                RETURN;
+	            END_IF;
+	            //recuperation du mobile qui suit le dernier noeud  dans le nouv circuit
+	            FOR #i := 0 TO "Nbr_Mob_Circuit" DO
+	                IF #ChNoeud._NouvCircuit.Mob_Circuit[#i].Mobile = #ChNoeud._DernierNoeudCommun THEN
+	                    #ChNoeud._MobSuivNoeaudCommunNv := #ChNoeud._NouvCircuit.Mob_Circuit[#i + 1].Mobile;
+	                    EXIT;
+	                END_IF;
+	            END_FOR;
+	            //Recuperation des nouveaux mob
+	            FOR #i := 0 TO "Nbr_Mob_Circuit" DO
+	                IF #ChNoeud._NouvCircuit.Mob_Circuit[#i].Mobile = -1 THEN
+	                    EXIT;
+	                END_IF;
+	                IF #ChNoeud._NouvCircuit.Mob_Circuit[#i].Mobile = #ChNoeud._DernierNoeudCommun THEN
+	                    //#l := #i;
+	                    #l := #i + 1;
+	                    FOR #x := 0 TO "Nbr_Mob_Circuit" DO
+	                        IF #ChNoeud._NouvCircuit.Mob_Circuit[#l].Mobile = -1 THEN
+	                            EXIT;
+	                        END_IF;
+	                        #ChNoeud._CircuitTemp.Mob_Circuit[#x] := #ChNoeud._NouvCircuit.Mob_Circuit[#l];
+	                        #l := #l + 1;
+	                    END_FOR;
+	                    EXIT;
+	                END_IF;
+	            END_FOR;
+	            #ChNoeud._CircuitTemp.Origine := #ChNoeud._CircuitTemp.Mob_Circuit[0].Mobile;
+	            #ChNoeud._CircuitTemp.Destination := #ChNoeud._CircuitTemp.Mob_Circuit[#x - 1].Mobile;
+	            #ChNoeud._CircuitTemp.Num_Circuit := #AncCircuit.Num_Circuit;
+	            //++++++++++++++++++++++++++++++++++++++++++//
+	            ///++++++++++++++++++++++++++++++++++++++++++++++++++++++TEST+++++++++++++++++++++++++++++++++++++++++++++++++++++
+	            //detecter si le nouveau mobile qui suit le dernier noeud commun est le premier ou non 
+	            FOR #j := 0 TO "Nbr_Mob_Suiv" DO
+	                IF "DB_BIBLIOTHEQUE".Mobile[#AncCircuit.Mob_Circuit[#ChNoeud._IndiceDernNoeaud].Mobile].Mob_Suiv[#j] = -1 THEN
+	                    EXIT;
+	                END_IF;
+	                //  IF "DB_BIBLIOTHEQUE".Mobile[#REC._PtCir.Mob_Circuit[#REC.ChNoeud._IndiceDernNoeaud+ChNoeud._NmbChngNoeud].Mobile].Mob_Suiv[#j] =ChNoeud._NouvCircuit.Mob_Circuit[#REC.ChNoeud._MobSuivNoeaudCommunNv +ChNoeud._NmbChngNoeud].Mobile THEN
+	                IF "DB_BIBLIOTHEQUE".Mobile[#ChNoeud._DernierNoeudCommun].Nbr_Pos = 1 AND "DB_BIBLIOTHEQUE".Mobile[#AncCircuit.Mob_Circuit[#ChNoeud._IndiceDernNoeaud].Mobile].Mob_Suiv[#j] = #ChNoeud._MobSuivNoeaudCommunNv THEN
+	                    #ChNoeud._Premier := TRUE;
+	                    EXIT;
+	                END_IF;
+	                IF "DB_BIBLIOTHEQUE".Mobile[#ChNoeud._DernierNoeudCommun].Nbr_Pos = 1 AND "DB_BIBLIOTHEQUE".Mobile[#AncCircuit.Mob_Circuit[#ChNoeud._IndiceDernNoeaud].Mobile].Mob_Suiv[#j] = #ChNoeud._MobSuivNoeaudCommunAnc THEN
+	                    #ChNoeud._Deuxieme := TRUE;
+	                    EXIT;
+	                END_IF;
+	            END_FOR;
+	            ///++++++++++++++++++++++++++++++++++++++++++++++++++++++TEST+++++++++++++++++++++++++++++++++++++++++++++++++++++
+	            REGION MAJ Position et chainage
+	                #i := 0;
+	                WHILE #ChNoeud._CircuitTemp.Mob_Circuit[#i].Mobile > -1 AND #ChNoeud._CircuitTemp.Mob_Circuit[#i].Mobile <> #ChNoeud._CircuitTemp.Destination DO
+	                    // Recherche de la position mobile
+	                    FOR #j := 0 TO "Nbr_Max_Pos" DO
+	                        FOR #k := 0 TO "Nbr_Mob_Suiv" DO
+	                            IF "DB_BIBLIOTHEQUE".Mobile[#ChNoeud._CircuitTemp.Mob_Circuit[#i].Mobile].Pos[#j].Mob_Suiv[#k] = #ChNoeud._CircuitTemp.Mob_Circuit[#i + 1].Mobile THEN
+	                                #ChNoeud._CircuitTemp.Mob_Circuit[#i].Position := #j;
+	                                "DB_BIBLIOTHEQUE".Mobile[#ChNoeud._CircuitTemp.Mob_Circuit[#i].Mobile].Pos_Dmd := #j;
+	                                "DB_BIBLIOTHEQUE".Mobile[#ChNoeud._CircuitTemp.Mob_Circuit[#i].Mobile].Pos[#j].Suiv_Enc := #ChNoeud._CircuitTemp.Mob_Circuit[#i + 1].Mobile;
+	                            END_IF;
+	                        END_FOR;
+	                    END_FOR;
+	                    #i := #i + 1;
+	                END_WHILE;
+	                IF #ChNoeud._CircuitTemp.Mob_Circuit[#i].Mobile = #ChNoeud._CircuitTemp.Destination THEN
+	                    "DB_BIBLIOTHEQUE".Mobile[#ChNoeud._CircuitTemp.Mob_Circuit[#i].Mobile].Pos_Dmd := 0;
+	                    "DB_BIBLIOTHEQUE".Mobile[#ChNoeud._CircuitTemp.Mob_Circuit[#i].Mobile].Tjr_Desasservi := true;
+	                END_IF;
+	            END_REGION MAJ Position et chainage
+	            #retu := "Conditon_ChngDest"(TpsPicke := #ChNoeud._TpsPicke, Circuit := #AncCircuit);
+	            
+	            IF #retu THEN
+	                #ChNoeud._Etp := 5;
+	                
+	            END_IF;
+	        END_REGION
+	        
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║               DEMARRAGE            ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	    5:
+	        REGION traitement preliminaire
+	            IF (#ChNoeud._Etp <> #ChNoeud._EtpPrec) THEN
+	                #ChNoeud._EtpPrec := #ChNoeud._Etp;
+	                #ChNoeud._DescEtp := 'demarrage';
+	                #Ret_RD_Sys_T := RD_SYS_T(#ChNoeud._TpsPicke);
+	                //#ret := "Rech_Cir"(Circuit :=ChNoeud._NouvCircuit);
+	                //#ret := "Rech_Cir_SansReserve"(#REC.ChNoeud._NouvCircuit);
+	                (* IF "DB_BIBLIOTHEQUE".Mobile[#ChNoeud._DernierNoeudCommun].Nbr_Pos > 1 THEN
+	                    "DB_BIBLIOTHEQUE".Mobile[#ChNoeud._DernierNoeudCommun].Tjr_Desasservi := FALSE;
+	                    "DB_BIBLIOTHEQUE".Mobile[#ChNoeud._DernierNoeudCommun].Asservi := TRUE;
+	                END_IF; *)
+	                #ret := "Dem_Circuit"(#ChNoeud._CircuitTemp);
+	            END_IF;
+	        END_REGION
+	        REGION TRAITEMENT CYCLIQUE
+	            #retu := "Test_Etat_Circuit"(Etat := "Pret", Debut := 0, CIRCUIT := #ChNoeud._CircuitTemp);
+	            
+	            IF #retu THEN
+	                FOR #i := 0 TO "Nbr_Mob_Circuit" DO
+	                    #ChNoeud._CircuitTemp.Mob_Circuit[#i].Mobile := -1;
+	                    #ChNoeud._CircuitTemp.Mob_Circuit[#i].Position := -1;
+	                END_FOR;
+	                IF #ChNoeud._Premier THEN
+	                    #retu := "Tempo"(Duree := "DB_BIBLIOTHEQUE".Mobile[#ChNoeud._MobSuivNoeaudCommunNv].Tps_Vid, Tps_Picke := #ChNoeud._TpsPicke, Anticip := FALSE, Tps_Passe => #Tpspasse);
+	                    IF #retu THEN
+	                        #ChNoeud._Etp := 6;
+	                    END_IF;
+	                    
+	                ELSIF #ChNoeud._Deuxieme THEN
+	                    FOR #i := #ChNoeud._IndiceDernNoeaud + 1 TO #ChNoeud._NmbMob DO
+	                        IF #AncCircuit.Mob_Circuit[#i].Mobile = -1 THEN
+	                            EXIT;
+	                        END_IF;
+	                        #ret := "Arr_Imm_Mobile"(#AncCircuit.Mob_Circuit[#i].Mobile);
+	                    END_FOR;
+	                    #ChNoeud._Etp := 7;
+	                    #ret := "Rech_Cir"(Circuit := #ChNoeud._NouvCircuit);
+	                ELSE
+	                    #ChNoeud._Etp := 6;
+	                END_IF;
+	            END_IF;
+	        END_REGION
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║              VIDANGE               ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	    6:
+	        REGION traitement preliminaire
+	            IF (#ChNoeud._Etp <> #ChNoeud._EtpPrec) THEN
+	                #ChNoeud._EtpPrec := #ChNoeud._Etp;
+	                #ChNoeud._DescEtp := 'Vidange';
+	                IF "DB_BIBLIOTHEQUE".Mobile[#AncCircuit.Mob_Circuit[#ChNoeud._IndiceDernNoeaud].Mobile].Nbr_Pos > 1 THEN
+	                    #debutboucle := #ChNoeud._IndiceDernNoeaud;
+	                ELSE
+	                    #debutboucle := #ChNoeud._IndiceDernNoeaud + 1;
+	                END_IF;
+	                //   FOR #i :=ChNoeud._IndiceDernNoeaud + 1 TOChNoeud._NmbMob DO
+	                FOR #i := #debutboucle TO #ChNoeud._NmbMob DO
+	                    IF #AncCircuit.Mob_Circuit[#i].Mobile = -1 THEN
+	                        EXIT;
+	                    END_IF;
+	                    #ChNoeud._CircuitTemp.Mob_Circuit[#n].Mobile := #AncCircuit.Mob_Circuit[#i].Mobile;
+	                    #ChNoeud._CircuitTemp.Mob_Circuit[#n].Position := "DB_BIBLIOTHEQUE".Mobile[#AncCircuit.Mob_Circuit[#i].Mobile].Pos_Enc;
+	                    #n := #n + 1;
+	                    //#ret := "Libere_Mobile"(#AncCircuit.Mob_Circuit[#i].Mobile);
+	                    //#ret := "Vid_Mobile"(#AncCircuit.Mob_Circuit[#i].Mobile);
+	                END_FOR;
+	                #Ret_sint := "Fin_Pos_Circuit"(#ChNoeud._CircuitTemp);
+	            END_IF;
+	        END_REGION
+	        REGION TRAITEMENT CYCLIQUE
+	            //#Ret_Bool := "Vid_Circuit_Cycl"(#ChNoeud._CircuitTemp);
+	            // IF "Test_Etat_Circuit"(Etat := "Libre", Debut := 0, CIRCUIT := #ChNoeud._CircuitTemp) THEN
+	            // "DB_BIBLIOTHEQUE".Mobile[#ChNoeud._DernierNoeudCommun].Tjr_Desasservi := FALSE;
+	            //"DB_BIBLIOTHEQUE".Mobile[#ChNoeud._DernierNoeudCommun].Asservi := TRUE;
+	            //
+	            
+	            
+	            
+	            
+	            // "DB_BIBLIOTHEQUE".Mobile[#ChNoeud._DernierNoeudCommun].Tjr_Desasservi := FALSE;
+	            FOR #i := 0 TO 4 DO
+	                "DB_BIBLIOTHEQUE".Mobile[#ChNoeud._CircuitTemp.Mob_Circuit[1].Mobile].Mob_Prec_Ec[#i] := -1;
+	            END_FOR;
+	            
+	            
+	            
+	            
+	            
+	            #Ret_sint := "Libere_Circuit"(#ChNoeud._CircuitTemp);
+	            // IF "DB_BIBLIOTHEQUE".Mobile[#AncCircuit.Destination].Etat = "Libre" THEN
+	            #ret := "Rech_Cir"(#ChNoeud._NouvCircuit);//();
+	            #ChNoeud._Etp := 7;
+	            // END_IF;
+	        END_REGION
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║         DEMARRAGE ORIGINE          ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	    7:
+	        REGION traitement preliminaire
+	            IF (#ChNoeud._Etp <> #ChNoeud._EtpPrec) THEN
+	                #ChNoeud._EtpPrec := #ChNoeud._Etp;
+	                #ChNoeud._DescEtp := 'demarrage origine';
+	                (* IF #Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #Dial_Def.Num_Def_Etazpe OF
+	                        1:
+	                            GOTO ProcChangDest_DEF1;
+	                    END_CASE;
+	                END_IF; *)
+	                #ret := "Dem_Circuit"(#ChNoeud._NouvCircuit);
+	                
+	            END_IF;
+	        END_REGION
+	        REGION TRAITEMENT CYCLIQUE
+	            #retu := "Test_Etat_Circuit"(Etat := "Pret", Debut := 0, CIRCUIT := #ChNoeud._NouvCircuit) AND "PsDemEnc"(#ChNoeud._NouvCircuit);
+	            
+	            
+	            IF #retu THEN
+	                
+	                #FgChangementDest := FALSE;
+	                //#REC.RecCommun.SUPREC.Commande._FgChangDest := FALSE;
+	                (*  "Supervision"(RAZ := FALSE,
+	                              REC := #REC); *)
+	                
+	                #ChNoeud._Etp := 0;
+	                #AncCircuit := #ChNoeud._NouvCircuit;
+	                IF "Valid_Index"(#ChNoeud._DernierNoeudCommun) THEN
+	                    "DB_BIBLIOTHEQUE".Mobile[#ChNoeud._DernierNoeudCommun].Tjr_Desasservi := FALSE;
+	                    "DB_BIBLIOTHEQUE".Mobile[#ChNoeud._DernierNoeudCommun].Asservi := TRUE;
+	                END_IF;
+	                
+	                IF "Valid_Index"(#ChNoeud._DernierNoeudCommun) THEN
+	                    IF "Valid_Index"("DB_BIBLIOTHEQUE".Mobile[#ChNoeud._DernierNoeudCommun].Mob_Prec[0]) THEN
+	                        "DB_BIBLIOTHEQUE".Mobile["DB_BIBLIOTHEQUE".Mobile[#ChNoeud._DernierNoeudCommun].Mob_Prec[0]].Tjr_Desasservi := FALSE;
+	                        "DB_BIBLIOTHEQUE".Mobile["DB_BIBLIOTHEQUE".Mobile[#ChNoeud._DernierNoeudCommun].Mob_Prec[0]].Asservi := TRUE;
+	                    END_IF;
+	                END_IF;
+	                
+	                IF "Valid_Index"(#AncCircuit.Mob_Circuit[#ChNoeud._IndiceDernNoeaud - 1].Mobile) THEN
+	                    "DB_BIBLIOTHEQUE".Mobile[#AncCircuit.Mob_Circuit[#ChNoeud._IndiceDernNoeaud - 1].Mobile].Tjr_Desasservi := FALSE;
+	                    "DB_BIBLIOTHEQUE".Mobile[#AncCircuit.Mob_Circuit[#ChNoeud._IndiceDernNoeaud - 1].Mobile].Asservi := TRUE;
+	                END_IF;
+	                
+	                FOR #i := 0 TO 19 DO
+	                    #ChNoeud._ListeNoeaudAnc[#i] := -1;
+	                END_FOR;
+	                #CelluleTrouve := 0;
+	                #ChngDest := 1;
+	                RETURN;
+	            END_IF;
+	        END_REGION
+	END_CASE;
+	#ChngDest := 0;
+	(* IF #REC._Ptzs._Fg_Produit_Vu = TRUE THEN
+	    #REC.RecCommun.CommunGeneral._Etp := "Etape_surveillance";
+	ELSE
+	    #REC.RecCommun.CommunGeneral._Etp := "Etape_attente_produit";
+	END_IF;
+	RETURN; *)
+	
+	
+	
+	
+	
+	(*      IF #FgBase THEN
+	          IF #IndxDestR> 1 THEN
+	              #ResultProcChangmtdestRec := "Proc_Changement_Dest_REC"(IdRecep := #REC._Ptzs._Id_Rec,
+	                                                                      AncDest := "Nom_Mobile"(#REC.RecCommun.CommunGeneral._AncDest),
+	                                                                      NvDest := "Nom_Mobile"(#REC.RecCommun.CommunGeneral._Ptdest),
+	                                                                      QTE := #REC._Ptzs._DestR._Liste[#REC._Ptzs._DestR._Index - 1]._Qte,
+	                                                                      TpsMarche := #REC._Ptzs._DestR._Liste[#REC._Ptzs._DestR._Index - 1]._Tps / 1000);
+	          ELSE
+	              #ResultProcChangmtdestRec := "Proc_Changement_Dest_REC"(IdRecep := #REC._Ptzs._Id_Rec,
+	                                                                      AncDest := "Nom_Mobile"(#REC.RecCommun.CommunGeneral._AncDest),
+	                                                                      NvDest := "Nom_Mobile"(#REC.RecCommun.CommunGeneral._Ptdest),
+	                                                                      QTE := #REC.RecCommun.CommunGeneral._ParCal._QteTrans,
+	                                                                      TpsMarche := #REC.RecCommun.CommunGeneral._ParCal._TpsTran / 1000);
+	          END_IF;
+	      ELSE
+	          #ResultProcChangmtdestRec := 'OK';
+	      END_IF;
+	      IF #ResultProcChangmtdestRec = 'OK' THEN
+	          #REC.Dial_Def.Reponse_Def := '';
+	          #REC.Dial_Def.Text_Reponse := '';
+	          #REC._CelluleTrouve := 0;
+	          IF #REC._Ptzs._Fg_Produit_Vu = TRUE THEN
+	              #REC.RecCommun.CommunGeneral._Etp := "Etape_surveillance";
+	          ELSE
+	              #REC.RecCommun.CommunGeneral._Etp := "Etape_attente_produit";
+	          END_IF;
+	          RETURN;
+	      END_IF;
+	      IF #ResultProcChangmtdestRec <> 'OK' THEN
+	          #REC.Dial_Def.Num_Def_Etape := 1;
+	          #REC.Dial_Def.Index_Defaut := "Dialog_Defaut"(Msg_Defaut := #ResultProcChangmtdestRec,
+	                                                        Type_Defaut := 2,
+	                                                        Automatisme := #REC.RecCommun.CommunGeneral._Autom,
+	                                                        Num_Lot := #REC._Ptzs._NoLot,
+	                                                        Origine_Defaut := 'Base de donnees',
+	                                                        Libelle_Origine := 'Base de donnees',
+	                                                        Acq1 := 'Abandon',
+	                                                        Acq2 := 'Relance',
+	                                                        Acq3 := '',
+	                                                        Acq4 := '',
+	                                                        Acq5 := '',
+	                                                        Acq6 := '',
+	                                                        Acq7 := '',
+	                                                        Acq8 := '',
+	                                                        Acq_Choisi := -1,
+	                                                        Date_Arrivee := #REC._TpsPicke);
+	          #ChNoeud._Etp := 8;
+	          RETURN;
+	      END_IF;
+	  END_IF;
+	ProcChangDest_DEF1:
+	  //============ Traitement des reponses pour le defaut1   Traitement_Badge=============================================================//
+	  IF #REC.Dial_Def.Reponse_Def = 'Relance' THEN
+	      #REC.Dial_Def.Reponse_Def := '';
+	      #ChNoeud._Etp := 7;
+	      RETURN;
+	  END_IF;
+	  IF #REC.Dial_Def.Reponse_Def = 'Abandon' THEN
+	      #ChNoeud._Etp := 0;
+	      IF #REC._Ptzs._Fg_Produit_Vu = TRUE THEN
+	          #REC.RecCommun.CommunGeneral._Etp := "Etape_surveillance";
+	      ELSE
+	          #REC.RecCommun.CommunGeneral._Etp := "Etape_attente_produit";
+	      END_IF;
+	      #REC.Dial_Def.Reponse_Def := '';
+	      RETURN;
+	  END_IF;
+	  //============================================  Fin traitement  ====================================================================//
+	  
+	END_REGION
+	
+	
+	(*      
+	*************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                       ╔════════════════════════════════════╗
+	                                                                       ║ Etape "Attente Reponse Dialogue"   ║
+	                                                                       ╚════════════════════════════════════╝
+	*************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                    
+	*)
+	    8:
+	        REGION Preliminaire Attente Acquuitement
+	            IF (#REC.ChNoeud._Etp <>#ChNoeud._EtpPrec) THEN
+	                #ChNoeud._EtpMemo :=#ChNoeud._EtpPrec;
+	                #ChNoeud._EtpPrec :=#ChNoeud._Etp;
+	                #ChNoeud._DescEtp := 'Attente Reponse Dialogue';
+	                
+	            END_IF;
+	        END_REGION Preliminaire Attente Acquuitement
+	        REGION Cyclique Attente Acquitement
+	            #REC.Dial_Def.Reponse_Def := "FC_Recup_Rep_Def"(Index_Def := #REC.Dial_Def.Index_Defaut, Reponse_Ecrit => #REC.Dial_Def.Text_Reponse);
+	            IF #REC.Dial_Def.Reponse_Def <> '' THEN
+	                "FC_Raz_Def"(#REC.Dial_Def.Index_Defaut);
+	                #ChNoeud._Etp := #REC.RecCommun.CommunGeneral._EtpMemo;
+	                RETURN;
+	            END_IF;
+	        END_REGION Cyclique Attente Acquitement   
+	END_CASE; *)
+	
+END_FUNCTION
+

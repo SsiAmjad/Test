@@ -1,0 +1,23 @@
+﻿FUNCTION "Test_Dernier_Produit" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Lst_Compos : Array[0..19] of "S_Com_Fab";
+   END_VAR
+
+   VAR_TEMP 
+      i : SInt;
+   END_VAR
+
+
+BEGIN
+	FOR #i := 0 TO 19 DO
+	    IF #Lst_Compos[#i].Code_MP <> '' AND NOT #Lst_Compos[#i].Fin_Dos THEN
+	        #Test_Dernier_Produit := FALSE;
+	        RETURN;
+	    END_IF;
+	END_FOR;
+	#Test_Dernier_Produit := TRUE;
+	RETURN;
+END_FUNCTION
+

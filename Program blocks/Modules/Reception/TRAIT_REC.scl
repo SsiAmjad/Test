@@ -1,0 +1,388 @@
+﻿FUNCTION "TRAIT_REC" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Fg_Base : Bool;
+   END_VAR
+
+   VAR_OUTPUT 
+      PT_Suiv : "S_MODULE_SUIVI_COMMUNREC";
+   END_VAR
+
+   VAR_IN_OUT 
+      Badge : "S_REC";
+      REC : "S_REC";
+   END_VAR
+
+   VAR_TEMP 
+      Zone : SInt;
+      i : Int;
+      Ret : Int;
+      Circuit : "S_Circuit";
+      TextDef1 : String;
+      TextDef2 : String;
+      TextDef3 : String;
+      TextDef4 : String;
+      TextDef5 : String;
+      TextDef : String;
+      Defaut : Bool;
+      Ret_RD_Sys_T : Int;
+      ResultProcRechRec : String[254];
+      ResultProcRechParam : String[254];
+      ResultProcChDest : String[254];
+      Text_Def : String;
+      RetFct : SInt;
+      RetProc : Bool;
+      ret_string : String;
+      Temp_Char : Char;
+   END_VAR
+
+
+BEGIN
+	// Fonction pour traiter les differents defauts au niveau de la recuperation des données de la base de données
+	CASE #Badge.TraitRec.Etape OF
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                        ╔════════════════════════════════════╗
+	                                                                        ║               REPOS                ║
+	                                                                        ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	    0:
+	        REGION traitement preliminaire 'Repos'
+	            IF (#Badge.TraitRec.Etape <> #Badge.TraitRec.EtpPrec) THEN
+	                #Badge.TraitRec.EtpPrec := #Badge.TraitRec.Etape;
+	            END_IF;
+	        END_REGION traitement preliminaire 'Repos'
+	        REGION traitement cyclique 'Repos'
+	            IF NOT #Badge._FgLanc THEN
+	                //Recherche zone de suivi lot
+	                #Ret := "Rech_Zone_Suivi_Libre"(#Badge.RecCommun.CommunGeneral._NumZone);
+	                IF #Ret = 1 THEN
+	                    #Badge.TraitRec.Etape := 1;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	            
+	        END_REGION traitement cyclique 'Repos'
+	        
+	        
+	        (* 1:
+	             IF #REC._FgLanc THEN
+	                 #PT_Suiv.Tab_Lots[#REC.RecCommun.CommunGeneral._NumZone] := #REC._PtzsScan;
+	                 #Ret := "Maj_Activ"(Num_Zone := #REC.RecCommun.CommunGeneral._NumZone, Num_Tache := #REC.RecCommun.CommunGeneral._Tache);
+	                 #REC.TraitRec.Etape := 0;
+	                 
+	             END_IF; *)
+	        
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                        ╔════════════════════════════════════╗
+	                                                                        ║         Attente  Lanc              ║
+	                                                                        ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	    1:
+	        REGION traitement preliminaire 
+	            IF (#Badge.TraitRec.Etape <> #Badge.TraitRec.EtpPrec) THEN
+	                #Badge.TraitRec.EtpPrec := #Badge.TraitRec.Etape;
+	                IF #Badge.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #Badge.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO ConfLance_DEF1;
+	                    END_CASE;
+	                END_IF;
+	            END_IF;
+	        END_REGION traitement preliminaire
+	        REGION traitement cyclique 
+	            //Attente lancement par badge
+	            IF #Badge._FgLanc THEN
+	                #Badge._PtzsScan._DestInit := #Badge._PtzsScan._Dest[0];
+	                // #PT_Suiv.Tab_Lots[#REC.RecCommun.CommunGeneral._NumZone] := #REC._PtzsScan;
+	                
+	                IF #Badge._fgConfLanc THEN
+	                    #Badge.Dial_Def.Num_Def_Etape := 1;
+	                    #Text_Def := CONCAT(IN1 := 'Lancement de la reception de ', IN2 := #Badge._PtzsScan._Orig[0], IN3 := ' vers  ', IN4 := #Badge._PtzsScan._Dest[0]);
+	                    #Badge.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base,
+	                                                                    Msg_Defaut := #Text_Def,
+	                                                                    Type_Defaut := 2,
+	                                                                    Automatisme := #Badge.RecCommun.CommunGeneral._Autom,
+	                                                                    Num_Lot := #Badge._PtzsScan._NoLot,
+	                                                                    Origine_Defaut := 'Confirmation Lancement',
+	                                                                    Libelle_Origine := 'Confirmation Lancement',
+	                                                                    Acq1 := 'Oui',
+	                                                                    Acq2 := 'Non',
+	                                                                    Acq3 := 'Cellule',
+	                                                                    Acq4 := '',
+	                                                                    Acq5 := '',
+	                                                                    Acq6 := '',
+	                                                                    Acq7 := '',
+	                                                                    Acq8 := '',
+	                                                                    Acq_Choisi := -1,
+	                                                                    Date_Arrivee := #Badge.TraitRec.TpsPicke);
+	                    
+	                    #Badge.TraitRec.Etape := 4;
+	                    RETURN;
+	                ELSE
+	                    #Badge.Dial_Def.Reponse_Def := 'Oui';
+	                END_IF;
+	            END_IF;
+	        ConfLance_DEF1:
+	            
+	            //============ Traitement des reponses pour le defaut1 Confirmation de lancement   ====================================//
+	            IF #Badge.Dial_Def.Reponse_Def = 'Non' THEN
+	                #Badge._FgLanc := FALSE;
+	                "DB_BIBLIOTHEQUE".Zones_Suivi[#Badge.RecCommun.CommunGeneral._NumZone].Occupee := FALSE;
+	                #Badge.TraitRec.Etape := 0;
+	                #Badge.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            IF #Badge.Dial_Def.Reponse_Def = 'Cellule' THEN
+	                #Badge._PtzsScan._Dest[0] := #Badge.Dial_Def.Text_Reponse;
+	                #Badge._PtzsScan._NouvDest := #Badge.Dial_Def.Text_Reponse;
+	                #Badge.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            IF #Badge.Dial_Def.Reponse_Def = 'Oui' THEN
+	                #Badge.TraitRec.Etape := 2;
+	                #Badge.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            
+	            
+	        END_REGION traitement cyclique 
+	        
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                        ╔════════════════════════════════════╗
+	                                                                        ║           Check Donnees            ║
+	                                                                        ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	//Je teste si les parametres sont renseignes
+	2:
+	    REGION traitement preliminaire 'Check donnees'
+	        IF (#Badge.TraitRec.Etape <> #Badge.TraitRec.EtpPrec) THEN
+	            #Badge.TraitRec.EtpPrec := #Badge.TraitRec.Etape;
+	            IF #Badge.Dial_Def.Reponse_Def <> '' THEN
+	                CASE #Badge.Dial_Def.Num_Def_Etape OF
+	                    1:
+	                        GOTO CheckDonnees_DEF1;
+	                END_CASE;
+	            END_IF;
+	            #Ret_RD_Sys_T := RD_SYS_T(#Badge.TraitRec.TpsPicke);
+	        END_IF;
+	    END_REGION traitement preliminaire 'Check donnees'
+	    REGION traitement cyclique 'Check donnees'
+	        #Ret := "Index_Mobile"(#Badge._PtzsScan._Orig[0]);
+	        IF #Ret = -1 THEN
+	            #Defaut := true;
+	            #TextDef1 := CONCAT(IN1 := 'Origine ', IN2 := #Badge._PtzsScan._Orig[0], IN3 := ' Inexistant');
+	        END_IF;
+	        #Ret := "Index_Mobile"(#Badge._PtzsScan._Dest[0]);
+	        IF #Ret = -1 THEN
+	            #Defaut := true;
+	            #TextDef2 := CONCAT(IN1 := 'Destination ', IN2 := #Badge._PtzsScan._Dest[0], IN3 := ' Inexistante');
+	        END_IF;
+	        IF #Badge._PtzsScan._Qte_Prev <= 0 THEN
+	            #Defaut := true;
+	            #TextDef3 := 'Manque du parametre Quantite prevue';
+	        END_IF;
+	        IF #Badge._PtzsScan._NoLot = '' THEN
+	            #Defaut := true;
+	            #TextDef4 := 'Manque du parametre Num Lot';
+	        END_IF;
+	        IF #Badge._PtzsScan._CdMat = '' THEN
+	            #Defaut := true;
+	            #TextDef5 := 'Manque du parametre Code matiere';
+	        END_IF;
+	        #TextDef := CONCAT(IN1 := #TextDef1, IN2 := #TextDef2, IN3 := #TextDef3, IN4 := #TextDef4, IN5 := #TextDef5);
+	        IF #Defaut THEN
+	            // Affichage d'un message defaut Données recuperees invalide
+	            #Badge.Dial_Def.Num_Def_Etape := 1;
+	            #Badge.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base, Msg_Defaut := #TextDef,
+	                                                            Type_Defaut := 2,
+	                                                            Automatisme := #Badge.RecCommun.CommunGeneral._Autom,
+	                                                            Num_Lot := #Badge._Ptzs._NoLot,
+	                                                            Origine_Defaut := 'Base de donnees',
+	                                                            Libelle_Origine := 'Donnees Invalide',
+	                                                            Acq1 := 'Relance',
+	                                                            Acq2 := '',
+	                                                            Acq3 := '',
+	                                                            Acq4 := '',
+	                                                            Acq5 := '',
+	                                                            Acq6 := '',
+	                                                            Acq7 := '',
+	                                                            Acq8 := '',
+	                                                            Acq_Choisi := -1,
+	                                                            Date_Arrivee := #Badge.TraitRec.TpsPicke);
+	            #Badge.TraitRec.Etape := 4;
+	            RETURN;
+	        ELSE
+	            #Badge.TraitRec.Etape := 3;
+	            RETURN;
+	        END_IF;
+	    CheckDonnees_DEF1:
+	        //============ Traitement des reponses pour le defaut1 Check Donnees =============================================================//
+	        IF #Badge.Dial_Def.Reponse_Def = 'Relance' THEN
+	            #Badge.Dial_Def.Reponse_Def := '';
+	            RETURN;
+	        END_IF;
+	        //============================================  Fin traitement  ====================================================================//
+	        
+	        
+	        
+	        
+	    END_REGION traitement cyclique 'Check donnees' *)
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                        ╔════════════════════════════════════╗
+	                                                                        ║        CONTROLE DESTINATION        ║
+	                                                                        ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	3:
+	    REGION traitement preliminaire 
+	        IF (#Badge.TraitRec.Etape <> #Badge.TraitRec.EtpPrec) THEN
+	            #Badge.TraitRec.EtpPrec := #Badge.TraitRec.Etape;
+	            #Ret_RD_Sys_T := RD_SYS_T(#Badge.TraitRec.TpsPicke);
+	        END_IF;
+	    END_REGION traitement preliminaire
+	    REGION traitement cyclique 
+	        "ControleDest"(fgbase := #Fg_Base,
+	                       TypeCelDest := #Badge._TypeCelDest,
+	                       FgMaskCtrlNh := #Badge._FgMaskCtrlNh,
+	                       "Return" => #RetFct,
+	                       FgLanc => #Badge._FgLanc,
+	                       NiveauHautDestNh => #Badge._NiveauHautDestNh,
+	                       CntlDest := #Badge.CntlDest,
+	                       Dial_Def := #Badge.Dial_Def,
+	                       NoLot := #Badge._PtzsScan._NoLot,
+	                       CdZoneDest := #Badge._PtzsScan._Dest[0],
+	                       Anc_Dest := #Badge._PtzsScan._AncDest,
+	                       Nouv_Dest := #Badge._PtzsScan._NouvDest,
+	                       CdMat := #Badge._PtzsScan._CdMat,
+	                       NomAuto := #Badge.RecCommun.CommunGeneral._Autom);
+	        
+	        IF #RetFct = -1 THEN
+	            "DB_BIBLIOTHEQUE".Zones_Suivi[#Badge.RecCommun.CommunGeneral._NumZone].Occupee := FALSE;
+	            #Badge._FgLanc := FALSE;
+	            #REC._FgLanc := FALSE;
+	            #Badge.TraitRec.Etape := 0;
+	            RETURN;
+	        END_IF;
+	        IF #RetFct = 1 THEN
+	            IF #Badge._PtzsScan._NouvDest <> '' AND #Badge._PtzsScan._NouvDest <> #Badge._PtzsScan._DestInit THEN
+	                #Badge._PtzsScan._AncDest := #Badge._PtzsScan._DestInit;
+	                #ResultProcChDest := "Proc_Changement_Dest_REC"(NumPoste := "Num_Poste",
+	                                                                IdRecep := #Badge._PtzsScan._Id_Rec,
+	                                                                AncDest := #Badge._PtzsScan._AncDest,
+	                                                                NvDest := #Badge._PtzsScan._NouvDest,
+	                                                                QTE := 0,
+	                                                                TpsMarche := T#0s, Msg_Def => #Text_Def);
+	                
+	                IF #ResultProcChDest = 'OK' THEN
+	                    #Badge._PtzsScan._Dest[0] := #Badge._PtzsScan._NouvDest;
+	                    #Badge._PtzsScan._NouvDest := '';
+	                    #ret_string := "Proc_AffecT"(NumPoste := "Num_Poste",
+	                                                 zone := #Badge._PtzsScan._NouvDest,
+	                                                 CodeMat := #Badge._PtzsScan._CdMat,
+	                                                 Formule := #Temp_Char,
+	                                                 LieuDos := '',
+	                                                 Qte := 0,
+	                                                 TypeMvmnt := '040',
+	                                                 Procede := #Badge.RecCommun.CommunGeneral._Autom,
+	                                                 NoLotOrig := '',
+	                                                 NoLotDest := #Badge._PtzsScan._NoLot,
+	                                                 Utilisateur := 'SAS',
+	                                                 SCb := '0',
+	                                                 Sof := #Badge._PtzsScan._Cd_Rec, Msg_Def => #Text_Def);
+	                    
+	                END_IF;
+	            END_IF;
+	            #ResultProcRechParam := "Proc_Recherche_ParmAut"(Article := #Badge._PtzsScan._CdMat,
+	                                                             Procede := #Badge.RecCommun.CommunGeneral._Autom,
+	                                                             Section := 'Circuit',
+	                                                             NumPoste := "Num_Poste",
+	                                                             Msg_Def => #Text_Def,
+	                                                             SUIV_REC := #Badge._PtzsScan);
+	            
+	            #PT_Suiv.Tab_Lots[#Badge.RecCommun.CommunGeneral._NumZone] := #Badge._PtzsScan;
+	            
+	            
+	            #Ret := "Maj_Activ"(Num_Zone := #Badge.RecCommun.CommunGeneral._NumZone, Num_Tache := #Badge.RecCommun.CommunGeneral._Tache);
+	            #Badge.TraitRec.Etape := 0;
+	            RETURN;
+	        END_IF;
+	        
+	        
+	        
+	        
+	        
+	        
+	        
+	        
+	    END_REGION traitement cyclique 
+	    
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                        ╔════════════════════════════════════╗
+	                                                                        ║           Check Donnees            ║
+	                                                                        ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	//Je teste si les parametres sont renseignes
+	(* 4:
+	REGION traitement preliminaire 'Check donnees'
+	    IF (#REC.TraitRec.Etape <> #REC.TraitRec.EtpPrec) THEN
+	        #REC.TraitRec.EtpPrec := #REC.TraitRec.Etape;
+	        IF #REC.Dial_Def.Reponse_Def <> '' THEN
+	            CASE #REC.Dial_Def.Num_Def_Etape OF
+	                1:
+	                    GOTO CheckDonnees_DEF1;
+	            END_CASE;
+	        END_IF;
+	        #Ret_RD_Sys_T := RD_SYS_T(#REC.TraitRec.TpsPicke);
+	    END_IF;
+	END_REGION traitement preliminaire 'Check donnees'
+	REGION traitement cyclique 'Check donnees'    
+	    
+	    *)
+	    
+	(*      
+	*************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                           ╔════════════════════════════════════╗
+	                                                                           ║ Etape "Attente Reponse Dialogue"   ║
+	                                                                           ╚════════════════════════════════════╝
+	*************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                    
+	*)
+	4:
+	    REGION Preliminaire Attente Acquuitement
+	        IF (#Badge.TraitRec.Etape <> #Badge.TraitRec.EtpPrec) THEN
+	            #Badge.TraitRec.EtapeMemo := #Badge.TraitRec.EtpPrec;
+	            #Badge.TraitRec.EtpPrec := #Badge.TraitRec.Etape;
+	        END_IF;
+	        
+	    END_REGION Preliminaire Attente Acquuitement
+	    REGION Cyclique Attente Acquitement
+	        
+	        #Badge.Dial_Def.Reponse_Def := "FC_Recup_Rep_Def"(Index_Def := #Badge.Dial_Def.Index_Defaut, Reponse_Ecrit => #Badge.Dial_Def.Text_Reponse);
+	        IF #Badge.Dial_Def.Reponse_Def <> '' THEN
+	            "FC_Raz_Def"(#Badge.Dial_Def.Index_Defaut);
+	            #Badge.TraitRec.Etape := #Badge.TraitRec.EtapeMemo;
+	            RETURN;
+	        END_IF;
+	    END_REGION Cyclique Attente Acquitement   
+	    
+	END_CASE;
+	
+	
+	
+	
+	
+	
+	
+	
+	
+END_FUNCTION
+

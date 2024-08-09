@@ -1,0 +1,542 @@
+﻿FUNCTION "Parametres" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_TEMP 
+      ret_sint : Int;
+   END_VAR
+
+
+BEGIN
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                        ╔════════════════════════════════════╗
+	                                                                        ║           FLAG BASE/Simul          ║
+	                                                                        ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	"fgbase" := TRUE;
+	"simul" := TRUE;
+	"Commande_Simulation" := 1;
+	
+	
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                        ╔════════════════════════════════════╗
+	                                                                        ║         RECEPTION FOSSE 1          ║
+	                                                                        ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	"BadgeReception1"._TpClignot := T#90s;
+	"BadgeReception1"._TpMaintVoyant := T#1m;
+	"BadgeReception1"._ptmodrec._FgValidEnchain := True;
+	"BadgeReception1"._ptmodrec._FgConfEnch := True;
+	"BadgeReception1"._ptmodrec._NomFos := "DB_REC".REC[0]._NomFos := 'Fosse01';
+	"BadgeReception1"._ptmodrec.RecCommun.CommunGeneral._Tache :=  "DB_REC".REC[0].RecCommun.CommunGeneral._Tache := "TAC_REC1";
+	"BadgeReception1"._ptmodrec.RecCommun.CommunGeneral._Autom:="DB_REC".REC[0].RecCommun.CommunGeneral._Autom := 'RECF1';//'Reception01';
+	
+	
+	"DB_REC".REC[0].RecCommun.CommunGeneral._NumZone := "BadgeReception1"._ptmodrec.RecCommun.CommunGeneral._NumZone;
+	"DB_REC".REC[0]._FgVerifQte := FALSE;
+	"DB_REC".REC[0]._FgDepartAuto := TRUE;
+	"DB_REC".REC[0]._NoCir := 1;
+	"DB_REC".REC[0]._CaptPm := TRUE;
+	"DB_REC".REC[0]._fgTestQtePossible := TRUE;
+	"DB_REC".REC[0]._TpFPm := "TpFPm";    //Temporisation de filtrage de perte du passage matiere du transporteur pour l'acquit fosse vide
+	"DB_REC".REC[0]._tpPresPm := "TpPresPm";   //Temporisation de filtrage pour prise en compte du passage matiere par l'automatisme 
+	"DB_REC".REC[0]._tpDefPm := "TpDefPm";   //Temporisation d'attente du passage matière avant activation d'un dialogue de défaut 
+	"DB_REC".REC[0]._TpMaskNh := "TpMaskNh"; //Temporisation pour masquer le niveau haut
+	"DB_REC".REC[0]._TpDefNh := "TpDefNh"; //Temporisation pour afficher defaut  niveau haut
+	"DB_REC".REC[0]._FgTestFinPm := TRUE;
+	"DB_REC".REC[0]._TypeCelDest := "RECF1";
+	"DB_REC".REC[0]._FgDemArr := FALSE;
+	"DB_REC".REC[0]._Volume := 2500;
+	"DB_REC".REC[0]._Densite := 0.75;
+	"DB_REC".REC[0].RecCommun.CommunGeneral._ParCal._DebVolTrans := 20;
+	"DB_REC".REC[0]._FgGestDens := TRUE;
+	
+	    //++++++++Boucle Controle Temperature++++++\\   
+	    "DB_CntrlTemp"."THIS"[0]._SeuilTempMax := 60;
+	    "DB_CntrlTemp"."THIS"[0]._SeuilRelance := 40;
+	    "DB_CntrlTemp"."THIS"[0]._TpAvRedAmo := "TpAvRedAmo";
+	    "DB_CntrlTemp"."THIS"[0]._TpAvArrMobi := "TpAvArrMobi";
+	    "DB_CntrlTemp"."THIS"[0]._TpAvSuspAmo := "TpAvSuspAmo";
+	    "DB_CntrlTemp"."THIS"[0]._TpAvRedMob := "TpAvRedMob";
+	    //++++++++Boucle Controle Deport Bande++++++\\  
+	    "DB_DeportBande"."THIS"[0]._Mobile := 13; //E1
+	    "DB_DeportBande"."THIS"[0]._TpAvRedAmo := "TpAvRedAmo";
+	    "DB_DeportBande"."THIS"[0]._TpAvArrMobi := "TpAvArrMobi";
+	    "DB_DeportBande"."THIS"[0]._TpAvSuspAmo := "TpAvSuspAmo";
+	    "DB_DeportBande"."THIS"[0]._TpAvRedMob := "TpAvRedMob";
+	    //++++++++Boucle Controle Intensité++++++\\  
+	    "DB_CntrlInt"."THIS"[0]._Mobile := 13;
+	    "DB_CntrlInt"."THIS"[0]._SeuilIntMax := 25;
+	    "DB_CntrlInt"."THIS"[0]._SeuilRelance := 20;
+	    "DB_CntrlInt"."THIS"[0]._TpAvRedAmo := "TpAvRedAmo";
+	    "DB_CntrlInt"."THIS"[0]._TpAvArrMobi := "TpAvArrMobi";
+	    "DB_CntrlInt"."THIS"[0]._TpAvSuspAmo := "TpAvSuspAmo";
+	    "DB_CntrlInt"."THIS"[0]._TpAvRedMob := "TpAvRedMob";
+	    
+	    //"DB_REC".REC[0]._FgVerifQte := TRUE;
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                        ╔════════════════════════════════════╗
+	                                                                        ║         RECEPTION FOSSE 2          ║
+	                                                                        ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	    "BadgeReception2"._TpClignot := T#90s;
+	    "BadgeReception2"._TpMaintVoyant := T#1m;
+	    "BadgeReception2"._ptmodrec._FgValidEnchain := True;
+	    "BadgeReception2"._ptmodrec._FgConfEnch := True;
+	    "BadgeReception2"._ptmodrec._NomFos := "DB_REC".REC[3]._NomFos := 'Fosse02';
+	    "BadgeReception2"._ptmodrec.RecCommun.CommunGeneral._Tache := "DB_REC".REC[3].RecCommun.CommunGeneral._Tache := "TAC_REC2";
+	    "BadgeReception2"._ptmodrec.RecCommun.CommunGeneral._Autom := "DB_REC".REC[3].RecCommun.CommunGeneral._Autom := 'RECF2';//'Reception02';
+	    
+	    "DB_REC".REC[3].RecCommun.CommunGeneral._NumZone := "BadgeReception3"._ptmodrec.RecCommun.CommunGeneral._NumZone;
+	   
+	    "DB_REC".REC[3]._FgVerifQte := FALSE;
+	    "DB_REC".REC[3]._FgDepartAuto := TRUE;
+	    "DB_REC".REC[3]._NoCir := 2;
+	    "DB_REC".REC[3]._CaptPm := TRUE;
+	    "DB_REC".REC[3]._fgTestQtePossible := TRUE;
+	    "DB_REC".REC[3]._TpFPm := "TpFPm";    //Temporisation de filtrage de perte du passage matiere du transporteur pour l'acquit fosse vide
+	    "DB_REC".REC[3]._tpPresPm := "TpPresPm";   //Temporisation de filtrage pour prise en compte du passage matiere par l'automatisme 
+	    "DB_REC".REC[3]._tpDefPm := "TpDefPm";   //Temporisation d'attente du passage matière avant activation d'un dialogue de défaut 
+	    "DB_REC".REC[3]._TpMaskNh := "TpMaskNh"; //Temporisation pour masquer le niveau haut
+	    "DB_REC".REC[3]._TpDefNh := "TpDefNh"; //Temporisation pour afficher defaut  niveau haut
+	    "DB_REC".REC[3]._FgTestFinPm := TRUE;
+	    "DB_REC".REC[3]._TypeCelDest := "RECF2";
+	    "DB_REC".REC[3]._FgDemArr := FALSE;
+	    "DB_REC".REC[3]._Volume := 2500;
+	    "DB_REC".REC[3]._Densite := 0.75;
+	    "DB_REC".REC[3].RecCommun.CommunGeneral._ParCal._DebVolTrans := 20;
+	 
+	    //++++++++Boucle Controle Temperature++++++\\   
+	    "DB_CntrlTemp"."THIS"[3]._SeuilTempMax := 60;
+	    "DB_CntrlTemp"."THIS"[3]._SeuilRelance := 40;
+	    "DB_CntrlTemp"."THIS"[3]._TpAvRedAmo := "TpAvRedAmo";
+	    "DB_CntrlTemp"."THIS"[3]._TpAvArrMobi := "TpAvArrMobi";
+	    "DB_CntrlTemp"."THIS"[3]._TpAvSuspAmo := "TpAvSuspAmo";
+	    "DB_CntrlTemp"."THIS"[3]._TpAvRedMob := "TpAvRedMob";
+	    //++++++++Boucle Controle Deport Bande++++++\\  
+	    "DB_DeportBande"."THIS"[3]._Mobile := 13; //E1
+	    "DB_DeportBande"."THIS"[3]._TpAvRedAmo := "TpAvRedAmo";
+	    "DB_DeportBande"."THIS"[3]._TpAvArrMobi := "TpAvArrMobi";
+	    "DB_DeportBande"."THIS"[3]._TpAvSuspAmo := "TpAvSuspAmo";
+	    "DB_DeportBande"."THIS"[3]._TpAvRedMob := "TpAvRedMob";
+	    //++++++++Boucle Controle Intensité++++++\\  
+	    "DB_CntrlInt"."THIS"[3]._Mobile := 13;
+	    "DB_CntrlInt"."THIS"[3]._SeuilIntMax := 25;
+	    "DB_CntrlInt"."THIS"[3]._SeuilRelance := 20;
+	    "DB_CntrlInt"."THIS"[3]._TpAvRedAmo := "TpAvRedAmo";
+	    "DB_CntrlInt"."THIS"[3]._TpAvArrMobi := "TpAvArrMobi";
+	    "DB_CntrlInt"."THIS"[3]._TpAvSuspAmo := "TpAvSuspAmo";
+	    "DB_CntrlInt"."THIS"[3]._TpAvRedMob := "TpAvRedMob";
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                        ╔════════════════════════════════════╗
+	                                                                        ║         RECEPTION FOSSE 3          ║
+	                                                                        ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	    "BadgeReception3"._TpClignot := T#90s;
+	    "BadgeReception3"._TpMaintVoyant := T#1m;
+	    "BadgeReception3"._ptmodrec._FgValidEnchain := True;
+	    "BadgeReception3"._ptmodrec._FgConfEnch := True;
+	    "BadgeReception3"._ptmodrec._NomFos := "DB_REC".REC[1]._NomFos := 'Fosse03';
+	    "BadgeReception3"._ptmodrec.RecCommun.CommunGeneral._Tache := "DB_REC".REC[1].RecCommun.CommunGeneral._Tache := "TAC_REC3";
+	    "BadgeReception3"._ptmodrec.RecCommun.CommunGeneral._Autom := "DB_REC".REC[1].RecCommun.CommunGeneral._Autom := 'RECF3';//'Reception03';
+	    
+	    "DB_REC".REC[1].RecCommun.CommunGeneral._NumZone := "BadgeReception3"._ptmodrec.RecCommun.CommunGeneral._NumZone;
+	
+	    "DB_REC".REC[1]._FgDepartAuto := TRUE;
+	    "DB_REC".REC[1]._NoCir := 3;
+	    "DB_REC".REC[1]._CaptPm := TRUE;
+	    "DB_REC".REC[1]._fgTestQtePossible := TRUE;
+	    "DB_REC".REC[1]._TpFPm := "TpFPm";    //Temporisation de filtrage de perte du passage matiere du transporteur pour l'acquit fosse vide
+	    "DB_REC".REC[1]._tpPresPm := "TpPresPm";   //Temporisation de filtrage pour prise en compte du passage matiere par l'automatisme 
+	    "DB_REC".REC[1]._tpDefPm := "TpDefPm";   //Temporisation d'attente du passage matière avant activation d'un dialogue de défaut 
+	    "DB_REC".REC[1]._TpMaskNh := "TpMaskNh"; //Temporisation pour masquer le niveau haut
+	    "DB_REC".REC[1]._TpDefNh := "TpDefNh"; //Temporisation pour afficher defaut  niveau haut
+	    "DB_REC".REC[1]._FgTestFinPm := TRUE;
+	    "DB_REC".REC[1]._TypeCelDest := "RECF3";
+	    "DB_REC".REC[1]._FgVerifQte := FALSE;
+	    "DB_REC".REC[1]._FgDemArr := FALSE;
+	    "DB_REC".REC[1]._Volume := 2500;
+	    "DB_REC".REC[1]._Densite := 0.65;
+	    "DB_REC".REC[1].RecCommun.CommunGeneral._ParCal._DebVolTrans := 15;
+	    "DB_REC".REC[1]._TpMaskNh := T#1m;
+	 
+	     //++++++++Boucle Controle Temperature++++++\\
+	    "DB_CntrlTemp"."THIS"[1]._SeuilTempMax := 60;
+	    "DB_CntrlTemp"."THIS"[1]._SeuilRelance := 40;
+	    "DB_CntrlTemp"."THIS"[1]._TpAvRedAmo := "TpAvRedAmo";
+	    "DB_CntrlTemp"."THIS"[1]._TpAvArrMobi := "TpAvArrMobi";
+	    "DB_CntrlTemp"."THIS"[1]._TpAvSuspAmo := "TpAvSuspAmo";
+	    "DB_CntrlTemp"."THIS"[1]._TpAvRedMob := "TpAvRedMob";
+	     //++++++++Boucle Controle Deport de bande++++++\\
+	    "DB_DeportBande"."THIS"[1]._Mobile := 16; //E4
+	    "DB_DeportBande"."THIS"[1]._TpAvRedAmo := "TpAvRedAmo";
+	    "DB_DeportBande"."THIS"[1]._TpAvArrMobi := "TpAvArrMobi";
+	    "DB_DeportBande"."THIS"[1]._TpAvSuspAmo := "TpAvSuspAmo";
+	    "DB_DeportBande"."THIS"[1]._TpAvRedMob := "TpAvRedMob";
+	    //++++++++Boucle Controle Intensité++++++\\
+	    "DB_CntrlInt"."THIS"[1]._Mobile := 16;
+	    "DB_CntrlInt"."THIS"[1]._SeuilIntMax := 25;
+	    "DB_CntrlInt"."THIS"[1]._SeuilRelance := 20;
+	    "DB_CntrlInt"."THIS"[1]._TpAvRedAmo := "TpAvRedAmo";
+	    "DB_CntrlInt"."THIS"[1]._TpAvArrMobi := "TpAvArrMobi";
+	    "DB_CntrlInt"."THIS"[1]._TpAvSuspAmo := "TpAvSuspAmo";
+	    "DB_CntrlInt"."THIS"[1]._TpAvRedMob := "TpAvRedMob";
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                        ╔════════════════════════════════════╗
+	                                                                        ║         RECEPTION FOSSE 4          ║
+	                                                                        ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	    
+	    "BadgeReception4"._TpClignot := T#90s;
+	    "BadgeReception4"._TpMaintVoyant := T#1m;
+	    "BadgeReception4"._ptmodrec._FgValidEnchain := True;
+	    "BadgeReception4"._ptmodrec._FgConfEnch := True;
+	    "BadgeReception4"._ptmodrec._NomFos := "DB_REC".REC[1]._NomFos := 'Fosse04';
+	    "BadgeReception4"._ptmodrec.RecCommun.CommunGeneral._Tache := "DB_REC".REC[2].RecCommun.CommunGeneral._Tache := "TAC_REC4";
+	    "BadgeReception4"._ptmodrec.RecCommun.CommunGeneral._Autom := "DB_REC".REC[2].RecCommun.CommunGeneral._Autom := 'RECF4';//'Reception04';
+	    
+	    "DB_REC".REC[2].RecCommun.CommunGeneral._NumZone := "BadgeReception4"._ptmodrec.RecCommun.CommunGeneral._NumZone;
+	    
+	  
+	    "DB_REC".REC[2]._FgVerifQte := FALSE;
+	    "DB_REC".REC[2]._FgDepartAuto := TRUE;
+	    "DB_REC".REC[2]._NoCir := 4;
+	    "DB_REC".REC[2]._CaptPm := TRUE;
+	    "DB_REC".REC[2]._fgTestQtePossible := TRUE;
+	    "DB_REC".REC[2]._TpFPm := "TpFPm";    //Temporisation de filtrage de perte du passage matiere du transporteur pour l'acquit fosse vide
+	    "DB_REC".REC[2]._tpPresPm := "TpPresPm";   //Temporisation de filtrage pour prise en compte du passage matiere par l'automatisme 
+	    "DB_REC".REC[2]._tpDefPm := "TpDefPm";   //Temporisation d'attente du passage matière avant activation d'un dialogue de défaut 
+	    "DB_REC".REC[2]._TpMaskNh := "TpMaskNh"; //Temporisation pour masquer le niveau haut
+	    "DB_REC".REC[2]._TpDefNh := "TpDefNh"; //Temporisation pour afficher defaut  niveau haut
+	    "DB_REC".REC[2]._FgTestFinPm := TRUE;
+	    "DB_REC".REC[2]._TypeCelDest := "RECF4";
+	    "DB_REC".REC[2]._FgDemArr := FALSE;
+	    "DB_REC".REC[2]._Volume := 2500;
+	    "DB_REC".REC[2]._Densite := 0.655;
+	    "DB_REC".REC[2].RecCommun.CommunGeneral._ParCal._DebVolTrans := 11;
+	    "DB_REC".REC[2]._TpMaskNh := T#1m;
+	  
+	    "DB_REC".REC[2]._FgGestDens := TRUE;
+	    //++++++++Boucle Controle Temperature++++++\\
+	    "DB_CntrlTemp"."THIS"[2]._SeuilTempMax := 60;
+	    "DB_CntrlTemp"."THIS"[2]._SeuilRelance := 40;
+	    "DB_CntrlTemp"."THIS"[2]._TpAvRedAmo := "TpAvRedAmo";
+	    "DB_CntrlTemp"."THIS"[2]._TpAvArrMobi := "TpAvArrMobi";
+	    "DB_CntrlTemp"."THIS"[2]._TpAvSuspAmo := "TpAvSuspAmo";
+	    "DB_CntrlTemp"."THIS"[2]._TpAvRedMob := "TpAvRedMob";
+	    //++++++++Boucle Controle Deport de bande++++++\\
+	    "DB_DeportBande"."THIS"[2]._Mobile := 17; //E5
+	    "DB_DeportBande"."THIS"[2]._TpAvRedAmo := "TpAvRedAmo";
+	    "DB_DeportBande"."THIS"[2]._TpAvArrMobi := "TpAvArrMobi";
+	    "DB_DeportBande"."THIS"[2]._TpAvSuspAmo := "TpAvSuspAmo";
+	    "DB_DeportBande"."THIS"[2]._TpAvRedMob := "TpAvRedMob" ;
+	    //++++++++Boucle Controle Intensité++++++\\
+	    "DB_CntrlInt"."THIS"[2]._Mobile := 17;
+	    "DB_CntrlInt"."THIS"[2]._SeuilIntMax := 25;
+	    "DB_CntrlInt"."THIS"[2]._SeuilRelance := 20;
+	    "DB_CntrlInt"."THIS"[2]._TpAvRedAmo := "TpAvRedAmo";
+	    "DB_CntrlInt"."THIS"[2]._TpAvArrMobi := "TpAvArrMobi";
+	    "DB_CntrlInt"."THIS"[2]._TpAvSuspAmo := "TpAvSuspAmo";
+	    "DB_CntrlInt"."THIS"[2]._TpAvRedMob := "TpAvRedMob";
+	   
+	
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                        ╔════════════════════════════════════╗
+	                                                                        ║        CIRCUIT TRANSFERT           ║
+	                                                                        ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	    
+	    "GprodTransfert1"._PtModuleTransf._TypeCelDest :=  "DB_TRANSFERT".TRANSF[0]._TypeCelDest;
+	    "GprodTransfert1"._PtModuleTransf._FgConfLanc := TRUE;
+	    "GprodTransfert1".TraitTransf.TpLectPlan := T#60s;
+	    
+	    "GprodTransfert1"._PtModuleTransf._TransfCommun.CommunGeneral._Tache :=  "DB_TRANSFERT".TRANSF[0]._TransfCommun.CommunGeneral._Tache := "TAC_TRANSF";
+	  
+	    "DB_TRANSFERT".TRANSF[0]._TransfCommun.CommunGeneral._NomTache := 'Transfert 2';
+	    "DB_TRANSFERT".TRANSF[0]._TransfCommun.CommunGeneral._Autom := 'TRANS1';
+	    "DB_TRANSFERT".TRANSF[0]._Origine := "GprodTransfert1"._PtModuleTransf._Origine;
+	    IF "GprodTransfert1"._PtModuleTransf._Origine >-1 THEN
+	        "DB_TRANSFERT".TRANSF[0]._TransfCommun.CommunGeneral._ParCal._MbTrans := "Index_Mobile"("DB_BIBLIOTHEQUE".Mobile["GprodTransfert1"._PtModuleTransf._Origine].Nom);
+	    END_IF;
+	    
+	    "DB_TRANSFERT".TRANSF[0]._tpVidOrg := T#20s;
+	    "DB_TRANSFERT".TRANSF[0]._TypeCelDest := "VRAC";
+	    "DB_TRANSFERT".TRANSF[0]._NoCir := 5;
+	    "DB_TRANSFERT".TRANSF[0]._ControleBoucleExterieur := FALSE;
+	    "DB_TRANSFERT".TRANSF[0]._FgValidMvmtEntree := TRUE;
+	    "DB_TRANSFERT".TRANSF[0]._FgValidMvmtSortie := TRUE;
+	    "DB_TRANSFERT".TRANSF[0]._FgTestPm := TRUE;
+	    "DB_TRANSFERT".TRANSF[0]._CaptPm := TRUE;
+	    
+	    
+	    "DB_TRANSFERT".TRANSF[0]._TpMaskNh := "TpMaskNh"; //Temporisation pour masquer le niveau haut
+	    "DB_TRANSFERT".TRANSF[0]._FgTestFinPm := TRUE;
+	    
+	    
+	    
+	    //  "DB_TRANSFERT".TRANSF[0]._fgTestQtePossible := TRUE;
+	    //  "DB_TRANSFERT".TRANSF[0]._TpFPm := "TpFPm";    //Temporisation de filtrage de perte du passage matiere du transporteur pour l'acquit fosse vide
+	    "DB_TRANSFERT".TRANSF[0]._tpPresPm := "TpPresPm";   //Temporisation de filtrage pour prise en compte du passage matiere par l'automatisme 
+	    "DB_TRANSFERT".TRANSF[0]._tpDefPm := "TpDefPm";   //Temporisation d'attente du passage matière avant activation d'un dialogue de défaut 
+	    //  "DB_TRANSFERT".TRANSF[0]._TpMaskNh := "TpMaskNh"; //Temporisation pour masquer le niveau haut
+	    "DB_TRANSFERT".TRANSF[0]._TpDefNh := "TpDefNh"; //Temporisation pour afficher defaut  niveau haut
+	    "DB_TRANSFERT".TRANSF[0]._tpVidOrg := "TpDefNb";//Temporisation pour afficher defaut  niveau haut
+	    //  "DB_TRANSFERT".TRANSF[0]._FgTestFinPm := TRUE;
+	    "DB_TRANSFERT".TRANSF[0]._Volume := 2500;
+	    "DB_TRANSFERT".TRANSF[0]._Densite := 0.655;
+	    "DB_TRANSFERT".TRANSF[0]._TransfCommun.CommunGeneral._ParCal._DebVolTrans := 11;
+	    //  "DB_TRANSFERT".TRANSF[0]._TpMaskNh := T#1m;
+	    
+	    // "DB_TRANSFERT".TRANSF[0]._FgTestNb := TRUE;
+	   // "DB_PTSUIV_TRANSF"."THIS"[0].Tab_Lots[0]._QteArretDem := 200;
+	     //"DB_PTSUIV_TRANSF"."THIS"[0].Tab_Lots[0]._TpsArretDem := T#2M;
+	(*       "DB_PTSUIV_TRANSF"."THIS"[0].Tab_Lots[0]._TypeArret := 'B';
+	    
+	    
+	    
+	  "DB_PTSUIV_TRANSF"."THIS"[0].Tab_Lots[0]._Dest[0] := 'S21';
+	    "DB_PTSUIV_TRANSF"."THIS"[0].Tab_Lots[0]._Orig[0] := 'S24';
+	    "DB_PTSUIV_TRANSF"."THIS"[0].Tab_Lots[0]._Dest[1] := 'S20'; //'S100'; //
+	    "DB_PTSUIV_TRANSF"."THIS"[0].Tab_Lots[0]._Dest[2] := 'B01';   // 'S41';
+	    
+	    "DB_PTSUIV_TRANSF"."THIS"[0].Tab_Lots[0]._CdMat := 'BLE000';
+	    "DB_PTSUIV_TRANSF"."THIS"[0].Tab_Lots[0]._CdMatOrg := 'BLE111';
+	    "DB_PTSUIV_TRANSF"."THIS"[0].Tab_Lots[0]._NoLot := '202311059809';
+	    "DB_PTSUIV_TRANSF"."THIS"[0].Tab_Lots[0]._QtePrev := 20000;
+	   // "DB_PTSUIV"."THIS"[0].Tab_Lots[0]._Cd_Rec := 'R16102023';
+	    "DB_PTSUIV_TRANSF"."THIS"[0].Tab_Lots[0]._Cd_Transf := 'R16102023';
+	    "DB_PTSUIV_TRANSF"."THIS"[0].Tab_Lots[0]._Densite := 0.75;
+	    "DB_PTSUIV_TRANSF"."THIS"[0].Tab_Lots[0]._LbMat := 'BLE'; *)
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                        ╔════════════════════════════════════╗
+	                                                                        ║             Vis Silo               ║
+	                                                                        ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	    "DB_VisSilo".DB_VisSilo[0]._Mobile := 105;
+	    "DB_VisSilo".DB_VisSilo[0]._Nb := "RNB_S21";
+	    "DB_VisSilo".DB_VisSilo[1]._Mobile := 106;
+	    "DB_VisSilo".DB_VisSilo[1]._Nb := "RNB_S22";
+	    "DB_VisSilo".DB_VisSilo[2]._Mobile := 107;
+	    "DB_VisSilo".DB_VisSilo[2]._Nb := "RNB_S23";
+	    "DB_VisSilo".DB_VisSilo[3]._Mobile := 108;
+	    "DB_VisSilo".DB_VisSilo[3]._Nb := "RNB_S24";
+	(*      
+	  *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                     ╔════════════════════════════════════════════════════════════════╗
+	                                                     ║                         Gestion de Tourne                      ║
+	                                                     ╚════════════════════════════════════════════════════════════════╝
+	  *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)  
+	    "DB_GestTournee".GestTour[0]._ChargCommun._CommunGeneral._Autom := 'Expedition Vrac';
+	    "DB_GestTournee".GestTour[0]._ChargCommun._CommunGeneral._Tache := "TAC_GTOUR";
+	    "DB_GestTournee".GestTour[0]._ChargCommun._CommunGeneral._NomTache := 'Gestion Tournee';
+	    "DB_GestTournee".GestTour[0]._TaChargCompo := 0;
+	    
+	    "DB_GestTournee".GestTour[0]._ListeTaFinChargCommande[0]._Tache := "TAC_PONT1";
+	    "DB_GestTournee".GestTour[0]._ListeTaFinChargCommande[0]._Niv := "N_FINLOT";
+	    
+	    "DB_GestTournee".GestTour[0]._ChargCommun._Pont := 'ORIGPONT1';
+	    "DB_GestTournee".GestTour[0]._ChargCommun._NumCharg := "Boisseaux.VRAC3";
+	    "DB_GestTournee".GestTour[0]._PoidsMaxCamions := 65000;
+	    "DB_GestTournee".GestTour[0]._ValidLecPlanAuto := FALSE;
+	    "DB_GestTournee".GestTour[0]._TpLecPlanAuto := t#0s;
+	    "DB_GestTournee".GestTour[0]._ChargCommun._Depesee := FALSE;
+	    "DB_GestTournee".GestTour[0]._ChargBenne := FALSE;
+	    "DB_GestTournee".GestTour[0]._ChargCommun._TypeZoneOrig := "VRAC";   // A verifier
+	    "DB_GestTournee".GestTour[0]._PreDosCompo := FALSE;
+	    "DB_GestTournee".GestTour[0]._ChargCommun._IndexTournee := 1;
+	    "DB_GestTournee".GestTour[0]._NoTour := '';                         //A remplir
+	    "DB_GestTournee".GestTour[0]._Camion:= '';                          //A remplir
+	    
+	    "DB_GestTournee".GestTour[0]._TaCharg1 := "TAC_PONT1";
+	(*      
+	  *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                     ╔════════════════════════════════════════════════════════════════╗
+	                                                     ║                        Gestion de chargement                   ║
+	                                                     ╚════════════════════════════════════════════════════════════════╝
+	  *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	    
+	    "DB_ChPont".ChPont[0]._ChargCommun._CommunGeneral._Autom := 'EXP VRAC';
+	    "DB_ChPont".ChPont[0]._ChargCommun._CommunGeneral._Tache := "TAC_PONT1";
+	    "DB_ChPont".ChPont[0]._ChargCommun._CommunGeneral._NomTache := 'Exp Vrac Pont';
+	    "DB_ChPont".ChPont[0]._ChargCommun._NumCharg   := "Boisseaux.VRAC3";
+	    "DB_ChPont".ChPont[0]._ChargCommun._TypeZoneOrig := "VRAC";
+	    "DB_ChPont".ChPont[0]._ChargCommun._NoCircuit:= 6;
+	    "DB_ChPont".ChPont[0]._BpDemTare := FALSE;
+	    "DB_ChPont".ChPont[0]._PriseTareAvDem := TRUE;
+	    "DB_ChPont".ChPont[0]._ConsArrCalcColChute := 500;
+	    "DB_ChPont".ChPont[0]._ChargCommun._Destination := '';        //A remplir
+	    "DB_ChPont".ChPont[0]._MbTamis := -1;
+	    "DB_ChPont".ChPont[0]._MaxChute := 10000;
+	    "DB_ChPont".ChPont[0]._MinChute := 50;
+	    "DB_ChPont".ChPont[0]._ChargCommun._FgPresPont := TRUE;
+	    "DB_ChPont".ChPont[0]._FgParamAuto := TRUE;
+	    "DB_ChPont".ChPont[0]._ChargCommun._TolEcartCharge := 10;
+	    
+	    //Simulateur du poids
+	    "DB_ChPont".ChPont[0]._ChargCommun._Simul._TpsEvol := T#2S;
+	    "DB_ChPont".ChPont[0]._ChargCommun._Simul._ModeSimul := TRUE;
+	    
+	    "DB_ChPont".ChPont[0]._TpCycleFermeture := T#2s;// Tempo de fermeture de la trappe lorsque l'on utilise le cycle d'ouverture (colonne de chute > consigne) 
+	    
+	    
+	   //Evolution poids
+	    "DB_ChPont".ChPont[0]._ChargCommun._TpEvolPoids := T#10s;
+	    "DB_ChPont".ChPont[0]._ChargCommun._VdEvol := 1; // delta poids
+	    
+	    
+	    //Stabilite poids
+	    "DB_ChPont".ChPont[0]._TpPoidsStab := T#10s;
+	    "DB_ChPont".ChPont[0]._EcartPoidsStab := 20;
+	    
+	  
+	    
+	    
+	    "DB_ChPont".ChPont[0]._ChargCommun._TpVidAuto := T#120s;
+	    "DB_ChPont".ChPont[0]._FgTypeLancColChute := 0;
+	    "DB_ChPont".ChPont[0]._TpCycleOuverture := T#10s;
+	   "DB_ChPont".ChPont[0]._TpCycleFermeture := T#10s;
+	 //  "DB_ChPont".ChPont[0]._ExtCons := 6;
+	   "DB_ChPont".ChPont[0]._TolVideCel := 200;
+	   "DB_ChPont".ChPont[0].CalcDebit._TpCalcDebit := T#30s;
+	   "DB_ChPont".ChPont[0].CalcDebit._NbPoidsCalcDebit:=3;
+	   
+	   //FGtype lanc col chute 0 Debit
+	   "DB_ChPont".ChPont[0]._ChargCommun._DebitMin := 30;
+	   
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                    ╔════════════════════════════════════════════════════════════════╗
+	                                                    ║        Initialisation d'un lot en simule RECEPTION   1         ║
+	                                                    ╚════════════════════════════════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)    
+	   IF NOT "fgbase" THEN
+	        "DB_PTSUIV_REC"."THIS"[0].Tab_Lots[0]._Orig[0] := 'Fosse01';
+	        "DB_PTSUIV_REC"."THIS"[0].Tab_Lots[0]._Dest[0] := 'S01';
+	        "DB_PTSUIV_REC"."THIS"[0].Tab_Lots[0]._Dest[1] := 'S06';
+	        
+	        
+	        "DB_PTSUIV_REC"."THIS"[0].Tab_Lots[0]._CdMat := 'BLE STD';
+	        "DB_PTSUIV_REC"."THIS"[0].Tab_Lots[0]._CdMatOrg := 'BLE STD';
+	        "DB_PTSUIV_REC"."THIS"[0].Tab_Lots[0]._NoLot := '20130205010101';
+	        "DB_PTSUIV_REC"."THIS"[0].Tab_Lots[0]._Qte_Prev := 5000;
+	        "DB_PTSUIV_REC"."THIS"[0].Tab_Lots[0]._Cd_Rec := 'R16102023';
+	        "DB_PTSUIV_REC"."THIS"[0].Tab_Lots[0]._Cd_Rec := 'R16102023';
+	        "DB_PTSUIV_REC"."THIS"[0].Tab_Lots[0]._Densite := 0.85;
+	        "DB_PTSUIV_REC"."THIS"[0].Tab_Lots[0]._LbMat := 'BLE';
+	        
+	        
+	        
+	        "DB_PTSUIV_REC"."THIS"[3].Tab_Lots[0]._Orig[0] := 'Fosse02';
+	        "DB_PTSUIV_REC"."THIS"[3].Tab_Lots[0]._Dest[0] := 'S20';
+	        "DB_PTSUIV_REC"."THIS"[3].Tab_Lots[0]._Dest[1] := '';
+	        
+	        
+	        "DB_PTSUIV_REC"."THIS"[3].Tab_Lots[0]._CdMat := 'BLE';
+	        "DB_PTSUIV_REC"."THIS"[3].Tab_Lots[0]._CdMatOrg := 'BLE';
+	        "DB_PTSUIV_REC"."THIS"[3].Tab_Lots[0]._NoLot := '20130205010101';
+	        "DB_PTSUIV_REC"."THIS"[3].Tab_Lots[0]._Qte_Prev := 3;
+	        "DB_PTSUIV_REC"."THIS"[3].Tab_Lots[0]._Cd_Rec := 'R44102023';
+	        "DB_PTSUIV_REC"."THIS"[3].Tab_Lots[0]._Cd_Rec := 'R44102023';
+	        "DB_PTSUIV_REC"."THIS"[3].Tab_Lots[0]._Densite := 0.75;
+	        "DB_PTSUIV_REC"."THIS"[3].Tab_Lots[0]._LbMat := 'BLE';
+	        
+	        
+	        
+	        
+	        
+	        "DB_PTSUIV_REC"."THIS"[1].Tab_Lots[0]._Orig[0] := 'Fosse03';
+	        "DB_PTSUIV_REC"."THIS"[1].Tab_Lots[0]._Dest[0] := 'Fosse01';
+	        "DB_PTSUIV_REC"."THIS"[1].Tab_Lots[0]._Dest[1] := '';
+	        
+	        
+	        "DB_PTSUIV_REC"."THIS"[1].Tab_Lots[0]._CdMat := 'BLE';
+	        "DB_PTSUIV_REC"."THIS"[1].Tab_Lots[0]._CdMatOrg := 'BLE';
+	        "DB_PTSUIV_REC"."THIS"[1].Tab_Lots[0]._NoLot := '20130205010101';
+	        "DB_PTSUIV_REC"."THIS"[1].Tab_Lots[0]._Qte_Prev := 3;
+	        "DB_PTSUIV_REC"."THIS"[1].Tab_Lots[0]._Cd_Rec := 'R44102023';
+	        "DB_PTSUIV_REC"."THIS"[1].Tab_Lots[0]._Cd_Rec := 'R44102023';
+	        "DB_PTSUIV_REC"."THIS"[1].Tab_Lots[0]._Densite := 0.75;
+	        "DB_PTSUIV_REC"."THIS"[1].Tab_Lots[0]._LbMat := 'BLE';
+	    END_IF; 
+	    
+	
+	    
+	    
+	    
+	    
+	    
+	    
+	    
+	    
+	    // (* strcpy((Char*)&Prog->No_Lot,"20130205010101"); // No_lot
+	    //  strcpy(Prog->Cd_MatOrg,"1485"); // Code mat
+	    //  strcpy(Prog->Lib_MatOrg,"BLE STD"); // Libelle
+	    //  strcpy(Prog->Cd_Mat,"1485"); // Code mat
+	    //  strcpy(Prog->Lib_Mat,"BLE STD"); // Libelle
+	    //  strcpy(Prog->Orig,VCH_ORIG_SIM_REC1); // Origine
+	    //  strcpy(Prog->Dest[0],VCH_DEST1_SIM_REC1); // Destination
+	    //  strcpy(Prog->Dest[1],VCH_DEST1_SIM_REC1); // Destination
+	    //  Prog->Densite = 0.85; // Densite
+	    //  Prog->Qte_Annoncee = 5000; // Quantite
+	    //  Prog->Cons_TC = 50; // Vitesse du transporteur de fosse
+	    //  } *)
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                        ╔════════════════════════════════════╗
+	                                                                        ║            Ensachage               ║
+	                                                                        ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	    "DB_ENSACHAGE"."THIS"[0]._EnsaCommun._NhTremie := "RNH_TRM_ENS1";
+	    //"DB_ENSACHAGE"."THIS"[0]._EnsaCommun._NiTremie := "RNi_TRM_ENS1";
+	    "DB_ENSACHAGE"."THIS"[0]._EnsaCommun._NbTremie := "RNB_TRM_ENS1";
+	    "DB_ENSACHAGE"."THIS"[0]._EnsaCommun.CommunGeneral._Autom := 'Ensachage1';
+	    "DB_ENSACHAGE"."THIS"[0]._EnsaCommun._NoCircuit := 7;
+	    "DB_ENSACHAGE"."THIS"[0]._EnsaCommun.CommunGeneral._Tache := "DB_ENSACHAGE"."THIS"[0].TraitEnsa.Tache:= "TAC_ENSA1";
+	    "DB_ENSACHAGE"."THIS"[0]._EnsaCommun._Destination := "Index_Mobile"('TRM_ENS1');
+	    "DB_ENSACHAGE"."THIS"[0]._EnsaCommun._TypeCelOrig := "ORIG_ENS1";
+	    "DB_ENSACHAGE"."THIS"[0]._EnsaCommun._FgLanc := FALSE;
+	    "DB_ENSACHAGE"."THIS"[0]._FgValidVidNh := TRUE; 
+	    
+	    "DB_ENSACHAGE"."THIS"[1]._EnsaCommun._NhTremie := "RNH_TRM_ENS2";
+	    //"DB_ENSACHAGE"."THIS"[0]._EnsaCommun._NiTremie := "RNi_TRM_ENS1";
+	    "DB_ENSACHAGE"."THIS"[1]._EnsaCommun._NbTremie := "RNB_TRM_ENS2";
+	    "DB_ENSACHAGE"."THIS"[1]._EnsaCommun.CommunGeneral._Autom := 'Ensachage2';
+	    "DB_ENSACHAGE"."THIS"[1]._EnsaCommun._NoCircuit := 8;
+	    "DB_ENSACHAGE"."THIS"[1]._EnsaCommun.CommunGeneral._Tache := "DB_ENSACHAGE"."THIS"[1].TraitEnsa.Tache := "TAC_ENSA2";
+	    "DB_ENSACHAGE"."THIS"[1]._EnsaCommun._Destination := "Index_Mobile"('TRM_ENS2');
+	    "DB_ENSACHAGE"."THIS"[1]._EnsaCommun._TypeCelOrig := "ORIG_ENS2";
+	    "DB_ENSACHAGE"."THIS"[1]._EnsaCommun._FgLanc := FALSE;
+	    "DB_ENSACHAGE"."THIS"[1]._FgValidVidNh := TRUE;
+	    
+	    
+	
+	    
+	    
+	  
+	    
+	   
+	    
+	    
+	    
+	   
+	
+	
+END_FUNCTION
+

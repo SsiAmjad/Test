@@ -1,0 +1,34 @@
+﻿FUNCTION "Vid_Mobile" : SInt
+TITLE = Vidange Mobile
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : 'I.Daoudi'
+FAMILY : Mobile
+VERSION : 1.0
+//Vidange Mobile
+   VAR_INPUT 
+      Index_Mobile : Int;
+   END_VAR
+
+   VAR_TEMP 
+      Ret_Test_Valid_Index : SInt;
+   END_VAR
+
+
+BEGIN
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | Version | Date       | Autheur     | Ajouts/Modifications                                                   |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | V_1     | 26.10.2023 | I.DAOUDI    | Creation du block                                                      |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	//Test du Ret_Test_Valid_Index
+	IF NOT "Valid_Index"(#Index_Mobile) THEN
+	    #Vid_Mobile := -1;
+	    RETURN;
+	END_IF;
+	// Passer l'ordre d'arret immediat au mobile
+	"DB_BIBLIOTHEQUE".Mobile[#Index_Mobile].Ord := "Ord_Vid_Imm";
+	#Vid_Mobile := 1;
+	RETURN;
+	// Ajout fonction archivage dans le Base de données
+END_FUNCTION
+

@@ -1,0 +1,46 @@
+﻿FUNCTION "SimulCommande" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      NumCommande : Int;
+   END_VAR
+
+   VAR_IN_OUT 
+      GeTour : "S_GEST_TOUR";
+   END_VAR
+
+   VAR_TEMP 
+      NoComp : USInt;
+      NumLigne : USInt;
+      Nocase : USInt;
+      i : Int;
+   END_VAR
+
+
+BEGIN
+	 #NoComp := 0;
+	#NumLigne := 1;
+	#Nocase := 0;
+	
+	
+	 //IF "Commande_Simulation" = 1  OR( "Commande_Simulation"=0 AND #NumCommande=0)  THEN
+	IF "Commande_Simulation" = 1 THEN
+	   
+	    IF #GeTour._Ptzs._ComLig[#GeTour._Ptzs._NumCommande]._NoCommande <> '' THEN
+	        #GeTour._Ptzs._TolInf := 100;
+	            #GeTour._Ptzs._TolSup := 100;
+	            #GeTour._Ptzs._HorsPont := FALSE;
+	            #GeTour._Ptzs._ParVrac._FgTamis := 'O';
+	            #GeTour._Ptzs._ParVrac._FgTypeTamis := 'F';
+	            #GeTour._Ptzs._SuiviCommun._CdMatOrg := #GeTour._Ptzs._ComLig[#GeTour._Ptzs._NumCommande]._CdMat;
+	           
+	          
+	            //#GeTour._Ptzs._NbCase := 1;
+	        END_IF;
+	   
+	
+	END_IF;
+	    
+	         
+END_FUNCTION
+

@@ -1,0 +1,17 @@
+﻿FUNCTION "CondEnsachage" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Ensacheuse : "S_ENSACHAGE";
+   END_VAR
+
+
+BEGIN
+	IF NOT #Ensacheuse._EnsaCommun._NhTremie AND  NOT #Ensacheuse._EnsaCommun._NiTremie THEN
+	    #CondEnsachage := TRUE;
+	ELSE
+	    #CondEnsachage := FALSE;
+	END_IF;
+	
+END_FUNCTION
+

@@ -1,0 +1,41 @@
+﻿FUNCTION "InitTableComp" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      ChargCommun : "S_ChargCommun";
+      Ptzs : "S_SuiviCommande";
+      Commande : "S_ComLign";
+   END_VAR
+
+   VAR_TEMP 
+      i : Int;
+   END_VAR
+
+
+BEGIN
+	FOR #i := 0 TO "MAX_COMPO_CHARG" DO ///#Ptzs._Nbcompo-1 DO   // #Nbcompo - 1 DO
+	    #ChargCommun._PtAff.CompoComEc[#i]._PoidsTare := 0;
+	    #ChargCommun._PtAff.CompoComEc[#i]._PoidsBrut := 0;
+	    #ChargCommun._PtAff.CompoComEc[#i]._PoidsNet := 0;
+	    #ChargCommun._PtAff.CompoComEc[#i]._ColChute := 0;
+	    #ChargCommun._PtAff.CompoComEc[#i]._Cel := '';
+	    #ChargCommun._PtAff.CompoComEc[#i]._Ecart := 0;
+	    #ChargCommun._PtAff.CompoComEc[#i]._ConsArret := 0;
+	    #ChargCommun._PtAff.CompoComEc[#i]._FgChrgEnc := 0;
+	    #ChargCommun._PtAff.CompoComEc[#i]._ConsQte :=0;
+	    #ChargCommun._PtAff.CompoComEc[#i]._ConsPV := 0;
+	    #ChargCommun._PtAff.CompoComEc[#i]._QteDejaChargee :=0;
+	    #ChargCommun._PtAff.CompoComEc[#i]._Pf :='';
+	    #ChargCommun._PtAff.CompoComEc[#i]._LibPf :='';
+	    #ChargCommun._PtAff.CompoComEc[#i]._Ligne := 0;
+	END_FOR;
+	#ChargCommun._PtAff._HorsPont := #Ptzs._HorsPont;
+	#ChargCommun._PtAff._TolInf := #Ptzs._TolInf;
+	#ChargCommun._PtAff._TolSup := #Ptzs._TolSup;
+	
+	
+	
+	
+	
+END_FUNCTION
+

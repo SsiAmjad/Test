@@ -1,0 +1,102 @@
+﻿FUNCTION "AffichePoids1" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      ChargCommun : "S_ChargCommun";
+      Ptzs : "S_SuiviCommande";
+      Commande : "S_ComLign";
+   END_VAR
+
+   VAR_TEMP 
+      i : Int;
+   END_VAR
+
+
+BEGIN
+	IF #ChargCommun._PtAff._DemHorsPont THEN
+	    IF #ChargCommun._PtAff._HorsPont THEN
+	        #Ptzs._HorsPont := FALSE;
+	    ELSE
+	        #Ptzs._HorsPont := TRUE;
+	    END_IF;
+	    #ChargCommun._PtAff._DemHorsPont := FALSE;
+	END_IF;
+	
+	IF #ChargCommun._PtAff._DemAVider THEN
+	    IF #Commande._FgaVider THEN
+	        #Commande._FgaVider := FALSE;
+	    ELSE
+	        #Commande._FgaVider := TRUE;
+	    END_IF;
+	    #ChargCommun._PtAff._DemAVider := FALSE;
+	END_IF;
+	#ChargCommun._PtAff._NumCompoEc := #Ptzs._NumCommande;
+	
+	
+	#ChargCommun._PtAff._NumCompoEc := #Ptzs._NumCommande;
+	IF #Ptzs._TareOk <> 0 THEN
+	    IF #ChargCommun._Depesee THEN
+	        #Commande._QteNet := #Commande._QteBrut - #ChargCommun._Vbasc;
+	    ELSE
+	        #Commande._QteNet := #ChargCommun._Vbasc -#Commande._QteTare;
+	    END_IF;
+	END_IF;
+	    
+	
+	
+	FOR #i := 0 TO "MAX_COMPO_CHARG" DO ///GeTour._Ptzs._Nbcompo-1 DO   // #Nbcompo - 1 DO
+	    IF #i = #ChargCommun._PtAff._NumCompoEc THEN
+	         #ChargCommun._PtAff.CompoComEc[#i]._FgChrgEnc := 1;
+	        IF  #Ptzs._TareOk <> 0 THEN
+	             #ChargCommun._PtAff.CompoComEc[#i]._PoidsTare := #Commande._QteTare;
+	             #ChargCommun._PtAff.CompoComEc[#i]._PoidsBrut := #Commande._QteBrut := #Commande._QteNet + #Commande._QteTare;
+	             #ChargCommun._PtAff.CompoComEc[#i]._PoidsNet := #Commande._QteNet;
+	             #ChargCommun._PtAff.CompoComEc[#i]._ColChute := #Commande._ChuteCel;
+	             #ChargCommun._PtAff.CompoComEc[#i]._Cel := #Commande._PtcelOrig._Cel;
+	             #ChargCommun._PtAff.CompoComEc[#i]._NoLot := #Commande._NoLot;
+	             #ChargCommun._PtAff.CompoComEc[#i]._Ecart := #Commande._Ecart := #Commande._QteNet - #Commande._ConsQteTot;
+	             #ChargCommun._PtAff.CompoComEc[#i]._ConsArret := #Commande._ConsArret;
+	             // GeTour._ChargCommun._PtAff.CompoComEc[#i]._FgChrgEnc := 1; 
+	        ELSE
+	             #ChargCommun._PtAff.CompoComEc[#i]._PoidsTare := 0;
+	             #ChargCommun._PtAff.CompoComEc[#i]._PoidsBrut := 0;
+	             #ChargCommun._PtAff.CompoComEc[#i]._PoidsNet := 0;
+	        END_IF;
+	    END_IF;
+	    
+	    #ChargCommun._PtAff.CompoComEc[#i]._Ligne := #Ptzs._ComLig[#i]._NoLigne;
+	    #ChargCommun._PtAff.CompoComEc[#i]._ConsQte :=  #Ptzs._ComLig[#i]._QteTotComm -  #Ptzs._ComLig[#i]._QteDejaCharg;
+	    #ChargCommun._PtAff.CompoComEc[#i]._ConsPV :=  #Ptzs._ComLig[#i]._SeuilPV;//  Ptzs._Compo._SeuilPV;
+	    #ChargCommun._PtAff.CompoComEc[#i]._ColChute :=  #Ptzs._ComLig[#i]._ChuteCel;//  Ptzs._Compo._ChuteCel;
+	    #ChargCommun._PtAff.CompoComEc[#i]._QteDejaChargee :=  #Ptzs._ComLig[#i]._QteDejaCharg;//  Ptzs._Compo._QteDejaChargee;
+	    #ChargCommun._PtAff.CompoComEc[#i]._Pf :=  #Ptzs._ComLig[#i]._CdMat;// Ptzs._Compo._CdMat;
+	    #ChargCommun._PtAff.CompoComEc[#i]._LibPf :=  #Ptzs._ComLig[#i]._LbMat; //  Ptzs._Compo._LbMat;
+	    //IF #i <> #ChargCommun._PtAff._NumCompoEc THEN
+	        #ChargCommun._PtAff.CompoComEc[#i]._Cel := #Ptzs._ComLig[#i]._PtcelOrig._Cel;
+	   /// END_IF;
+	// Ptzs._Compo._Cel;
+	END_FOR;
+	
+	
+	
+	
+	
+	//GeTour._ChargCommun._PtAff._Debit := GeTour._Ptzs._Debit;
+	 #ChargCommun._PtAff._HorsPont :=  #Ptzs._HorsPont;
+	 #ChargCommun._PtAff._AVider := #Commande._FgaVider;
+	 #ChargCommun._PtAff._TolInf :=  #Ptzs._TolInf;
+	 #ChargCommun._PtAff._TolSup :=  #Ptzs._TolSup;
+	 
+	 
+	 
+	
+	
+	
+	
+	
+	
+	
+	
+	
+END_FUNCTION
+

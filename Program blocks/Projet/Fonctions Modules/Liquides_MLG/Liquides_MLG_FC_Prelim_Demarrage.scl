@@ -1,0 +1,54 @@
+﻿FUNCTION "Liquides_MLG_FC_Prelim_Demarrage" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Liq_MLG : "S_Liquide_Mel";
+   END_VAR
+
+   VAR CONSTANT 
+      Pos_Gauche : SInt := 0;
+      Pos_Droite : SInt := 1;
+   END_VAR
+
+
+BEGIN
+	// Affecter la position fictive pour les pompes d injection liquides
+	//IF #Liq_MLG.CommunDos.Module_Commun._Tache = "TAC_LIQ1_MLG1" THEN
+	IF #Liq_MLG.Pt_Zs._SuiviCommun._DonneesDiverses.tab_short[0] = 1 THEN
+	    IF "Valid_Index"("Index_Mobile"('PMP_LIQ1')) THEN
+	        "DB_BIBLIOTHEQUE".Mobile["Index_Mobile"('PMP_LIQ1')].Pos_Dmd := 0;
+	    END_IF;
+	    IF "Valid_Index"("Index_Mobile"('PMP_LIQ2')) THEN
+	        "DB_BIBLIOTHEQUE".Mobile["Index_Mobile"('PMP_LIQ2')].Pos_Dmd := 0;
+	    END_IF;
+	    IF "Valid_Index"("Index_Mobile"('PMP_LIQ3')) THEN
+	        "DB_BIBLIOTHEQUE".Mobile["Index_Mobile"('PMP_LIQ3')].Pos_Dmd := 0;
+	    END_IF;
+	    IF "Valid_Index"("Index_Mobile"('PMP_LIQ4')) THEN
+	        "DB_BIBLIOTHEQUE".Mobile["Index_Mobile"('PMP_LIQ4')].Pos_Dmd := 0;
+	    END_IF;
+	    IF "Valid_Index"("Index_Mobile"('PMP_LIQ5')) THEN
+	        "DB_BIBLIOTHEQUE".Mobile["Index_Mobile"('PMP_LIQ5')].Pos_Dmd := 0;
+	    END_IF;
+	END_IF;
+	IF #Liq_MLG.Pt_Zs._SuiviCommun._DonneesDiverses.tab_short[0] = 2 THEN
+	    IF "Valid_Index"("Index_Mobile"('PMP_LIQ1')) THEN
+	        "DB_BIBLIOTHEQUE".Mobile["Index_Mobile"('PMP_LIQ1')].Pos_Dmd := 1;
+	    END_IF;
+	    IF "Valid_Index"("Index_Mobile"('PMP_LIQ2')) THEN
+	        "DB_BIBLIOTHEQUE".Mobile["Index_Mobile"('PMP_LIQ2')].Pos_Dmd := 1;
+	    END_IF;
+	    IF "Valid_Index"("Index_Mobile"('PMP_LIQ3')) THEN
+	        "DB_BIBLIOTHEQUE".Mobile["Index_Mobile"('PMP_LIQ3')].Pos_Dmd := 1;
+	    END_IF;
+	    IF "Valid_Index"("Index_Mobile"('PMP_LIQ4')) THEN
+	        "DB_BIBLIOTHEQUE".Mobile["Index_Mobile"('PMP_LIQ4')].Pos_Dmd := 1;
+	    END_IF;
+	    IF "Valid_Index"("Index_Mobile"('PMP_LIQ5')) THEN
+	        "DB_BIBLIOTHEQUE".Mobile["Index_Mobile"('PMP_LIQ5')].Pos_Dmd := 1;
+	    END_IF;
+	END_IF;
+	//END_IF;
+	
+END_FUNCTION
+

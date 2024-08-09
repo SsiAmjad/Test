@@ -1,0 +1,8 @@
+﻿FUNCTION "ConditionTare" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+BEGIN
+	#ConditionTare := TRUE;
+END_FUNCTION
+

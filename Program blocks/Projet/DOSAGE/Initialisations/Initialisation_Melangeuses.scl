@@ -1,0 +1,112 @@
+﻿FUNCTION "Initialisation_Melangeuses" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+BEGIN
+	//--------------------- MELANGEUSE1  ---------------------//
+	"DB_Dosage".MLG[0].Tps_FPM := T#10s;
+	"DB_Dosage".MLG[0].Tps_Max_FPM := T#30s;
+	"DB_Dosage".MLG[0].Tps_NB := T#10s;
+	"DB_Dosage".MLG[0].Tps_Max_NB := T#30s;
+	//"DB_Dosage".MLG[0].Tps_Sur_Intens := T#30s;
+	
+	"DB_Dosage".MLG[0].Tps_Vid_Melang := T#10s;
+	"DB_Dosage".MLG[0].Tps_Max_Vid_Melang := T#30s;
+	//--------------------- Affectation des mobiles pour MLG  ---------------------//
+	// "DB_Dosage".MLG[0].Mob_Decomp := "Index_Mobile"('');
+	"DB_Dosage".MLG[0].Mob_Melang := "Index_Mobile"('MLG1');
+	"DB_Dosage".MLG[0].Mob_Trappe := "Index_Mobile"('TRP1_MLG1');
+	"DB_Dosage".MLG[0].Mob_Verrou := "Index_Mobile"('VERR_MLG1');
+	// "DB_Dosage".MLG[0].Mob_Vib := "Index_Mobile"('');
+	//--------------------- SYNCHRONISATION GRAFCET MLG ---------------------//
+	"DB_Dosage".MLG[0].Lst_Taches_Att_Debut_Remp[0]._Tache := "TAC_TREMSR_MLG1";
+	"DB_Dosage".MLG[0].Lst_Taches_Att_Debut_Remp[0]._Niv := "NIV_TREMIE_TRAPPE_DEM_EXTRACT";
+	"DB_Dosage".MLG[0].Lst_Taches_Att_Aut_Demar[0]._Tache := "TAC_TREMSR_MLG1";
+	"DB_Dosage".MLG[0].Lst_Taches_Att_Aut_Demar[0]._Niv := "NIV_TREMIE_TRAPPE_PRES_PRD";
+	"DB_Dosage".MLG[0].Lst_Taches_Att_Aut_Demar[1]._Tache := "TAC_TREMSS_BP4";
+	"DB_Dosage".MLG[0].Lst_Taches_Att_Aut_Demar[1]._Niv := "NIV_TREMIE_TRAPPE_PRES_PRD";
+	"DB_Dosage".MLG[0].Lst_Taches_Att_Aut_Demar[2]._Tache := "TAC_TREMSS_MLG1";
+	"DB_Dosage".MLG[0].Lst_Taches_Att_Aut_Demar[2]._Niv := "NIV_TREMIE_TRANS_DEBUT_LOT";
+	"DB_Dosage".MLG[0].Lst_Taches_Att_Fin_Amont[0]._Tache := "TAC_TREMSR_MLG1";
+	"DB_Dosage".MLG[0].Lst_Taches_Att_Fin_Amont[0]._Niv := "NIV_TREMIE_TRAPPE_FIN_LOT";
+	"DB_Dosage".MLG[0].Lst_Taches_Att_Fin_Amont[1]._Tache := "TAC_TREMSS_BP4";
+	"DB_Dosage".MLG[0].Lst_Taches_Att_Fin_Amont[1]._Niv := "NIV_TREMIE_TRAPPE_FIN_LOT";
+	"DB_Dosage".MLG[0].Lst_Taches_Att_Fin_Amont[2]._Tache := "TAC_VS_MLG1";
+	"DB_Dosage".MLG[0].Lst_Taches_Att_Fin_Amont[2]._Niv := "NIV_VS_FIN_LOT";
+	"DB_Dosage".MLG[0].Lst_Taches_Att_Fin_Liq[0]._Tache := "TAC_LIQ1_MLG1";
+	"DB_Dosage".MLG[0].Lst_Taches_Att_Fin_Liq[0]._Niv := "NIV_LIQ_FIN_INJ";
+	"DB_Dosage".MLG[0].Lst_Taches_Att_Fin_Liq[1]._Tache := "TAC_LIQ2_MLG1";
+	"DB_Dosage".MLG[0].Lst_Taches_Att_Fin_Liq[1]._Niv := "NIV_LIQ_FIN_INJ";
+	"DB_Dosage".MLG[0].Lst_Taches_Att_Fin_Liq[2]._Tache := "TAC_LIQ3_MLG1";
+	"DB_Dosage".MLG[0].Lst_Taches_Att_Fin_Liq[2]._Niv := "NIV_LIQ_FIN_INJ";
+	"DB_Dosage".MLG[0].Lst_Taches_Att_Fin_Liq[3]._Tache := "TAC_LIQ4_MLG1";
+	"DB_Dosage".MLG[0].Lst_Taches_Att_Fin_Liq[3]._Niv := "NIV_LIQ_FIN_INJ";
+	"DB_Dosage".MLG[0].Lst_Taches_Att_Fin_Liq[4]._Tache := "TAC_LIQ5_MLG1";
+	"DB_Dosage".MLG[0].Lst_Taches_Att_Fin_Liq[4]._Niv := "NIV_LIQ_FIN_INJ";
+	"DB_Dosage".MLG[0].Lst_Taches_Att_Fin_Prd[0]._Tache := "TAC_TREMSR_MLG1";
+	"DB_Dosage".MLG[0].Lst_Taches_Att_Fin_Prd[0]._Niv := "NIV_TREMIE_TRAPPE_FIN_LOT";
+	"DB_Dosage".MLG[0].Lst_Taches_Att_Res_Sous_Mlg[0]._Tache := "TAC_TREMSS_MLG1";
+	"DB_Dosage".MLG[0].Lst_Taches_Att_Res_Sous_Mlg[0]._Niv := "NIV_TREMIE_TRANS_DEBUT_LOT";
+	//--------------------- QTE MLG ---------------------//
+	"DB_Dosage".MLG[0].Lst_Taches_Amont_Qte[0] := "TAC_TREMSR_MLG1";
+	"DB_Dosage".MLG[0].Lst_Taches_Amont_Qte[1] := "TAC_TREMSS_BP4";
+	"DB_Dosage".MLG[0].Lst_Taches_Amont_Qte[2] := "TAC_LIQ1_MLG1";
+	"DB_Dosage".MLG[0].Lst_Taches_Amont_Qte[3] := "TAC_LIQ2_MLG1";
+	"DB_Dosage".MLG[0].Lst_Taches_Amont_Qte[4] := "TAC_LIQ3_MLG1";
+	"DB_Dosage".MLG[0].Lst_Taches_Amont_Qte[5] := "TAC_LIQ4_MLG1";
+	"DB_Dosage".MLG[0].Lst_Taches_Amont_Qte[6] := "TAC_LIQ5_MLG1";
+	"DB_Dosage".MLG[0].Lst_Taches_Amont_Qte[7] := "TAC_VS_MLG1";
+	//--------------------- MELANGEUSE2  ---------------------//
+	"DB_Dosage".MLG[1].Tps_FPM := T#10s;
+	"DB_Dosage".MLG[1].Tps_Max_FPM := T#30s;
+	"DB_Dosage".MLG[1].Tps_NB := T#10s;
+	"DB_Dosage".MLG[1].Tps_Max_NB := T#30s;
+	//"DB_Dosage".MLG[1].Tps_Sur_Intens := T#30s;
+	"DB_Dosage".MLG[1].Tps_Vid_Melang := T#10s;
+	"DB_Dosage".MLG[1].Tps_Max_Vid_Melang := T#30s;
+	//--------------------- Affectation des mobiles pour MLG  ---------------------//
+	// "DB_Dosage".MLG[1].Mob_Decomp := "Index_Mobile"('');
+	"DB_Dosage".MLG[1].Mob_Melang := "Index_Mobile"('MLG2');
+	"DB_Dosage".MLG[1].Mob_Trappe := "Index_Mobile"('TRP1_MLG2');
+	"DB_Dosage".MLG[1].Mob_Verrou := "Index_Mobile"('VERR_MLG2');
+	// "DB_Dosage".MLG[1].Mob_Vib := "Index_Mobile"('');
+	//--------------------- SYNCHRONISATION GRAFCET MLG ---------------------//
+	"DB_Dosage".MLG[1].Lst_Taches_Att_Debut_Remp[0]._Tache := "TAC_TREMSR_MLG2";
+	"DB_Dosage".MLG[1].Lst_Taches_Att_Debut_Remp[0]._Niv := "NIV_TREMIE_TRAPPE_DEM_EXTRACT";
+	"DB_Dosage".MLG[1].Lst_Taches_Att_Aut_Demar[0]._Tache := "TAC_TREMSR_MLG2";
+	"DB_Dosage".MLG[1].Lst_Taches_Att_Aut_Demar[0]._Niv := "NIV_TREMIE_TRAPPE_PRES_PRD";
+	"DB_Dosage".MLG[1].Lst_Taches_Att_Aut_Demar[1]._Tache := "TAC_TREMSS_BP4";
+	"DB_Dosage".MLG[1].Lst_Taches_Att_Aut_Demar[1]._Niv := "NIV_TREMIE_TRAPPE_PRES_PRD";
+	"DB_Dosage".MLG[1].Lst_Taches_Att_Aut_Demar[2]._Tache := "TAC_TREMSS_MLG2";
+	"DB_Dosage".MLG[1].Lst_Taches_Att_Aut_Demar[2]._Niv := "NIV_TREMIE_TRANS_DEBUT_LOT";
+	"DB_Dosage".MLG[1].Lst_Taches_Att_Fin_Amont[0]._Tache := "TAC_TREMSR_MLG2";
+	"DB_Dosage".MLG[1].Lst_Taches_Att_Fin_Amont[0]._Niv := "NIV_TREMIE_TRAPPE_FIN_LOT";
+	"DB_Dosage".MLG[1].Lst_Taches_Att_Fin_Amont[1]._Tache := "TAC_TREMSS_BP4";
+	"DB_Dosage".MLG[1].Lst_Taches_Att_Fin_Amont[1]._Niv := "NIV_TREMIE_TRAPPE_FIN_LOT";
+	"DB_Dosage".MLG[1].Lst_Taches_Att_Fin_Amont[2]._Tache := "TAC_VS_MLG1";
+	"DB_Dosage".MLG[1].Lst_Taches_Att_Fin_Amont[2]._Niv := "NIV_VS_FIN_LOT";
+	"DB_Dosage".MLG[1].Lst_Taches_Att_Fin_Liq[0]._Tache := "TAC_LIQ1_MLG2";
+	"DB_Dosage".MLG[1].Lst_Taches_Att_Fin_Liq[0]._Niv := "NIV_LIQ_FIN_INJ";
+	"DB_Dosage".MLG[1].Lst_Taches_Att_Fin_Liq[1]._Tache := "TAC_LIQ2_MLG2";
+	"DB_Dosage".MLG[1].Lst_Taches_Att_Fin_Liq[1]._Niv := "NIV_LIQ_FIN_INJ";
+	"DB_Dosage".MLG[1].Lst_Taches_Att_Fin_Liq[2]._Tache := "TAC_LIQ3_MLG2";
+	"DB_Dosage".MLG[1].Lst_Taches_Att_Fin_Liq[2]._Niv := "NIV_LIQ_FIN_INJ";
+	"DB_Dosage".MLG[1].Lst_Taches_Att_Fin_Liq[3]._Tache := "TAC_LIQ4_MLG2";
+	"DB_Dosage".MLG[1].Lst_Taches_Att_Fin_Liq[3]._Niv := "NIV_LIQ_FIN_INJ";
+	"DB_Dosage".MLG[1].Lst_Taches_Att_Fin_Liq[4]._Tache := "TAC_LIQ5_MLG2";
+	"DB_Dosage".MLG[1].Lst_Taches_Att_Fin_Liq[4]._Niv := "NIV_LIQ_FIN_INJ";
+	"DB_Dosage".MLG[1].Lst_Taches_Att_Fin_Prd[0]._Tache := "TAC_TREMSR_MLG2";
+	"DB_Dosage".MLG[1].Lst_Taches_Att_Fin_Prd[0]._Niv := "NIV_TREMIE_TRAPPE_FIN_LOT";
+	"DB_Dosage".MLG[1].Lst_Taches_Att_Res_Sous_Mlg[0]._Tache := "TAC_TREMSS_MLG2";
+	"DB_Dosage".MLG[1].Lst_Taches_Att_Res_Sous_Mlg[0]._Niv := "NIV_TREMIE_TRANS_DEBUT_LOT";
+	//--------------------- QTE MLG ---------------------//
+	"DB_Dosage".MLG[1].Lst_Taches_Amont_Qte[0] := "TAC_TREMSR_MLG2";
+	"DB_Dosage".MLG[1].Lst_Taches_Amont_Qte[1] := "TAC_TREMSS_BP4";
+	"DB_Dosage".MLG[1].Lst_Taches_Amont_Qte[2] := "TAC_LIQ1_MLG2";
+	"DB_Dosage".MLG[1].Lst_Taches_Amont_Qte[3] := "TAC_LIQ2_MLG2";
+	"DB_Dosage".MLG[1].Lst_Taches_Amont_Qte[4] := "TAC_LIQ3_MLG2";
+	"DB_Dosage".MLG[1].Lst_Taches_Amont_Qte[5] := "TAC_LIQ4_MLG2";
+	"DB_Dosage".MLG[1].Lst_Taches_Amont_Qte[6] := "TAC_LIQ5_MLG2";
+	"DB_Dosage".MLG[1].Lst_Taches_Amont_Qte[7] := "TAC_VS_MLG1";
+END_FUNCTION
+

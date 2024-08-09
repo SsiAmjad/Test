@@ -1,0 +1,169 @@
+﻿FUNCTION_BLOCK "fbSql4SiemensConnectionObserver3"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      tTimeout : Time := T#9s;
+      xCloseConnection : Bool := true;
+   END_VAR
+
+   VAR_IN_OUT 
+      stSql4SiemensInterface : "utSql4SiemensInterface";
+   END_VAR
+
+   VAR 
+      inTimeout {InstructionName := 'TON_TIME'; LibVersion := '1.0'} : TON_TIME;
+      iStep : Int;
+      diDoneCount : DInt;
+      diErrorCount : DInt;
+   END_VAR
+
+   VAR_TEMP 
+      xRet : Bool;
+   END_VAR
+
+
+BEGIN
+	// +------------------------------------------------------------------------------------------------------------------+
+	// | Sql4Siemens connection observer                                                                                  |
+	// +------------------------------------------------------------------------------------------------------------------+
+	
+	// +-------------+-------------+-------------+------------------------------------------------------------------------+
+	// | Version     | Date        | Author      | Comment                                                                |
+	// +-------------+-------------+-------------+------------------------------------------------------------------------+
+	// | 4.0.0.0     | 13.06.2019  | BaM         | Initial version                                                        |
+	// +-------------+-------------+-------------+------------------------------------------------------------------------+
+	
+	// Check timeout
+	#inTimeout(IN:=(#stSql4SiemensInterface.xExecute = false) AND (#stSql4SiemensInterface.xHoldConnection = true),
+	           PT:=#tTimeout);
+	           
+	           
+	// Sequence
+	CASE (#stSql4SiemensInterface.Observer._Etp) OF
+	    0: // Inactive
+	        REGION Traitement preliminaire 
+	            IF (#stSql4SiemensInterface.Observer._Etp <> #stSql4SiemensInterface.Observer._EtpPrec) THEN
+	                #stSql4SiemensInterface.Observer._EtpPrec := #stSql4SiemensInterface.Observer._Etp;
+	            END_IF;
+	        END_REGION Traitement preliminaire
+	        
+	  (* IF (#stSql4SiemensInterface.xExecute = TRUE) AND (#stSql4SiemensInterface.xHoldConnection = false) THEN
+	       #stSql4SiemensInterface.xHoldConnection := true;
+	       #stSql4SiemensInterface.Observer._Etp := 1;
+	   END_IF; *)
+	    IF (#inTimeout.Q = true) THEN
+	       #stSql4SiemensInterface.Observer._Etp := 1;
+	   END_IF;
+	  
+	   
+	1: // Send a dummy request on timeout
+	    REGION Traitement preliminaire 
+	        IF (#stSql4SiemensInterface.Observer._Etp <> #stSql4SiemensInterface.Observer._EtpPrec) THEN
+	            #stSql4SiemensInterface.Observer._EtpPrec := #stSql4SiemensInterface.Observer._Etp;
+	            IF #stSql4SiemensInterface.Observer.Dial_Def.Reponse_Def <> '' THEN
+	                CASE #stSql4SiemensInterface.Observer.Dial_Def.Num_Def_Etape OF
+	                    1:
+	                        GOTO ParseRep_DEF1;
+	                END_CASE;
+	            END_IF;
+	        END_IF;
+	    END_REGION Traitement preliminaire
+	    
+	   // Wait until the SQL4Siemens interface is ready and not in use
+	   IF (#stSql4SiemensInterface.xReady = true) AND (#stSql4SiemensInterface.xExecute = false) THEN
+	     // Initialize and start the request
+	     #xRet := "fcSql4Siemens_Reset"(#stSql4SiemensInterface);
+	     IF (#xCloseConnection = TRUE) THEN
+	       #stSql4SiemensInterface.xHoldConnection := FALSE;
+	       #xRet := "fcSql4Siemens_AddRequest"(sRequest := 'SELECT $'ConnectionObserver:CloseConnection$'', stSql4SiemensInterface := #stSql4SiemensInterface);
+	     ELSE
+	       #stSql4SiemensInterface.xHoldConnection := TRUE;
+	       #xRet := "fcSql4Siemens_AddRequest"(sRequest := 'SELECT $'ConnectionObserver:HoldConnection$'', stSql4SiemensInterface := #stSql4SiemensInterface);
+	   END_IF;
+	   IF "fgbase" AND #stSql4SiemensInterface.Observer.xTimeout THEN
+	       #stSql4SiemensInterface.Observer.Dial_Def.Num_Def_Etape := 1;
+	       "fgbase" := FALSE;
+	       #stSql4SiemensInterface.Observer.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := "fgbase",
+	                                                                                 Msg_Defaut := 'Connexion avec la base interrompue',
+	                                                                                 Type_Defaut := 2,
+	                                                                                 Automatisme := '',
+	                                                                                 Num_Lot := '',
+	                                                                                 Origine_Defaut := 'Base de donnees',
+	                                                                                 Libelle_Origine := 'Base de donnees',
+	                                                                                 Acq1 := 'Relance',
+	                                                                                 Acq2 := 'Annuler Comm',
+	                                                                                 Acq3 := '',
+	                                                                                 Acq4 := '',
+	                                                                                 Acq5 := '',
+	                                                                                 Acq6 := '',
+	                                                                                 Acq7 := '',
+	                                                                                 Acq8 := '',
+	                                                                                 Acq_Choisi := -1,
+	                                                                                 Date_Arrivee := #stSql4SiemensInterface.Observer._TpsPicke);
+	       #stSql4SiemensInterface.Observer._Etp := 3;
+	       RETURN;
+	   END_IF;
+	   #stSql4SiemensInterface.xExecute := true;
+	       #stSql4SiemensInterface.Observer._Etp := 2;
+	 END_IF;
+	 
+	ParseRep_DEF1:
+	 //================================== Traitement des reponses pour le defaut1  =============================================================//
+	 IF #stSql4SiemensInterface.Observer.Dial_Def.Reponse_Def = 'Relance' THEN
+	     #stSql4SiemensInterface.Observer._Etp := 0;
+	     "fgbase" := TRUE;
+	     #stSql4SiemensInterface.Observer.xTimeout := FALSE;
+	     #stSql4SiemensInterface.Observer.Dial_Def.Reponse_Def := '';
+	     RETURN;
+	 END_IF;
+	 IF #stSql4SiemensInterface.Observer.Dial_Def.Reponse_Def = 'Annuler Comm' THEN
+	     #stSql4SiemensInterface.Observer.Dial_Def.Reponse_Def := '';
+	     #stSql4SiemensInterface.Observer.xTimeout := FALSE;
+	     #stSql4SiemensInterface.Observer._Etp := 0;
+	     "fgbase" := FALSE;
+	     RETURN;
+	 END_IF;
+	 //============================================  Fin traitement  ====================================================================//
+	 
+	   
+	   
+	2: // Parse the response
+	    REGION Traitement preliminaire 
+	        IF (#stSql4SiemensInterface.Observer._Etp <> #stSql4SiemensInterface.Observer._EtpPrec) THEN
+	            #stSql4SiemensInterface.Observer._EtpPrec := #stSql4SiemensInterface.Observer._Etp;
+	        END_IF;
+	    END_REGION Traitement preliminaire
+	    
+	   IF (#stSql4SiemensInterface.xExecute = false) THEN
+	     #diErrorCount := #diErrorCount + 1;
+	     #stSql4SiemensInterface.Observer._Etp := 0;
+	   ELSIF (#stSql4SiemensInterface.xError = true) THEN
+	     #diErrorCount := #diErrorCount + 1;
+	     #stSql4SiemensInterface.xExecute := false;
+	     #stSql4SiemensInterface.Observer._Etp := 0;
+	   ELSIF (#stSql4SiemensInterface.xDone = true) THEN
+	     #diDoneCount := #diDoneCount + 1;
+	     #stSql4SiemensInterface.xExecute := false;
+	     #stSql4SiemensInterface.Observer._Etp := 0;
+	 END_IF;
+	 
+	3:
+	    
+	    REGION Preliminaire Attente Acquuitement
+	        IF #stSql4SiemensInterface.Observer._Etp <> #stSql4SiemensInterface.Observer._EtpPrec THEN
+	            #stSql4SiemensInterface.Observer._EtpMemo := #stSql4SiemensInterface.Observer._EtpPrec;
+	            #stSql4SiemensInterface.Observer._EtpPrec := #stSql4SiemensInterface.Observer._Etp;
+	        END_IF;
+	    END_REGION Preliminaire Attente Acquuitement
+	    REGION Cyclique Attente Acquitement
+	        #stSql4SiemensInterface.Observer.Dial_Def.Reponse_Def := "FC_Recup_Rep_Def"(Index_Def := #stSql4SiemensInterface.Observer.Dial_Def.Index_Defaut, Reponse_Ecrit => #stSql4SiemensInterface.Observer.Dial_Def.Text_Reponse);
+	        IF #stSql4SiemensInterface.Observer.Dial_Def.Reponse_Def <> '' THEN
+	            "FC_Raz_Def"(#stSql4SiemensInterface.Observer.Dial_Def.Index_Defaut);
+	            #stSql4SiemensInterface.Observer._Etp := #stSql4SiemensInterface.Observer._EtpMemo;
+	            RETURN;
+	        END_IF;
+	    END_REGION Cyclique Attente Acquitement  
+	    
+	END_CASE;
+END_FUNCTION_BLOCK
+

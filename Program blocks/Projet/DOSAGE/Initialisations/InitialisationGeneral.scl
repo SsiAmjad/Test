@@ -1,0 +1,22 @@
+﻿FUNCTION "InitialisationGeneral" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+BEGIN
+	"Initialisation_Taches_Dosage"();
+	"Initialisation_Circuits_Extraction"();
+	"Initialisation_SURVDOSBENNE"();
+	"Initialisation_Circuit_Transfert"();
+	"Initialisation_Broyeurs"();
+	"Initialisation_Melangeuses"();
+	"Initialisation_Liquides"();
+	"Initialisation_Tremies_Sur_Trans"();
+	"Initialisation_Tremies_Sur_Trappe"();
+	"Initialisation_Circuit_Expedition"();
+	"Initialisation_Verse_Sac"();
+	"Initialisation_Couleurs_Zones_Suivi"();
+	"Initialisation_Cellules_Dos_Superv"();
+	
+	
+END_FUNCTION
+

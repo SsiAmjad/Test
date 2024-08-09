@@ -1,0 +1,37 @@
+﻿FUNCTION "Test_Lot_Enc" : SInt
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_TEMP 
+      i : SInt;
+      j : SInt;
+   END_VAR
+
+
+BEGIN
+	(*
+	================================================  Documentation  ================================================
+	Cette fonction cherche si un lot est en cours ou pas
+	- Valeurs de retour : + 1 si la fonction a trouvé un lot en cours
+	                      + -1 si aucun lot n'est en cours
+	================================================  Documentation  ================================================
+	*)
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | Version | Date       | Autheur     | Ajouts/Modifications                                                   |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | V_1     | 18.10.2023 | I.DAOUDI    | Creation du block                                                      |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// 
+	// Recherche de la zone de suivi contenant le lot possedant cette tache
+	FOR #i := 0 TO "Nbr_Max_Lots" DO
+	    // Recherche de la tache
+	    FOR #j := 0 TO "Nbr_Max_Tache" DO
+	        IF "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches[#j].Niveau > 0 AND "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches[#j].Niveau < "Niv_Tache_Max" THEN
+	                #Test_Lot_Enc := 1;
+	                RETURN;
+	        END_IF;
+	    END_FOR;
+	END_FOR;
+	#Test_Lot_Enc := -1;
+	RETURN;
+END_FUNCTION
+

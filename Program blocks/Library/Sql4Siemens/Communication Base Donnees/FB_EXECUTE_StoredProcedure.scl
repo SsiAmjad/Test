@@ -1,0 +1,145 @@
+﻿FUNCTION_BLOCK "FB_EXECUTE_StoredProcedure"
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : DAOUDI
+VERSION : 0.1
+   VAR_INPUT 
+      procedure_name : String;
+      values_of_record : Array[0..20] of String;
+      parameters_number : SInt;
+   END_VAR
+
+   VAR_OUTPUT 
+      xReady : Bool;
+      xBusy : Bool;
+      xDone : Bool;
+      xError : Bool;
+      diResultState : DInt;
+      sResult : WString[6000];
+   END_VAR
+
+   VAR_IN_OUT 
+      stSql4SiemensInterface : "utSql4SiemensInterface";
+      xExecute : Bool;
+   END_VAR
+
+   VAR 
+      iStep : Int;
+      diDoneCount : DInt;
+      diErrorCount : DInt;
+   END_VAR
+   VAR RETAIN
+      query_assembled : String;
+   END_VAR
+
+   VAR_TEMP 
+      xRet : Bool;
+      diRow : DInt;
+      diCol : DInt;
+   END_VAR
+
+
+BEGIN
+	// +------------------------------------------------------------------------------------------------------------------+
+	// |                                     EXECUTE  STORED PROCEDURE                                                    |
+	// +------------------------------------------------------------------------------------------------------------------+
+	
+	// +-------------+-------------+-------------+------------------------------------------------------------------------+
+	// | Version     | Date        | Author      | Comment                                                                |
+	// +-------------+-------------+-------------+------------------------------------------------------------------------+
+	// | 4.0.0.0     | 16-03-2023  | DAOUDI      | CUSTOM VERSION                                                         |
+	// +-------------+-------------+-------------+------------------------------------------------------------------------+
+	
+	//============================================================================
+	//=============== DOCUMENTATION of  FB_EXECUTE_STOREDPROCEDURE ===============
+	//============================================================================
+	//  procedure_name          :
+	//  values_of_record        :
+	//  parameters_number       :
+	//  xReady                 =>  _bool_out_
+	//  xBusy                  =>  _bool_out_
+	//  xDone                  =>  _bool_out_
+	//  xError                 =>  _bool_out_
+	//  diResultState          =>  _dint_out_
+	//  sResult                =>  _strg_out_
+	//  sRep                   =>  _strg_out_
+	//  stSql4SiemensInterface := "dbSql4SiemensInterface".stSql4SiemensInterface
+	//============================================================================
+	//============================================================================
+	CASE (#iStep) OF
+	  0: // Inactive
+	    #xReady := true;
+	    #xBusy := false;
+	    #xDone := false;
+	    #xError := false;
+	    #diResultState := -1;
+	    IF (#xExecute = true) THEN
+	      
+	      #iStep := 1;
+	  END_IF;
+	  1: // Create the request
+	    IF (#xExecute = false) THEN
+	      #iStep := 3;
+	    ELSE
+	      #xReady := false;
+	      #xBusy := true;
+	      // Wait until the SQL4Siemens interface is ready and not in use 
+	      IF (#stSql4SiemensInterface.xReady = true) AND (#stSql4SiemensInterface.xExecute = false) THEN
+	          #xRet := "fcSql4Siemens_Reset"(#stSql4SiemensInterface); //INTIALIZE THE BUFFER
+	         //===========================================================================================
+	         //========================== START ASSEMBLY QUERY FOR POSTGRESQL ============================
+	         //===========================================================================================
+	          "FC_ASSEMBLY_FOR_POSTGRE"(parameters_value := #values_of_record,
+	                                          procedure_name := #procedure_name,
+	                                          parameters_number := #parameters_number,
+	                                          assembled_query => #query_assembled);
+	         //=============================================================================================
+	         //========================== END ASSEMBLY QUERY FOR POSTGRESQL ================================
+	         //=============================================================================================
+	         #xRet := "fcSql4Siemens_AddRequest"(sRequest := #query_assembled, stSql4SiemensInterface := #stSql4SiemensInterface );
+	         //Pour la visualisation de la requete envoyée
+	         #stSql4SiemensInterface.xExecute := true;
+	         #iStep := 2;
+	      END_IF;
+	  END_IF;
+	  2: // Parse the response
+	    IF (#xExecute = false) THEN
+	      #stSql4SiemensInterface.xExecute := false;
+	      #iStep := 3;
+	    ELSIF (#stSql4SiemensInterface.xExecute = false) THEN
+	      #diErrorCount := #diErrorCount + 1;
+	      #diResultState := 9999;
+	      #xBusy := false;
+	      #xError := true;
+	      #iStep := 3;
+	    ELSIF (#stSql4SiemensInterface.xError = true) THEN
+	      #diErrorCount := #diErrorCount + 1;
+	      #diResultState := #stSql4SiemensInterface.diResultState;
+	      #stSql4SiemensInterface.xExecute := false;
+	      #xBusy := false;
+	      #xError := true;
+	      #iStep := 3;
+	    ELSIF (#stSql4SiemensInterface.xDone = true) THEN
+	      IF (#stSql4SiemensInterface.diResultRows = 1) AND (#stSql4SiemensInterface.diResultColumns = 1) THEN
+	        #sResult := "fcSql4Siemens_GetData"(diRow := 0, diColumn := 0, stSql4SiemensInterface := #stSql4SiemensInterface);
+	        #diDoneCount := #diDoneCount + 1;
+	        #diResultState := 0;
+	        #stSql4SiemensInterface.xExecute := false;
+	        #xBusy := false;
+	        #xDone := true;
+	        #iStep := 3;
+	      ELSE
+	        // The result columns don't match
+	        #diErrorCount := #diErrorCount + 1;
+	        #diResultState := 9998;
+	        #stSql4SiemensInterface.xExecute := false;
+	        #xBusy := false;
+	        #xError := true;
+	        #iStep := 3;
+	      END_IF;
+	  END_IF;
+	3: // Reset execute signal
+	    #xExecute := FALSE;
+	    #iStep := 0;
+	END_CASE;
+END_FUNCTION_BLOCK
+

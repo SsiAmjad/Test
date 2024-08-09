@@ -1,0 +1,179 @@
+﻿FUNCTION "Calcul_Quantité_1" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Mobile : "S_Mobile";
+   END_VAR
+
+   VAR_TEMP 
+      Ret_RD_Sys_T : Int;
+      TpsPassé : Time;
+      RET : Bool;
+      UDINTDureeCalFar : UDInt;
+   END_VAR
+
+   VAR CONSTANT 
+      REPOS_Q : SInt := 0;
+      Att_Marche_Trans : SInt := 1;
+      Test_Tempo : SInt := 2;
+      Calcule_Qte : SInt := 3;
+   END_VAR
+
+
+BEGIN
+	// Calcul debit massique transporteur
+	IF #Mobile.SA_Vitesse > 0 THEN
+	    #Mobile.ParCal._DebMasTrans := #Mobile.ParCal._DebVolTrans * #Mobile.ParCal._Dens * (#Mobile.SA_Vitesse / 100);
+	ELSE
+	    #Mobile.ParCal._DebMasTrans := #Mobile.ParCal._DebVolTrans * #Mobile.ParCal._Dens;
+	END_IF;
+	
+	
+	CASE #Mobile.ParCal._EtpQ OF
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║            Etape "Repos"           ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	    #REPOS_Q:
+	        REGION traitement preliminaire
+	            IF (#Mobile.ParCal._EtpQ <> #Mobile.ParCal._EtpMemoQ) THEN
+	                //Memorisation de l'etape encours
+	                #Mobile.ParCal._EtpMemoQ := #Mobile.ParCal._EtpQ;
+	                #Ret_RD_Sys_T := RD_SYS_T(#Mobile.ParCal._TpPicke);
+	            END_IF;
+	        END_REGION
+	        
+	        REGION traitement cyclique
+	            //attente lancement
+	            IF #Mobile.ParCal._FgCalFar THEN
+	                #Mobile.ParCal._DebutCalFar := #Mobile.ParCal._TpPicke;
+	                #Mobile.ParCal._EtpQ := #Att_Marche_Trans; // Att_March_Trans
+	                RETURN;
+	            END_IF;
+	        END_REGION
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║Etape "Attente Marche Transporteur" ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	        
+	    #Att_Marche_Trans:
+	        REGION traitement preliminaire
+	            IF (#Mobile.ParCal._EtpQ <> #Mobile.ParCal._EtpMemoQ) THEN
+	                #Mobile.ParCal._EtpMemoQ := #Mobile.ParCal._EtpQ;
+	                #Ret_RD_Sys_T := RD_SYS_T(#Mobile.ParCal._TpPicke);
+	            END_IF;
+	        END_REGION
+	        REGION traitement cyclique
+	            //test arret calcul
+	            IF #Mobile.ParCal._FgCalFar = FALSE THEN
+	                #Mobile.ParCal._EtpQ := #REPOS_Q; //repos
+	                RETURN;
+	            END_IF;
+	            //test marche transporteur
+	            IF NOT (#Mobile.Etat ="Pret") AND NOT (#Mobile.Etat="Vid") THEN
+	                #Mobile.ParCal._DebutCalFar := #Mobile.ParCal._TpPicke;
+	                RETURN;
+	            END_IF; 
+	            //test passage matiere 
+	            IF #Mobile.Pass_Mat = FALSE  THEN
+	                #Mobile.ParCal._DebutCalFar := #Mobile.ParCal._TpPicke;
+	                RETURN;
+	            END_IF;
+	            #Mobile.ParCal._EtpQ := #Test_Tempo;
+	            RETURN;
+	        END_REGION
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║          Etape "Test Tempo"        ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	    #Test_Tempo:
+	        REGION traitement preliminaire
+	            IF (#Mobile.ParCal._EtpQ <> #Mobile.ParCal._EtpMemoQ) THEN
+	                #Mobile.ParCal._EtpMemoQ := #Mobile.ParCal._EtpQ;
+	                #Ret_RD_Sys_T := RD_SYS_T(#Mobile.ParCal._TpPicke);
+	            END_IF;
+	        END_REGION
+	        REGION Traitement cyclique
+	            //test arret calcul
+	            IF #Mobile.ParCal._FgCalFar = FALSE THEN
+	                #Mobile.ParCal._EtpQ := #REPOS_Q;
+	                RETURN;
+	            END_IF;
+	            //SORTIE Anticipee si arret transporteurn ou fin  pm eventuel
+	            IF NOT (#Mobile.Etat ="Pret") THEN
+	                #Mobile.ParCal._EtpQ := #Calcule_Qte;
+	                RETURN;
+	            END_IF;
+	            IF #Mobile.Pass_Mat= FALSE THEN
+	                #Mobile.ParCal._EtpQ := #Att_Marche_Trans;
+	                RETURN;
+	            END_IF;
+	            //Test Fin Tempo
+	            #RET := "Tempo"(Duree := #Mobile.ParCal._TpCalFar , Tps_Picke := #Mobile.ParCal._TpPicke, Anticip := FALSE, Tps_Passe => #TpsPassé);
+	            IF #RET THEN
+	                #Mobile.ParCal._EtpQ := #Calcule_Qte;
+	                RETURN;
+	            END_IF;
+	        END_REGION
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║      Etape "Calcule Quantité"      ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	    #Calcule_Qte:
+	        REGION traitement preliminaire
+	            IF (#Mobile.ParCal._EtpQ <> #Mobile.ParCal._EtpMemoQ) THEN
+	                //Memorisation de l'etape encours
+	                #Mobile.ParCal._EtpMemoQ := #Mobile.ParCal._EtpQ;
+	                #Ret_RD_Sys_T := RD_SYS_T(#Mobile.ParCal._TpPicke);
+	                #Mobile.ParCal._DebutCalFar := #Mobile.ParCal._TpPicke;
+	                #Mobile.ParCal.PrFois := TRUE;
+	                // Initialisation QTE suivi
+	                #Mobile.ParCal._QteSuivi := 0;
+	            END_IF;
+	        END_REGION
+	        REGION Traitement cyclique
+	            #Ret_RD_Sys_T := RD_SYS_T(#Mobile.ParCal._TpPicke);
+	            #Mobile.ParCal._DureeCalFar := T_DIFF(IN1 := #Mobile.ParCal._TpPicke, IN2 := #Mobile.ParCal._DebutCalFar);
+	            //Quantité en kgs = débit en t/h *1000/3600 *duree/1000
+	            #UDINTDureeCalFar := TIME_TO_UDINT(#Mobile.ParCal._DureeCalFar);
+	            //#UDINTDureeCalFar := SINT_TO_UDINT(#IntDureeCalFar);
+	            #Mobile.ParCal._QteCalFar := #Mobile.ParCal._DebMasTrans / 3600 * UDINT_TO_REAL(#UDINTDureeCalFar);
+	            IF #Mobile.ParCal.PrFois THEN
+	                // Si changement
+	                //Memo du QTE de transfert
+	                #Mobile.ParCal._QteSuivi := #Mobile.ParCal._QteTrans;
+	                // RAZ Qte de transfert
+	                #Mobile.ParCal._QteTrans := 0;
+	                // Si changement
+	                #Mobile.ParCal.PrFois := FALSE;
+	            END_IF;
+	            #Mobile.ParCal._QteTrans := #Mobile.ParCal._QteSuivi + #Mobile.ParCal._QteCalFar;
+	            IF #Mobile.ParCal._FgCalFar = FALSE THEN
+	                #Mobile.ParCal._EtpQ := #REPOS_Q;
+	                RETURN;
+	            END_IF;
+	            //test marche transporteur
+	            IF  NOT (#Mobile.Etat ="Pret") AND  NOT (#Mobile.Etat ="Vid") THEN
+	                #Mobile.ParCal._EtpQ := #Att_Marche_Trans;
+	                RETURN;
+	            END_IF;
+	            IF #Mobile.Pass_Mat= FALSE  THEN
+	                #Mobile.ParCal._EtpQ := #Att_Marche_Trans;
+	                RETURN;
+	            END_IF;
+	        END_REGION
+	END_CASE;
+END_FUNCTION
+

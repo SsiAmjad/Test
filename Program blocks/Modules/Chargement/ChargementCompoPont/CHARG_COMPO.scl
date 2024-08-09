@@ -1,0 +1,475 @@
+﻿FUNCTION "CHARG_COMPO" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      FgBase : Bool;
+   END_VAR
+
+   VAR_IN_OUT 
+      ChCompo : "S_ChargCompo";
+   END_VAR
+
+   VAR_TEMP 
+      CircTemp : "S_Circuit";
+      Ret_Bool : Bool;
+      Ret_Sint : SInt;
+      Text_Def : String;
+      Ret_RD_Sys_T : Int;
+      i : USInt;
+      MajNiv : SInt;
+      Tps_Passe : Time;
+      Ret_Usint : USInt;
+      TempInt : Int;
+      Ret_int : Int;
+   END_VAR
+
+   VAR CONSTANT 
+      Etape_Repos : SInt := 0;   // Attente lot a traiter
+      Etape_AttCondPreRemp : SInt := 1;
+      Etape_PreRemplissage : SInt := 2;
+      Etape_AttCond : SInt := 3;
+      Etape_RechCirc : SInt := 4;
+      Etape_DemCirc : SInt := 5;
+      Etape_Surveillance : SInt := 6;
+      Etape_DefArrProd : SInt := 7;
+      Etape_SuspChargement : SInt := 8;
+      Etape_VidCircuit : SInt := 9;
+      Etape_ChgtCel : SInt := 10;
+      Etape_FinLot : SInt := 11;
+      Etape_AttenteRepDial : SInt := 12;
+   END_VAR
+
+
+BEGIN
+	// CASE #ChCompo._ChargCommun._CommunGeneral._Etp OF
+	// (*      
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	//                                                                 ╔════════════════════════════════════╗
+	//                                                                 ║          Etape "repos"             ║
+	//                                                                 ╚════════════════════════════════════╝
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	// *)
+	//     #Etape_Repos:
+	//         REGION Traitement preliminaire "repos"
+	//             IF (#ChCompo._ChargCommun._CommunGeneral._Etp <> #ChCompo._ChargCommun._CommunGeneral._EtpPrec) THEN
+	//                 #ChCompo._ChargCommun._CommunGeneral._EtpPrec := #ChCompo._ChargCommun._CommunGeneral._Etp;
+	//                 #ChCompo._ChargCommun._CommunGeneral._DescEtp := 'Etape repos';
+	//                 #ChCompo._SuspCircuit := FALSE;
+	//             END_IF;
+	//         END_REGION Traitement preliminaire    
+	//         REGION Traitement cyclique "repos" 
+	//             //Attente de l'activation de la tâche
+	//             #Ret_Sint := "Test_Lot_Att_Tache"(Num_Tache := #ChCompo._ChargCommun._CommunGeneral._Tache, Num_Zone => #ChCompo._ChargCommun._CommunGeneral._NumZone);
+	//             IF #Ret_Sint = 1 THEN
+	//                 #ChCompo._ChargCommun._CommunGeneral._Etp := #Etape_AttCondPreRemp;
+	//                 RETURN;
+	//             END_IF;
+	//         END_REGION Traitement cyclique "repos" 
+	// (*      
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	//                                                                 ╔════════════════════════════════════╗
+	//                                                                 ║     Etape "AttCondPreRemp"         ║
+	//                                                                 ╚════════════════════════════════════╝
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	// *)
+	//     #Etape_AttCondPreRemp:
+	//         REGION Traitement preliminaire "AttCondPreRemp"
+	//             IF (#ChCompo._ChargCommun._CommunGeneral._Etp <> #ChCompo._ChargCommun._CommunGeneral._EtpPrec) THEN
+	//                 #ChCompo._ChargCommun._CommunGeneral._EtpPrec := #ChCompo._ChargCommun._CommunGeneral._Etp;
+	//                 #ChCompo._ChargCommun._CommunGeneral._DescEtp := 'Etape AttCondPreRemp';
+	//                 #MajNiv := "Maj_Niv"(Num_Zone := #ChCompo._ChargCommun._CommunGeneral._NumZone, Num_Tache :=#ChCompo._ChargCommun._CommunGeneral._Tache, Niveau := "NIV_CHARGCOMPO_ATT_PREREMP"); //Attente demande demarrage circuit
+	                
+	//             END_IF;
+	//         END_REGION Traitement preliminaire    
+	//         REGION Traitement cyclique "AttCondPreRemp" 
+	//             // On attend d'avoir le niveau bas sur la tremie avant de dmarrer le circuit
+	//             IF #ChCompo._NivBasTremie  THEN
+	//                 IF "FC_Test_Niv_AmontAval"(Num_Zone := #ChCompo._ChargCommun._CommunGeneral._NumZone, Lst_Taches := #ChCompo._ListeTaAttAutPreremplissage) THEN
+	//                     #ChCompo._ChargCommun._CommunGeneral._Etp := #Etape_PreRemplissage;
+	//                     RETURN;
+	//                 END_IF;
+	//             END_IF;
+	
+	            
+	            
+	//         END_REGION Traitement cyclique "AttCondPreRemp"   
+	// (*      
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	//                                                                 ╔════════════════════════════════════╗
+	//                                                                 ║     Etape "PreRemplissage"         ║
+	//                                                                 ╚════════════════════════════════════╝
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	// *)
+	//     #Etape_PreRemplissage:
+	//         REGION Traitement preliminaire "AttCondPreRemp"
+	//             IF (#ChCompo._ChargCommun._CommunGeneral._Etp <> #ChCompo._ChargCommun._CommunGeneral._EtpPrec) THEN
+	//                 #ChCompo._ChargCommun._CommunGeneral._EtpPrec := #ChCompo._ChargCommun._CommunGeneral._Etp;
+	//                 #ChCompo._ChargCommun._CommunGeneral._DescEtp := 'Etape PreRemplissage';
+	//                 #MajNiv := "Maj_Niv"(Num_Zone := #ChCompo._ChargCommun._CommunGeneral._NumZone, Num_Tache :=#ChCompo._ChargCommun._CommunGeneral._Tache, Niveau := "NIV_CHARGCOMPO_PREREMP"); //Attente demande demarrage circuit
+	//                 FOR #i := 0 TO #ChCompo._Ptzs._Nbcompo DO
+	//                     IF #ChCompo._Ptzs._Compo[#i]._Type='R' AND #ChCompo._Ptzs._Compo[#i]._EtatChar<>"FIN_CHARG" THEN
+	//                         #ChCompo._Ptcompo := #ChCompo._Ptzs._Compo[#i];
+	//                     END_IF;
+	//                 END_FOR;
+	                
+	//                 //Deasservissement dernier mobile du tableau de mobile
+	//                 WHILE #ChCompo._TabCircuitPreremp[#TempInt].Mobile <>-1 DO
+	//                     #TempInt:=#TempInt+1  ;
+	//                 END_WHILE;
+	//                 IF #TempInt>0 THEN
+	//                     #TempInt:=#TempInt-1;
+	//                 END_IF;
+	//                 #ChCompo._MobDeasserv := #ChCompo._TabCircuitPreremp[#TempInt].Mobile;
+	//                 IF  #ChCompo._MobDeasserv<>-1 THEN
+	//                     "DB_Mobiles"."THIS"[#ChCompo._MobDeasserv].Asservi:=FALSE;
+	//                     "DB_Mobiles"."THIS"[#ChCompo._MobDeasserv].Tjr_Desasservi := TRUE;
+	//                 END_IF;
+	                
+	//                 //Demarrage des mobiles
+	//                 #ChCompo._PrerempEc:=TRUE;
+	//                 #ChCompo._SRazNbTourPreremp:=1;
+	                
+	//             END_IF;
+	//         END_REGION Traitement preliminaire    
+	//         REGION Traitement cyclique "PreRemplissage" 
+	//             //Demarrage des mobiles
+	//             IF #ChCompo._CptNbTourPreremp = 0 THEN
+	//                 #ChCompo._SRazNbTourPreremp := 0;
+	//                 #ChCompo._SavVisCharg := #ChCompo._VitPreremp;
+	//                 FOR #i := 0 TO "NB_MAX_MOBCIR" DO
+	//                     IF #ChCompo._TabCircuitPreremp[#i].Mobile =-1 THEN
+	//                         EXIT;
+	//                     END_IF;
+	//                    #Ret_Sint:="Dem_Mobile"(#ChCompo._TabCircuitPreremp[#i].Mobile);
+	//                END_FOR;
+	//                IF  #ChCompo._EPmPreremp OR (#ChCompo._CptNbTourPreremp >=#ChCompo._NbTourPreremp)  THEN
+	//                    FOR #i := 0 TO "NB_MAX_MOBCIR" DO
+	//                        IF #ChCompo._TabCircuitPreremp[#i].Mobile = -1 THEN
+	//                            EXIT;
+	//                        END_IF;
+	//                        #Ret_Sint := "Arr_Imm_Mobile"(#ChCompo._TabCircuitPreremp[#i].Mobile);
+	//                    END_FOR;
+	//                    // Reasservissement du dernier mobile du tableau de mobile
+	//                     IF #ChCompo._MobDeasserv<>-1 THEN
+	//                         "DB_Mobiles"."THIS"[#ChCompo._MobDeasserv].Asservi := TRUE;
+	//                         "DB_Mobiles"."THIS"[#ChCompo._MobDeasserv].Tjr_Desasservi := FALSE;
+	//                     END_IF;
+	//                     #ChCompo._PrerempEc := FALSE;
+	//                     #ChCompo._ChargCommun._CommunGeneral._Etp := #Etape_AttCond;
+	//                     RETURN;
+	//                 END_IF;
+	                
+	//            END_IF;
+	            
+	            
+	            
+	//         END_REGION Traitement cyclique "PreRemplissage"  
+	// (*      
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	//                                                                 ╔════════════════════════════════════╗
+	//                                                                 ║           Etape "AttCond"          ║
+	//                                                                 ╚════════════════════════════════════╝
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	// *)
+	//     #Etape_AttCond:
+	//         REGION Traitement preliminaire "AttCond"
+	//             IF (#ChCompo._ChargCommun._CommunGeneral._Etp <> #ChCompo._ChargCommun._CommunGeneral._EtpPrec) THEN
+	//                 #ChCompo._ChargCommun._CommunGeneral._EtpPrec := #ChCompo._ChargCommun._CommunGeneral._Etp;
+	//                 #ChCompo._ChargCommun._CommunGeneral._DescEtp := 'Etape AttCondPreRemp';
+	//                 #MajNiv := "Maj_Niv"(Num_Zone := #ChCompo._ChargCommun._CommunGeneral._NumZone, Num_Tache :=#ChCompo._ChargCommun._CommunGeneral._Tache, Niveau := "NIV_CHARGCOMPO_ATT_DEM_CIR"); //Attente demande demarrage circuit
+	                
+	//             END_IF;
+	//         END_REGION Traitement preliminaire    
+	//         REGION Traitement cyclique "AttCond" 
+	//             //Attente chargement sur le meme lot
+	//             IF #ChCompo._PtChargPont._ChargCommun._CommunGeneral._NumZone <> #ChCompo._ChargCommun._CommunGeneral._NumZone THEN
+	//                 RETURN ;
+	//             END_IF;
+	            
+	//             IF "FC_Test_Niv_AmontAval"(Num_Zone := #ChCompo._ChargCommun._CommunGeneral._NumZone, Lst_Taches := #ChCompo._ListeTaAttFinLotCharg) THEN
+	//                 #ChCompo._ChargCommun._CommunGeneral._Etp := #Etape_FinLot;
+	//                 RETURN;
+	//             END_IF;
+	            
+	//             IF "FC_Test_Niv_AmontAval"(Num_Zone := #ChCompo._ChargCommun._CommunGeneral._NumZone, Lst_Taches := #ChCompo._ListeTaAttAutDemarrage) AND
+	//                 ( #ChCompo._Ptzs._QteNet>= #ChCompo._SeuilQteDemCharg OR #ChCompo._EPmMobCharg) THEN
+	//                 #ChCompo._ChargCommun._CommunGeneral._Etp := #Etape_RechCirc;
+	//                 RETURN;
+	//             END_IF;
+	            
+	//         END_REGION Traitement cyclique "AttCond"   
+	// (*      
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	//                                                                 ╔════════════════════════════════════╗
+	//                                                                 ║           Etape "RechCirc"         ║
+	//                                                                 ╚════════════════════════════════════╝
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	// *)
+	//     #Etape_RechCirc:
+	//         REGION Traitement preliminaire "RechCirc"
+	//             IF (#ChCompo._ChargCommun._CommunGeneral._Etp <> #ChCompo._ChargCommun._CommunGeneral._EtpPrec) THEN
+	//                 #ChCompo._ChargCommun._CommunGeneral._EtpPrec := #ChCompo._ChargCommun._CommunGeneral._Etp;
+	//                 #ChCompo._ChargCommun._CommunGeneral._DescEtp := 'Etape RechCirc';
+	//                 #MajNiv := "Maj_Niv"(Num_Zone := #ChCompo._ChargCommun._CommunGeneral._NumZone, Num_Tache := #ChCompo._ChargCommun._CommunGeneral._Tache, Niveau := "NIV_CHARGCOMPO_ATT_DEM_CIR"); //Attente demande demarrage circuit
+	//                 #Ret_RD_Sys_T := RD_SYS_T(#ChCompo._TpsPicke);
+	//                 IF #ChCompo.Dial_Def.Reponse_Def <> '' THEN
+	//                     CASE #ChCompo.Dial_Def.Num_Def_Etape OF
+	//                         1:
+	//                             GOTO RechCir_DEF;
+	                        
+	//                     END_CASE;
+	                    
+	//                 END_IF;
+	//             END_IF;
+	//         END_REGION Traitement preliminaire    
+	//         REGION Traitement cyclique "RechCirc" 
+	            
+	//             // recuperation d'origine destination et num circuit
+	//             #ChCompo._Circuit.Origine := #ChCompo._OrigineCharg; //#REC.RecCommun.CommunGeneral._Orig[0];
+	//             #ChCompo._Circuit.Destination := "Index_Mobile"(#ChCompo._ChargCommun._Destination);
+	//             #ChCompo._Circuit.Num_Circuit := #ChCompo._ChargCommun._NoCircuit;
+	//             #Ret_Sint := "Rech_Cir"(Circuit :=  #ChCompo._Circuit);
+	            
+	            
+	//             IF #Ret_Sint = -1 THEN
+	//                 //appel dialogue defaut
+	//                 #ChCompo.Dial_Def.Num_Def_Etape := 1;
+	//                 #Text_Def := CONCAT(IN1 := 'Circuit de ', IN2 := "Nom_Mobile"(#ChCompo._Circuit.Origine), IN3 := ' vers ', IN4 := "Nom_Mobile"(#ChCompo._Circuit.Destination), IN5 := ' introuvable ou reserve ');
+	//                 #ChCompo.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #FgBase,
+	//                                                                   Msg_Defaut := #Text_Def,
+	//                                                                   Type_Defaut := 2,
+	//                                                                   Automatisme := #ChCompo._ChargCommun._CommunGeneral._Autom,
+	//                                                                   Num_Lot := #ChCompo._ChargCommun._CommunGeneral._NumLot,
+	//                                                                   Origine_Defaut := 'Circuit Introuvable ou reserve',
+	//                                                                   Libelle_Origine := 'Circuit Introuvable ou reserve',
+	//                                                                   Acq1 := 'Relance',
+	//                                                                   Acq2 := 'Abandon',
+	//                                                                   Acq3 := '',
+	//                                                                   Acq4 := '',
+	//                                                                   Acq5 := '',
+	//                                                                   Acq6 := '',
+	//                                                                   Acq7 := '',
+	//                                                                   Acq8 := '',
+	//                                                                   Acq_Choisi := -1,
+	//                                                                   Date_Arrivee := #ChCompo._TpsPicke);
+	//                 #ChCompo._ChargCommun._CommunGeneral._Etp := #Etape_AttenteRepDial;
+	//                 RETURN;
+	//             ELSE
+	//                 #ChCompo._ChargCommun._CommunGeneral._Etp := #Etape_DemCirc;
+	//                 RETURN;
+	//             END_IF;
+	            
+	//         RechCir_DEF:
+	//             //============ Traitement des reponses pour le defaut  Recherche circuit  ====================================//
+	//             IF #ChCompo.Dial_Def.Reponse_Def = 'Relance' THEN //Relance
+	//                 #ChCompo._ChargCommun._CommunGeneral._Etp := #Etape_RechCirc;
+	//                 #ChCompo.Dial_Def.Reponse_Def := '';
+	//                 RETURN;
+	//             END_IF;
+	//             IF #ChCompo.Dial_Def.Reponse_Def = 'Abandon' THEN
+	//                 #ChCompo._Ptzs._Abandon := TRUE;
+	//                 #ChCompo._ChargCommun._CommunGeneral._Etp := #Etape_FinLot;
+	//                 #ChCompo.Dial_Def.Reponse_Def := '';
+	//                 RETURN;
+	//             END_IF;
+	         
+	//            //============================================  Fin traitement  =============================================//
+	//         END_REGION Traitement cyclique "RechCirc"   
+	// (*      
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	//                                                                 ╔════════════════════════════════════╗
+	//                                                                 ║         Etape "DemCirc"            ║
+	//                                                                 ╚════════════════════════════════════╝
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	// *)
+	//     #Etape_DemCirc:
+	//         REGION Traitement preliminaire "DemCirc"
+	//             IF (#ChCompo._ChargCommun._CommunGeneral._Etp <> #ChCompo._ChargCommun._CommunGeneral._EtpPrec) THEN
+	//                 #ChCompo._ChargCommun._CommunGeneral._EtpPrec := #ChCompo._ChargCommun._CommunGeneral._Etp;
+	//                 #ChCompo._ChargCommun._CommunGeneral._DescEtp := 'Etape DemCirc';
+	//                 #MajNiv := "Maj_Niv"(Num_Zone := #ChCompo._ChargCommun._CommunGeneral._NumZone, Num_Tache :=#ChCompo._ChargCommun._CommunGeneral._Tache, Niveau := "NIV_CHARGCOMPO_DEM_CIR"); 
+	//                 #Ret_Sint := "Dem_Circuit"(#ChCompo._Circuit);
+	//             END_IF;
+	//         END_REGION Traitement preliminaire    
+	//         REGION Traitement cyclique "DemCirc" 
+	//             IF "Test_Etat_Circuit"(Etat := "Pret", Debut := 0, CIRCUIT := #ChCompo._Circuit) THEN
+	//                 #ChCompo._ChargCommun._CommunGeneral._Etp := #Etape_Surveillance;
+	//                 RETURN;
+	//             END_IF;
+	//         END_REGION Traitement cyclique "DemCirc"  
+	// (*      
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	//                                                                 ╔════════════════════════════════════╗
+	//                                                                 ║         Etape "Surveillance"       ║
+	//                                                                 ╚════════════════════════════════════╝
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	// *)
+	//     #Etape_Surveillance:
+	//         REGION Traitement preliminaire "Surveillance"
+	//             IF (#ChCompo._ChargCommun._CommunGeneral._Etp <> #ChCompo._ChargCommun._CommunGeneral._EtpPrec) THEN
+	//                 #ChCompo._ChargCommun._CommunGeneral._EtpPrec := #ChCompo._ChargCommun._CommunGeneral._Etp;
+	//                 #ChCompo._ChargCommun._CommunGeneral._DescEtp := 'Etape Surveillance';
+	//                 #MajNiv := "Maj_Niv"(Num_Zone := #ChCompo._ChargCommun._CommunGeneral._NumZone, Num_Tache := #ChCompo._ChargCommun._CommunGeneral._Tache, Niveau := "NIV_CHARGCOMPO_CHARG_EC");
+	//                 #Ret_RD_Sys_T := RD_SYS_T(#ChCompo._DebutNb);
+	//             END_IF;
+	//         END_REGION Traitement preliminaire    
+	//         REGION Traitement cyclique "Surveillance" 
+	//            //Appel fct gestionvit incorporo
+	//             "GestionVitIncorpo"(#ChCompo);
+	//              //Le cas ou  j'ai pas  capt Niv bas tremie
+	//             IF NOT #ChCompo._PresenceCapNivBasTremie THEN
+	//                 IF NOT "FC_Test_Niv_AmontAval"(Num_Zone := #ChCompo._ChargCommun._CommunGeneral._NumZone, Lst_Taches := #ChCompo._ListeTaAttAttAutVidange) THEN
+	//                     #Ret_RD_Sys_T := RD_SYS_T(#ChCompo._DebutNb);
+	//                 ELSE
+	//                     #ChCompo._Vibreur := TRUE;
+	//                     IF "Tempo"(Duree := #ChCompo._FiltreNiveauBas, Tps_Picke := #ChCompo._DebutNb, Anticip := FALSE, Tps_Passe => #Tps_Passe) THEN
+	//                         #ChCompo._Vibreur := FALSE;
+	//                         #ChCompo._ChargCommun._CommunGeneral._Etp := #Etape_VidCircuit;
+	//                         RETURN;
+	//                     END_IF;
+	//                 END_IF;
+	//                 #ChCompo._ChargCommun._CommunGeneral._Etp := #Etape_VidCircuit;
+	//                 RETURN;
+	//             END_IF;
+	            
+	            
+	//             IF  #ChCompo._PresenceCapNivBasTremie THEN
+	//                 IF #ChCompo._NivBasTremie THEN
+	//                     #ChCompo._Vibreur := FALSE;
+	//                     #Ret_RD_Sys_T := RD_SYS_T(#ChCompo._DebutNb);
+	//                 ELSE
+	//                     #ChCompo._Vibreur := TRUE;
+	//                     IF "Tempo"(Duree := #ChCompo._FiltreNiveauBas, Tps_Picke := #ChCompo._DebutNb, Anticip := FALSE, Tps_Passe => #Tps_Passe)
+	//                         AND  "FC_Test_Niv_AmontAval"(Num_Zone := #ChCompo._ChargCommun._CommunGeneral._NumZone, Lst_Taches := #ChCompo._ListeTaAttAttAutVidange) THEN
+	//                         #ChCompo._Vibreur := FALSE;
+	//                         #ChCompo._ChargCommun._CommunGeneral._Etp := #Etape_VidCircuit;
+	//                         RETURN;
+	//                     END_IF;
+	//                 END_IF;
+	//             END_IF;
+	           
+	//             IF "CondSuspCirCompo"(#ChCompo)  THEN
+	//                 #ChCompo._ChargCommun._CommunGeneral._Etp := #Etape_SuspChargement;
+	//                 RETURN;
+	//             END_IF;
+	            
+	//         END_REGION Traitement cyclique "Surveillance" 
+	// (*      
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	//                                                                 ╔════════════════════════════════════╗
+	//                                                                 ║         Etape "DefArrProd"         ║
+	//                                                                 ╚════════════════════════════════════╝
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	// *)
+	//     #Etape_DefArrProd:
+	//         REGION Traitement preliminaire "DefArrProd"
+	//             IF (#ChCompo._ChargCommun._CommunGeneral._Etp <> #ChCompo._ChargCommun._CommunGeneral._EtpPrec) THEN
+	//                 #ChCompo._ChargCommun._CommunGeneral._EtpPrec := #ChCompo._ChargCommun._CommunGeneral._Etp;
+	//                 #ChCompo._ChargCommun._CommunGeneral._DescEtp := 'Etape DefArrProd';
+	//                 #ChCompo._SuspCircuit := TRUE;
+	//             END_IF;
+	//         END_REGION Traitement preliminaire    
+	//         REGION Traitement cyclique "DefArrProd" 
+	//             #ChCompo._ChargCommun._CommunGeneral._Etp := #Etape_VidCircuit;
+	//             RETURN;
+	            
+	//         END_REGION Traitement cyclique "DefArrProd"  
+	// (*      
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	//                                                                 ╔════════════════════════════════════╗
+	//                                                                 ║         Etape "SuspChargement"     ║
+	//                                                                 ╚════════════════════════════════════╝
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	// *)
+	//     #Etape_SuspChargement:
+	//         REGION Traitement preliminaire "SuspChargement"
+	//             IF (#ChCompo._ChargCommun._CommunGeneral._Etp <> #ChCompo._ChargCommun._CommunGeneral._EtpPrec) THEN
+	//                 #ChCompo._ChargCommun._CommunGeneral._EtpPrec := #ChCompo._ChargCommun._CommunGeneral._Etp;
+	//                 #ChCompo._ChargCommun._CommunGeneral._DescEtp := 'Etape SuspChargement';
+	//                 #ChCompo._SuspCircuit := TRUE;
+	//             END_IF;
+	//         END_REGION Traitement preliminaire    
+	//         REGION Traitement cyclique "SuspChargement" 
+	           
+	//             IF NOT "CondSuspCirCompo"(#ChCompo) THEN
+	//                 #ChCompo._SuspCircuit := FALSE;
+	//                 #ChCompo._ChargCommun._CommunGeneral._Etp := #Etape_Surveillance;
+	//                 RETURN;
+	//             END_IF;
+	            
+	
+	          
+	//         END_REGION Traitement cyclique "SuspChargement"  
+	// (*      
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	//                                                                 ╔════════════════════════════════════╗
+	//                                                                 ║           Etape "FinLot"           ║
+	//                                                                 ╚════════════════════════════════════╝
+	// *************************************** *************************************** *************************************** *************************************** ***************************************
+	// *)
+	//     #Etape_FinLot:
+	//         REGION Traitement preliminaire "FinLot"
+	//             IF (#ChCompo._ChargCommun._CommunGeneral._Etp <> #ChCompo._ChargCommun._CommunGeneral._EtpPrec) THEN
+	//                 #ChCompo._ChargCommun._CommunGeneral._EtpPrec := #ChCompo._ChargCommun._CommunGeneral._Etp;
+	//                 #ChCompo._ChargCommun._CommunGeneral._DescEtp := 'Etape FinLot';
+	//                 #MajNiv := "Maj_Niv"(Num_Zone := #ChCompo._ChargCommun._CommunGeneral._NumZone, Num_Tache := #ChCompo._ChargCommun._CommunGeneral._Tache, Niveau := "NIV_CHARGCOMPO_FVID_CIR");
+	//                 #Ret_Sint := "Fin_Pos_Circuit"(#ChCompo._Circuit);
+	//             END_IF;
+	//         END_REGION Traitement preliminaire    
+	//         REGION Traitement cyclique "FinLot" 
+	//             //Attente fin lot compo principal
+	//             IF  "FC_Test_Niv_AmontAval"(Num_Zone := #ChCompo._ChargCommun._CommunGeneral._NumZone, Lst_Taches := #ChCompo._ListeTaAttFinLotCharg) THEN
+	//                 IF #ChCompo._ChargCommun._Vbasc=0 THEN
+	//                     IF #ChCompo._ValidPoidsTheo<>0 THEN
+	//                         #ChCompo._Ptzs._QteTotMinIncorp := #ChCompo._Ptzs._QteTotMinComm;
+	//                     ELSE
+	//                         #ChCompo._Ptzs._QteTotMinIncorp := 0;
+	//                         FOR #i := 0 TO #ChCompo._Ptzs._Nbcompo DO
+	//                             IF #ChCompo._Ptzs._Compo[#i]._Type='R' THEN
+	//                                 #ChCompo._Ptzs._QteTotMinIncorp := #ChCompo._Ptzs._QteTotMinIncorp + #ChCompo._Ptzs._Compo[#i]._PoidsReel;
+	//                             END_IF;
+	//                         END_FOR;
+	//                     END_IF;
+	//                 END_IF;
+	//                 #MajNiv := "Maj_Niv"(Num_Zone := #ChCompo._ChargCommun._CommunGeneral._NumZone, Num_Tache := #ChCompo._ChargCommun._CommunGeneral._Tache, Niveau := "N_FINLOT");
+	//                 #ChCompo._ChargCommun._CommunGeneral._Etp := #Etape_Repos;
+	//                 RETURN;
+	//             END_IF;
+	//             IF NOT "FC_Test_Niv_AmontAval"(Num_Zone := #ChCompo._ChargCommun._CommunGeneral._NumZone, Lst_Taches := #ChCompo._ListeTaAttAttAutVidange) THEN
+	//                 #ChCompo._ChargCommun._CommunGeneral._Etp := #Etape_AttCond;
+	//                 RETURN;
+	//             END_IF;
+	            
+	//         END_REGION Traitement cyclique "FinLot"  
+	        
+	// (*      
+	// *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	//                                                                             ╔════════════════════════════════════╗
+	//                                                                             ║ Etape "Attente Reponse Dialogue"   ║
+	//                                                                             ╚════════════════════════════════════╝
+	// *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                    
+	// *)
+	//     "Etape_Attente_RepDial":
+	//         REGION Preliminaire Attente Acquuitement
+	//             IF #ChCompo._ChargCommun._CommunGeneral._Etp <> #ChCompo._ChargCommun._CommunGeneral._EtpPrec THEN
+	//                 //Memorisation de l'etape encours
+	//                 #ChCompo._ChargCommun._CommunGeneral._EtpMemo := #ChCompo._ChargCommun._CommunGeneral._EtpPrec;
+	                
+	//                 #ChCompo._ChargCommun._CommunGeneral._DescEtp := 'Etape_Attente_RepDial';
+	//                 #ChCompo._ChargCommun._CommunGeneral._EtpPrec := #ChCompo._ChargCommun._CommunGeneral._Etp;
+	                
+	//             END_IF;
+	//         END_REGION Preliminaire Attente Acquuitement
+	//         REGION Cyclique Attente Acquitement
+	//             #ChCompo.Dial_Def.Reponse_Def := "FC_Recup_Rep_Def"(Index_Def := #ChCompo.Dial_Def.Index_Defaut, Reponse_Ecrit => #ChCompo.Dial_Def.Text_Reponse);
+	//             IF #ChCompo.Dial_Def.Reponse_Def <> '' THEN
+	//                 "FC_Raz_Def"(#ChCompo.Dial_Def.Index_Defaut);
+	//                 #ChCompo._ChargCommun._CommunGeneral._Etp := #ChCompo._ChargCommun._CommunGeneral._EtpMemo;
+	//                 RETURN;
+	//             END_IF;
+	//         END_REGION Cyclique Attente Acquitement      
+	        
+	        
+	// END_CASE;
+END_FUNCTION
+

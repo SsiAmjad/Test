@@ -1,0 +1,20 @@
+﻿FUNCTION "Init_Tps" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Index : UInt;
+   END_VAR
+
+
+BEGIN
+	"DB_BIBLIOTHEQUE".Mobile[#Index].Tps_Att := t#500ms;
+	"DB_BIBLIOTHEQUE".Mobile[#Index].Tps_Alerte_Dem := t#0ms;
+	"DB_BIBLIOTHEQUE".Mobile[#Index].Tps_Ap_Def := t#0ms;
+	"DB_BIBLIOTHEQUE".Mobile[#Index].Tps_Asserv := t#0ms;
+	"DB_BIBLIOTHEQUE".Mobile[#Index].Tps_Chang_Pos := t#0ms;
+	"DB_BIBLIOTHEQUE".Mobile[#Index].Tps_Pass_Mat := t#0ms;
+	"DB_BIBLIOTHEQUE".Mobile[#Index].Tps_Vid := t#0ms;
+	"DB_BIBLIOTHEQUE".Mobile[#Index].Tps_Max_Mar_Forc := t#0ms;
+	"DB_BIBLIOTHEQUE".Mobile[#Index].Tps_Arr := t#0ms;
+END_FUNCTION
+

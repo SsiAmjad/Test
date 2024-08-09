@@ -1,0 +1,114 @@
+﻿FUNCTION "SimulCharg" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Ptzs : "S_SuiviCommande";
+   END_VAR
+
+   VAR_TEMP 
+      NoComm : USInt;
+      NumLigne : USInt;
+   END_VAR
+
+
+BEGIN
+	 #NoComm := 0;
+	#NumLigne := 1;
+	
+	#Ptzs._InfoTour._NoLot:= '1121245365';
+	#Ptzs._InfoTour._Camion := 'CAMION';
+	#Ptzs._InfoTour._ImmatCamion := 'B26173500';
+	#Ptzs._InfoTour._Chauffeur := 'Mohamed';
+	#Ptzs._InfoTour._NoTour := '1';
+	#Ptzs._InfoTour._Tare := 10000;
+	#Ptzs._InfoTour._NoFeuilleRoute := '15751';
+	
+	
+	
+	IF "Commande_Simulation" = 1 THEN
+	    
+	    #Ptzs._ComLig[#NoComm]._NoLot := '159357852456';
+	    #Ptzs._ComLig[#NoComm]._NoCommande := 'Com001';
+	    #Ptzs._ComLig[#NoComm]._NoLigne := 2;
+	    #Ptzs._ComLig[#NoComm]._PtcelOrig._Cel := 'BV01';
+	    #Ptzs._ComLig[#NoComm]._PtcelOrig := "DB_Mod_Cellule"._TabCel["RechIndexCel"(#Ptzs._ComLig[#NoComm]._PtcelOrig._Cel)];
+	    #Ptzs._ComLig[#NoComm]._ChuteCel := 450;
+	    #Ptzs._ComLig[#NoComm]._Densite := 0.7;
+	    #Ptzs._ComLig[#NoComm]._CdMat := '3RBOL';
+	    #Ptzs._ComLig[#NoComm]._LbMat := '3RBOL_____';
+	    #Ptzs._ComLig[#NoComm]._QteTotComm := 5000;
+	    #Ptzs._ComLig[#NoComm]._QteDejaCharg := 0;
+	    #Ptzs._ComLig[#NoComm]._ConsQteTot := #Ptzs._ComLig[#NoComm]._QteTotComm - #Ptzs._ComLig[#NoComm]._QteDejaCharg;
+	    #Ptzs._ComLig[#NoComm]._Case := 01;
+	    #Ptzs._ComLig[#NoComm]._AutrePont := FALSE;
+	    #Ptzs._ComLig[#NoComm]._NomClient := 'Amine';
+	    #Ptzs._ComLig[#NoComm]._CdClient := 'Cli00';
+	    #Ptzs._ComLig[#NoComm]._Ville := 'Casablanca';
+	    #Ptzs._ComLig[#NoComm]._NbCase := 1;
+	    
+	    #NoComm := #NoComm + 1;
+	    #Ptzs._ComLig[#NoComm]._NoLot := '986523';
+	    #Ptzs._ComLig[#NoComm]._NoCommande := 'Com002';
+	    #Ptzs._ComLig[#NoComm]._NoLigne := 1;
+	    #Ptzs._ComLig[#NoComm]._PtcelOrig._Cel := 'BV02';
+	    #Ptzs._ComLig[#NoComm]._PtcelOrig := "DB_Mod_Cellule"._TabCel["RechIndexCel"(#Ptzs._ComLig[#NoComm]._PtcelOrig._Cel)];
+	    #Ptzs._ComLig[#NoComm]._ChuteCel := 0;
+	    #Ptzs._ComLig[#NoComm]._Densite := 0.65;
+	    #Ptzs._ComLig[#NoComm]._CdMat := '3RBOL';
+	    #Ptzs._ComLig[#NoComm]._LbMat := '3RBOL_____';
+	    #Ptzs._ComLig[#NoComm]._QteTotComm := 2000;
+	    #Ptzs._ComLig[#NoComm]._QteDejaCharg := 1000;
+	    #Ptzs._ComLig[#NoComm]._ConsQteTot := #Ptzs._ComLig[#NoComm]._QteTotComm - #Ptzs._ComLig[#NoComm]._QteDejaCharg;
+	    #Ptzs._ComLig[#NoComm]._Case := 02;
+	    #Ptzs._ComLig[#NoComm]._AutrePont := FALSE;
+	    #Ptzs._ComLig[#NoComm]._NomClient := 'Mohamed';
+	    #Ptzs._ComLig[#NoComm]._CdClient := 'Cli01';
+	    #Ptzs._ComLig[#NoComm]._Ville := 'Rabat';
+	    #Ptzs._ComLig[#NoComm]._NbCase := 1;
+	    
+	    #NoComm := #NoComm + 1;
+	    #Ptzs._ComLig[#NoComm]._NoLot := '9999999';
+	    #Ptzs._ComLig[#NoComm]._NoCommande := 'Com001';
+	    #Ptzs._ComLig[#NoComm]._NoLigne := 1;
+	    #Ptzs._ComLig[#NoComm]._PtcelOrig._Cel := 'BV03';
+	    #Ptzs._ComLig[#NoComm]._ChuteCel := 100;
+	    #Ptzs._ComLig[#NoComm]._PtcelOrig := "DB_Mod_Cellule"._TabCel["RechIndexCel"(#Ptzs._ComLig[#NoComm]._PtcelOrig._Cel)];
+	    #Ptzs._ComLig[#NoComm]._Densite := 0.7;
+	    #Ptzs._ComLig[#NoComm]._CdMat := '2PCC100';
+	    #Ptzs._ComLig[#NoComm]._LbMat := '2PCC100_____';
+	    #Ptzs._ComLig[#NoComm]._QteTotComm := 3500;
+	    #Ptzs._ComLig[#NoComm]._QteDejaCharg := 900;
+	    #Ptzs._ComLig[#NoComm]._ConsQteTot := #Ptzs._ComLig[#NoComm]._QteTotComm - #Ptzs._ComLig[#NoComm]._QteDejaCharg;
+	    #Ptzs._ComLig[#NoComm]._Case := 03;
+	    #Ptzs._ComLig[#NoComm]._AutrePont := FALSE;
+	    #Ptzs._ComLig[#NoComm]._NomClient := 'Said';
+	    #Ptzs._ComLig[#NoComm]._CdClient := 'Cli02';
+	    #Ptzs._ComLig[#NoComm]._Ville := 'Casablanca';
+	    #Ptzs._ComLig[#NoComm]._NbCase := 1;
+	    
+	    
+	    #NoComm := #NoComm + 1;
+	    #Ptzs._ComLig[#NoComm]._NoLot := '88888888';
+	    #Ptzs._ComLig[#NoComm]._NoCommande := 'Com002';
+	    #Ptzs._ComLig[#NoComm]._NoLigne := 2;
+	    #Ptzs._ComLig[#NoComm]._PtcelOrig._Cel := 'BV05';
+	    #Ptzs._ComLig[#NoComm]._Densite := 0.65;
+	    #Ptzs._ComLig[#NoComm]._ChuteCel := 0;
+	    #Ptzs._ComLig[#NoComm]._PtcelOrig := "DB_Mod_Cellule"._TabCel["RechIndexCel"(#Ptzs._ComLig[#NoComm]._PtcelOrig._Cel)];
+	    #Ptzs._ComLig[#NoComm]._CdMat := '2PCC100';
+	    #Ptzs._ComLig[#NoComm]._LbMat := '2PCC100_____';
+	    #Ptzs._ComLig[#NoComm]._QteTotComm := 6000;
+	    #Ptzs._ComLig[#NoComm]._QteDejaCharg := 2000;
+	    #Ptzs._ComLig[#NoComm]._ConsQteTot := #Ptzs._ComLig[#NoComm]._QteTotComm - #Ptzs._ComLig[#NoComm]._QteDejaCharg;
+	    #Ptzs._ComLig[#NoComm]._Case := 06;
+	    #Ptzs._ComLig[#NoComm]._AutrePont := FALSE;
+	    #Ptzs._ComLig[#NoComm]._NomClient := 'Issam';
+	    #Ptzs._ComLig[#NoComm]._CdClient := 'Cli03';
+	    #Ptzs._ComLig[#NoComm]._Ville := 'Rabat';
+	    #Ptzs._ComLig[#NoComm]._NbCase := 1;
+	    
+	    
+	END_IF;
+	#Ptzs._NbCommande := #NoComm+1;
+END_FUNCTION
+

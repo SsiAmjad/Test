@@ -1,0 +1,59 @@
+﻿ORGANIZATION_BLOCK "Startup"
+TITLE = "Complete Restart"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_TEMP 
+      i : SInt;
+   END_VAR
+
+
+BEGIN
+	"fgbase" := TRUE;
+	"simul" := TRUE;
+	"Rens_Cellules"();
+	"TempoMobiles"();
+	"Parametres"();
+	
+	
+	"BadgeReception1"._ptmodrec := "DB_REC".REC[0];
+	"BadgeReception2"._ptmodrec := "DB_REC".REC[3];
+	"BadgeReception3"._ptmodrec := "DB_REC".REC[1];
+	"BadgeReception4"._ptmodrec := "DB_REC".REC[2];
+	"GprodTransfert1"._PtModuleTransf := "DB_TRANSFERT".TRANSF[0];
+	//====================
+	FOR #i := 0 TO 7 DO
+	    "DB_Dosage".TRM_TRANS[#i].Tps_Mini := T#10s;
+	    "DB_Dosage".TRM_TRANS[#i].Tps_Att_NB := T#500ms;
+	    "DB_Dosage".TRM_TRANS[#i].Tps_MAX_Att_NB := T#3m;
+	    "DB_Dosage".TRM_TRANS[#i].Tps_Att_PM := T#500ms;
+	    "DB_Dosage".TRM_TRANS[#i].Tps_MAX_Att_PM := T#3m;
+	END_FOR;
+	//====================
+	FOR #i := 0 TO 4 DO
+	    "DB_Dosage".TRM_TRP[#i].Tps_Att_NB := T#500ms;
+	    "DB_Dosage".TRM_TRP[#i].Tps_MAX_Att_NB := T#3m;
+	END_FOR;
+	//====================
+	"DB_Dosage".BR[0].Tps_FPM := T#500ms;
+	"DB_Dosage".BR[0].Tps_Max_FPM := T#3m;
+	"DB_Dosage".BR[0].Tps_Int_Vide := T#1s;
+	"DB_Dosage".BR[0].Tps_Max_Int_Vide := T#3s;
+	"DB_Dosage".BR[0].Tps_NB := T#500ms;
+	"DB_Dosage".BR[0].Tps_Max_NB := T#3m;
+	"DB_Dosage".BR[1].Tps_FPM := T#500ms;
+	"DB_Dosage".BR[1].Tps_Max_FPM := T#3m;
+	"DB_Dosage".BR[1].Tps_Int_Vide := T#1s;
+	"DB_Dosage".BR[1].Tps_Max_Int_Vide := T#3s;
+	"DB_Dosage".BR[1].Tps_NB := T#500ms;
+	"DB_Dosage".BR[1].Tps_Max_NB := T#3m;
+	//====================
+	FOR #i := 0 TO 9 DO
+	    "DB_Dosage".LIQUIDES_MLG[#i]._Tps_Evol_Poids := T#15S;
+	END_FOR;
+	//====================
+	// Mettre la position par defaut pour le volet de sens
+	"DB_Dosage".BR[0].E_Sens_AV := TRUE;
+	"DB_Dosage".BR[1].E_Sens_AV := TRUE;
+	
+END_ORGANIZATION_BLOCK
+

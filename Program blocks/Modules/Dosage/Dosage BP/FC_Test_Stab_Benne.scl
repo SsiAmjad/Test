@@ -1,0 +1,19 @@
+﻿FUNCTION "FC_Test_Stab_Benne" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Benne : "S_Benne";
+   END_VAR
+
+
+BEGIN
+	// Benne hors tolerance de stabilite
+	IF #Benne.Tol_Stb < ABS(#Benne.Poids_Memo - #Benne.Poids_Net) THEN
+	    #FC_Test_Stab_Benne := FALSE;
+	    RETURN;
+	END_IF;
+	// Benne stable
+	#FC_Test_Stab_Benne := TRUE;
+	RETURN;
+END_FUNCTION
+

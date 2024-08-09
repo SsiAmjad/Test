@@ -1,0 +1,103 @@
+﻿FUNCTION "Initialisation_Broyeurs" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+BEGIN
+	//--------------------- Mobiles pour BR1  ---------------------//
+	"DB_Dosage".BR[0].Nom := 'BR1';
+	"DB_Dosage".BR[0].Mob_Alim := "Index_Mobile"('Alim_BR1');
+	"DB_Dosage".BR[0].Mob_Broyeur := "Index_Mobile"('BR1');
+	"DB_Dosage".BR[0].Mob_Decol := "Index_Mobile"('DECOL_BR1');
+	"DB_Dosage".BR[0].Mob_Magnet := "Index_Mobile"('MAGNET_BR1');
+	"DB_Dosage".BR[0].Mob_Vol_Sens := "Index_Mobile"('VSENS_BR1');
+	"DB_Dosage".BR[0].Mob_Trappe := "Index_Mobile"('TRP_AV_BR1');
+	"DB_Dosage".BR[0].Mob_Vib := "Index_Mobile"('VIB_BR1');
+	"DB_Dosage".BR[0].Mob_Vent := "Index_Mobile"('VENT_BR1');
+	"DB_Dosage".BR[0].Mob_Vis_Epierreur := "Index_Mobile"('Vis_Ep_BR1');
+	"DB_Dosage".BR[0].Mob_Vol_Air := "Index_Mobile"('VA_BR1');
+	"DB_Dosage".BR[0].Mob_Vol_Haut_Couche := "Index_Mobile"('VH_BR1');
+	"DB_Dosage".BR[0].NB := "RNB_TRM_AVBR1";
+	//--------------------- Tempos pour BR1 ---------------------//
+	// "DB_Dosage".BR[0].Tps_FPM := T#3s;
+	// "DB_Dosage".BR[0].Tps_Max_FPM := T#30s;
+	// "DB_Dosage".BR[0].Tps_Int_Vide := T#10s;
+	// "DB_Dosage".BR[0].Tps_Max_Int_Vide := T#30s;
+	// "DB_Dosage".BR[0].Tps_NB := T#3s;
+	// "DB_Dosage".BR[0].Tps_Max_NB := T#30s;
+	//--------------------- Donnees BR1 ---------------------//
+	"DB_Dosage".BR[0].Intens_Nominale := 300;
+	"DB_Dosage".BR[0].Vit_Max_Broy := 3000;
+	//--------------------- Regulation BR1 ---------------------//
+	"DB_Dosage".BR[0].Regul_Alim.Coef_Propo := 0.1;
+	"DB_Dosage".BR[0].Regul_Alim.Coef_Integr := 2;
+	"DB_Dosage".BR[0].Regul_Alim.Coef_Deriv := 0;
+	"DB_Dosage".BR[0].Regul_Alim.Tps_Inter_Regul := T#3s;
+	"DB_Dosage".BR[0].Regul_Alim.Cor_Max := 2;
+	// "DB_Dosage".BR[0].Regul_Alim.SA_Min := 30;
+	// "DB_Dosage".BR[0].Regul_Alim.SA_Max := 100;
+	// "DB_Dosage".BR[0].Regul_Alim.SA_Fixe := 20;
+	// "DB_Dosage".BR[0].Regul_Alim.Tol_Inf := "DB_Dosage".BR[0].Regul_Alim.Tol_Sup := 5;
+	"DB_Dosage".BR[0].Regul_Alim.Type_Reg := 'R';
+	//--------------------- SYNCHRONISATION GRAFCET BR1 ---------------------//
+	"DB_Dosage".BR[0].Lst_Taches_Att_Amont_Av_Demarrage[0]._Tache := "TAC_TREMSR_BR1";
+	"DB_Dosage".BR[0].Lst_Taches_Att_Amont_Av_Demarrage[0]._Niv := "NIV_TREMIE_TRAPPE_DEM_EXTRACT";
+	"DB_Dosage".BR[0].Lst_Taches_Att_Fin_Amont[0]._Tache := "TAC_TREMSR_BR1";
+	"DB_Dosage".BR[0].Lst_Taches_Att_Fin_Amont[0]._Niv := "NIV_TREMIE_TRAPPE_FIN_LOT";
+	// "DB_Dosage".BR[0].Lst_Taches_Att_Amont_Av_Test_Grille[0]._Tache := "TAC_TREMSR_BR1";
+	// "DB_Dosage".BR[0].Lst_Taches_Att_Amont_Av_Test_Grille[0]._Niv := 255;
+	"DB_Dosage".BR[0].Lst_Taches_Att_Aval_Pret[0]._Tache:= "TAC_TREMSS_BR1";
+	"DB_Dosage".BR[0].Lst_Taches_Att_Aval_Pret[0]._Niv := "NIV_TREMIE_TRANS_DEBUT_LOT";
+	"DB_Dosage".BR[0].Lst_Taches_Att_Ouv_Amont[0]._Tache := "TAC_TREMSR_BR1";
+	"DB_Dosage".BR[0].Lst_Taches_Att_Ouv_Amont[0]._Niv := "NIV_TREMIE_TRANS_DEM_EXTRACT";
+	"DB_Dosage".BR[0].Lst_Taches_Vid_Vis_Sous_Broy[0]._Tache:= "TAC_TREMSS_BR1";
+	"DB_Dosage".BR[0].Lst_Taches_Vid_Vis_Sous_Broy[0]._Niv := "NIV_TREMIE_TRANS_DEBUT_VIDANGE";
+	"DB_Dosage".BR[0].Lst_Taches_Amont_Qte[0] := "TAC_TREMSR_BR1";
+	//--------------------- Affectation des mobiles pour BR2  ---------------------//
+	"DB_Dosage".BR[1].Nom := 'BR2';
+	"DB_Dosage".BR[1].Mob_Alim := "Index_Mobile"('Alim_BR2');
+	"DB_Dosage".BR[1].Mob_Broyeur := "Index_Mobile"('BR2');
+	"DB_Dosage".BR[1].Mob_Decol := "Index_Mobile"('DECOL_BR2');
+	"DB_Dosage".BR[1].Mob_Magnet := "Index_Mobile"('MAGNET_BR2');
+	"DB_Dosage".BR[1].Mob_Vol_Sens := "Index_Mobile"('VSENS_BR2');
+	"DB_Dosage".BR[1].Mob_Vib := "Index_Mobile"('VIB_BR2');
+	"DB_Dosage".BR[1].Mob_Vent := "Index_Mobile"('VENT_BR2');
+	"DB_Dosage".BR[1].Mob_Vis_Epierreur := "Index_Mobile"('Vis_Ep_BR2');
+	"DB_Dosage".BR[1].Mob_Vol_Air := "Index_Mobile"('VA_BR2');
+	"DB_Dosage".BR[1].Mob_Vol_Haut_Couche := "Index_Mobile"('VH_BR2');
+	"DB_Dosage".BR[1].Mob_Trappe := "Index_Mobile"('TRP_AV_BR2');
+	"DB_Dosage".BR[1].NB := "RNB_TRM_AVBR2";
+	//--------------------- Regulation BR2 ---------------------//
+	"DB_Dosage".BR[1].Regul_Alim.Coef_Propo := 0.1;
+	"DB_Dosage".BR[1].Regul_Alim.Coef_Integr := 2;
+	"DB_Dosage".BR[1].Regul_Alim.Coef_Deriv := 0;
+	"DB_Dosage".BR[1].Regul_Alim.Tps_Inter_Regul := T#3s;
+	"DB_Dosage".BR[1].Regul_Alim.Cor_Max := 2;
+	// "DB_Dosage".BR[1].Regul_Alim.SA_Min := 30;
+	// "DB_Dosage".BR[1].Regul_Alim.SA_Max := 100;
+	// "DB_Dosage".BR[1].Regul_Alim.SA_Fixe := 20;
+	// "DB_Dosage".BR[1].Regul_Alim.Tol_Inf := "DB_Dosage".BR[1].Regul_Alim.Tol_Sup := 5;
+	"DB_Dosage".BR[1].Regul_Alim.Type_Reg := 'R';
+	//--------------------- Tempos pour BR2 ---------------------//
+	// "DB_Dosage".BR[1].Tps_FPM := T#3s;
+	// "DB_Dosage".BR[1].Tps_Max_FPM := T#30s;
+	// "DB_Dosage".BR[1].Tps_Int_Vide := T#10s;
+	// "DB_Dosage".BR[1].Tps_Max_Int_Vide := T#30s;
+	// "DB_Dosage".BR[1].Tps_NB := T#3s;
+	// "DB_Dosage".BR[1].Tps_Max_NB := T#30s;
+	//--------------------- Donnees BR2 ---------------------//
+	"DB_Dosage".BR[1].Intens_Nominale := 300;
+	"DB_Dosage".BR[1].Vit_Max_Broy := 3000;
+	//--------------------- SYNCHRONISATION GRAFCET BR2 ---------------------//
+	"DB_Dosage".BR[1].Lst_Taches_Att_Amont_Av_Demarrage[0]._Tache := "TAC_TREMSR_BR2";
+	"DB_Dosage".BR[1].Lst_Taches_Att_Amont_Av_Demarrage[0]._Niv := "NIV_TREMIE_TRAPPE_DEM_EXTRACT";
+	// "DB_Dosage".BR[1].Lst_Taches_Att_Amont_Av_Test_Grille[0]._Tache := "TAC_TREMSR_BR2";
+	// "DB_Dosage".BR[1].Lst_Taches_Att_Amont_Av_Test_Grille[0]._Niv := 255;
+	"DB_Dosage".BR[1].Lst_Taches_Att_Aval_Pret[0]._Tache := "TAC_TREMSS_BR2";
+	"DB_Dosage".BR[1].Lst_Taches_Att_Aval_Pret[0]._Niv := "NIV_TREMIE_TRANS_DEBUT_LOT";
+	"DB_Dosage".BR[1].Lst_Taches_Att_Ouv_Amont[0]._Tache := "TAC_TREMSR_BR2";
+	"DB_Dosage".BR[1].Lst_Taches_Att_Ouv_Amont[0]._Niv := "NIV_TREMIE_TRANS_DEM_EXTRACT";
+	"DB_Dosage".BR[1].Lst_Taches_Vid_Vis_Sous_Broy[0]._Tache := "TAC_TREMSS_BR2";
+	"DB_Dosage".BR[1].Lst_Taches_Vid_Vis_Sous_Broy[0]._Niv := "NIV_TREMIE_TRANS_DEBUT_VIDANGE";
+	"DB_Dosage".BR[1].Lst_Taches_Amont_Qte[0] := "TAC_TREMSR_BR2";
+END_FUNCTION
+

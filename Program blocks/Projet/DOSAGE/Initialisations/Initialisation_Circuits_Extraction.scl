@@ -1,0 +1,377 @@
+﻿FUNCTION "Initialisation_Circuits_Extraction" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR CONSTANT 
+      PosPv : SInt := 0;
+      PosGv : SInt := 1;
+      Ferm : SInt := 0;
+      Ouv : SInt := 1;
+      PosArret : SInt := 0;
+      MonoPos : SInt := 0;
+   END_VAR
+
+
+BEGIN
+	//================================= CELLULE1 BP1 =================================//
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Cel := 'S01';
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Extrac[0]._IndexMob := "Index_Mobile"('EXT1_S01');
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Extrac[0]._PosGv := #PosGv;
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Extrac[0]._PosPv := #PosPv;
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Extrac[0]._PosArret := #PosArret;
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Extrac[1]._IndexMob := "Index_Mobile"('EXT2_S01');
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Extrac[1]._PosGv := #MonoPos;
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Extrac[1]._PosPv := #MonoPos;
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Extrac[1]._PosArret := #MonoPos;
+	//================================= CELLULE1 BP1 =================================//
+	//================================= CELLULE2 BP1 =================================//
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[1]._Cel := 'S02';
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[1]._Extrac[0]._IndexMob := "Index_Mobile"('EXT1_S02');
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[1]._Extrac[0]._PosGv := #PosGv;
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[1]._Extrac[0]._PosPv := #PosPv;
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[1]._Extrac[0]._PosArret := #PosArret;
+	//================================= CELLULE2 BP1 =================================//
+	//================================= CELLULE3 BP1 =================================//
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[2]._Cel := 'S03';
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[2]._Extrac[0]._IndexMob := "Index_Mobile"('EXT1_S03');
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[2]._Extrac[0]._PosGv := #PosGv;
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[2]._Extrac[0]._PosPv := #PosPv;
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[2]._Extrac[0]._PosArret := #PosArret;
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[2]._Extrac[1]._IndexMob := "Index_Mobile"('EXT2_S03');
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[2]._Extrac[1]._PosGv := #MonoPos;
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[2]._Extrac[1]._PosPv := #MonoPos;
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[2]._Extrac[1]._PosArret := #MonoPos;
+	//================================= CELLULE3 BP1 =================================//
+	//================================= CELLULE4 BP1 =================================//
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[3]._Cel := 'S04';
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[3]._Extrac[0]._IndexMob := "Index_Mobile"('EXT1_S04');
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[3]._Extrac[0]._PosGv := #PosGv;
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[3]._Extrac[0]._PosPv := #PosPv;
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[3]._Extrac[0]._PosArret := #PosArret;
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[3]._Extrac[1]._IndexMob := "Index_Mobile"('EXT2_S04');
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[3]._Extrac[1]._PosGv := #MonoPos;
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[3]._Extrac[1]._PosPv := #MonoPos;
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[3]._Extrac[1]._PosArret := #MonoPos;
+	//================================= CELLULE4 BP1 =================================//
+	//================================= CELLULE5 BP1 =================================//
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[4]._Cel := 'S05';
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[4]._Extrac[0]._IndexMob := "Index_Mobile"('EXT1_S05');
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[4]._Extrac[0]._PosGv := #PosGv;
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[4]._Extrac[0]._PosPv := #PosPv;
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[4]._Extrac[0]._PosArret := #PosArret;
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[4]._Extrac[1]._IndexMob := "Index_Mobile"('EXT2_S05');
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[4]._Extrac[1]._PosGv := #MonoPos;
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[4]._Extrac[1]._PosPv := #MonoPos;
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[4]._Extrac[1]._PosArret := #MonoPos;
+	//================================= CELLULE5 BP1 =================================//
+	//================================= CELLULE6 BP1 =================================//
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[5]._Cel := 'S06';
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[5]._Extrac[0]._IndexMob := "Index_Mobile"('EXT1_S06');
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[5]._Extrac[0]._PosGv := #PosGv;
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[5]._Extrac[0]._PosPv := #PosPv;
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[5]._Extrac[0]._PosArret := #PosArret;
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[5]._Extrac[1]._IndexMob := "Index_Mobile"('EXT2_S06');
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[5]._Extrac[1]._PosGv := #MonoPos;
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[5]._Extrac[1]._PosPv := #MonoPos;
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._PtCel._TabCel[5]._Extrac[1]._PosArret := #MonoPos;
+	//================================= CELLULE6 BP1 =================================//
+	
+	//================================= CELLULE1 BP2 =================================//
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Cel := 'S11';
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Extrac[0]._IndexMob := "Index_Mobile"('EXT1_S11');
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Extrac[0]._PosGv := #PosGv;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Extrac[0]._PosPv := #PosPv;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Extrac[0]._PosArret := #PosArret;
+	//================================= CELLULE1 BP2 =================================//
+	//================================= CELLULE2 BP2 =================================//
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[1]._Cel := 'S12';
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[1]._Extrac[0]._IndexMob := "Index_Mobile"('EXT1_S12');
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[1]._Extrac[0]._PosGv := #PosGv;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[1]._Extrac[0]._PosPv := #PosPv;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[1]._Extrac[0]._PosArret := #PosArret;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[1]._Extrac[1]._IndexMob := "Index_Mobile"('EXT2_S12');
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[1]._Extrac[1]._PosGv := #MonoPos;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[1]._Extrac[1]._PosPv := #MonoPos;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[1]._Extrac[1]._PosArret := #MonoPos;
+	//================================= CELLULE2 BP2 =================================//
+	//================================= CELLULE3 BP2 =================================//
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[2]._Cel := 'S13';
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[2]._Extrac[0]._IndexMob := "Index_Mobile"('EXT1_S13');
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[2]._Extrac[0]._PosGv := #PosGv;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[2]._Extrac[0]._PosPv := #PosPv;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[2]._Extrac[0]._PosArret := #PosArret;
+	//================================= CELLULE3 BP2 =================================//
+	//================================= CELLULE4 BP2 =================================//
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[3]._Cel := 'S14';
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[3]._Extrac[0]._IndexMob := "Index_Mobile"('EXT1_S14');
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[3]._Extrac[0]._PosGv := #PosGv;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[3]._Extrac[0]._PosPv := #PosPv;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[3]._Extrac[0]._PosArret := #PosArret;
+	//================================= CELLULE4 BP2 =================================//
+	//================================= CELLULE5 BP2 =================================//
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[4]._Cel := 'S15';
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[4]._Extrac[0]._IndexMob := "Index_Mobile"('EXT1_S15');
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[4]._Extrac[0]._PosGv := #PosGv;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[4]._Extrac[0]._PosPv := #PosPv;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[4]._Extrac[0]._PosArret := #PosArret;
+	//================================= CELLULE5 BP2 =================================//
+	//================================= CELLULE6 BP2 =================================//
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[5]._Cel := 'S16';
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[5]._Extrac[0]._IndexMob := "Index_Mobile"('EXT1_S16');
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[5]._Extrac[0]._PosGv := #PosGv;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[5]._Extrac[0]._PosPv := #PosPv;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[5]._Extrac[0]._PosArret := #PosArret;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[5]._Extrac[1]._IndexMob := "Index_Mobile"('EXT2_S16');
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[5]._Extrac[1]._PosGv := #MonoPos;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[5]._Extrac[1]._PosPv := #MonoPos;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[5]._Extrac[1]._PosArret := #MonoPos;
+	//================================= CELLULE6 BP2 =================================//
+	//================================= CELLULE7 BP2 =================================//
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[6]._Cel := 'S17';
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[6]._Extrac[0]._IndexMob := "Index_Mobile"('EXT1_S17');
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[6]._Extrac[0]._PosGv := #PosGv;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[6]._Extrac[0]._PosPv := #PosPv;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[6]._Extrac[0]._PosArret := #PosArret;
+	//================================= CELLULE7 BP2 =================================//
+	//================================= CELLULE8 BP2 =================================//
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[7]._Cel := 'S18';
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[7]._Extrac[0]._IndexMob := "Index_Mobile"('EXT1_S18');
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[7]._Extrac[0]._PosGv := #PosGv;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[7]._Extrac[0]._PosPv := #PosPv;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[7]._Extrac[0]._PosArret := #PosArret;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[7]._Extrac[1]._IndexMob := "Index_Mobile"('EXT2_S18');
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[7]._Extrac[1]._PosGv := #MonoPos;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[7]._Extrac[1]._PosPv := #MonoPos;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[7]._Extrac[1]._PosArret := #MonoPos;
+	//================================= CELLULE8 BP2 =================================//
+	//================================= CELLULE9 BP2 =================================//
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[8]._Cel := 'S19';
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[8]._Extrac[0]._IndexMob := "Index_Mobile"('EXT1_S19');
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[8]._Extrac[0]._PosGv := #PosGv;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[8]._Extrac[0]._PosPv := #PosPv;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[8]._Extrac[0]._PosArret := #PosArret;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[8]._Extrac[1]._IndexMob := "Index_Mobile"('EXT2_S19');
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[8]._Extrac[1]._PosGv := #MonoPos;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[8]._Extrac[1]._PosPv := #MonoPos;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[8]._Extrac[1]._PosArret := #MonoPos;
+	//================================= CELLULE9 BP2 =================================//
+	//================================= CELLULE10 BP2 =================================//
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[9]._Cel := 'S31';
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[9]._Extrac[0]._IndexMob := "Index_Mobile"('EXT1_S31');
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[9]._Extrac[0]._PosGv := #PosGv;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[9]._Extrac[0]._PosPv := #PosPv;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[9]._Extrac[0]._PosArret := #PosArret;
+	//================================= CELLULE10 BP2 =================================//
+	//================================= CELLULE11 BP2 =================================//
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[10]._Cel := 'S34';
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[10]._Extrac[0]._IndexMob := "Index_Mobile"('EXT1_S34');
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[10]._Extrac[0]._PosGv := #PosGv;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[10]._Extrac[0]._PosPv := #PosPv;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[10]._Extrac[0]._PosArret := #PosArret;
+	//================================= CELLULE11 BP2 =================================//
+	//================================= CELLULE12 BP2 =================================//
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[11]._Cel := 'S35';
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[11]._Extrac[0]._IndexMob := "Index_Mobile"('EXT1_S35');
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[11]._Extrac[0]._PosGv := #PosGv;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[11]._Extrac[0]._PosPv := #PosPv;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[11]._Extrac[0]._PosArret := #PosArret;
+	//================================= CELLULE12 BP2 =================================//
+	//================================= CELLULE13 BP2 =================================//
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[12]._Cel := 'S37';
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[12]._Extrac[0]._IndexMob := "Index_Mobile"('EXT1_S37');
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[12]._Extrac[0]._PosGv := #PosGv;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[12]._Extrac[0]._PosPv := #PosPv;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[12]._Extrac[0]._PosArret := #PosArret;
+	//================================= CELLULE13 BP2 =================================//
+	//================================= CELLULE14 BP2 =================================//
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[13]._Cel := 'S38';
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[13]._Extrac[0]._IndexMob := "Index_Mobile"('EXT1_S38');
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[13]._Extrac[0]._PosGv := #PosGv;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[13]._Extrac[0]._PosPv := #PosPv;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[13]._Extrac[0]._PosArret := #PosArret;
+	//================================= CELLULE14 BP2 =================================//
+	//================================= CELLULE15 BP2 =================================//
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[14]._Cel := 'S39';
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[14]._Extrac[0]._IndexMob := "Index_Mobile"('EXT1_S39');
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[14]._Extrac[0]._PosGv := #PosGv;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[14]._Extrac[0]._PosPv := #PosPv;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[14]._Extrac[0]._PosArret := #PosArret;
+	//================================= CELLULE15 BP2 =================================//
+	//================================= CELLULE16 BP2 =================================//
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[15]._Cel := 'S40';
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[15]._Extrac[0]._IndexMob := "Index_Mobile"('EXT1_S40');
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[15]._Extrac[0]._PosGv := #PosGv;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[15]._Extrac[0]._PosPv := #PosPv;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[15]._Extrac[0]._PosArret := #PosArret;
+	//================================= CELLULE16 BP2 =================================//
+	//================================= CELLULE17 BP2 =================================//
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[16]._Cel := 'S41';
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[16]._Extrac[0]._IndexMob := "Index_Mobile"('EXT1_S41');
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[16]._Extrac[0]._PosGv := #PosGv;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[16]._Extrac[0]._PosPv := #PosPv;
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._PtCel._TabCel[16]._Extrac[0]._PosArret := #PosArret;
+	//================================= CELLULE17 BP2 =================================//
+	
+	//================================= CELLULE1 BP3 =================================//
+	"DB_Dosage".BP[2].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Cel := 'S30';
+	"DB_Dosage".BP[2].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Extrac[0]._IndexMob := "Index_Mobile"('EXT1_S30');
+	"DB_Dosage".BP[2].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Extrac[0]._PosGv := #PosGv;
+	"DB_Dosage".BP[2].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Extrac[0]._PosPv := #PosPv;
+	"DB_Dosage".BP[2].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Extrac[0]._PosArret := #PosArret;
+	"DB_Dosage".BP[2].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Extrac[1]._IndexMob := "Index_Mobile"('EXT2_S30');
+	"DB_Dosage".BP[2].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Extrac[1]._PosGv := #Ouv;
+	"DB_Dosage".BP[2].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Extrac[1]._PosPv := #Ouv;
+	"DB_Dosage".BP[2].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Extrac[1]._PosArret := #Ferm;
+	//================================= CELLULE1 BP3 =================================//
+	//================================= CELLULE2 BP3 =================================//
+	"DB_Dosage".BP[2].Dos_Commun.Module_Commun._PtCel._TabCel[1]._Cel := 'S32';
+	"DB_Dosage".BP[2].Dos_Commun.Module_Commun._PtCel._TabCel[1]._Extrac[0]._IndexMob := "Index_Mobile"('EXT1_S32');
+	"DB_Dosage".BP[2].Dos_Commun.Module_Commun._PtCel._TabCel[1]._Extrac[0]._PosGv := #PosGv;
+	"DB_Dosage".BP[2].Dos_Commun.Module_Commun._PtCel._TabCel[1]._Extrac[0]._PosPv := #PosPv;
+	"DB_Dosage".BP[2].Dos_Commun.Module_Commun._PtCel._TabCel[1]._Extrac[0]._PosArret := #PosArret;
+	//================================= CELLULE2 BP3 =================================//
+	//================================= CELLULE3 BP3 =================================//
+	"DB_Dosage".BP[2].Dos_Commun.Module_Commun._PtCel._TabCel[2]._Cel := 'S33';
+	"DB_Dosage".BP[2].Dos_Commun.Module_Commun._PtCel._TabCel[2]._Extrac[0]._IndexMob := "Index_Mobile"('EXT1_S33');
+	"DB_Dosage".BP[2].Dos_Commun.Module_Commun._PtCel._TabCel[2]._Extrac[0]._PosGv := #PosGv;
+	"DB_Dosage".BP[2].Dos_Commun.Module_Commun._PtCel._TabCel[2]._Extrac[0]._PosPv := #PosPv;
+	"DB_Dosage".BP[2].Dos_Commun.Module_Commun._PtCel._TabCel[2]._Extrac[0]._PosArret := #PosArret;
+	"DB_Dosage".BP[2].Dos_Commun.Module_Commun._PtCel._TabCel[2]._Extrac[1]._IndexMob := "Index_Mobile"('EXT2_S33');
+	"DB_Dosage".BP[2].Dos_Commun.Module_Commun._PtCel._TabCel[2]._Extrac[1]._PosGv := #Ouv;
+	"DB_Dosage".BP[2].Dos_Commun.Module_Commun._PtCel._TabCel[2]._Extrac[1]._PosPv := #Ouv;
+	"DB_Dosage".BP[2].Dos_Commun.Module_Commun._PtCel._TabCel[2]._Extrac[1]._PosArret := #Ferm;
+	//================================= CELLULE3 BP3 =================================//
+	
+	//================================= CELLULE1 BP4 =================================//
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Cel := 'S50';
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Extrac[0]._IndexMob := "Index_Mobile"('Ext1_S50');
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Extrac[0]._PosGv := #PosGv;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Extrac[0]._PosPv := #PosPv;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Extrac[0]._PosArret := #PosArret;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Extrac[1]._IndexMob := "Index_Mobile"('Ext2_S50');
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Extrac[1]._PosGv := #Ouv;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Extrac[1]._PosPv := #Ouv;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Extrac[1]._PosArret := #Ferm;
+	//================================= CELLULE1 BP4 =================================//
+	//================================= CELLULE2 BP4 =================================//
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[1]._Cel := 'S51';
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[1]._Extrac[0]._IndexMob := "Index_Mobile"('Ext1_S51');
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[1]._Extrac[0]._PosGv := #PosGv;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[1]._Extrac[0]._PosPv := #PosPv;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[1]._Extrac[0]._PosArret := #PosArret;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[1]._Extrac[1]._IndexMob := "Index_Mobile"('Ext2_S51');
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[1]._Extrac[1]._PosGv := #Ouv;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[1]._Extrac[1]._PosPv := #Ouv;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[1]._Extrac[1]._PosArret := #Ferm;
+	//================================= CELLULE2 BP4 =================================//
+	//================================= CELLULE3 BP4 =================================//
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[2]._Cel := 'S52';
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[2]._Extrac[0]._IndexMob := "Index_Mobile"('Ext1_S52');
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[2]._Extrac[0]._PosGv := #PosGv;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[2]._Extrac[0]._PosPv := #PosPv;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[2]._Extrac[0]._PosArret := #PosArret;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[2]._Extrac[1]._IndexMob := "Index_Mobile"('Ext2_S52');
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[2]._Extrac[1]._PosGv := #Ouv;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[2]._Extrac[1]._PosPv := #Ouv;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[2]._Extrac[1]._PosArret := #Ferm;
+	//================================= CELLULE3 BP4 =================================//
+	//================================= CELLULE4 BP4 =================================//
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[3]._Cel := 'S53';
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[3]._Extrac[0]._IndexMob := "Index_Mobile"('Ext1_S53');
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[3]._Extrac[0]._PosGv := #PosGv;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[3]._Extrac[0]._PosPv := #PosPv;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[3]._Extrac[0]._PosArret := #PosArret;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[3]._Extrac[1]._IndexMob := "Index_Mobile"('Ext2_S53');
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[3]._Extrac[1]._PosGv := #Ouv;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[3]._Extrac[1]._PosPv := #Ouv;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[3]._Extrac[1]._PosArret := #Ferm;
+	//================================= CELLULE4 BP4 =================================//
+	//================================= CELLULE5 BP4 =================================//
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[4]._Cel := 'S54';
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[4]._Extrac[0]._IndexMob := "Index_Mobile"('Ext1_S54');
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[4]._Extrac[0]._PosGv := #PosGv;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[4]._Extrac[0]._PosPv := #PosPv;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[4]._Extrac[0]._PosArret := #PosArret;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[4]._Extrac[1]._IndexMob := "Index_Mobile"('Ext2_S54');
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[4]._Extrac[1]._PosGv := #Ouv;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[4]._Extrac[1]._PosPv := #Ouv;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[4]._Extrac[1]._PosArret := #Ferm;
+	//================================= CELLULE5 BP4 =================================//
+	//================================= CELLULE6 BP4 =================================//
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[5]._Cel := 'S55';
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[5]._Extrac[0]._IndexMob := "Index_Mobile"('Ext1_S55');
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[5]._Extrac[0]._PosGv := #PosGv;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[5]._Extrac[0]._PosPv := #PosPv;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[5]._Extrac[0]._PosArret := #PosArret;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[5]._Extrac[1]._IndexMob := "Index_Mobile"('Ext2_S55');
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[5]._Extrac[1]._PosGv := #Ouv;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[5]._Extrac[1]._PosPv := #Ouv;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[5]._Extrac[1]._PosArret := #Ferm;
+	//================================= CELLULE6 BP4 =================================//
+	//================================= CELLULE7 BP4 =================================//
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[6]._Cel := 'S56';
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[6]._Extrac[0]._IndexMob := "Index_Mobile"('Ext1_S56');
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[6]._Extrac[0]._PosGv := #PosGv;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[6]._Extrac[0]._PosPv := #PosPv;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[6]._Extrac[0]._PosArret := #PosArret;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[6]._Extrac[1]._IndexMob := "Index_Mobile"('Ext2_S56');
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[6]._Extrac[1]._PosGv := #Ouv;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[6]._Extrac[1]._PosPv := #Ouv;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[6]._Extrac[1]._PosArret := #Ferm;
+	//================================= CELLULE7 BP4 =================================//
+	//================================= CELLULE8 BP4 =================================//
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[7]._Cel := 'S57';
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[7]._Extrac[0]._IndexMob := "Index_Mobile"('Ext1_S57');
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[7]._Extrac[0]._PosGv := #PosGv;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[7]._Extrac[0]._PosPv := #PosPv;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[7]._Extrac[0]._PosArret := #PosArret;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[7]._Extrac[1]._IndexMob := "Index_Mobile"('Ext2_S57');
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[7]._Extrac[1]._PosGv := #Ouv;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[7]._Extrac[1]._PosPv := #Ouv;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[7]._Extrac[1]._PosArret := #Ferm;
+	//================================= CELLULE8 BP4 =================================//
+	//================================= CELLULE9 BP4 =================================//
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[8]._Cel := 'S58';
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[8]._Extrac[0]._IndexMob := "Index_Mobile"('Ext1_S58');
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[8]._Extrac[0]._PosGv := #PosGv;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[8]._Extrac[0]._PosPv := #PosPv;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[8]._Extrac[0]._PosArret := #PosArret;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[8]._Extrac[1]._IndexMob := "Index_Mobile"('Ext2_S58');
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[8]._Extrac[1]._PosGv := #Ouv;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[8]._Extrac[1]._PosPv := #Ouv;
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._PtCel._TabCel[8]._Extrac[1]._PosArret := #Ferm;
+	//================================= CELLULE9 BP4 =================================//
+	
+	//================================= CELLULE1 BP5 =================================//
+	"DB_Dosage".BP[4].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Cel := 'S36';
+	"DB_Dosage".BP[4].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Extrac[0]._IndexMob := "Index_Mobile"('EXT1_S36');
+	"DB_Dosage".BP[4].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Extrac[0]._PosGv := #PosGv;
+	"DB_Dosage".BP[4].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Extrac[0]._PosPv := #PosPv;
+	"DB_Dosage".BP[4].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Extrac[0]._PosArret := #PosArret;
+	"DB_Dosage".BP[4].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Extrac[1]._IndexMob := "Index_Mobile"('EXT2_S36');
+	"DB_Dosage".BP[4].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Extrac[1]._PosGv := #Ouv;
+	"DB_Dosage".BP[4].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Extrac[1]._PosPv := #Ouv;
+	"DB_Dosage".BP[4].Dos_Commun.Module_Commun._PtCel._TabCel[0]._Extrac[1]._PosArret := #Ferm;
+	//================================= CELLULE1 BP5 =================================//
+	
+	//================================= CELLULE1 LIQUIDE1 =================================//
+	"DB_Dosage".LIQUIDES_MLG[0].CommunDos.Module_Commun._PtCel._TabCel[0]._Cel := 'CL01';
+	"DB_Dosage".LIQUIDES_MLG[5].CommunDos.Module_Commun._PtCel._TabCel[0]._Cel := 'CL01';
+	//================================= CELLULE1 LIQUIDE1 =================================//
+	//================================= CELLULE1 LIQUIDE2 =================================//
+	"DB_Dosage".LIQUIDES_MLG[1].CommunDos.Module_Commun._PtCel._TabCel[0]._Cel := 'CL02';
+	"DB_Dosage".LIQUIDES_MLG[6].CommunDos.Module_Commun._PtCel._TabCel[0]._Cel := 'CL02';
+	//================================= CELLULE1 LIQUIDE2 =================================//
+	//================================= CELLULE1 LIQUIDE3 =================================//
+	"DB_Dosage".LIQUIDES_MLG[2].CommunDos.Module_Commun._PtCel._TabCel[0]._Cel := 'CL03';
+	"DB_Dosage".LIQUIDES_MLG[7].CommunDos.Module_Commun._PtCel._TabCel[0]._Cel := 'CL03';
+	//================================= CELLULE1 LIQUIDE3 =================================//
+	//================================= CELLULE1 LIQUIDE4 =================================//
+	"DB_Dosage".LIQUIDES_MLG[3].CommunDos.Module_Commun._PtCel._TabCel[0]._Cel := 'CL04';
+	"DB_Dosage".LIQUIDES_MLG[8].CommunDos.Module_Commun._PtCel._TabCel[0]._Cel := 'CL04';
+	//================================= CELLULE1 LIQUIDE4 =================================//
+	//================================= CELLULE1 LIQUIDE5 =================================//
+	"DB_Dosage".LIQUIDES_MLG[4].CommunDos.Module_Commun._PtCel._TabCel[0]._Cel := 'CL05';
+	"DB_Dosage".LIQUIDES_MLG[9].CommunDos.Module_Commun._PtCel._TabCel[0]._Cel := 'CL05';
+	//================================= CELLULE1 LIQUIDE5 =================================//
+END_FUNCTION
+

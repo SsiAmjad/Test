@@ -1,0 +1,50 @@
+﻿FUNCTION "Proc_Cancel_Transf" : String[254]
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      NumPoste : UInt;
+      IdTransf : ULInt;
+   END_VAR
+
+   VAR_OUTPUT 
+      Msg_Def : String;
+   END_VAR
+
+   VAR_TEMP 
+      parameters_value : Array[0..20] of String;
+      ErreurMessage : String;
+      Resultat_Decode : WString;
+      status : Int;
+   END_VAR
+
+
+BEGIN
+	//Insertion des parametres 
+	#parameters_value[0] := UINT_TO_STRING(#NumPoste);
+	#parameters_value[1] := ULINT_TO_STRING(#IdTransf);
+	
+	
+	
+	
+	
+	//++++++++++++++++++++++++++++++++++++
+	
+	
+	#Resultat_Decode := "COMBASE"(procedure_name := 'SP_TRANS_CancelTrans',
+	                              values_of_record := #parameters_value,
+	                              parameters_number := 2,
+	                              ERROR_MESSAGE => #ErreurMessage);
+	
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := 'REPONSE:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Proc_Cancel_Transf);
+	
+	IF #Proc_Cancel_Transf = 'NOK' THEN
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := 'MESS:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Msg_Def);
+	    RETURN;
+	END_IF;
+END_FUNCTION
+

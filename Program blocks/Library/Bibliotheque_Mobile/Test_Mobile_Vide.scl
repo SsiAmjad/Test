@@ -1,0 +1,33 @@
+﻿FUNCTION "Test_Mobile_Vide" : Bool
+TITLE = Test Etat Mobile
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : 'I.Daoudi'
+FAMILY : Mobile
+VERSION : 1.0
+//Test Etat Mobile
+   VAR_INPUT 
+      Index_Mobile : Int;
+   END_VAR
+
+   VAR_TEMP 
+      Ret_Test_Valid_Index : SInt;
+   END_VAR
+
+
+BEGIN
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | Version | Date       | Autheur     | Ajouts/Modifications                                                   |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | V_1     | 26.10.2023 | I.DAOUDI    | Creation du block                                                      |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	//Test du Valid_Index
+	IF NOT "Valid_Index"(#Index_Mobile) THEN
+	    #Test_Mobile_Vide := TRUE;
+	    RETURN;
+	END_IF;
+	// Recuperation de l'etat mobile
+	#Test_Mobile_Vide := "DB_BIBLIOTHEQUE".Mobile[#Index_Mobile].Vide;
+	RETURN;
+	// Ajout fonction archivage dans le Base de données
+END_FUNCTION
+

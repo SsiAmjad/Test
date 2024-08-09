@@ -1,0 +1,60 @@
+﻿FUNCTION_BLOCK "Aff_Def_Sup"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR 
+      Aff_Def_Sup { S7_SetPoint := 'False'} : Array[0..9] of "S_Defaut";
+      Offset { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : USInt;
+      Num_Page : Int;
+      Nbr_Msg : Int;
+   END_VAR
+
+   VAR_TEMP 
+      i : USInt;
+      Ret : Int;
+      Raz_Aff_Def : "S_Defaut";
+   END_VAR
+
+
+BEGIN
+	// Calcul nombre de messages non acq
+	#Nbr_Msg := 0;
+	FOR #i := 0 TO "Nbr_Max_Def" DO
+	    IF "DB_BIBLIOTHEQUE".Defaut[#i].Msg_Defaut <> ''THEN
+	        #Nbr_Msg := #Nbr_Msg + 1;
+	    END_IF;
+	END_FOR;
+	
+	IF (#Num_Page < 1 ) THEN
+	    #Num_Page := 1;
+	END_IF;
+	IF (#Num_Page > 5) THEN
+	    #Num_Page := 5;
+	END_IF;
+	//#Ret := MOVE_BLK_VARIANT(SRC := "DB_BIBLIOTHEQUE".Defaut, COUNT := 10, SRC_INDEX := (#Num_Page*10), DEST_INDEX := 0, DEST => #Aff_Def_Sup);
+	#Offset := (#Num_Page - 1) * 10;
+	FOR #i := 0 TO 9 DO
+	    IF "DB_BIBLIOTHEQUE".Defaut[#Offset + #i].Reponse_Lue THEN
+	        #Aff_Def_Sup[#i] := #Raz_Aff_Def;
+	        CONTINUE;
+	    END_IF;
+	    // AUTOMATISME VERS SUPERVISION
+	    #Aff_Def_Sup[#i].Msg_Defaut := "DB_BIBLIOTHEQUE".Defaut[#Offset + #i].Msg_Defaut;
+	    #Aff_Def_Sup[#i].Automatisme := "DB_BIBLIOTHEQUE".Defaut[#Offset + #i].Automatisme;
+	    #Aff_Def_Sup[#i].Num_Lot := "DB_BIBLIOTHEQUE".Defaut[#Offset + #i].Num_Lot;
+	    #Aff_Def_Sup[#i].Origine_Defaut := "DB_BIBLIOTHEQUE".Defaut[#Offset + #i].Origine_Defaut;
+	    #Aff_Def_Sup[#i].Acq1 := "DB_BIBLIOTHEQUE".Defaut[#Offset + #i].Acq1;
+	    #Aff_Def_Sup[#i].Acq2 := "DB_BIBLIOTHEQUE".Defaut[#Offset + #i].Acq2;
+	    #Aff_Def_Sup[#i].Acq3 := "DB_BIBLIOTHEQUE".Defaut[#Offset + #i].Acq3;
+	    #Aff_Def_Sup[#i].Acq4 := "DB_BIBLIOTHEQUE".Defaut[#Offset + #i].Acq4;
+	    #Aff_Def_Sup[#i].Acq5 := "DB_BIBLIOTHEQUE".Defaut[#Offset + #i].Acq5;
+	    #Aff_Def_Sup[#i].Acq6 := "DB_BIBLIOTHEQUE".Defaut[#Offset + #i].Acq6;
+	    #Aff_Def_Sup[#i].Acq7 := "DB_BIBLIOTHEQUE".Defaut[#Offset + #i].Acq7;
+	    #Aff_Def_Sup[#i].Acq8 := "DB_BIBLIOTHEQUE".Defaut[#Offset + #i].Acq8;
+	    #Aff_Def_Sup[#i].Date_Arrivee := "DB_BIBLIOTHEQUE".Defaut[#Offset + #i].Date_Arrivee;
+	    // SUPERVISION VERS AUTOMATISME
+	    "DB_BIBLIOTHEQUE".Defaut[#Offset + #i].Reponse := #Aff_Def_Sup[#i].Reponse;
+	    "DB_BIBLIOTHEQUE".Defaut[#Offset + #i].Acq_Choisi := #Aff_Def_Sup[#i].Acq_Choisi;
+	    "DB_BIBLIOTHEQUE".Defaut[#Offset + #i].Text_Reponse := #Aff_Def_Sup[#i].Text_Reponse;
+	END_FOR;
+END_FUNCTION_BLOCK
+

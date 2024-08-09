@@ -1,0 +1,35 @@
+﻿FUNCTION "FC_Simul_Ent_Analog" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Simul_EA : "Simul_Entr_Analog";
+   END_VAR
+
+   VAR_TEMP 
+      Tps_Passe : Time;
+      Ret_RD_SYS_T : Int;
+   END_VAR
+
+
+BEGIN
+	IF NOT #Simul_EA.Prem_Fois THEN
+	    #Ret_RD_SYS_T := RD_SYS_T(#Simul_EA.Tps_Picke);
+	    #Simul_EA.Prem_Fois := TRUE;
+	END_IF;
+	
+	IF #Simul_EA.Simul THEN
+	    IF NOT "Tempo"(Duree := #Simul_EA.Retard, Tps_Picke := #Simul_EA.Tps_Picke, Anticip := FALSE, Tps_Passe => #Tps_Passe) THEN
+	        RETURN;
+	    END_IF;
+	    
+	    IF #Simul_EA.Activation THEN
+	        #Simul_EA.EA := #Simul_EA.Coef * #Simul_EA.SA + #Simul_EA.Offset;
+	    ELSE
+	        // #Simul_EA.EA := #Simul_EA.Coef * #Simul_EA.SA;
+	        #Simul_EA.EA := 0;
+	    END_IF;
+	    #Simul_EA.Prem_Fois := FALSE;
+	END_IF;
+	
+END_FUNCTION
+

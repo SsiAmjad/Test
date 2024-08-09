@@ -1,0 +1,17 @@
+﻿FUNCTION "ArretCalculDebit" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      ParCal : "S_CAL_FAR";
+   END_VAR
+
+
+BEGIN
+	    #ParCal._FgCalFar := 0;
+	    #ParCal._FgCalTps := 0;
+	    #ParCal._QteSuivi := 0;
+	    #ParCal._QteTrans := 0;
+	
+	
+END_FUNCTION
+

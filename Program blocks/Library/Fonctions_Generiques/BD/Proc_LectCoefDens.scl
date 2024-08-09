@@ -1,0 +1,47 @@
+﻿FUNCTION "Proc_LectCoefDens" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      NumPoste : UInt;
+      Article : String;
+      Lieu : String;
+      Procede : String;
+   END_VAR
+
+   VAR_TEMP 
+      parameters_value : Array[0..20] of String;
+      ErreurMessage : String;
+      Resultat_Decode : WString[300];
+      status : Int;
+      Rep_temp : String;
+   END_VAR
+
+
+BEGIN
+	//Insertion des parametres 
+	#parameters_value[0] := ULINT_TO_STRING(#NumPoste);
+	#parameters_value[1] := #Article;
+	#parameters_value[2] := #Lieu;
+	#parameters_value[3] := #Procede;
+	
+	
+	
+	
+	
+	//++++++++++++++++++++++++++++++++++++
+	#Resultat_Decode := "COMBASE"(procedure_name :='Sp_parauto_rechparam',
+	                                 values_of_record := #parameters_value,
+	                                 parameters_number := 4,
+	                                 ERROR_MESSAGE => #ErreurMessage);
+	
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := 'PARAM:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|Val:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	
+END_FUNCTION
+

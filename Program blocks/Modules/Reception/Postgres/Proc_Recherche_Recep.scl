@@ -1,0 +1,146 @@
+﻿FUNCTION "Proc_Recherche_Recep" : String[254]
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      NumPoste : UInt;
+      NoBadge : String;
+      Procede : String;
+      Fosse : String;
+   END_VAR
+
+   VAR_IN_OUT 
+      SUIV_REC : "S_SUIVI_RECEPTION";
+   END_VAR
+
+   VAR_TEMP 
+      parameters_value : Array[0..20] of String;
+      ErreurMessage : String;
+      Resultat_Decode : WString[300];
+      status : Int;
+      Rep_temp : String;
+   END_VAR
+
+
+BEGIN
+	//Insertion des parametres 
+	#parameters_value[0] := ULINT_TO_STRING(#NumPoste);
+	#parameters_value[1] := #NoBadge;
+	#parameters_value[2] := #Procede;
+	#parameters_value[3] := #Fosse;
+	
+	
+	
+	//++++++++++++++++++++++++++++++++++++
+	#Resultat_Decode := "COMBASE"(procedure_name := 'SP_REC_RechRec',
+	                                 values_of_record := #parameters_value,
+	                                 parameters_number := 4,
+	                                 ERROR_MESSAGE => #ErreurMessage);
+	
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := 'REPONSE:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Proc_Recherche_Recep);
+	
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|ID:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	#SUIV_REC._Id_Rec := STRING_TO_ULINT(#Rep_temp);
+	
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|SCODEREC:',    
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #SUIV_REC._Cd_Rec);
+	
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|NORDRE:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	#SUIV_REC._No_Ordre := STRING_TO_INT(#Rep_temp);
+	
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|SCOMGEST:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #SUIV_REC._Cd_Gestion);
+	
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|NOLOT:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #SUIV_REC._NoLot);
+	
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|SCODEMAT:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #SUIV_REC._CdMat);
+	
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|LIBMAT:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #SUIV_REC._LbMat);
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|SCODEMATORG:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #SUIV_REC._CdMatOrg);
+	
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|LIBMATORG:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #SUIV_REC._LbMatOrg);
+	
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|NDENS:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL =>#Rep_temp);
+	#SUIV_REC._Densite := STRING_TO_REAL(#Rep_temp);
+	
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|SBADGE:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #SUIV_REC._No_Badge);
+	
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|ORIG:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #SUIV_REC._Orig[0]);
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|DEST1:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #SUIV_REC._Dest[0]);
+	
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|DEST2:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #SUIV_REC._Dest[1]);
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|QTEPREV:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	#SUIV_REC._Qte_Prev := STRING_TO_REAL(#Rep_temp);
+	
+	
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|QTEBRUT:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	#SUIV_REC._QteBrut := STRING_TO_REAL(#Rep_temp);
+	
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|SCODEFOURN:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #SUIV_REC._CdFournisseur);
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|SLOTFOURN:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #SUIV_REC._LotFournisseur);
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|QTEFOURN:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	#SUIV_REC._Qte_Annoncee := STRING_TO_REAL(#Rep_temp);
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|SIMMAT:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #SUIV_REC._Immat);
+	
+END_FUNCTION
+

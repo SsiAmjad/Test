@@ -1,0 +1,56 @@
+﻿FUNCTION "Arret_Ext" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      ConsQte : Real;   // Consigne poids a charger (poids restant)
+   END_VAR
+
+   VAR_IN_OUT 
+      Commande : "S_ComLign";
+      ChargCommun : "S_ChargCommun";
+      Ptcel : "S_Cellule";
+   END_VAR
+
+   VAR_TEMP 
+      i : USInt;
+      Ret_Sint : SInt;
+      Tempo : Real;
+   END_VAR
+
+
+BEGIN
+	FOR #i := 0 TO "NB_MOB_EXT" DO
+	    IF #Ptcel._Extrac[#i]._IndexMob < 0 THEN
+	        EXIT;
+	    END_IF;
+	    #Ret_Sint := "Arr_Imm_Mobile"(#Ptcel._Extrac[#i]._IndexMob);
+	END_FOR;
+	//sortie analogique du variateur 0 
+	#Ptcel._SAV := 0;
+	IF #Ptcel._FgDosageDebit THEN
+	    #ChargCommun._CommunGeneral._ParCal._SAV_TRANS := 0;
+	    "Debit_Massique"(SAV:=#ChargCommun._CommunGeneral._ParCal._SAV_TRANS,
+	                     Densite:=#Commande._Densite,
+	                     PARCAL:=#ChargCommun._CommunGeneral._ParCal);
+	    
+	END_IF;
+	// memorisation poids a la coupure extraction */
+	#ChargCommun._ValCoupure := #ChargCommun._Vbasc;
+	IF "simul" THEN
+	    // tempo pour simulation colonne de chute selon taille de lot
+	    IF #Commande._ConsQteTot > 0.1 THEN
+	        #Tempo := #Commande._ConsQteTot / 5;
+	    ELSE
+	        #Tempo := #ConsQte/ 5;
+	    END_IF;
+	//"Tempo"(Duree:=#Tempo, Tps_Picke:=_date_and_time_in_, Anticip:=_bool_in_, Tps_Passe=>_time_out_)
+	END_IF;
+	#ChargCommun._DefEvol := 0;
+	#ChargCommun._Simul._ValBascDec := FALSE;
+	#ChargCommun._Simul._ValBascInc := FALSE;
+	
+	
+	
+	
+END_FUNCTION
+

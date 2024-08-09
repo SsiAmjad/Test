@@ -1,0 +1,67 @@
+﻿FUNCTION "Gest_Defaut" : Void
+TITLE = Piloter Sorties TOR
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : 'I.Daoudi'
+VERSION : 1.0
+   VAR_INPUT 
+      Fg_Base : Bool;
+   END_VAR
+
+   VAR_TEMP 
+      parameters_value : Array[0..20] of String;
+      i : SInt;
+      ErreurMessage : String;
+      Resultat_Decode : WString;
+      status : Int;
+   END_VAR
+
+
+BEGIN
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | Version | Date       | Autheur     | Ajouts/Modifications                                                   |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | V_1     | 02.08.2023 | I.DAOUDI    | Creation du block                                                      |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	//------------------------------------------   HISTORIQUE DES VERSIONS  ------------------------------------------ 
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | Version | Date       | Autheur     | Commentaire                                                            |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | V_1     | 02.08.2023 | I.DAOUDI    | Version initiale                                                       |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	
+	// Liberer une ligne de defaut deja acquite
+	FOR #i := 0 TO 49 DO
+	    IF "DB_BIBLIOTHEQUE".Defaut[#i].Acq_Choisi > 0 THEN
+	        IF "DB_BIBLIOTHEQUE".Defaut[#i].Reponse_Lue THEN
+	            #parameters_value[0] := ULINT_TO_STRING("DB_BIBLIOTHEQUE".Defaut[#i].ID_Base);
+	            #parameters_value[1] := "DB_BIBLIOTHEQUE".Defaut[#i].Reponse_Archiv;
+	            #parameters_value[2] := "DB_BIBLIOTHEQUE".Defaut[#i].Text_Reponse;
+	            #parameters_value[3] := '';
+	            "DB_BIBLIOTHEQUE".Defaut[#i].Msg_Defaut := '';
+	            "DB_BIBLIOTHEQUE".Defaut[#i].Type_Defaut := 0;
+	            "DB_BIBLIOTHEQUE".Defaut[#i].Automatisme := '';
+	            "DB_BIBLIOTHEQUE".Defaut[#i].Num_Lot := '';
+	            "DB_BIBLIOTHEQUE".Defaut[#i].Origine_Defaut := '';
+	            "DB_BIBLIOTHEQUE".Defaut[#i].Libelle_Origine := '';
+	            "DB_BIBLIOTHEQUE".Defaut[#i].Acq1 := '';
+	            "DB_BIBLIOTHEQUE".Defaut[#i].Acq2 := '';
+	            "DB_BIBLIOTHEQUE".Defaut[#i].Acq3 := '';
+	            "DB_BIBLIOTHEQUE".Defaut[#i].Acq4 := '';
+	            "DB_BIBLIOTHEQUE".Defaut[#i].Acq5 := '';
+	            "DB_BIBLIOTHEQUE".Defaut[#i].Acq6 := '';
+	            "DB_BIBLIOTHEQUE".Defaut[#i].Acq7 := '';
+	            "DB_BIBLIOTHEQUE".Defaut[#i].Acq8 := '';
+	            "DB_BIBLIOTHEQUE".Defaut[#i].Reponse := '';
+	            "DB_BIBLIOTHEQUE".Defaut[#i].Acq_Choisi := -1;
+	            // Insertion message de défaut et récupératiuon de l'id de la ligne
+	            IF #Fg_Base THEN
+	                #Resultat_Decode := "COMBASE"(procedure_name := 'SP_General_UpdateDef',
+	                                              values_of_record := #parameters_value,
+	                                              parameters_number := 4,
+	                                              ERROR_MESSAGE => #ErreurMessage);
+	             END_IF;
+	        END_IF;
+	    END_IF;
+	END_FOR;
+END_FUNCTION
+

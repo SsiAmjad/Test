@@ -1,0 +1,220 @@
+﻿FUNCTION "Rens_Noeuds_Dos" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_TEMP 
+      IndexCir : UInt;
+   END_VAR
+
+
+BEGIN
+	#IndexCir := 152;
+	// CIRCUIT TRANSFERT VERS BB1
+	"CircNoeud"."THIS"[#IndexCir].Circuit := #IndexCir;
+	"CircNoeud"."THIS"[#IndexCir].Noeud[0] := "Index_Mobile"('E10');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[1] := "Index_Mobile"('BDE10');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[2] := "Index_Mobile"('BB01');
+	#IndexCir := #IndexCir + 1;
+	
+	// CIRCUIT TRANSFERT VERS BB2
+	"CircNoeud"."THIS"[#IndexCir].Noeud[0] := "Index_Mobile"('E10');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[1] := "Index_Mobile"('BDE10');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[2] := "Index_Mobile"('BB02');
+	#IndexCir := #IndexCir + 1;
+	
+	// CIRCUIT TRANSFERT VERS TMEL
+	"CircNoeud"."THIS"[#IndexCir].Noeud[0] := "Index_Mobile"('E11');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[1] := "Index_Mobile"('BDE11');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[2] := "Index_Mobile"('TMEL');
+	#IndexCir := #IndexCir + 1;
+	
+	// CIRCUIT TRANSFERT VERS TMEL2
+	"CircNoeud"."THIS"[#IndexCir].Noeud[0] := "Index_Mobile"('E11');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[1] := "Index_Mobile"('BDE11');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[2] := "Index_Mobile"('TMEL2');
+	#IndexCir := #IndexCir + 1;
+	
+	// CIRCUIT EXPEDITION VERS BP1
+	"CircNoeud"."THIS"[#IndexCir].Noeud[0] := "Index_Mobile"('O_Exp_Fict');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[1] := "Index_Mobile"('T28');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[2] := "Index_Mobile"('BP01');
+	#IndexCir := #IndexCir + 1;
+	
+	// CIRCUIT EXPEDITION VERS BP2
+	"CircNoeud"."THIS"[#IndexCir].Noeud[0] := "Index_Mobile"('O_Exp_Fict');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[1] := "Index_Mobile"('T28');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[2] := "Index_Mobile"('BP02');
+	#IndexCir := #IndexCir + 1;
+	
+	//CIRCUIT EXPEDITION VERS BT1
+	"CircNoeud"."THIS"[#IndexCir].Noeud[0] := "Index_Mobile"('O_Exp_Fict');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[1] := "Index_Mobile"('T28');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[2] := "Index_Mobile"('T42');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[3] := "Index_Mobile"('BT01');
+	#IndexCir := #IndexCir + 1;
+	
+	//CIRCUIT EXPEDITION VERS BT4
+	"CircNoeud"."THIS"[#IndexCir].Noeud[0] := "Index_Mobile"('O_Exp_Fict');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[1] := "Index_Mobile"('T28');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[2] := "Index_Mobile"('T42');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[3] := "Index_Mobile"('BT04');
+	#IndexCir := #IndexCir + 1;
+	
+	//CIRCUIT EXPEDITION VERS BT10
+	"CircNoeud"."THIS"[#IndexCir].Noeud[0] := "Index_Mobile"('O_Exp_Fict');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[1] := "Index_Mobile"('T28');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[2] := "Index_Mobile"('T29');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[3] := "Index_Mobile"('REV01');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[4] := "Index_Mobile"('BT10');
+	#IndexCir := #IndexCir + 1;
+	
+	//CIRCUIT EXPEDITION VERS BT12
+	"CircNoeud"."THIS"[#IndexCir].Noeud[0] := "Index_Mobile"('O_Exp_Fict');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[1] := "Index_Mobile"('T28');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[2] := "Index_Mobile"('T29');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[3] := "Index_Mobile"('REV01');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[4] := "Index_Mobile"('BT12');
+	#IndexCir := #IndexCir + 1;
+	
+	//CIRCUIT EXPEDITION VERS BT16
+	"CircNoeud"."THIS"[#IndexCir].Noeud[0] := "Index_Mobile"('O_Exp_Fict');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[1] := "Index_Mobile"('T28');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[2] := "Index_Mobile"('T29');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[3] := "Index_Mobile"('REV01');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[4] := "Index_Mobile"('BT16');
+	#IndexCir := #IndexCir + 1;
+	
+	//CIRCUIT EXPEDITION VERS BT17
+	"CircNoeud"."THIS"[#IndexCir].Noeud[0] := "Index_Mobile"('O_Exp_Fict');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[1] := "Index_Mobile"('T28');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[2] := "Index_Mobile"('T29');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[3] := "Index_Mobile"('REV01');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[4] := "Index_Mobile"('BT17');
+	#IndexCir := #IndexCir + 1;
+	
+	//CIRCUIT EXPEDITION VERS BV1
+	"CircNoeud"."THIS"[#IndexCir].Noeud[0] := "Index_Mobile"('O_Exp_Fict');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[1] := "Index_Mobile"('T28');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[2] := "Index_Mobile"('T42');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[3] := "Index_Mobile"('BDE24');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[4] := "Index_Mobile"('DD01');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[5] := "Index_Mobile"('BV01');
+	#IndexCir := #IndexCir + 1;
+	
+	//CIRCUIT EXPEDITION VERS BV2
+	"CircNoeud"."THIS"[#IndexCir].Noeud[0] := "Index_Mobile"('O_Exp_Fict');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[1] := "Index_Mobile"('T28');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[2] := "Index_Mobile"('T42');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[3] := "Index_Mobile"('BDE24');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[4] := "Index_Mobile"('DD01');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[5] := "Index_Mobile"('BV02');
+	#IndexCir := #IndexCir + 1;
+	
+	//CIRCUIT EXPEDITION VERS BV3
+	"CircNoeud"."THIS"[#IndexCir].Noeud[0] := "Index_Mobile"('O_Exp_Fict');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[1] := "Index_Mobile"('T28');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[2] := "Index_Mobile"('T42');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[3] := "Index_Mobile"('BDE24');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[4] := "Index_Mobile"('DD01');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[5] := "Index_Mobile"('BV03');
+	#IndexCir := #IndexCir + 1;
+	
+	//CIRCUIT EXPEDITION VERS BV4
+	"CircNoeud"."THIS"[#IndexCir].Noeud[0] := "Index_Mobile"('O_Exp_Fict');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[1] := "Index_Mobile"('T28');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[2] := "Index_Mobile"('T42');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[3] := "Index_Mobile"('BDE24');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[4] := "Index_Mobile"('DD01');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[5] := "Index_Mobile"('BV04');
+	#IndexCir := #IndexCir + 1;
+	
+	//CIRCUIT EXPEDITION VERS BV5
+	"CircNoeud"."THIS"[#IndexCir].Noeud[0] := "Index_Mobile"('O_Exp_Fict');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[1] := "Index_Mobile"('T28');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[2] := "Index_Mobile"('T42');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[3] := "Index_Mobile"('BDE24');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[4] := "Index_Mobile"('DD01');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[5] := "Index_Mobile"('BV05');
+	#IndexCir := #IndexCir + 1;
+	
+	//CIRCUIT EXPEDITION VERS BV6
+	"CircNoeud"."THIS"[#IndexCir].Noeud[0] := "Index_Mobile"('O_Exp_Fict');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[1] := "Index_Mobile"('T28');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[2] := "Index_Mobile"('T42');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[3] := "Index_Mobile"('BDE24');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[4] := "Index_Mobile"('DD01');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[5] := "Index_Mobile"('BV06');
+	#IndexCir := #IndexCir + 1;
+	
+	//CIRCUIT EXPEDITION VERS BV7
+	"CircNoeud"."THIS"[#IndexCir].Noeud[0] := "Index_Mobile"('O_Exp_Fict');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[1] := "Index_Mobile"('T28');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[2] := "Index_Mobile"('T42');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[3] := "Index_Mobile"('BDE24');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[4] := "Index_Mobile"('DD02');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[5] := "Index_Mobile"('BV07');
+	#IndexCir := #IndexCir + 1;
+	
+	//CIRCUIT EXPEDITION VERS BV8
+	"CircNoeud"."THIS"[#IndexCir].Noeud[0] := "Index_Mobile"('O_Exp_Fict');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[1] := "Index_Mobile"('T28');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[2] := "Index_Mobile"('T42');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[3] := "Index_Mobile"('BDE24');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[4] := "Index_Mobile"('DD02');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[5] := "Index_Mobile"('BV08');
+	#IndexCir := #IndexCir + 1;
+	
+	//CIRCUIT EXPEDITION VERS BV9
+	"CircNoeud"."THIS"[#IndexCir].Noeud[0] := "Index_Mobile"('O_Exp_Fict');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[1] := "Index_Mobile"('T28');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[2] := "Index_Mobile"('T42');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[3] := "Index_Mobile"('BDE24');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[4] := "Index_Mobile"('DD02');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[5] := "Index_Mobile"('BV09');
+	#IndexCir := #IndexCir + 1;
+	
+	//CIRCUIT EXPEDITION VERS BV10
+	"CircNoeud"."THIS"[#IndexCir].Noeud[0] := "Index_Mobile"('O_Exp_Fict');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[1] := "Index_Mobile"('T28');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[2] := "Index_Mobile"('T42');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[3] := "Index_Mobile"('BDE24');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[4] := "Index_Mobile"('DD02');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[5] := "Index_Mobile"('BV10');
+	#IndexCir := #IndexCir + 1;
+	
+	//CIRCUIT EXPEDITION VERS BV11
+	"CircNoeud"."THIS"[#IndexCir].Noeud[0] := "Index_Mobile"('O_Exp_Fict');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[1] := "Index_Mobile"('T28');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[2] := "Index_Mobile"('T42');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[3] := "Index_Mobile"('BDE24');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[4] := "Index_Mobile"('DD02');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[5] := "Index_Mobile"('BV11');
+	#IndexCir := #IndexCir + 1;
+	
+	//CIRCUIT EXPEDITION VERS BV12
+	"CircNoeud"."THIS"[#IndexCir].Noeud[0] := "Index_Mobile"('O_Exp_Fict');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[1] := "Index_Mobile"('T28');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[2] := "Index_Mobile"('T42');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[3] := "Index_Mobile"('BDE24');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[4] := "Index_Mobile"('DD02');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[5] := "Index_Mobile"('BV12');
+	#IndexCir := #IndexCir + 1;
+	
+	//CIRCUIT EXPEDITION VERS BP3
+	"CircNoeud"."THIS"[#IndexCir].Noeud[0] := "Index_Mobile"('O_Exp_Fict');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[1] := "Index_Mobile"('T28');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[2] := "Index_Mobile"('T29');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[3] := "Index_Mobile"('BP03');
+	#IndexCir := #IndexCir + 1;
+	
+	// CIRCUIT SOUS SBP1
+	"CircNoeud"."THIS"[#IndexCir].Noeud[0] := "Index_Mobile"('E30');
+	"CircNoeud"."THIS"[#IndexCir].Noeud[1] := "Index_Mobile"('T20');
+	
+	
+	
+	
+	
+	
+	
+END_FUNCTION
+

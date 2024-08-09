@@ -1,0 +1,26 @@
+﻿FUNCTION "FC_Affich_Etiquette" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Couleur : "S_Couleur";
+      Cel_Dest : String;
+      CdMat : String;
+      NoLot : String;
+      QteLot : Real;
+      Desc_Etp : String;
+   END_VAR
+
+   VAR_IN_OUT 
+      Etiquette : "S_Dosage_Commun";
+   END_VAR
+
+
+BEGIN
+	#Etiquette._Supervision.Couleur:=#Couleur;
+	#Etiquette._Supervision.Affichage._Destination:=#Cel_Dest;
+	#Etiquette._Supervision.Affichage._Matiere:=#CdMat;
+	#Etiquette._Supervision.Affichage._NumLot:=#NoLot;
+	#Etiquette._Supervision.Affichage._QteTheorique := #QteLot;
+	#Etiquette._Supervision.Affichage._Desc_Etp := #Desc_Etp;
+END_FUNCTION
+

@@ -1,0 +1,19 @@
+﻿FUNCTION "RazTabIncmop" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      TabMob : Array[0.."MAX_MOB_INCOMP"] of "S_MobIncomp";
+   END_VAR
+
+   VAR_TEMP 
+      i : SInt;
+   END_VAR
+
+
+BEGIN
+	FOR #i := 0 TO "MAX_MOB_INCOMP" DO
+	    #TabMob[#i]._Teste:=FALSE ;
+	END_FOR;
+	
+END_FUNCTION
+

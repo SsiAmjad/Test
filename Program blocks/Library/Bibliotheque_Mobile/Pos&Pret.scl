@@ -1,0 +1,32 @@
+﻿FUNCTION "Pos&Pret" : Bool
+TITLE = Test Etat Mobile
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : 'I.Daoudi'
+FAMILY : Mobile
+VERSION : 1.0
+//Test Etat Mobile
+   VAR_INPUT 
+      Index_Mobile : Int;
+      Position : SInt;
+   END_VAR
+
+   VAR_TEMP 
+      Ret_Test_Valid_Index : SInt;
+   END_VAR
+
+
+BEGIN
+	// Test de la validite de l'index mobile
+	IF NOT "Valid_Index"(#Index_Mobile) THEN
+	    #"Pos&Pret" := FALSE;
+	    RETURN;
+	END_IF;
+	//Test Etat Mobile
+	IF "DB_BIBLIOTHEQUE".Mobile[#Index_Mobile].Etat = "Pret" AND "DB_BIBLIOTHEQUE".Mobile[#Index_Mobile].Pos_Enc = #Position THEN
+	    #"Pos&Pret" := TRUE;
+	    RETURN;
+	END_IF;
+	#"Pos&Pret" := FALSE;
+	RETURN;
+END_FUNCTION
+

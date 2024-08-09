@@ -1,0 +1,145 @@
+﻿FUNCTION "Initialisation_Tremies_Sur_Trappe" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+BEGIN
+	//--------------------- Tremie sur Trappe SR BR1 ---------------------//
+	// "DB_Dosage".TRM_TRP[0].Tps_Att_NB := T#30S;
+	// "DB_Dosage".TRM_TRP[0].Tps_MAX_Att_NB := T#1M;
+	// "DB_Dosage".TRM_TRP[0].Tps_Mini := T#30S;
+	"DB_Dosage".TRM_TRP[0].NB := "RNB_TRM_BB1";
+	"DB_Dosage".TRM_TRP[0].Seuil_Poids_Test_NB := 300;
+	//--------------------- SYNCHRONISATION GRAFCET Tremie sur Trappe SR BR1 ---------------------//
+	"DB_Dosage".TRM_TRP[0].Mob_Trappe1 := "Index_Mobile"('Ext1_BB1');
+	"DB_Dosage".TRM_TRP[0].Mob_Vib := "Index_Mobile"('');
+	"DB_Dosage".TRM_TRP[0].Lst_Att_Amont_Av_Test_Prd[0]._Tache := "TAC_CIRREMP_BR1";
+	"DB_Dosage".TRM_TRP[0].Lst_Att_Amont_Av_Test_Prd[0]._Niv := "NIV_CIRTRANS_CIR_TRANS_PRET";
+	"DB_Dosage".TRM_TRP[0].Lst_Att_Aval_Pret[0]._Tache := "TAC_BR1";
+	"DB_Dosage".TRM_TRP[0].Lst_Att_Aval_Pret[0]._Niv := "NIV_BR_DEBUT_LOT";
+	"DB_Dosage".TRM_TRP[0].Lst_Att_Debut_Remp[0]._Tache := "TAC_CIRREMP_BR1";
+	"DB_Dosage".TRM_TRP[0].Lst_Att_Debut_Remp[0]._Niv := "NIV_CIRTRANS_CIR_TRANS_PRET";
+	"DB_Dosage".TRM_TRP[0].Lst_Att_Dem_Aval_Av_Test_Fin_Prd[0]._Tache := "TAC_BR1";
+	"DB_Dosage".TRM_TRP[0].Lst_Att_Dem_Aval_Av_Test_Fin_Prd[0]._Niv := "NIV_BR_ALIM_MARCHE";
+	"DB_Dosage".TRM_TRP[0].Lst_Att_Dem_Aval_Av_Test_Fin_Prd[1]._Tache := "TAC_CIRREMP_BR1";
+	"DB_Dosage".TRM_TRP[0].Lst_Att_Dem_Aval_Av_Test_Fin_Prd[1]._Niv := "NIV_CIRTRANS_CIR_FIN_LOT";
+	"DB_Dosage".TRM_TRP[0].Lst_Att_Fin_Remp[0]._Tache := "TAC_CIRREMP_BR1";
+	"DB_Dosage".TRM_TRP[0].Lst_Att_Fin_Remp[0]._Niv := "NIV_CIRTRANS_CIR_FIN_LOT";
+	"DB_Dosage".TRM_TRP[0].Lst_Att_Fin_Amont[0]._Tache := "TAC_CIRREMP_BR1";
+	"DB_Dosage".TRM_TRP[0].Lst_Att_Fin_Amont[0]._Niv := "NIV_CIRTRANS_CIR_TRANS_PRET";
+	"DB_Dosage".TRM_TRP[0].Lst_Att_Fin_Trou[0]._Tache := "TAC_BR1";
+	//"DB_Dosage".TRM_TRP[0].Lst_Att_Fin_Trou[0]._Niv := ;
+	//--------------------- QTE Tremie sur Trappe SR BR1 ---------------------//
+	"DB_Dosage".TRM_TRP[0].Lst_Taches_Amont_Qte[0] := "TAC_CIRREMP_BR1";
+	//--------------------- Tremie sur Trappe SR BR2 ---------------------//
+	// "DB_Dosage".TRM_TRP[1].Tps_Att_NB := T#30S;
+	// "DB_Dosage".TRM_TRP[1].Tps_MAX_Att_NB := T#1M;
+	// "DB_Dosage".TRM_TRP[1].Tps_Mini := T#30S;
+	"DB_Dosage".TRM_TRP[1].NB := "RNB_TRM_BB2";
+	"DB_Dosage".TRM_TRP[1].Seuil_Poids_Test_NB := 300;
+	//--------------------- SYNCHRONISATION GRAFCET Tremie sur Trappe SR BR2 ---------------------//
+	"DB_Dosage".TRM_TRP[1].Mob_Trappe1 := "Index_Mobile"('Ext1_BB2');
+	"DB_Dosage".TRM_TRP[1].Lst_Att_Amont_Av_Test_Prd[0]._Tache := "TAC_CIRREMP_BR2";
+	"DB_Dosage".TRM_TRP[1].Lst_Att_Amont_Av_Test_Prd[0]._Niv := "NIV_CIRTRANS_CIR_TRANS_PRET";
+	"DB_Dosage".TRM_TRP[1].Lst_Att_Aval_Pret[0]._Tache := "TAC_BR2";
+	"DB_Dosage".TRM_TRP[1].Lst_Att_Aval_Pret[0]._Niv := "NIV_BR_DEBUT_LOT";
+	"DB_Dosage".TRM_TRP[1].Lst_Att_Debut_Remp[0]._Tache := "TAC_CIRREMP_BR2";
+	"DB_Dosage".TRM_TRP[1].Lst_Att_Debut_Remp[0]._Niv := "NIV_CIRTRANS_CIR_TRANS_PRET";
+	"DB_Dosage".TRM_TRP[1].Lst_Att_Dem_Aval_Av_Test_Fin_Prd[0]._Tache := "TAC_BR2";
+	"DB_Dosage".TRM_TRP[1].Lst_Att_Dem_Aval_Av_Test_Fin_Prd[0]._Niv := "NIV_BR_ALIM_MARCHE";
+	"DB_Dosage".TRM_TRP[1].Lst_Att_Dem_Aval_Av_Test_Fin_Prd[1]._Tache := "TAC_CIRREMP_BR2";
+	"DB_Dosage".TRM_TRP[1].Lst_Att_Dem_Aval_Av_Test_Fin_Prd[1]._Niv := "NIV_CIRTRANS_CIR_FIN_LOT";
+	"DB_Dosage".TRM_TRP[1].Lst_Att_Fin_Remp[0]._Tache := "TAC_CIRREMP_BR2";
+	"DB_Dosage".TRM_TRP[1].Lst_Att_Fin_Remp[0]._Niv := "NIV_CIRTRANS_CIR_FIN_LOT";
+	"DB_Dosage".TRM_TRP[1].Lst_Att_Fin_Amont[0]._Tache := "TAC_CIRREMP_BR2";
+	"DB_Dosage".TRM_TRP[1].Lst_Att_Fin_Amont[0]._Niv := "NIV_CIRTRANS_CIR_FIN_LOT";
+	//"DB_Dosage".TRM_TRP[1].Lst_Att_Fin_Trou[0]._Tache := ;
+	//"DB_Dosage".TRM_TRP[1].Lst_Att_Fin_Trou[0]._Niv := ;
+	//--------------------- QTE Tremie sur Trappe SR BR2 ---------------------//
+	"DB_Dosage".TRM_TRP[1].Lst_Taches_Amont_Qte[0] := "TAC_CIRREMP_BR2";
+	//--------------------- Tremie sur Trappe SR MLG1 ---------------------//
+	// "DB_Dosage".TRM_TRP[2].Tps_Att_NB := T#30S;
+	// "DB_Dosage".TRM_TRP[2].Tps_MAX_Att_NB := T#1M;
+	// "DB_Dosage".TRM_TRP[2].Tps_Mini := T#30S;
+	"DB_Dosage".TRM_TRP[2].NB := "RNB_TRM_TMEL1";
+	"DB_Dosage".TRM_TRP[2].Seuil_Poids_Test_NB := 300;
+	//--------------------- SYNCHRONISATION GRAFCET Tremie sur Trappe SR MLG1 ---------------------//
+	"DB_Dosage".TRM_TRP[2].Mob_Trappe1 := "Index_Mobile"('TRP1_TMEL');
+	"DB_Dosage".TRM_TRP[2].Mob_Vib := "Index_Mobile"('VIB_TMEL');
+	"DB_Dosage".TRM_TRP[2].Lst_Att_Amont_Av_Test_Prd[0]._Tache := "TAC_CIRREMP_MLG1";
+	"DB_Dosage".TRM_TRP[2].Lst_Att_Amont_Av_Test_Prd[0]._Niv := "NIV_CIRTRANS_CIR_TRANS_PRET";
+	"DB_Dosage".TRM_TRP[2].Lst_Att_Aval_Pret[0]._Tache := "TAC_MELANG1";
+	"DB_Dosage".TRM_TRP[2].Lst_Att_Aval_Pret[0]._Niv := "NIV_MLG_MARCHE";
+	"DB_Dosage".TRM_TRP[2].Lst_Att_Debut_Remp[0]._Tache := "TAC_CIRREMP_MLG1";
+	"DB_Dosage".TRM_TRP[2].Lst_Att_Debut_Remp[0]._Niv := "NIV_CIRTRANS_CIR_TRANS_PRET";
+	"DB_Dosage".TRM_TRP[2].Lst_Att_Dem_Aval_Av_Test_Fin_Prd[0]._Tache := "TAC_MELANG1";
+	"DB_Dosage".TRM_TRP[2].Lst_Att_Dem_Aval_Av_Test_Fin_Prd[0]._Niv := "NIV_MLG_DEBUT_REMP";
+	"DB_Dosage".TRM_TRP[2].Lst_Att_Fin_Remp[0]._Tache := "TAC_CIRREMP_MLG1";
+	"DB_Dosage".TRM_TRP[2].Lst_Att_Fin_Remp[0]._Niv := "NIV_CIRTRANS_CIR_FIN_LOT";
+	"DB_Dosage".TRM_TRP[2].Lst_Att_Fin_Amont[0]._Tache := "TAC_CIRREMP_MLG1";
+	"DB_Dosage".TRM_TRP[2].Lst_Att_Fin_Amont[0]._Niv := "NIV_CIRTRANS_CIR_FIN_LOT";
+	// "DB_Dosage".TRM_TRP[2].Lst_Att_Fin_Trou[0]._Tache := "";
+	//"DB_Dosage".TRM_TRP[2].Lst_Att_Fin_Trou[0]._Niv := ;
+	//--------------------- QTE Tremie sur Trappe SR MLG1 ---------------------//
+	"DB_Dosage".TRM_TRP[2].Lst_Taches_Amont_Qte[0] := "TAC_CIRREMP_MLG1";
+	//--------------------- Tremie sur Trappe SR MLG2 ---------------------//
+	// "DB_Dosage".TRM_TRP[3].Tps_Att_NB := T#30S;
+	// "DB_Dosage".TRM_TRP[3].Tps_MAX_Att_NB := T#1M;
+	// "DB_Dosage".TRM_TRP[3].Tps_Mini := T#30S;
+	"DB_Dosage".TRM_TRP[3].NB := "RNB_TMEL2";
+	"DB_Dosage".TRM_TRP[3].Seuil_Poids_Test_NB := 300;
+	//--------------------- SYNCHRONISATION GRAFCET Tremie sur Trappe SR MLG2 ---------------------//
+	"DB_Dosage".TRM_TRP[3].Mob_Trappe1 := "Index_Mobile"('TRP1_TMEL2');
+	"DB_Dosage".TRM_TRP[3].Mob_Vib := "Index_Mobile"('');
+	"DB_Dosage".TRM_TRP[3].Lst_Att_Amont_Av_Test_Prd[0]._Tache := "TAC_CIRREMP_MLG2";
+	"DB_Dosage".TRM_TRP[3].Lst_Att_Amont_Av_Test_Prd[0]._Niv := "NIV_CIRTRANS_CIR_TRANS_PRET";
+	"DB_Dosage".TRM_TRP[3].Lst_Att_Aval_Pret[0]._Tache := "TAC_MELANG2";
+	"DB_Dosage".TRM_TRP[3].Lst_Att_Aval_Pret[0]._Niv := "NIV_MLG_MARCHE";
+	"DB_Dosage".TRM_TRP[3].Lst_Att_Debut_Remp[0]._Tache := "TAC_CIRREMP_MLG2";
+	"DB_Dosage".TRM_TRP[3].Lst_Att_Debut_Remp[0]._Niv := "NIV_CIRTRANS_CIR_TRANS_PRET";
+	"DB_Dosage".TRM_TRP[3].Lst_Att_Dem_Aval_Av_Test_Fin_Prd[0]._Tache := "TAC_MELANG2";
+	"DB_Dosage".TRM_TRP[3].Lst_Att_Dem_Aval_Av_Test_Fin_Prd[0]._Niv := "NIV_MLG_DEBUT_REMP";
+	"DB_Dosage".TRM_TRP[3].Lst_Att_Fin_Remp[0]._Tache := "TAC_CIRREMP_MLG2";
+	"DB_Dosage".TRM_TRP[3].Lst_Att_Fin_Remp[0]._Niv := "NIV_CIRTRANS_CIR_FIN_LOT";
+	"DB_Dosage".TRM_TRP[3].Lst_Att_Fin_Amont[0]._Tache := "TAC_CIRREMP_MLG2";
+	"DB_Dosage".TRM_TRP[3].Lst_Att_Fin_Amont[0]._Niv := "NIV_CIRTRANS_CIR_FIN_LOT";
+	// "DB_Dosage".TRM_TRP[3].Lst_Att_Fin_Trou[0]._Tache := "";
+	// "DB_Dosage".TRM_TRP[3].Lst_Att_Fin_Trou[0]._Niv := ;
+	//--------------------- QTE Tremie sur Trappe SR MLG2 ---------------------//
+	"DB_Dosage".TRM_TRP[3].Lst_Taches_Amont_Qte[0] := "TAC_CIRREMP_MLG2";
+	//--------------------- Tremie sur Trappe SS BP4 ---------------------//
+	// "DB_Dosage".TRM_TRP[4].Tps_Att_NB := T#30S;
+	// "DB_Dosage".TRM_TRP[4].Tps_MAX_Att_NB := T#1M;
+	// "DB_Dosage".TRM_TRP[4].Tps_Mini := T#30S;
+	"DB_Dosage".TRM_TRP[4].NB := "RNB_TRM_BP4";
+	"DB_Dosage".TRM_TRP[4].Seuil_Poids_Test_NB := 300;
+	//--------------------- SYNCHRONISATION GRAFCET Tremie sur Trappe SS BP4 ---------------------//
+	"DB_Dosage".TRM_TRP[4].Mob_Trappe1 := "Index_Mobile"('TRP1_TBP4');
+	"DB_Dosage".TRM_TRP[4].Mob_A_Dispo := "Index_Mobile"('BDBP4');
+	//"DB_Dosage".TRM_TRP[4].Mob_Vib := "Index_Mobile"('VIBR');
+	"DB_Dosage".TRM_TRP[4].Lst_Att_Amont_Av_Test_Prd[0]._Tache := "TAC_BP4";
+	"DB_Dosage".TRM_TRP[4].Lst_Att_Amont_Av_Test_Prd[0]._Niv := "NIV_SURDOS_FIN_VIDANGE_BENNE";
+	"DB_Dosage".TRM_TRP[4].Lst_Att_Aval_Pret[0]._Tache := "TAC_MELANG1";
+	"DB_Dosage".TRM_TRP[4].Lst_Att_Aval_Pret[0]._Niv := "NIV_MLG_MARCHE";
+	"DB_Dosage".TRM_TRP[4].Lst_Att_Aval_Pret[1]._Tache := "TAC_MELANG2";
+	"DB_Dosage".TRM_TRP[4].Lst_Att_Aval_Pret[1]._Niv := "NIV_MLG_MARCHE";
+	"DB_Dosage".TRM_TRP[4].Lst_Att_Aval_Pret[2]._Tache := "TAC_TREMSR_MLG1";
+	"DB_Dosage".TRM_TRP[4].Lst_Att_Aval_Pret[2]._Niv := "NIV_TREMIE_TRAPPE_VID_DEPUIS_X_SEC";
+	"DB_Dosage".TRM_TRP[4].Lst_Att_Aval_Pret[3]._Tache := "TAC_TREMSR_MLG2";
+	"DB_Dosage".TRM_TRP[4].Lst_Att_Aval_Pret[3]._Niv := "NIV_TREMIE_TRAPPE_VID_DEPUIS_X_SEC";
+	"DB_Dosage".TRM_TRP[4].Lst_Att_Debut_Remp[0]._Tache := "TAC_BP4";
+	"DB_Dosage".TRM_TRP[4].Lst_Att_Debut_Remp[0]._Niv := "NIV_SURDOS_DEBUT_VIDANGE_BENNE";
+	"DB_Dosage".TRM_TRP[4].Lst_Att_Dem_Aval_Av_Test_Fin_Prd[0]._Tache := "TAC_MELANG1";
+	"DB_Dosage".TRM_TRP[4].Lst_Att_Dem_Aval_Av_Test_Fin_Prd[0]._Niv := "NIV_MLG_MARCHE";
+	"DB_Dosage".TRM_TRP[4].Lst_Att_Dem_Aval_Av_Test_Fin_Prd[1]._Tache := "TAC_MELANG2";
+	"DB_Dosage".TRM_TRP[4].Lst_Att_Dem_Aval_Av_Test_Fin_Prd[1]._Niv := "NIV_MLG_MARCHE";
+	"DB_Dosage".TRM_TRP[4].Lst_Att_Fin_Remp[0]._Tache := "TAC_BP4";
+	"DB_Dosage".TRM_TRP[4].Lst_Att_Fin_Remp[0]._Niv := "NIV_SURDOS_DEBUT_VIDANGE_BENNE";
+	"DB_Dosage".TRM_TRP[4].Lst_Att_Fin_Amont[0]._Tache := "TAC_BP4";
+	"DB_Dosage".TRM_TRP[4].Lst_Att_Fin_Amont[0]._Niv := "NIV_SURDOS_FIN_LOT";
+	// "DB_Dosage".TRM_TRP[4].Lst_Att_Fin_Trou[0]._Tache := "";
+	//"DB_Dosage".TRM_TRP[4].Lst_Att_Fin_Trou[0]._Niv := ;
+	//--------------------- QTE Tremie sur Trappe SS BP4 ---------------------//
+	"DB_Dosage".TRM_TRP[4].Lst_Taches_Amont_Qte[0] := "TAC_BP4";
+	//-------------------------------------------//
+END_FUNCTION
+

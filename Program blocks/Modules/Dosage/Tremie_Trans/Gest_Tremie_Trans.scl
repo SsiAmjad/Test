@@ -1,0 +1,633 @@
+﻿FUNCTION "Gest_Tremie_Trans" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Fg_Base : Bool;
+      RAZ_Pt_Zs : "S_Suivi_Dosage";
+   END_VAR
+
+   VAR_IN_OUT 
+      Tremie_Trans : "S_Tremie_Trans";
+   END_VAR
+
+   VAR_TEMP 
+      Ret_Test_Lot_Att_Tache : SInt;
+      Ret_Maj_Niv : SInt;
+      Ret_Dem_Mobile : SInt;
+      Ret_Test_Etat_Mobile : SInt;
+      Ret_Fin_Pos_Circuit : SInt;
+      Ret_RD_SYS_T : Int;
+      Tps_Act : Date_And_Time;
+      Etat_Mobile : USInt;
+      Ret_Vid_Mobile : SInt;
+      Tps_Ecoule : Time;
+      Msg_Defaut : String;
+      Ret_Fin_Pos_Mobile : SInt;
+   END_VAR
+
+   VAR CONSTANT 
+      Etp_Repos : SInt := 0;
+      Etp_Att_Cond : SInt := 1;
+      Etp_Att_Debut_Remp : SInt := 2;
+      Etp_Att_Prd : SInt := 3;
+      Etp_Att_Fin_Remp : SInt := 4;
+      Etp_Att_Aval_Pret : SInt := 5;
+      Etp_Att_Circ_Libre : SInt := 6;
+      Etp_Demarrage : SInt := 7;
+      Etp_Att_Amont_Av_Test_Prd : SInt := 8;
+      Etp_Att_PM : SInt := 9;
+      Etp_Att_Av_Redem : SInt := 10;
+      Etp_Fin_Amont : SInt := 11;
+      Etp_Fin_Prd : SInt := 12;
+      Etp_Tempo_Mini : SInt := 13;
+      Etp_Att_Fin_Pm : SInt := 14;
+      Etp_Att_Fin_Amont_Trans : SInt := 15;
+      Etp_Fin_Aval : SInt := 16;
+      Etp_Fin_Vidange : SInt := 17;
+      Etp_Fin_Lot : SInt := 18;
+      Etp_Att_Fin_Prd : SInt := 19;
+      Etp_Att_Acquittement : SInt := 20;
+      Niv_TACHES_AMONT_DEBUT_REMP : USInt := 70;
+      Niv_TACHES_AMONT_FIN_REMP : USInt := 80;
+      Niv_TACHE_AVAL_PRET : USInt := 50;
+   END_VAR
+
+
+BEGIN
+	//============= Affichage Etiquette =============//
+	"FC_Affich_Etiquette"(Couleur := #Tremie_Trans.Pt_Zs._SuiviCommun._Couleur,
+	                      Cel_Dest := #Tremie_Trans.Pt_Zs._Cel_Dest,
+	                      CdMat := #Tremie_Trans.Pt_Zs._SuiviCommun._CdMat,
+	                      NoLot := #Tremie_Trans.Pt_Zs._SuiviCommun._NoLot,
+	                      QteLot := #Tremie_Trans.Pt_Zs._SuiviCommun._QteLot,
+	                      Desc_Etp := #Tremie_Trans.DosCommun.Module_Commun._DescEtp,
+	                      Etiquette := #Tremie_Trans.DosCommun);
+	//============= Affichage Etiquette =============//
+	#Ret_RD_SYS_T := RD_SYS_T(#Tps_Act);
+	CASE #Tremie_Trans.DosCommun.Module_Commun._Etp OF
+	    #Etp_Repos:
+	        REGION Preliminaire Repos
+	            IF #Tremie_Trans.DosCommun.Module_Commun._Etp <> #Tremie_Trans.DosCommun.Module_Commun._EtpMemo THEN
+	                #Tremie_Trans.DosCommun.Module_Commun._DescEtp := 'REPOS';
+	                #Tremie_Trans.Pt_Zs := #RAZ_Pt_Zs;
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpPrec := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpMemo := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Preliminaire Repos
+	        REGION Cyclique Repos
+	            #Ret_Test_Lot_Att_Tache := "Test_Lot_Att_Tache"(Num_Tache := #Tremie_Trans.DosCommun.Module_Commun._Tache,
+	                                                            Num_Zone => #Tremie_Trans.DosCommun.Module_Commun._NumZone);
+	            IF #Ret_Test_Lot_Att_Tache = 1 THEN
+	                #Tremie_Trans.Pt_Zs := "DB_Data_Dosage"."THIS"[#Tremie_Trans.DosCommun.Module_Commun._NumZone];
+	                #Ret_Maj_Niv := "Maj_Niv"(Num_Zone := #Tremie_Trans.DosCommun.Module_Commun._NumZone,
+	                                          Num_Tache := #Tremie_Trans.DosCommun.Module_Commun._Tache,
+	                                          Niveau := "NIV_TREMIE_TRANS_DEBUT_LOT");
+	                #Tremie_Trans.DosCommun.Module_Commun._Etp := #Etp_Att_Cond;
+	                RETURN;
+	            END_IF; 
+	        END_REGION Cyclique Repos
+	    #Etp_Att_Cond:
+	        REGION Preliminaire Att Cond
+	            IF #Tremie_Trans.DosCommun.Module_Commun._Etp <> #Tremie_Trans.DosCommun.Module_Commun._EtpMemo THEN
+	                #Tremie_Trans.DosCommun.Module_Commun._DescEtp := 'ATT COND';
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpPrec := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpMemo := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Preliminaire Att Cond
+	        REGION Cyclique Att Cond
+	            // Appel Procedure stockee pour recuperation de la densite corrige sur ce lieu
+	            // Test Renseignement Mobile 
+	            IF #Tremie_Trans.Mob_Trans = -1 THEN
+	                RETURN;
+	            END_IF;
+	            // Test Si Mobile Transporteur Libre (En Arret)
+	            IF NOT "Test_Etat_Mobile"("Index_Mobile":=#Tremie_Trans.Mob_Trans, Etat:="Libre") THEN
+	                RETURN;
+	            END_IF;
+	            #Ret_Maj_Niv := "Maj_Niv"(Num_Zone:=#Tremie_Trans.DosCommun.Module_Commun._NumZone,Num_Tache:=#Tremie_Trans.DosCommun.Module_Commun._Tache,Niveau:="NIV_TREMIE_TRANS_AUT_REMP");
+	            #Tremie_Trans.DosCommun.Module_Commun._Etp := #Etp_Att_Debut_Remp;
+	            RETURN;
+	        END_REGION Cyclique Att Cond
+	    #Etp_Att_Debut_Remp:
+	        REGION Preliminaire Att Debut remp
+	            IF #Tremie_Trans.DosCommun.Module_Commun._Etp <> #Tremie_Trans.DosCommun.Module_Commun._EtpMemo THEN
+	                #Tremie_Trans.DosCommun.Module_Commun._DescEtp := 'DEBUT REMP';
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpPrec := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpMemo := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Preliminaire Att Debut Remp
+	        REGION Cyclique Att Debut Remp
+	            // Attente Debut Remplissage Taches Amont
+	            IF NOT "FC_Test_Niv_AmontAval"(Num_Zone:=#Tremie_Trans.DosCommun.Module_Commun._NumZone, Lst_Taches:=#Tremie_Trans.Lst_Att_Debut_Remp) THEN
+	                RETURN;
+	            END_IF;
+	            // Test Renseignement Mobile Aspiration
+	            IF "Valid_Index"(#Tremie_Trans.Mob_Asp) THEN
+	                #Ret_Dem_Mobile := "Dem_Mobile"(#Tremie_Trans.Mob_Asp);
+	            END_IF;
+	            // Test Renseignement Mobile Decolmatage
+	            IF "Valid_Index"(#Tremie_Trans.Mob_Decol) THEN
+	                #Ret_Dem_Mobile := "Dem_Mobile"(#Tremie_Trans.Mob_Decol);
+	            END_IF;
+	            #Tremie_Trans.DosCommun.Module_Commun._Etp := #Etp_Att_Prd;
+	            RETURN;
+	        END_REGION Cyclique Att Debut Remp
+	    #Etp_Att_Prd:
+	        REGION Preliminaire Att Prd
+	            IF #Tremie_Trans.DosCommun.Module_Commun._Etp <> #Tremie_Trans.DosCommun.Module_Commun._EtpMemo THEN
+	                #Tremie_Trans.DosCommun.Module_Commun._DescEtp := 'ATT PRD';
+	                "Maj_Qte_Tache"(Num_Tache := #Tremie_Trans.DosCommun.Module_Commun._Tache,
+	                                Num_Zone := #Tremie_Trans.DosCommun.Module_Commun._NumZone,
+	                                Qte := "Calc_Qte_Tache"(Num_Zone := #Tremie_Trans.DosCommun.Module_Commun._NumZone, Lst_Amont := #Tremie_Trans.Lst_Taches_Amont_Qte));
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpPrec := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	                //=== Traitement cas retour de defaut ===//
+	                IF #Tremie_Trans.Dial_Def.Reponse_Def <> '' THEN
+	                    #Tremie_Trans.DosCommun.Module_Commun._EtpMemo := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	                    CASE #Tremie_Trans.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO Att_Prd_DEF1;
+	                    END_CASE;
+	                END_IF;
+	                //=== Traitement cas retour de defaut ===//
+	                #Ret_RD_SYS_T := RD_SYS_T(#Tremie_Trans.DosCommun.Module_Commun._TpsPicke_Max);
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpMemo := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Preliminaire Att Prd
+	        REGION Cyclique Att Prd  
+	            // Tempo si non NB
+	            IF "Tempo"(Duree := #Tremie_Trans.Tps_MAX_Att_NB, Tps_Picke := #Tremie_Trans.DosCommun.Module_Commun._TpsPicke_Max, Anticip := FALSE, Tps_Passe => #Tps_Ecoule) THEN
+	                // DIALOG DEFAUT
+	                #Tremie_Trans.Dial_Def.Num_Def_Etape := 1;
+	                #Msg_Defaut := CONCAT(IN1:='Defaut: Recouvert Niveau Bas ', IN2:=#Tremie_Trans.DosCommun.Module_Commun._NomTache, IN3:=' !');
+	                #Tremie_Trans.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base:=#Fg_Base, Msg_Defaut := #Msg_Defaut,
+	                                                                       Type_Defaut := 0,
+	                                                                       Automatisme := #Tremie_Trans.Pt_Zs._SuiviCommun._CdProc,
+	                                                                       Num_Lot := #Tremie_Trans.Pt_Zs._SuiviCommun._NoLot,
+	                                                                       Origine_Defaut := #Tremie_Trans.DosCommun.Module_Commun._NomTache,
+	                                                                       Libelle_Origine := #Tremie_Trans.DosCommun.Module_Commun._NomTache,
+	                                                                       Acq1 := 'Relance',
+	                                                                       Acq2 := 'Abandon',
+	                                                                       Acq3 := '',
+	                                                                       Acq4 := '',
+	                                                                       Acq5 := '',
+	                                                                       Acq6 := '',
+	                                                                       Acq7 := '',
+	                                                                       Acq8 := '',
+	                                                                       Acq_Choisi := -1,
+	                                                                       Date_Arrivee := #Tps_Act);
+	                #Tremie_Trans.DosCommun.Module_Commun._Etp := #Etp_Att_Acquittement;
+	                RETURN;
+	            END_IF;
+	        Att_Prd_DEF1:
+	            //========================== Traitement des reponses defaut ==========================//
+	            IF (#Tremie_Trans.Dial_Def.Reponse_Def = 'Relance') THEN
+	                // Reinitialisation de la tempo
+	                #Ret_RD_SYS_T := RD_SYS_T(#Tremie_Trans.DosCommun.Module_Commun._TpsPicke_Max);
+	                // RAZ message defaut
+	                #Tremie_Trans.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            IF (#Tremie_Trans.Dial_Def.Reponse_Def = 'Abandon') THEN
+	                #Ret_Maj_Niv := "Maj_Niv"(Num_Zone := #Tremie_Trans.DosCommun.Module_Commun._NumZone, Num_Tache := #Tremie_Trans.DosCommun.Module_Commun._Tache, Niveau := "NIV_TREMIE_TRANS_NB");
+	                // RAZ message defaut
+	                #Tremie_Trans.Dial_Def.Reponse_Def := '';
+	                #Tremie_Trans.DosCommun.Module_Commun._Etp := #Etp_Att_Fin_Remp;
+	                RETURN;
+	            END_IF;
+	            //========================== Traitement des reponses defaut ==========================//
+	            // Test Niveau Bas
+	            IF NOT #Tremie_Trans.NB AND (#Tremie_Trans.Seuil_Poids_Test_NB < "Calc_Qte_Tache"(Num_Zone:=#Tremie_Trans.DosCommun.Module_Commun._NumZone, Lst_Amont:=#Tremie_Trans.Lst_Taches_Amont_Qte)) THEN
+	                RETURN;
+	            END_IF;
+	            #Tremie_Trans.DosCommun.Module_Commun._Etp := #Etp_Att_Fin_Remp;
+	            RETURN;
+	        END_REGION Cyclique Att Prd  
+	    #Etp_Att_Fin_Remp:
+	        REGION Preliminaire Att Fin Remp
+	            IF #Tremie_Trans.DosCommun.Module_Commun._Etp <> #Tremie_Trans.DosCommun.Module_Commun._EtpMemo THEN
+	                #Tremie_Trans.DosCommun.Module_Commun._DescEtp := 'ATT FIN REMP';
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpPrec := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	                #Ret_Maj_Niv := "Maj_Niv"(Num_Zone := #Tremie_Trans.DosCommun.Module_Commun._NumZone, Num_Tache := #Tremie_Trans.DosCommun.Module_Commun._Tache, Niveau := "NIV_TREMIE_TRANS_PRES_PRD");
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpMemo := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION  Preliminaire Att Fin Remp
+	        REGION Cyclique Att Fin Remp
+	            IF NOT "FC_Test_Niv_AmontAval"(Num_Zone := #Tremie_Trans.DosCommun.Module_Commun._NumZone, Lst_Taches := #Tremie_Trans.Lst_Att_Fin_Remp) THEN
+	                RETURN;
+	            END_IF;
+	            #Tremie_Trans.DosCommun.Module_Commun._Etp := #Etp_Att_Aval_Pret;
+	            RETURN;
+	        END_REGION Cyclique Att Fin Remp
+	    #Etp_Att_Aval_Pret:
+	        REGION Preliminaire Att Aval Pret
+	            IF #Tremie_Trans.DosCommun.Module_Commun._Etp <> #Tremie_Trans.DosCommun.Module_Commun._EtpMemo THEN
+	                #Tremie_Trans.DosCommun.Module_Commun._DescEtp := 'ATT AVAL PRET';
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpPrec := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpMemo := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Preliminaire Att Aval Pret
+	        REGION Cyclique Att Aval Pret
+	            //Calcul debit massique  transporteur
+	            IF NOT "FC_Test_Niv_AmontAval"(Num_Zone := #Tremie_Trans.DosCommun.Module_Commun._NumZone, Lst_Taches := #Tremie_Trans.Lst_Att_Aval_Pret) THEN
+	                RETURN;
+	            END_IF;
+	           #Tremie_Trans.DosCommun.Module_Commun._Etp := #Etp_Att_Circ_Libre;
+	           RETURN;
+	       END_REGION  Cyclique Att Aval Pret
+	    #Etp_Att_Circ_Libre:
+	        REGION Preliminaire Att Circ Pret
+	            IF #Tremie_Trans.DosCommun.Module_Commun._Etp <> #Tremie_Trans.DosCommun.Module_Commun._EtpMemo THEN
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpPrec := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpMemo := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Preliminaire Att Circ Pret
+	        REGION Cyclique Att Circ Pret
+	            
+	            #Tremie_Trans.DosCommun.Module_Commun._Etp := #Etp_Demarrage;
+	            RETURN;
+	        END_REGION Cyclique Att Circ Pret
+	    #Etp_Demarrage:
+	        REGION Preliminaire Demarrage
+	            IF #Tremie_Trans.DosCommun.Module_Commun._Etp <> #Tremie_Trans.DosCommun.Module_Commun._EtpMemo THEN
+	                #Tremie_Trans.DosCommun.Module_Commun._DescEtp := 'DEMARRAGE';
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpPrec := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	                #Ret_Maj_Niv := "Maj_Niv"(Num_Zone := #Tremie_Trans.DosCommun.Module_Commun._NumZone,
+	                                          Num_Tache := #Tremie_Trans.DosCommun.Module_Commun._Tache,
+	                                          Niveau := "NIV_TREMIE_TRANS_LANCE_EXTRACT");
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpMemo := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Preliminaire Demarrage
+	        REGION Cyclique Demarrage
+	            // Test Renseignement Mobile Transporteur
+	            IF #Tremie_Trans.Mob_Trans = -1 THEN
+	                RETURN;
+	            END_IF;
+	            #Ret_Dem_Mobile := "Dem_Mobile"(#Tremie_Trans.Mob_Trans);
+	            #Ret_Maj_Niv := "Maj_Niv"(Num_Zone := #Tremie_Trans.DosCommun.Module_Commun._NumZone, Num_Tache := #Tremie_Trans.DosCommun.Module_Commun._Tache, Niveau := "NIV_TREMIE_TRANS_DEM_EXTRACT");
+	            
+	            #Tremie_Trans.DosCommun.Module_Commun._Etp := #Etp_Att_Amont_Av_Test_Prd;
+	            RETURN;
+	        END_REGION Cyclique Demarrage
+	    #Etp_Att_Amont_Av_Test_Prd:
+	        REGION Preliminaire Att Amont Avant Test Prd
+	            IF #Tremie_Trans.DosCommun.Module_Commun._Etp <> #Tremie_Trans.DosCommun.Module_Commun._EtpMemo THEN
+	                #Tremie_Trans.DosCommun.Module_Commun._DescEtp := 'ATT AMONT AV TEST PRD';
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpPrec := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpMemo := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Preliminaire Att Amont Avant Test Prd
+	        REGION Cyclique Att Amont Avant Test Prd
+	            IF NOT "FC_Test_Niv_AmontAval"(Num_Zone := #Tremie_Trans.DosCommun.Module_Commun._NumZone, Lst_Taches := #Tremie_Trans.Lst_Att_Test_Amont_Av_Test_Prd) THEN
+	                RETURN;
+	            END_IF;
+	            #Tremie_Trans.DosCommun.Module_Commun._Etp := #Etp_Att_PM;
+	            RETURN;
+	        END_REGION Cyclique Att Amont Avant Test Prd
+	    #Etp_Att_PM:
+	        REGION Preliminaire Att PM
+	            IF #Tremie_Trans.DosCommun.Module_Commun._Etp <> #Tremie_Trans.DosCommun.Module_Commun._EtpMemo THEN
+	                #Tremie_Trans.DosCommun.Module_Commun._DescEtp := 'ATT PM';
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpPrec := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	                //=== Traitement cas retour de defaut ===//
+	                IF #Tremie_Trans.Dial_Def.Reponse_Def <> '' THEN
+	                    #Tremie_Trans.DosCommun.Module_Commun._EtpMemo := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	                    CASE #Tremie_Trans.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO Att_PM_DEF1;
+	                    END_CASE;
+	                END_IF;
+	                //=== Traitement cas retour de defaut ===//
+	                #Ret_RD_SYS_T := RD_SYS_T(#Tremie_Trans.DosCommun.Module_Commun._TpsPicke);
+	                #Ret_RD_SYS_T := RD_SYS_T(#Tremie_Trans.DosCommun.Module_Commun._TpsPicke_Max);
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpMemo := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Preliminaire Att PM
+	        REGION Cyclique Att PM
+	            // Tempo si non PM
+	            IF "Tempo"(Duree := #Tremie_Trans.Tps_MAX_Att_PM, Tps_Picke := #Tremie_Trans.DosCommun.Module_Commun._TpsPicke_Max, Anticip := FALSE, Tps_Passe => #Tps_Ecoule) THEN
+	                // DIALOG DEFAUT
+	                #Tremie_Trans.Dial_Def.Num_Def_Etape := 1;
+	                #Msg_Defaut := CONCAT(IN1 := 'Defaut: Recouvert Passage Matiere ', IN2 := #Tremie_Trans.DosCommun.Module_Commun._NomTache, IN3 := ' !');
+	                #Tremie_Trans.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base:=#Fg_Base, Msg_Defaut := #Msg_Defaut,
+	                                                                       Type_Defaut := 0,
+	                                                                       Automatisme := #Tremie_Trans.Pt_Zs._SuiviCommun._CdProc,
+	                                                                       Num_Lot := #Tremie_Trans.Pt_Zs._SuiviCommun._NoLot,
+	                                                                       Origine_Defaut := #Tremie_Trans.DosCommun.Module_Commun._NomTache,
+	                                                                       Libelle_Origine := #Tremie_Trans.DosCommun.Module_Commun._NomTache,
+	                                                                       Acq1 := 'Relance',
+	                                                                       Acq2 := 'Abandon',
+	                                                                       Acq3 := '',
+	                                                                       Acq4 := '',
+	                                                                       Acq5 := '',
+	                                                                       Acq6 := '',
+	                                                                       Acq7 := '',
+	                                                                       Acq8 := '',
+	                                                                       Acq_Choisi := -1,
+	                                                                       Date_Arrivee := #Tps_Act);
+	                #Tremie_Trans.DosCommun.Module_Commun._Etp := #Etp_Att_Acquittement;
+	                RETURN;
+	            END_IF;
+	        Att_PM_DEF1:
+	            //========================== Traitement des reponses defaut ==========================//
+	            IF (#Tremie_Trans.Dial_Def.Reponse_Def = 'Relance') THEN
+	                // Reinitialisation de la tempo
+	                #Ret_RD_SYS_T := RD_SYS_T(#Tremie_Trans.DosCommun.Module_Commun._TpsPicke_Max);
+	                // RAZ message defaut
+	                #Tremie_Trans.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            IF (#Tremie_Trans.Dial_Def.Reponse_Def = 'Abandon') THEN
+	                 // RAZ message defaut
+	                #Tremie_Trans.Dial_Def.Reponse_Def := '';
+	                #Tremie_Trans.DosCommun.Module_Commun._Etp := #Etp_Fin_Amont;
+	                RETURN;
+	            END_IF;
+	            //========================== Traitement des reponses defaut ==========================//
+	            // PM trans
+	            IF  NOT #Tremie_Trans.PM THEN
+	                #Ret_RD_SYS_T := RD_SYS_T(#Tremie_Trans.DosCommun.Module_Commun._TpsPicke);
+	                RETURN;
+	            END_IF;
+	            IF NOT "Tempo"(Duree := #Tremie_Trans.Tps_Att_PM, Tps_Picke := #Tremie_Trans.DosCommun.Module_Commun._TpsPicke, Anticip := FALSE, Tps_Passe => #Tps_Ecoule) THEN
+	                RETURN;
+	            END_IF;
+	            #Tremie_Trans.DosCommun.Module_Commun._Etp := #Etp_Fin_Amont;
+	            RETURN;
+	        END_REGION Cyclique Att PM
+	    #Etp_Att_Av_Redem:
+	        REGION Preliminaire Att Av Redem
+	            IF #Tremie_Trans.DosCommun.Module_Commun._Etp <> #Tremie_Trans.DosCommun.Module_Commun._EtpMemo THEN
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpPrec := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpMemo := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Preliminaire Att Av Redem
+	        REGION Cyclique Att Av Redem
+	            
+	            #Tremie_Trans.DosCommun.Module_Commun._Etp := #Etp_Fin_Amont;
+	            RETURN;
+	        END_REGION Cyclique Att Av Redem
+	    #Etp_Fin_Amont:
+	        REGION Preliminaire Att Fin Amont
+	            IF #Tremie_Trans.DosCommun.Module_Commun._Etp <> #Tremie_Trans.DosCommun.Module_Commun._EtpMemo THEN
+	                #Tremie_Trans.DosCommun.Module_Commun._DescEtp := 'FIN AMONT';
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpPrec := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	                #Ret_Maj_Niv := "Maj_Niv"(Num_Zone := #Tremie_Trans.DosCommun.Module_Commun._NumZone,
+	                                          Num_Tache := #Tremie_Trans.DosCommun.Module_Commun._Tache,
+	                                          Niveau := "NIV_TREMIE_TRANS_PM");
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpMemo := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Preliminaire Att Fin Amont
+	        REGION Cyclique Att Fin Amont
+	            IF #Tremie_Trans.NB THEN
+	                #Ret_Maj_Niv := "Maj_Niv"(Num_Zone := #Tremie_Trans.DosCommun.Module_Commun._NumZone, Num_Tache := #Tremie_Trans.DosCommun.Module_Commun._Tache, Niveau := "NIV_TREMIE_TRANS_NB");
+	            END_IF;
+	            IF NOT "FC_Test_Niv_AmontAval"(Num_Zone := #Tremie_Trans.DosCommun.Module_Commun._NumZone, Lst_Taches := #Tremie_Trans.Lst_Att_Fin_Amont) THEN
+	                RETURN;
+	            END_IF;
+	            #Tremie_Trans.DosCommun.Module_Commun._Etp := #Etp_Att_Fin_Prd;
+	        END_REGION Cyclique Att Fin Amont
+	    #Etp_Att_Fin_Prd:
+	        REGION Preliminaire Att Fin Prd
+	            IF #Tremie_Trans.DosCommun.Module_Commun._Etp <> #Tremie_Trans.DosCommun.Module_Commun._EtpMemo THEN
+	                #Tremie_Trans.DosCommun.Module_Commun._DescEtp := 'ATT FIN PRD';
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpPrec := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	                //=== Traitement cas retour de defaut ===//
+	                IF #Tremie_Trans.Dial_Def.Reponse_Def <> '' THEN
+	                    #Tremie_Trans.DosCommun.Module_Commun._EtpMemo := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	                    CASE #Tremie_Trans.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO Att_Fin_Prd_DEF1;
+	                    END_CASE;
+	                END_IF;
+	                //=== Traitement cas retour de defaut ===//
+	                #Ret_RD_SYS_T := RD_SYS_T(#Tremie_Trans.DosCommun.Module_Commun._TpsPicke);
+	                #Ret_RD_SYS_T := RD_SYS_T(#Tremie_Trans.DosCommun.Module_Commun._TpsPicke_Max);
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpMemo := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Preliminaire Att Fin Prd
+	        REGION Cyclique Att Fin Prd
+	            IF "Tempo"(Duree := #Tremie_Trans.Tps_MAX_Att_NB, Tps_Picke := #Tremie_Trans.DosCommun.Module_Commun._TpsPicke_Max, Anticip := FALSE, Tps_Passe => #Tps_Ecoule) THEN
+	                // DIALOG DEFAUT
+	                #Tremie_Trans.Dial_Def.Num_Def_Etape := 1;
+	                #Msg_Defaut := CONCAT(IN1 := 'Defaut: Decouvert Niveau Bas ', IN2 := #Tremie_Trans.DosCommun.Module_Commun._NomTache, IN3 := ' !');
+	                #Tremie_Trans.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base:=#Fg_Base, Msg_Defaut := #Msg_Defaut,
+	                                                                       Type_Defaut := 0,
+	                                                                       Automatisme := #Tremie_Trans.Pt_Zs._SuiviCommun._CdProc,
+	                                                                       Num_Lot := #Tremie_Trans.Pt_Zs._SuiviCommun._NoLot,
+	                                                                       Origine_Defaut := #Tremie_Trans.DosCommun.Module_Commun._NomTache,
+	                                                                       Libelle_Origine := #Tremie_Trans.DosCommun.Module_Commun._NomTache,
+	                                                                       Acq1 := 'Relance',
+	                                                                       Acq2 := 'Abandon',
+	                                                                       Acq3 := '',
+	                                                                       Acq4 := '',
+	                                                                       Acq5 := '',
+	                                                                       Acq6 := '',
+	                                                                       Acq7 := '',
+	                                                                       Acq8 := '',
+	                                                                       Acq_Choisi := -1,
+	                                                                       Date_Arrivee := #Tps_Act);
+	                #Tremie_Trans.DosCommun.Module_Commun._Etp := #Etp_Att_Acquittement;
+	                RETURN;
+	            END_IF;
+	        Att_Fin_Prd_DEF1:
+	            //========================== Traitement des reponses defaut ==========================//
+	            IF (#Tremie_Trans.Dial_Def.Reponse_Def = 'Relance') THEN
+	                // Reinitialisation de la tempo
+	                #Ret_RD_SYS_T := RD_SYS_T(#Tremie_Trans.DosCommun.Module_Commun._TpsPicke_Max);
+	                // RAZ message defaut
+	                #Tremie_Trans.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            IF (#Tremie_Trans.Dial_Def.Reponse_Def = 'Abandon') THEN
+	                #Ret_Maj_Niv := "Maj_Niv"(Num_Zone := #Tremie_Trans.DosCommun.Module_Commun._NumZone, Num_Tache := #Tremie_Trans.DosCommun.Module_Commun._Tache, Niveau := "NIV_TREMIE_TRANS_NIVEAU_BAS");
+	                // RAZ message defaut
+	                #Tremie_Trans.Dial_Def.Reponse_Def := '';
+	                IF "Valid_Index"(#Tremie_Trans.Mob_Vib ) THEN
+	                    #Ret_Dem_Mobile := "Dem_Mobile"(#Tremie_Trans.Mob_Vib);
+	                END_IF;
+	                #Tremie_Trans.DosCommun.Module_Commun._Etp := #Etp_Tempo_Mini;
+	                RETURN;
+	            END_IF;
+	            //========================== Traitement des reponses defaut ==========================//
+	            // Test Niveau Bas
+	            IF #Tremie_Trans.NB THEN
+	                RETURN;
+	            END_IF;
+	            IF "Valid_Index"(#Tremie_Trans.Mob_Vib) THEN
+	                #Ret_Dem_Mobile := "Dem_Mobile"(#Tremie_Trans.Mob_Vib);
+	            END_IF;
+	            #Tremie_Trans.DosCommun.Module_Commun._Etp := #Etp_Tempo_Mini;
+	        END_REGION Cyclique Att Fin Prd
+	    #Etp_Tempo_Mini:
+	        REGION Preliminaire Att Tempo Mini
+	            IF #Tremie_Trans.DosCommun.Module_Commun._Etp <> #Tremie_Trans.DosCommun.Module_Commun._EtpMemo THEN
+	                #Tremie_Trans.DosCommun.Module_Commun._DescEtp := 'TEMPO MINI';
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpPrec := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	                #Ret_Maj_Niv := "Maj_Niv"(Num_Zone := #Tremie_Trans.DosCommun.Module_Commun._NumZone, Num_Tache := #Tremie_Trans.DosCommun.Module_Commun._Tache, Niveau := "NIV_TREMIE_TRANS_TEMPO_MINI");
+	                #Ret_RD_SYS_T := RD_SYS_T(#Tremie_Trans.DosCommun.Module_Commun._TpsPicke);
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpMemo := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Preliminaire Att Tempo Mini
+	        REGION Cyclique Att Tempo Mini
+	            // Attente de la tempo mini
+	            IF NOT "Tempo"(Duree:=#Tremie_Trans.Tps_Mini, Tps_Picke:=#Tremie_Trans.DosCommun.Module_Commun._TpsPicke, Anticip:=FALSE, Tps_Passe=>#Tps_Ecoule) THEN
+	                RETURN;
+	            END_IF;
+	            #Tremie_Trans.DosCommun.Module_Commun._Etp := #Etp_Att_Fin_Pm;
+	        END_REGION Cyclique Att Tempo Mini
+	    #Etp_Att_Fin_Pm:
+	        REGION Preliminaire Att Fin Pm
+	            IF #Tremie_Trans.DosCommun.Module_Commun._Etp <> #Tremie_Trans.DosCommun.Module_Commun._EtpMemo THEN
+	                #Tremie_Trans.DosCommun.Module_Commun._DescEtp := 'ATT FIN PM';
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpPrec := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	                #Ret_Maj_Niv := "Maj_Niv"(Num_Zone := #Tremie_Trans.DosCommun.Module_Commun._NumZone, Num_Tache := #Tremie_Trans.DosCommun.Module_Commun._Tache, Niveau := "NIV_TREMIE_TRANS_FIN_PM");
+	                //=== Traitement cas retour de defaut ===//
+	                IF #Tremie_Trans.Dial_Def.Reponse_Def <> '' THEN
+	                    #Tremie_Trans.DosCommun.Module_Commun._EtpMemo := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	                    CASE #Tremie_Trans.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO Att_Fin_PM_DEF1;
+	                    END_CASE;
+	                END_IF;
+	                //=== Traitement cas retour de defaut ===//
+	                #Ret_RD_SYS_T := RD_SYS_T(#Tremie_Trans.DosCommun.Module_Commun._TpsPicke);
+	                #Ret_RD_SYS_T := RD_SYS_T(#Tremie_Trans.DosCommun.Module_Commun._TpsPicke_Max);
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpMemo := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Preliminaire Att Fin Pm
+	        REGION Cyclique Att Fin Pm 
+	            IF "Tempo"(Duree := #Tremie_Trans.Tps_MAX_Att_PM, Tps_Picke := #Tremie_Trans.DosCommun.Module_Commun._TpsPicke_Max, Anticip := FALSE, Tps_Passe => #Tps_Ecoule) THEN
+	                // DIALOG DEFAUT
+	                #Tremie_Trans.Dial_Def.Num_Def_Etape := 1;
+	                #Msg_Defaut := CONCAT(IN1 := 'Defaut: Decouvert Passage Matiere  ', IN2 := #Tremie_Trans.DosCommun.Module_Commun._NomTache, IN3 := ' !');
+	                #Tremie_Trans.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base:=#Fg_Base, Msg_Defaut := #Msg_Defaut,
+	                                                                       Type_Defaut := 0,
+	                                                                       Automatisme := #Tremie_Trans.Pt_Zs._SuiviCommun._CdProc,
+	                                                                       Num_Lot := #Tremie_Trans.Pt_Zs._SuiviCommun._NoLot,
+	                                                                       Origine_Defaut := #Tremie_Trans.DosCommun.Module_Commun._NomTache,
+	                                                                       Libelle_Origine := #Tremie_Trans.DosCommun.Module_Commun._NomTache,
+	                                                                       Acq1 := 'Relance',
+	                                                                       Acq2 := 'Abandon',
+	                                                                       Acq3 := '',
+	                                                                       Acq4 := '',
+	                                                                       Acq5 := '',
+	                                                                       Acq6 := '',
+	                                                                       Acq7 := '',
+	                                                                       Acq8 := '',
+	                                                                       Acq_Choisi := -1,
+	                                                                       Date_Arrivee := #Tps_Act);
+	                #Tremie_Trans.DosCommun.Module_Commun._Etp := #Etp_Att_Acquittement;
+	                RETURN;
+	            END_IF;
+	        Att_Fin_PM_DEF1:
+	            //========================== Traitement des reponses defaut ==========================//
+	            IF (#Tremie_Trans.Dial_Def.Reponse_Def = 'Relance') THEN
+	                // Reinitialisation de la tempo
+	                #Ret_RD_SYS_T := RD_SYS_T(#Tremie_Trans.DosCommun.Module_Commun._TpsPicke_Max);
+	                // RAZ message defaut
+	                #Tremie_Trans.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            IF (#Tremie_Trans.Dial_Def.Reponse_Def = 'Abandon') THEN
+	                // RAZ message defaut
+	                #Tremie_Trans.Dial_Def.Reponse_Def := '';
+	                #Tremie_Trans.DosCommun.Module_Commun._Etp := #Etp_Att_Fin_Amont_Trans;
+	                RETURN;
+	            END_IF;
+	            //========================== Traitement des reponses defaut ==========================//
+	            // PM trans
+	            IF  #Tremie_Trans.PM THEN
+	                #Ret_RD_SYS_T := RD_SYS_T(#Tremie_Trans.DosCommun.Module_Commun._TpsPicke);
+	                RETURN;
+	            END_IF;
+	            IF NOT "Tempo"(Duree := #Tremie_Trans.Tps_Att_PM, Tps_Picke := #Tremie_Trans.DosCommun.Module_Commun._TpsPicke, Anticip := FALSE, Tps_Passe => #Tps_Ecoule) THEN
+	                RETURN;
+	            END_IF;
+	            #Tremie_Trans.DosCommun.Module_Commun._Etp := #Etp_Att_Fin_Amont_Trans;
+	        END_REGION Cyclique Att Fin Pm
+	    #Etp_Att_Fin_Amont_Trans:
+	        REGION Preliminaire Att Fin Amont Trans
+	            IF #Tremie_Trans.DosCommun.Module_Commun._Etp <> #Tremie_Trans.DosCommun.Module_Commun._EtpMemo THEN
+	                #Tremie_Trans.DosCommun.Module_Commun._DescEtp := 'ATT FIN AMONT';
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpPrec := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	                #Ret_Maj_Niv := "Maj_Niv"(Num_Zone := #Tremie_Trans.DosCommun.Module_Commun._NumZone, Num_Tache := #Tremie_Trans.DosCommun.Module_Commun._Tache, Niveau := "NIV_TREMIE_TRANS_DEBUT_VIDANGE");
+	                
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpMemo := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Preliminaire Att Fin Amont Trans
+	        REGION Cyclique Att Fin Amont Trans
+	            IF NOT "FC_Test_Niv_AmontAval"(Num_Zone := #Tremie_Trans.DosCommun.Module_Commun._NumZone, Lst_Taches := #Tremie_Trans.Lst_Att_Fin_Amont_Trans) THEN
+	                RETURN;
+	            END_IF;
+	            #Tremie_Trans.DosCommun.Module_Commun._Etp := #Etp_Fin_Aval;
+	        END_REGION Cyclique Att Fin Amont Trans
+	    #Etp_Fin_Aval:
+	        REGION Preliminaire Fin Aval
+	            IF #Tremie_Trans.DosCommun.Module_Commun._Etp <> #Tremie_Trans.DosCommun.Module_Commun._EtpMemo THEN
+	                #Tremie_Trans.DosCommun.Module_Commun._DescEtp := 'FIN AVAL';
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpPrec := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	                #Ret_Maj_Niv := "Maj_Niv"(Num_Zone := #Tremie_Trans.DosCommun.Module_Commun._NumZone, Num_Tache := #Tremie_Trans.DosCommun.Module_Commun._Tache, Niveau := "NIV_TREMIE_TRANS_FIN_PM");
+	                
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpMemo := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Preliminaire Fin Aval
+	        REGION Cyclique Fin Aval
+	            IF NOT "FC_Test_Niv_AmontAval"(Num_Zone := #Tremie_Trans.DosCommun.Module_Commun._NumZone, Lst_Taches := #Tremie_Trans.Lst_Att_Fin_Aval) THEN
+	                RETURN;
+	            END_IF;
+	            #Tremie_Trans.DosCommun.Module_Commun._Etp := #Etp_Fin_Vidange;
+	        END_REGION Cyclique Fin Aval 
+	    #Etp_Fin_Vidange:
+	        REGION Preliminaire Fin Vidange
+	            IF #Tremie_Trans.DosCommun.Module_Commun._Etp <> #Tremie_Trans.DosCommun.Module_Commun._EtpMemo THEN
+	                #Tremie_Trans.DosCommun.Module_Commun._DescEtp := 'FIN VIDANGE';
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpPrec := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	                #Ret_Maj_Niv := "Maj_Niv"(Num_Zone := #Tremie_Trans.DosCommun.Module_Commun._NumZone, Num_Tache := #Tremie_Trans.DosCommun.Module_Commun._Tache, Niveau := "NIV_TREMIE_TRANS_DEBUT_VIDANGE");
+	                #Ret_Fin_Pos_Mobile := "Fin_Pos_Mobile"(#Tremie_Trans.Mob_Trans);
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpMemo := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Preliminaire Fin Vidange
+	        REGION Cyclique Fin Vidange
+	            IF NOT ("Test_Etat_Mobile"("Index_Mobile":=#Tremie_Trans.Mob_Trans, Etat:="Libre") AND "Test_Mobile_Vide"(#Tremie_Trans.Mob_Trans)) THEN
+	                RETURN;
+	            END_IF;
+	            #Tremie_Trans.DosCommun.Module_Commun._Etp := #Etp_Fin_Lot;
+	        END_REGION Cyclique Fin Vidange
+	    #Etp_Fin_Lot:
+	        REGION Preliminaire Fin Lot
+	            IF #Tremie_Trans.DosCommun.Module_Commun._Etp <> #Tremie_Trans.DosCommun.Module_Commun._EtpMemo THEN
+	                #Tremie_Trans.DosCommun.Module_Commun._DescEtp := 'FIN LOT';
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpPrec := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpMemo := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Preliminaire Fin Lot
+	        REGION Cyclique Fin Lot
+	            // Test Renseignement Mobile Aspiration
+	            IF "Valid_Index"(#Tremie_Trans.Mob_Asp) THEN
+	                #Ret_Vid_Mobile := "Vid_Mobile"(#Tremie_Trans.Mob_Asp);
+	            END_IF;
+	            // Test Renseignement Mobile Decolmatage
+	            IF "Valid_Index"(#Tremie_Trans.Mob_Decol) THEN
+	                #Ret_Vid_Mobile := "Vid_Mobile"(#Tremie_Trans.Mob_Decol);
+	            END_IF;
+	            #Ret_Maj_Niv := "Maj_Niv"(Num_Zone := #Tremie_Trans.DosCommun.Module_Commun._NumZone, Num_Tache := #Tremie_Trans.DosCommun.Module_Commun._Tache, Niveau := "NIV_TREMIE_TRANS_FIN_LOT");
+	            #Tremie_Trans.DosCommun.Module_Commun._Etp := #Etp_Repos;
+	        END_REGION Cyclique Fin Lot
+	    #Etp_Att_Acquittement:
+	        REGION Preliminaire Att Acquittement
+	            IF #Tremie_Trans.DosCommun.Module_Commun._Etp <> #Tremie_Trans.DosCommun.Module_Commun._EtpMemo THEN
+	                #Tremie_Trans.DosCommun.Module_Commun._DescEtp := 'ATT ACQ';
+	                #Tremie_Trans.DosCommun.Module_Commun._EtpMemo := #Tremie_Trans.DosCommun.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Preliminaire Att Acquittement
+	        REGION Cyclique Att Acquittement
+	            #Tremie_Trans.Dial_Def.Reponse_Def := "FC_Recup_Rep_Def"(Index_Def:=#Tremie_Trans.Dial_Def.Index_Defaut, Reponse_Ecrit=>#Tremie_Trans.Dial_Def.Text_Reponse);
+	            IF #Tremie_Trans.Dial_Def.Reponse_Def <> '' THEN
+	                "FC_Raz_Def"(#Tremie_Trans.Dial_Def.Index_Defaut);
+	                #Tremie_Trans.DosCommun.Module_Commun._Etp := #Tremie_Trans.DosCommun.Module_Commun._EtpPrec;
+	                RETURN;
+	            END_IF;
+	        END_REGION Cyclique Att Acquittement
+	END_CASE;
+END_FUNCTION
+

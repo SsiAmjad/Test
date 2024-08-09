@@ -1,0 +1,33 @@
+﻿FUNCTION "FC_Simul_Impul" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Simul : "Simul_Poids";
+      Poids_Simul : UInt;
+   END_VAR
+
+   VAR_TEMP 
+      Ret_RD_SYS_T : Int;
+      Tps_Ecoul : Time;
+   END_VAR
+
+
+BEGIN
+	//============================= Simulateur Impuls =============================//
+	IF NOT #Simul._PremFois THEN
+	    #Ret_RD_SYS_T := RD_SYS_T(#Simul._TpsPicke);
+	    #Simul._PremFois := TRUE;
+	END_IF;
+	IF "Tempo"(Duree := #Simul._TpsEvol, Tps_Picke := #Simul._TpsPicke, Anticip := FALSE, Tps_Passe => #Tps_Ecoul) THEN
+	    IF (#Simul._ValBascInc AND NOT #Simul._StopValBasc) THEN
+	        #Poids_Simul := #Poids_Simul + 1;
+	    END_IF;
+	    // IF ( #Simul.Val_Basc_Dec AND NOT #Simul.Stop_Val_Basc) THEN
+	    //     #Poids_Incorp := #Poids_Incorp - #Simul.Pas_Dec;
+	    // END_IF;
+	    #Ret_RD_SYS_T := RD_SYS_T(#Simul._TpsPicke);
+	END_IF;
+	//============================= Simulateur Impuls =============================//
+	
+END_FUNCTION
+

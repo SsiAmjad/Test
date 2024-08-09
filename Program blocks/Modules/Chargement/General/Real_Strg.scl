@@ -1,0 +1,32 @@
+﻿FUNCTION "Real_Strg" : Void
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : SAS
+VERSION : 0.1
+   VAR_INPUT 
+      "Real" : Real;
+      Size : USInt;
+      NmbDecimal : USInt;
+   END_VAR
+
+   VAR_OUTPUT 
+      "String" : String;
+   END_VAR
+
+   VAR_TEMP 
+      aString : String;
+      aString_1 : String;
+   END_VAR
+
+
+BEGIN
+	//#String := ''; 
+	VAL_STRG(IN := #Real, //Val a convertir
+	         SIZE := #Size, //Nombre de caracteres du resultat
+	         PREC := #NmbDecimal, //Pour les chiffres a virgule, nombre de decimales
+	         FORMAT := 0, //Choix du tupe de conversion
+	         P := 1, //Emplacement du premier caracter
+	         OUT => #String ); //resultat
+	
+	#aString_1 := #String;
+END_FUNCTION
+

@@ -1,0 +1,30 @@
+﻿FUNCTION "MemoPoidsCase" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      IndexNouvCase : USInt;
+   END_VAR
+
+   VAR_IN_OUT 
+      Chpont : "S_ChargPont";
+   END_VAR
+
+
+BEGIN
+	IF #Chpont._Ptzs._Cases[#Chpont._Commande._Case]._FgTareOK <>0 THEN
+	    #Chpont._Ptzs._Cases[#Chpont._Commande._Case]._QteDejaChargee := #Chpont._ChargCommun._Vbasc - #Chpont._Ptzs._Cases[#Chpont._Commande._Case]._Tare;
+	    #Chpont._Ptzs._Cases[#Chpont._Commande._Case]._FgTareOK:=0;
+	    #Chpont._Ptzs._Cases[#Chpont._Commande._Case]._Brut := #Chpont._ChargCommun._Vbasc;
+	    #Chpont._Ptzs._Cases[#IndexNouvCase]._Tare := #Chpont._ChargCommun._Vbasc;
+	    #Chpont._Ptzs._Cases[#IndexNouvCase]._FgTareOK := 1;
+	    IF "fgbase" AND #Chpont._GestQteCaseAuto THEN
+	        // FinExpCases(pt_zs); pt_zs->No_Lot, pt_zs->Cases[pt_zs->noCaseEc].noCase, pt_zs->Cases[pt_zs->noCaseEc].tare, pt_zs->Cases[pt_zs->noCaseEc].brut);
+	        ;
+	    END_IF;
+	    
+	END_IF;
+	
+	#Chpont._Commande._Case:= #IndexNouvCase;
+	
+END_FUNCTION
+

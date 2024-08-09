@@ -1,0 +1,187 @@
+﻿FUNCTION "Initialisation_Liquides" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+BEGIN
+	//--------------------- Affectation des mobiles pour liquide1 MLG1 ---------------------//
+	"DB_Dosage".LIQUIDES_MLG[0]._Mob_Mlg := "Index_Mobile"('MLG1');
+	"DB_Dosage".LIQUIDES_MLG[0]._Mob_Pompe := "Index_Mobile"('PMP_LIQ1');
+	// "DB_Dosage".LIQUIDES_MLG[0]._Mob_Vanne_Air := "Index_Mobile"('');
+	"DB_Dosage".LIQUIDES_MLG[0]._Mob_Vanne1 := "Index_Mobile"('VN1_MLG1');
+	// "DB_Dosage".LIQUIDES_MLG[0]._Mob_Vanne2 := "Index_Mobile"('');
+	"DB_Dosage".LIQUIDES_MLG[0]._Type_Compteur := 'M';
+	"DB_Dosage".LIQUIDES_MLG[0]._Val_Impuls := 0.01;
+	//--------------------- SYNCHRONISATION GRAFCET LIQUIDE1 MLG1 ---------------------//
+	"DB_Dosage".LIQUIDES_MLG[0].Lst_Taches_Att_Debut_Mel[0]._Tache := "TAC_MELANG1";
+	"DB_Dosage".LIQUIDES_MLG[0].Lst_Taches_Att_Debut_Mel[0]._Niv := "NIV_MLG_DEBUT_REMP";
+	"DB_Dosage".LIQUIDES_MLG[0].Lst_Taches_Att_Fin_Melang[0]._Tache := "TAC_MELANG1";
+	"DB_Dosage".LIQUIDES_MLG[0].Lst_Taches_Att_Fin_Melang[0]._Niv := "NIV_MLG_PRETE_VIDANGE";
+	"DB_Dosage".LIQUIDES_MLG[0].Lst_Taches_Att_Fin_Premel[0]._Tache := "TAC_MELANG1";
+	"DB_Dosage".LIQUIDES_MLG[0].Lst_Taches_Att_Fin_Premel[0]._Niv := "NIV_MLG_FIN_PREMELANG";
+	//--------------------- Infos LIQUIDE1 MLG1 ---------------------//
+	"DB_Dosage".LIQUIDES_MLG[0]._Num_Liq := 1;
+	"DB_Dosage".LIQUIDES_MLG[0]._Ordre := 1;
+	//--------------------- Affectation des mobiles pour liquide2 MLG1 ---------------------//
+	"DB_Dosage".LIQUIDES_MLG[1]._Mob_Mlg := "Index_Mobile"('MLG1');
+	"DB_Dosage".LIQUIDES_MLG[1]._Mob_Pompe := "Index_Mobile"('PMP_LIQ2');
+	// "DB_Dosage".LIQUIDES_MLG[1]._Mob_Vanne_Air := "Index_Mobile"('');
+	"DB_Dosage".LIQUIDES_MLG[1]._Mob_Vanne1 := "Index_Mobile"('VN2_MLG1');
+	// "DB_Dosage".LIQUIDES_MLG[1]._Mob_Vanne2 := "Index_Mobile"('');
+	"DB_Dosage".LIQUIDES_MLG[1]._Type_Compteur := 'M';
+	"DB_Dosage".LIQUIDES_MLG[1]._Val_Impuls := 0.01;
+	//--------------------- SYNCHRONISATION GRAFCET LIQUIDE2 MLG1 ---------------------//
+	"DB_Dosage".LIQUIDES_MLG[1].Lst_Taches_Att_Debut_Mel[0]._Tache := "TAC_MELANG1";
+	"DB_Dosage".LIQUIDES_MLG[1].Lst_Taches_Att_Debut_Mel[0]._Niv := "NIV_MLG_DEBUT_REMP";
+	"DB_Dosage".LIQUIDES_MLG[1].Lst_Taches_Att_Fin_Melang[0]._Tache := "TAC_MELANG1";
+	"DB_Dosage".LIQUIDES_MLG[1].Lst_Taches_Att_Fin_Melang[0]._Niv := "NIV_MLG_PRETE_VIDANGE";
+	"DB_Dosage".LIQUIDES_MLG[1].Lst_Taches_Att_Fin_Premel[0]._Tache := "TAC_MELANG1";
+	"DB_Dosage".LIQUIDES_MLG[1].Lst_Taches_Att_Fin_Premel[0]._Niv := "NIV_MLG_FIN_PREMELANG";
+	//--------------------- Infos LIQUIDE2 MLG1 ---------------------//
+	"DB_Dosage".LIQUIDES_MLG[1]._Num_Liq := 2;
+	"DB_Dosage".LIQUIDES_MLG[1]._Ordre := 2;
+	//--------------------- Affectation des mobiles pour liquide3 MLG1 ---------------------//
+	"DB_Dosage".LIQUIDES_MLG[2]._Mob_Mlg := "Index_Mobile"('MLG1');
+	"DB_Dosage".LIQUIDES_MLG[2]._Mob_Pompe := "Index_Mobile"('PMP_LIQ3');
+	// "DB_Dosage".LIQUIDES_MLG[2]._Mob_Vanne_Air := "Index_Mobile"('');
+	"DB_Dosage".LIQUIDES_MLG[2]._Mob_Vanne1 := "Index_Mobile"('VN3_MLG1');
+	// "DB_Dosage".LIQUIDES_MLG[2]._Mob_Vanne2 := "Index_Mobile"('');
+	"DB_Dosage".LIQUIDES_MLG[2]._Type_Compteur := 'M';
+	"DB_Dosage".LIQUIDES_MLG[2]._Val_Impuls := 0.01;
+	//--------------------- SYNCHRONISATION GRAFCET LIQUIDE3 MLG1 ---------------------//
+	"DB_Dosage".LIQUIDES_MLG[2].Lst_Taches_Att_Debut_Mel[0]._Tache := "TAC_MELANG1";
+	"DB_Dosage".LIQUIDES_MLG[2].Lst_Taches_Att_Debut_Mel[0]._Niv := "NIV_MLG_DEBUT_REMP";
+	"DB_Dosage".LIQUIDES_MLG[2].Lst_Taches_Att_Fin_Melang[0]._Tache := "TAC_MELANG1";
+	"DB_Dosage".LIQUIDES_MLG[2].Lst_Taches_Att_Fin_Melang[0]._Niv := "NIV_MLG_PRETE_VIDANGE";
+	"DB_Dosage".LIQUIDES_MLG[2].Lst_Taches_Att_Fin_Premel[0]._Tache := "TAC_MELANG1";
+	"DB_Dosage".LIQUIDES_MLG[2].Lst_Taches_Att_Fin_Premel[0]._Niv := "NIV_MLG_FIN_PREMELANG";
+	//--------------------- Infos LIQUIDE3 MLG1 ---------------------//
+	"DB_Dosage".LIQUIDES_MLG[2]._Num_Liq := 3;
+	"DB_Dosage".LIQUIDES_MLG[2]._Ordre := 1;
+	//--------------------- Affectation des mobiles pour liquide4 MLG1 ---------------------//
+	"DB_Dosage".LIQUIDES_MLG[3]._Mob_Mlg := "Index_Mobile"('MLG1');
+	"DB_Dosage".LIQUIDES_MLG[3]._Mob_Pompe := "Index_Mobile"('PMP_LIQ4');
+	// "DB_Dosage".LIQUIDES_MLG[3]._Mob_Vanne_Air := "Index_Mobile"('');
+	"DB_Dosage".LIQUIDES_MLG[3]._Mob_Vanne1 := "Index_Mobile"('VN4_MLG1');
+	// "DB_Dosage".LIQUIDES_MLG[3]._Mob_Vanne2 := "Index_Mobile"('');
+	"DB_Dosage".LIQUIDES_MLG[3]._Type_Compteur := 'M';
+	"DB_Dosage".LIQUIDES_MLG[3]._Val_Impuls := 0.01;
+	//--------------------- SYNCHRONISATION GRAFCET LIQUIDE4 ---------------------//
+	"DB_Dosage".LIQUIDES_MLG[3].Lst_Taches_Att_Debut_Mel[0]._Tache := "TAC_MELANG1";
+	"DB_Dosage".LIQUIDES_MLG[3].Lst_Taches_Att_Debut_Mel[0]._Niv := "NIV_MLG_DEBUT_REMP";
+	"DB_Dosage".LIQUIDES_MLG[3].Lst_Taches_Att_Fin_Melang[0]._Tache := "TAC_MELANG1";
+	"DB_Dosage".LIQUIDES_MLG[3].Lst_Taches_Att_Fin_Melang[0]._Niv := "NIV_MLG_PRETE_VIDANGE";
+	"DB_Dosage".LIQUIDES_MLG[3].Lst_Taches_Att_Fin_Premel[0]._Tache := "TAC_MELANG1";
+	"DB_Dosage".LIQUIDES_MLG[3].Lst_Taches_Att_Fin_Premel[0]._Niv := "NIV_MLG_FIN_PREMELANG";
+	//--------------------- Infos LIQUIDE4 MLG1 ---------------------//
+	"DB_Dosage".LIQUIDES_MLG[3]._Num_Liq := 4;
+	"DB_Dosage".LIQUIDES_MLG[3]._Ordre := 1;
+	//--------------------- Affectation des mobiles pour liquide5 MLG1 ---------------------//
+	"DB_Dosage".LIQUIDES_MLG[4]._Mob_Mlg := "Index_Mobile"('MLG1');
+	"DB_Dosage".LIQUIDES_MLG[4]._Mob_Pompe := "Index_Mobile"('PMP_LIQ5');
+	// "DB_Dosage".LIQUIDES_MLG[4]._Mob_Vanne_Air := "Index_Mobile"('');
+	"DB_Dosage".LIQUIDES_MLG[4]._Mob_Vanne1 := "Index_Mobile"('VN5_MLG1');
+	// "DB_Dosage".LIQUIDES_MLG[4]._Mob_Vanne2 := "Index_Mobile"('');
+	"DB_Dosage".LIQUIDES_MLG[4]._Type_Compteur := 'M';
+	"DB_Dosage".LIQUIDES_MLG[4]._Val_Impuls := 0.01;
+	//--------------------- SYNCHRONISATION GRAFCET LIQUIDE5 MLG1 ---------------------//
+	"DB_Dosage".LIQUIDES_MLG[4].Lst_Taches_Att_Debut_Mel[0]._Tache := "TAC_MELANG1";
+	"DB_Dosage".LIQUIDES_MLG[4].Lst_Taches_Att_Debut_Mel[0]._Niv := "NIV_MLG_DEBUT_REMP";
+	"DB_Dosage".LIQUIDES_MLG[4].Lst_Taches_Att_Fin_Melang[0]._Tache := "TAC_MELANG1";
+	"DB_Dosage".LIQUIDES_MLG[4].Lst_Taches_Att_Fin_Melang[0]._Niv := "NIV_MLG_PRETE_VIDANGE";
+	"DB_Dosage".LIQUIDES_MLG[4].Lst_Taches_Att_Fin_Premel[0]._Tache := "TAC_MELANG1";
+	"DB_Dosage".LIQUIDES_MLG[4].Lst_Taches_Att_Fin_Premel[0]._Niv := "NIV_MLG_FIN_PREMELANG";
+	//--------------------- Infos LIQUIDE5 MLG1 ---------------------//
+	"DB_Dosage".LIQUIDES_MLG[4]._Num_Liq := 5;
+	"DB_Dosage".LIQUIDES_MLG[4]._Ordre := 1;
+	//--------------------- Affectation des mobiles pour liquide1 MLG2 ---------------------//
+	"DB_Dosage".LIQUIDES_MLG[5]._Mob_Mlg := "Index_Mobile"('MLG2');
+	"DB_Dosage".LIQUIDES_MLG[5]._Mob_Pompe := "Index_Mobile"('PMP_LIQ1');
+	// "DB_Dosage".LIQUIDES_MLG[5]._Mob_Vanne_Air := "Index_Mobile"('');
+	"DB_Dosage".LIQUIDES_MLG[5]._Mob_Vanne1 := "Index_Mobile"('VN1_MLG2');
+	// "DB_Dosage".LIQUIDES_MLG[5]._Mob_Vanne2 := "Index_Mobile"('');
+	"DB_Dosage".LIQUIDES_MLG[5]._Type_Compteur := 'M';
+	"DB_Dosage".LIQUIDES_MLG[5]._Val_Impuls := 0.01;
+	//--------------------- SYNCHRONISATION GRAFCET LIQUIDE1 MLG2 ---------------------//
+	"DB_Dosage".LIQUIDES_MLG[5].Lst_Taches_Att_Debut_Mel[0]._Tache := "TAC_MELANG2";
+	"DB_Dosage".LIQUIDES_MLG[5].Lst_Taches_Att_Debut_Mel[0]._Niv := "NIV_MLG_DEBUT_REMP";
+	"DB_Dosage".LIQUIDES_MLG[5].Lst_Taches_Att_Fin_Melang[0]._Tache := "TAC_MELANG2";
+	"DB_Dosage".LIQUIDES_MLG[5].Lst_Taches_Att_Fin_Melang[0]._Niv := "NIV_MLG_PRETE_VIDANGE";
+	"DB_Dosage".LIQUIDES_MLG[5].Lst_Taches_Att_Fin_Premel[0]._Tache := "TAC_MELANG2";
+	"DB_Dosage".LIQUIDES_MLG[5].Lst_Taches_Att_Fin_Premel[0]._Niv := "NIV_MLG_FIN_PREMELANG";
+	//--------------------- Infos LIQUIDE1 MLG2 ---------------------//
+	"DB_Dosage".LIQUIDES_MLG[5]._Num_Liq := 1;
+	"DB_Dosage".LIQUIDES_MLG[5]._Ordre := 1;
+	//--------------------- Affectation des mobiles pour liquide2 MLG2 ---------------------//
+	"DB_Dosage".LIQUIDES_MLG[6]._Mob_Mlg := "Index_Mobile"('MLG2');
+	"DB_Dosage".LIQUIDES_MLG[6]._Mob_Pompe := "Index_Mobile"('PMP_LIQ2');
+	// "DB_Dosage".LIQUIDES_MLG[6]._Mob_Vanne_Air := "Index_Mobile"('');
+	"DB_Dosage".LIQUIDES_MLG[6]._Mob_Vanne1 := "Index_Mobile"('VN2_MLG2');
+	// "DB_Dosage".LIQUIDES_MLG[6]._Mob_Vanne2 := "Index_Mobile"('');
+	"DB_Dosage".LIQUIDES_MLG[6]._Type_Compteur := 'M';
+	"DB_Dosage".LIQUIDES_MLG[6]._Val_Impuls := 0.01;
+	//--------------------- SYNCHRONISATION GRAFCET LIQUIDE2 MLG2 ---------------------//
+	"DB_Dosage".LIQUIDES_MLG[6].Lst_Taches_Att_Debut_Mel[0]._Tache := "TAC_MELANG2";
+	"DB_Dosage".LIQUIDES_MLG[6].Lst_Taches_Att_Debut_Mel[0]._Niv := "NIV_MLG_DEBUT_REMP";
+	"DB_Dosage".LIQUIDES_MLG[6].Lst_Taches_Att_Fin_Melang[0]._Tache := "TAC_MELANG2";
+	"DB_Dosage".LIQUIDES_MLG[6].Lst_Taches_Att_Fin_Melang[0]._Niv := "NIV_MLG_PRETE_VIDANGE";
+	"DB_Dosage".LIQUIDES_MLG[6].Lst_Taches_Att_Fin_Premel[0]._Tache := "TAC_MELANG2";
+	"DB_Dosage".LIQUIDES_MLG[6].Lst_Taches_Att_Fin_Premel[0]._Niv := "NIV_MLG_FIN_PREMELANG";
+	//--------------------- Infos LIQUIDE2 MLG2 ---------------------//
+	"DB_Dosage".LIQUIDES_MLG[6]._Num_Liq := 2;
+	"DB_Dosage".LIQUIDES_MLG[6]._Ordre := 1;
+	//--------------------- Affectation des mobiles pour liquide3 MLG2 ---------------------//
+	"DB_Dosage".LIQUIDES_MLG[7]._Mob_Mlg := "Index_Mobile"('MLG2');
+	"DB_Dosage".LIQUIDES_MLG[7]._Mob_Pompe := "Index_Mobile"('PMP_LIQ3');
+	// "DB_Dosage".LIQUIDES_MLG[7]._Mob_Vanne_Air := "Index_Mobile"('');
+	"DB_Dosage".LIQUIDES_MLG[7]._Mob_Vanne1 := "Index_Mobile"('VN3_MLG2');
+	// "DB_Dosage".LIQUIDES_MLG[7]._Mob_Vanne2 := "Index_Mobile"('');
+	"DB_Dosage".LIQUIDES_MLG[7]._Type_Compteur := 'M';
+	"DB_Dosage".LIQUIDES_MLG[7]._Val_Impuls := 0.01;
+	//--------------------- SYNCHRONISATION GRAFCET LIQUIDE3 MLG2 ---------------------//
+	"DB_Dosage".LIQUIDES_MLG[7].Lst_Taches_Att_Debut_Mel[0]._Tache := "TAC_MELANG2";
+	"DB_Dosage".LIQUIDES_MLG[7].Lst_Taches_Att_Debut_Mel[0]._Niv := "NIV_MLG_DEBUT_REMP";
+	"DB_Dosage".LIQUIDES_MLG[7].Lst_Taches_Att_Fin_Melang[0]._Tache := "TAC_MELANG2";
+	"DB_Dosage".LIQUIDES_MLG[7].Lst_Taches_Att_Fin_Melang[0]._Niv := "NIV_MLG_PRETE_VIDANGE";
+	"DB_Dosage".LIQUIDES_MLG[7].Lst_Taches_Att_Fin_Premel[0]._Tache := "TAC_MELANG2";
+	"DB_Dosage".LIQUIDES_MLG[7].Lst_Taches_Att_Fin_Premel[0]._Niv := "NIV_MLG_FIN_PREMELANG";
+	//--------------------- Infos LIQUIDE3 MLG2 ---------------------//
+	"DB_Dosage".LIQUIDES_MLG[7]._Num_Liq := 3;
+	"DB_Dosage".LIQUIDES_MLG[7]._Ordre := 1;
+	//--------------------- Affectation des mobiles pour liquide4 MLG2 ---------------------//
+	"DB_Dosage".LIQUIDES_MLG[8]._Mob_Mlg := "Index_Mobile"('MLG2');
+	"DB_Dosage".LIQUIDES_MLG[8]._Mob_Pompe := "Index_Mobile"('PMP_LIQ4');
+	// "DB_Dosage".LIQUIDES_MLG[8]._Mob_Vanne_Air := "Index_Mobile"('');
+	"DB_Dosage".LIQUIDES_MLG[8]._Mob_Vanne1 := "Index_Mobile"('VN4_MLG2');
+	// "DB_Dosage".LIQUIDES_MLG[8]._Mob_Vanne2 := "Index_Mobile"('');
+	"DB_Dosage".LIQUIDES_MLG[8]._Type_Compteur := 'M';
+	"DB_Dosage".LIQUIDES_MLG[8]._Val_Impuls := 0.01;
+	//--------------------- SYNCHRONISATION GRAFCET LIQUIDE4 MLG2 ---------------------//
+	"DB_Dosage".LIQUIDES_MLG[8].Lst_Taches_Att_Debut_Mel[0]._Tache := "TAC_MELANG2";
+	"DB_Dosage".LIQUIDES_MLG[8].Lst_Taches_Att_Debut_Mel[0]._Niv := "NIV_MLG_DEBUT_REMP";
+	"DB_Dosage".LIQUIDES_MLG[8].Lst_Taches_Att_Fin_Melang[0]._Tache := "TAC_MELANG2";
+	"DB_Dosage".LIQUIDES_MLG[8].Lst_Taches_Att_Fin_Melang[0]._Niv := "NIV_MLG_PRETE_VIDANGE";
+	"DB_Dosage".LIQUIDES_MLG[8].Lst_Taches_Att_Fin_Premel[0]._Tache := "TAC_MELANG2";
+	"DB_Dosage".LIQUIDES_MLG[8].Lst_Taches_Att_Fin_Premel[0]._Niv := "NIV_MLG_FIN_PREMELANG";
+	//--------------------- Infos LIQUIDE4 MLG2 ---------------------//
+	"DB_Dosage".LIQUIDES_MLG[8]._Num_Liq := 4;
+	"DB_Dosage".LIQUIDES_MLG[8]._Ordre := 1;
+	//--------------------- Affectation des mobiles pour liquide5 MLG2 ---------------------//
+	"DB_Dosage".LIQUIDES_MLG[9]._Mob_Mlg := "Index_Mobile"('MLG2');
+	"DB_Dosage".LIQUIDES_MLG[9]._Mob_Pompe := "Index_Mobile"('PMP_LIQ5');
+	// "DB_Dosage".LIQUIDES_MLG[9]._Mob_Vanne_Air := "Index_Mobile"('');
+	"DB_Dosage".LIQUIDES_MLG[9]._Mob_Vanne1 := "Index_Mobile"('VN5_MLG2');
+	// "DB_Dosage".LIQUIDES_MLG[9]._Mob_Vanne2 := "Index_Mobile"('');
+	"DB_Dosage".LIQUIDES_MLG[9]._Type_Compteur := 'M';
+	"DB_Dosage".LIQUIDES_MLG[9]._Val_Impuls := 0.01;
+	//--------------------- SYNCHRONISATION GRAFCET LIQUIDE5 MLG2 ---------------------//
+	"DB_Dosage".LIQUIDES_MLG[9].Lst_Taches_Att_Debut_Mel[0]._Tache := "TAC_MELANG2";
+	"DB_Dosage".LIQUIDES_MLG[9].Lst_Taches_Att_Debut_Mel[0]._Niv := "NIV_MLG_DEBUT_REMP";
+	"DB_Dosage".LIQUIDES_MLG[9].Lst_Taches_Att_Fin_Melang[0]._Tache := "TAC_MELANG2";
+	"DB_Dosage".LIQUIDES_MLG[9].Lst_Taches_Att_Fin_Melang[0]._Niv := "NIV_MLG_PRETE_VIDANGE";
+	"DB_Dosage".LIQUIDES_MLG[9].Lst_Taches_Att_Fin_Premel[0]._Tache := "TAC_MELANG2";
+	"DB_Dosage".LIQUIDES_MLG[9].Lst_Taches_Att_Fin_Premel[0]._Niv := "NIV_MLG_FIN_PREMELANG";
+	//--------------------- Infos LIQUIDE5 MLG2 ---------------------//
+	"DB_Dosage".LIQUIDES_MLG[9]._Num_Liq := 5;
+	"DB_Dosage".LIQUIDES_MLG[9]._Ordre := 1;
+END_FUNCTION
+

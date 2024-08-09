@@ -1,0 +1,49 @@
+﻿FUNCTION "FC_Recup_Rep_Def" : String
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Index_Def : USInt;
+   END_VAR
+
+   VAR_OUTPUT 
+      Reponse_Ecrit : String;
+   END_VAR
+
+
+BEGIN
+	
+	
+	IF "DB_BIBLIOTHEQUE".Defaut[#Index_Def].Acq_Choisi > 0 THEN
+	    #Reponse_Ecrit := '';
+	    #Reponse_Ecrit := "DB_BIBLIOTHEQUE".Defaut[#Index_Def].Text_Reponse;
+	    CASE "DB_BIBLIOTHEQUE".Defaut[#Index_Def].Acq_Choisi OF
+	        1:
+	            #FC_Recup_Rep_Def := "DB_BIBLIOTHEQUE".Defaut[#Index_Def].Acq1;
+	        2:
+	            #FC_Recup_Rep_Def := "DB_BIBLIOTHEQUE".Defaut[#Index_Def].Acq2;
+	        3:
+	            #FC_Recup_Rep_Def := "DB_BIBLIOTHEQUE".Defaut[#Index_Def].Acq3;
+	        4:
+	            #FC_Recup_Rep_Def := "DB_BIBLIOTHEQUE".Defaut[#Index_Def].Acq4;
+	        5:
+	            #FC_Recup_Rep_Def := "DB_BIBLIOTHEQUE".Defaut[#Index_Def].Acq5;
+	        6:
+	            #FC_Recup_Rep_Def := "DB_BIBLIOTHEQUE".Defaut[#Index_Def].Acq6;
+	        7:
+	            #FC_Recup_Rep_Def := "DB_BIBLIOTHEQUE".Defaut[#Index_Def].Acq7;
+	        8:
+	            #FC_Recup_Rep_Def := "DB_BIBLIOTHEQUE".Defaut[#Index_Def].Acq8;
+	        ELSE
+	            #FC_Recup_Rep_Def := '';
+	    END_CASE;
+	    
+	ELSE
+	    #FC_Recup_Rep_Def := '';
+	    
+	END_IF;
+	"DB_BIBLIOTHEQUE".Defaut[#Index_Def].Reponse_Archiv := #FC_Recup_Rep_Def;
+	
+	
+	
+END_FUNCTION
+

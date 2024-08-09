@@ -1,0 +1,823 @@
+﻿FUNCTION "SurvDosBenne" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Fg_Base : Bool;
+      Raz_Pt_Zs : "S_Suivi_Dosage";
+   END_VAR
+
+   VAR_IN_OUT 
+      SurvDosBenne : "S_DOSBENNE";
+   END_VAR
+
+   VAR_TEMP 
+      Ret_Test_Lot_Att_Tache : SInt;
+      Ret_Maj_Niv : SInt;
+      Ret_Dem_Mobile : SInt;
+      Ret_Test_Pres_Prd : SInt;
+      Pres_Prd : Bool;
+      Ret_Vid_Mob : SInt;
+      Ret_Maj_Pres_Prd : SInt;
+      Ret_Test_Niv : SInt;
+      Niv_Tache : USInt;
+      Ret_RD_Sys_T : Int;
+      Ret_Arr_Imm_Mobile : Int;
+      Ret_Libere_Zone_Suivi : Int;
+      Ret_Test_Niv_Taches : Bool;
+      Ret_Agitation : Bool;
+      i : USInt;
+      Tps_Ecoul : Time;
+      Zone_Suivi : SInt;
+      Ret_Test : SInt;
+      Tps_Act : Date_And_Time;
+      Raz_Circ_Ext : Array[0..9] of "S_CirExt";
+      Raz_Benne : "S_Benne" := ((), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), [10(-1)], (), (), (), (), (), (), (), (), (), (), (), (), (), [()], (), (), (), (), (), (), (), (), (), (), (), (), (), (((), (), (), (), (), (), ()), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), (), ()), ((), (), (), (), (), (), (), (), ()), ((), (), (), ()), [((), (), (), (), ()), ((), (), (), (), ()), ((), (), (), (), ()), ((), (), (), (), ()), ((), (), (), (), ()), ((), (), (), (), ()), ((), (), (), (), ()), ((), (), (), (), ()), ((), (), (), (), ()), ((), (), (), (), ())]);
+      Raz_Compo : "S_Com_Fab";
+      j : SInt;
+      Msg_Defaut : String;
+      k : SInt;
+      Tol_Sup : String;
+      Ecart : String;
+      Tol_Sup_conform : String;
+      Ret_Proc_Maj_Stock : String;
+      Ret_Proc_Chang_Org : String;
+      Err_Sql : String;
+      Aff_Def : Bool;
+      Mess_Def : String;
+   END_VAR
+
+   VAR CONSTANT 
+      Etp_Repos : SInt := 0;
+      Etp_Att_Cond : SInt := 1;
+      Etp_Att_Cond_Supp : SInt := 2;
+      Etp_Lancement : SInt := 3;
+      Etp_Dosage_Lance : SInt := 4;
+      Etp_Vidange_Pesee : SInt := 5;
+      Etp_Ctrl_Tol : SInt := 7;
+      Etp_Fin_Dosage : SInt := 8;
+      Etp_Att_Fin_Remp : SInt := 9;
+      Etp_Att_Aval_Libre : SInt := 10;
+      Etp_Vidange_Benne : SInt := 11;
+      Etp_Arret_Vidange_Benne : SInt := 12;
+      Etp_Defaut_Vidange_Benne : SInt := 13;
+      Etp_Fin_Vidange_Benne : SInt := 14;
+      Etp_Att_Fin_Dos_Autres_Bennes : SInt := 15;
+      Etp_Maj_Base : SInt := 16;
+      Etp_Fin_Lot_Benne : SInt := 17;
+      Etp_Att_Acquit : SInt := 18;
+      Niveau_Benne_Repos : USInt := 1;
+      Niveau_Benne_Attente_Stabilite_Remplissage : USInt := 10;
+      Niveau_Benne_Extract_GV : USInt := 30;
+      Niveau_Benne_Extract_PV : USInt := 40;
+      Niveau_Benne_Attente_Stabilite_Fin_Dosage : USInt := 50;
+      Niveau_Benne_Fin_Dosage : USInt := 60;
+      Niveau_Benne_Defaut_Evol_Poids : USInt := 70;
+      Niveau_Benne_Vidange : USInt := 100;
+      Niveau_Benne_Fin_Vidange : USInt := 150;
+      Niveau_Benne_Attente_Acquitement : USInt := 0;
+      Demande_Dosage : USInt := 1;
+      Demande_Reprise_Extraction : USInt := 2;
+      Demande_Reprise_Extraction_PV : USInt := 3;
+      Demande_Fin_Dosage : USInt := 4;
+      Demande_Vidange : USInt := 5;
+      Demande_NV_Compo : USInt := 6;
+      Demande_Repos : USInt := 7;
+      NIV_Aval_LIBRE : USInt := 10;
+   END_VAR
+
+
+BEGIN
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | Version | Date       | Autheur     | Ajouts/Modifications                                                   |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | V_1     | 28.11.2023 | I.DAOUDI    | Creation du block                                                      |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	
+	#Ret_RD_Sys_T := RD_SYS_T(#Tps_Act);
+	//============= BOUCLE BENNE =============//
+	"FC_Benne"(Fg_Base:=#Fg_Base,
+	           SurvDosBenne:= #SurvDosBenne,Benne:=#SurvDosBenne.Benne);
+	//============= BOUCLE BENNE =============//
+	//============= Affichage Compo Supervision =============//
+	"FC_Affich_Compo_Superv"(Code_MP:=#SurvDosBenne.Benne.Composant.Code_MP,
+	                         Net:=#SurvDosBenne.Benne.Composant.Net,
+	                         Lst_Compos:=#SurvDosBenne.Lst_Compos,
+	                         Lst_Compos_Affich:=#SurvDosBenne.Lst_Compo_Affich);
+	//============= Affichage Compo Supervision =============//
+	//============= Affichage Etiquette =============//
+	"FC_Affich_Etiquette"(Couleur := #SurvDosBenne.Pt_Zs._SuiviCommun._Couleur,
+	                      Cel_Dest := #SurvDosBenne.Pt_Zs._Cel_Dest,
+	                      CdMat := #SurvDosBenne.Pt_Zs._SuiviCommun._CdMat,
+	                      NoLot := #SurvDosBenne.Pt_Zs._SuiviCommun._NoLot,
+	                      QteLot := #SurvDosBenne.Pt_Zs._SuiviCommun._QteLot,
+	                      Desc_Etp := #SurvDosBenne.Dos_Commun.Module_Commun._DescEtp,
+	                      Etiquette := #SurvDosBenne.Dos_Commun);
+	//============= Affichage Etiquette =============//
+	CASE #SurvDosBenne.Dos_Commun.Module_Commun._Etp OF
+	    #Etp_Repos:
+	        REGION Traitement Preliminaire "Repos"
+	            IF  #SurvDosBenne.Dos_Commun.Module_Commun._Etp <> #SurvDosBenne.Dos_Commun.Module_Commun._EtpMemo THEN
+	                #SurvDosBenne.Dos_Commun.Module_Commun._DescEtp := 'REPOS';
+	                #SurvDosBenne.Pt_Zs := #Raz_Pt_Zs;
+	                //============= Affichage Compo Supervision =============//
+	                FOR #i := 0 TO "Nbr_Max_Compo" DO
+	                    #SurvDosBenne.Lst_Compos[#i] := #Raz_Compo;
+	                END_FOR;
+	                //============= Affichage Compo Supervision =============//
+	                #SurvDosBenne.Dos_Commun.Module_Commun._EtpMemo  := #SurvDosBenne.Dos_Commun.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Traitement Preliminaire "Repos"
+	        REGION Traitement Cyclique "Repos"
+	            #Ret_Test_Lot_Att_Tache := "Test_Lot_Att_Tache"(Num_Tache := #SurvDosBenne.Dos_Commun.Module_Commun._Tache,
+	                                                            Num_Zone => #SurvDosBenne.Dos_Commun.Module_Commun._NumZone);
+	            IF #Ret_Test_Lot_Att_Tache = 1 THEN
+	                #SurvDosBenne.Pt_Zs := "DB_Data_Dosage"."THIS"[#SurvDosBenne.Dos_Commun.Module_Commun._NumZone];
+	                // Recuperation des composants a doser dans ce lieux
+	                FOR #i := 0 TO "Nbr_Max_Compo" DO
+	                    IF #SurvDosBenne.Pt_Zs._Lst_Compos[#i].Incorpo = #SurvDosBenne.Benne.Nom THEN
+	                        #SurvDosBenne.Lst_Compos[#k] := #SurvDosBenne.Pt_Zs._Lst_Compos[#i];
+	                        #k := #k + 1;
+	                    END_IF;
+	                END_FOR;
+	                #Ret_Maj_Niv := "Maj_Niv"(Num_Zone := #SurvDosBenne.Dos_Commun.Module_Commun._NumZone,
+	                                          Num_Tache := #SurvDosBenne.Dos_Commun.Module_Commun._Tache,
+	                                          Niveau := "NIV_SURDOS_DEBUT_LOT");
+	                #SurvDosBenne.Pt_Zs._Fin_Remplissage := 0;
+	                #SurvDosBenne.FgArretVidange := 0;
+	                #SurvDosBenne.Dos_Commun.Module_Commun._Etp := #Etp_Att_Cond;
+	                RETURN;
+	            END_IF;
+	        END_REGION Traitement Cyclique "Repos"
+	    #Etp_Att_Cond:
+	        REGION Traitement Preliminaire "Att_Cond"
+	            IF #SurvDosBenne.Dos_Commun.Module_Commun._Etp <> #SurvDosBenne.Dos_Commun.Module_Commun._EtpMemo THEN
+	                #SurvDosBenne.Dos_Commun.Module_Commun._DescEtp := 'ATT COND';
+	                #SurvDosBenne.Dos_Commun.Module_Commun._EtpMemo := #SurvDosBenne.Dos_Commun.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Traitement Preliminaire "Att_Cond"
+	        REGION Traitement Cyclique "Att_Cond"
+	            // Verification des etats mobiles
+	            IF "FC_Verif_Cond_Dos_Mob"(Benne := #SurvDosBenne.Benne) = -1 THEN
+	                RETURN;
+	            END_IF;
+	            // Fonctions mise a disposition pour toute autre condition
+	            IF NOT "Cond_Lancement"() THEN
+	                RETURN;
+	            END_IF; 
+	            #SurvDosBenne.Dos_Commun.Module_Commun._Etp := #Etp_Att_Cond_Supp;
+	        END_REGION Traitement Cyclique "Att_Cond"
+	    #Etp_Att_Cond_Supp:
+	        REGION Traitement Preliminaire "Att_Cond_Supp"
+	            IF #SurvDosBenne.Dos_Commun.Module_Commun._Etp <> #SurvDosBenne.Dos_Commun.Module_Commun._EtpMemo THEN
+	                #SurvDosBenne.Dos_Commun.Module_Commun._DescEtp := 'ATT COND SUPP';
+	                #SurvDosBenne.Dos_Commun.Module_Commun._EtpMemo := #SurvDosBenne.Dos_Commun.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Traitement Preliminaire "Att_Cond_Supp"
+	        REGION Traitement Cyclique "Att_Cond_Supp"
+	            // Fonctions mise a disposition pour toute autre condition supplementaire
+	            IF NOT "Cond_Lancement_Supp"() THEN
+	                RETURN;
+	            END_IF;
+	            #SurvDosBenne.Dos_Commun.Module_Commun._Etp := #Etp_Lancement;
+	        END_REGION Traitement Cyclique "Att_Cond_Supp"
+	    #Etp_Lancement:
+	        REGION Traitement Preliminaire "Lancement"
+	            IF #SurvDosBenne.Dos_Commun.Module_Commun._Etp <> #SurvDosBenne.Dos_Commun.Module_Commun._EtpMemo  THEN
+	                #SurvDosBenne.Dos_Commun.Module_Commun._DescEtp := 'LANCEMENT';
+	                #SurvDosBenne.Dos_Commun.Module_Commun._EtpMemo := #SurvDosBenne.Dos_Commun.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Traitement Preliminaire "Lancement"
+	        REGION Traitement Cyclique "Lancement"
+	            // Action eventuelle avant dosage benne
+	            "FC_ActionAvDosage"(#SurvDosBenne);
+	            //============  Recherche Composant a doser ============//
+	            FOR #i := 0 TO "Nbr_Max_Compo" DO
+	                IF NOT #SurvDosBenne.Lst_Compos[#i].Fin_Dos AND #SurvDosBenne.Lst_Compos[#i].Code_MP <> '' THEN
+	                    #SurvDosBenne.Benne.Composant := #SurvDosBenne.Lst_Compos[#i];
+	                    //============ RENSEIGNEMENT DU COMPOSANT ============//
+	                    #SurvDosBenne.Benne.Composant.Incorpo_Reel := #SurvDosBenne.Benne.Nom;
+	                    //============ RENSEIGNEMENT DU COMPOSANT ============//
+	                    #SurvDosBenne.Benne.Index_Compo_Enc := #i;
+	                    #SurvDosBenne.Benne.Demande := #Demande_Dosage;
+	                    "FC_Rech_Cir_Ext"(#SurvDosBenne);
+	                    EXIT;
+	                END_IF;
+	            END_FOR;
+	            //============  Recherche Composant a doser ============//
+	            // Niveau debut dosage
+	            #Ret_Maj_Niv := "Maj_Niv"(Num_Zone := #SurvDosBenne.Dos_Commun.Module_Commun._NumZone,
+	                                      Num_Tache := #SurvDosBenne.Dos_Commun.Module_Commun._Tache,
+	                                      Niveau := "NIV_SURDOS_DEBUT_LOT");
+	            
+	            #SurvDosBenne.Dos_Commun.Module_Commun._Etp := #Etp_Dosage_Lance;
+	        END_REGION Traitement Cyclique "lancement"
+	    #Etp_Dosage_Lance:
+	        REGION Traitement Preliminaire "Dosage Lance"
+	            IF #SurvDosBenne.Dos_Commun.Module_Commun._Etp <> #SurvDosBenne.Dos_Commun.Module_Commun._EtpMemo THEN
+	                #SurvDosBenne.Dos_Commun.Module_Commun._DescEtp := 'DOSAGE LANCE';
+	                //Raz Demande
+	                #SurvDosBenne.Benne.Demande := 0;
+	                #SurvDosBenne.Dos_Commun.Module_Commun._EtpPrec := #SurvDosBenne.Dos_Commun.Module_Commun._Etp;
+	                //=== Traitement cas retour de defaut ===//
+	                IF #SurvDosBenne.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #SurvDosBenne.Dial_Def.Num_Def_Etape OF
+	                        0:
+	                            GOTO Dosage_Lance_DEF0;
+	                        1:
+	                            GOTO Dosage_Lance_DEF1;
+	                        2:
+	                            GOTO Dosage_Lance_DEF2;
+	                    END_CASE;
+	                END_IF;
+	                //=== Traitement cas retour de defaut ===//
+	                #Ret_RD_Sys_T := RD_SYS_T(#SurvDosBenne.Benne.Composant.Tps_Picke_Deb_Dos);
+	                #SurvDosBenne.Benne.Composant.Deb_Extr := "Tps_Mob"(#SurvDosBenne.Benne.Circuit_Extr[0]._IndexMob);
+	                #SurvDosBenne.Dos_Commun.Module_Commun._EtpMemo := #SurvDosBenne.Dos_Commun.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Traitement Preliminaire "Dosage Lance"
+	        REGION Traitement Cyclique "Dosage Lance"
+	            // Verification defaut evolution poids
+	            IF #SurvDosBenne.Benne.Niv_Grafcet = #Niveau_Benne_Defaut_Evol_Poids THEN
+	                // Update stock compo
+	                #Ret_Proc_Maj_Stock := "Proc_MAJ_Stock"(Compo := #SurvDosBenne.Benne.Composant, Err_Sql=> #Err_Sql , Msg_Def => #Msg_Defaut, Data_Dosage := #SurvDosBenne.Pt_Zs);
+	                IF ("dbSql4SiemensInterface".stSql4SiemensInterface.Observer.xTimeout) THEN
+	                    #Aff_Def := TRUE;
+	                    #Mess_Def := 'Connexion avec la base interrompue';
+	                // ELSIF NOT ((#Ret_Proc_Maj_Stock = 'NOK') OR (#Ret_Proc_Maj_Stock = 'OK')) THEN
+	                //     #Aff_Def := TRUE;
+	                //     #Mess_Def := #Err_Sql;
+	                ELSIF #Ret_Proc_Maj_Stock = 'NOK' OR (#Ret_Proc_Maj_Stock = 'OK' AND #Msg_Defaut <> 'VIDE') THEN
+	                    #Aff_Def := TRUE;
+	                    #Mess_Def := #Msg_Defaut;
+	                END_IF;
+	                IF #Aff_Def THEN
+	                    #Aff_Def := FALSE;
+	                    #SurvDosBenne.Dial_Def.Num_Def_Etape := 0;
+	                    #SurvDosBenne.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base,
+	                                                                           Msg_Defaut := #Mess_Def,
+	                                                                           Type_Defaut := 0,
+	                                                                           Automatisme := #SurvDosBenne.Pt_Zs._SuiviCommun._CdProc,
+	                                                                           Num_Lot := #SurvDosBenne.Pt_Zs._SuiviCommun._NoLot,
+	                                                                           Origine_Defaut := 'SurvDosBenne',
+	                                                                           Libelle_Origine := 'Proc_MAJ_Stock',
+	                                                                           Acq1 := 'Relance',
+	                                                                           Acq2 := '',
+	                                                                           Acq3 := '',
+	                                                                           Acq4 := '',
+	                                                                           Acq5 := '',
+	                                                                           Acq6 := '',
+	                                                                           Acq7 := '',
+	                                                                           Acq8 := '',
+	                                                                           Acq_Choisi := -1,
+	                                                                           Date_Arrivee := #Tps_Act);
+	                    #SurvDosBenne.Dos_Commun.Module_Commun._Etp := #Etp_Att_Acquit;
+	                    RETURN;
+	                END_IF;
+	            
+	                // DIALOGUE DEFEAUT
+	                #SurvDosBenne.Dial_Def.Num_Def_Etape := 1;
+	                #Msg_Defaut := CONCAT(IN1 := 'Defaut Evolution Poids ', IN2 := #SurvDosBenne.Benne.Nom, IN3 := ' , Pour Composant: ', IN4 := #SurvDosBenne.Benne.Composant.Code_MP);
+	                #SurvDosBenne.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base, Msg_Defaut := #Msg_Defaut,
+	                                                                       Type_Defaut := 0,
+	                                                                       Automatisme := #SurvDosBenne.Pt_Zs._SuiviCommun._CdProc,
+	                                                                       Num_Lot := #SurvDosBenne.Pt_Zs._SuiviCommun._NoLot,
+	                                                                       Origine_Defaut := #SurvDosBenne.Benne.Nom,
+	                                                                       Libelle_Origine := #SurvDosBenne.Dos_Commun.Module_Commun._NomTache,
+	                                                                       Acq1 := 'Relance',
+	                                                                       Acq2 := 'Abandon',
+	                                                                       Acq3 := 'Cellule',
+	                                                                       Acq4 := 'CelVide',
+	                                                                       Acq5 := 'Decal',
+	                                                                       Acq6 := 'ChangBenne',
+	                                                                       Acq7 := 'Versac',
+	                                                                       Acq8 := 'Subst',
+	                                                                       Acq_Choisi := -1,
+	                                                                       Date_Arrivee := #Tps_Act);
+	                // Transition vers l'etape defaut
+	                #SurvDosBenne.Dos_Commun.Module_Commun._Etp := #Etp_Att_Acquit;
+	                RETURN;
+	            END_IF;
+	        Dosage_Lance_DEF1:
+	                 //============ Traitement des reponses pour le defaut1 Evolution Poids ============//
+	                 IF (#SurvDosBenne.Dial_Def.Reponse_Def = 'Relance') THEN
+	                     // Demande de reprise extraction
+	                     #SurvDosBenne.Benne.Demande := #Demande_Reprise_Extraction;
+	                     IF #SurvDosBenne.Benne.Niv_Grafcet <> #Niveau_Benne_Extract_GV AND #SurvDosBenne.Benne.Niv_Grafcet <> #Niveau_Benne_Extract_PV THEN
+	                         RETURN;
+	                     END_IF;
+	                     #SurvDosBenne.Benne.Demande := 0;
+	                     #SurvDosBenne.Dos_Commun.Module_Commun._EtpMemo := #SurvDosBenne.Dos_Commun.Module_Commun._Etp;
+	                     // Vider la reponse defaut
+	                     #SurvDosBenne.Dial_Def.Reponse_Def := '';
+	                     RETURN;
+	                 END_IF;
+	                 IF (#SurvDosBenne.Dial_Def.Reponse_Def = 'Abandon') THEN
+	                     // Demande fin dosage
+	                     #SurvDosBenne.Benne.Demande := #Demande_Fin_Dosage;
+	                     IF #SurvDosBenne.Benne.Niv_Grafcet <> #Niveau_Benne_Fin_Dosage THEN
+	                         RETURN;
+	                     END_IF;
+	                     // Vider la reponse defaut
+	                     #SurvDosBenne.Dial_Def.Reponse_Def := '';
+	                     #SurvDosBenne.Dos_Commun.Module_Commun._Etp := #Etp_Fin_Dosage;
+	                     RETURN;
+	                 END_IF;
+	                 IF (#SurvDosBenne.Dial_Def.Reponse_Def = 'Cellule') THEN
+	                     //#SurvDosBenne.Dial_Def.Reponse_Def := '';
+	                     IF "Valid_Cellule"(Cellule:=#SurvDosBenne.Dial_Def.Text_Reponse, TabCel:=#SurvDosBenne.Dos_Commun.Module_Commun._PtCel._TabCel) THEN
+	                         #SurvDosBenne.Benne.Composant.Code_Cel := #SurvDosBenne.Dial_Def.Text_Reponse;
+	                         IF #SurvDosBenne.Fg_Proc_Exec THEN
+	                             #Ret_Proc_Chang_Org := "Proc_Chang_Org"(Nouvelle_Zone := #SurvDosBenne.Benne.Composant.Code_Cel, Err_Sql => #Err_Sql, Msg_Def => #Msg_Defaut,
+	                                                                     Data_Dosage := #SurvDosBenne.Pt_Zs,
+	                                                                     Compo := #SurvDosBenne.Benne.Composant);
+	                         END_IF;
+	
+	                         IF  ("dbSql4SiemensInterface".stSql4SiemensInterface.Observer.xTimeout) THEN
+	                             #Aff_Def := TRUE;
+	                             #Mess_Def := 'Connexion avec la base interrompue';
+	                         // ELSIF NOT ((#Ret_Proc_Chang_Org = 'NOK') OR (#Ret_Proc_Chang_Org = 'OK')) THEN
+	                         //     #Aff_Def := TRUE;
+	                         //     #Mess_Def := #Err_Sql;
+	                         ELSIF #Ret_Proc_Chang_Org = 'NOK' THEN
+	                             #Aff_Def := TRUE;
+	                             #Mess_Def := #Msg_Defaut;
+	                         END_IF;
+	                        IF #Aff_Def THEN
+	                            #Aff_Def := FALSE;
+	                            #SurvDosBenne.Dial_Def.Num_Def_Etape := 2;
+	                            #SurvDosBenne.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base,
+	                                                                                   Msg_Defaut := #Mess_Def,
+	                                                                                   Type_Defaut := 0,
+	                                                                                   Automatisme := #SurvDosBenne.Pt_Zs._SuiviCommun._CdProc,
+	                                                                                   Num_Lot := #SurvDosBenne.Pt_Zs._SuiviCommun._NoLot,
+	                                                                                   Origine_Defaut := 'SurvDosBenne',
+	                                                                                   Libelle_Origine := 'Proc_Chang_Org',
+	                                                                                   Acq1 := 'Relance',
+	                                                                                   Acq2 := '',
+	                                                                                   Acq3 := '',
+	                                                                                   Acq4 := '',
+	                                                                                   Acq5 := '',
+	                                                                                   Acq6 := '',
+	                                                                                   Acq7 := '',
+	                                                                                   Acq8 := '',
+	                                                                                   Acq_Choisi := -1,
+	                                                                                   Date_Arrivee := #Tps_Act);
+	                            #SurvDosBenne.Dos_Commun.Module_Commun._Etp := #Etp_Att_Acquit;
+	                            RETURN;
+	                        END_IF;
+	                        #SurvDosBenne.Fg_Proc_Exec := TRUE;
+	                        #SurvDosBenne.Lst_Compos[#SurvDosBenne.Benne.Index_Compo_Enc] := #SurvDosBenne.Benne.Composant;
+	                         "FC_Rech_Cir_Ext"(#SurvDosBenne);
+	                         // Demande de reprise extraction
+	                         #SurvDosBenne.Benne.Demande := #Demande_Reprise_Extraction;
+	                         IF #SurvDosBenne.Benne.Niv_Grafcet <> #Niveau_Benne_Extract_GV AND #SurvDosBenne.Benne.Niv_Grafcet <> #Niveau_Benne_Extract_PV THEN
+	                             RETURN;
+	                         END_IF;
+	                         #SurvDosBenne.Fg_Proc_Exec := FALSE;
+	                         #SurvDosBenne.Benne.Demande := 0;
+	                         // Pour ne pas refaire le traitement preliminaire
+	                         #SurvDosBenne.Dos_Commun.Module_Commun._EtpMemo := #SurvDosBenne.Dos_Commun.Module_Commun._Etp;
+	                         // Vider la reponse defaut
+	                         #SurvDosBenne.Dial_Def.Reponse_Def := '';
+	                         RETURN;
+	                     ELSE
+	                         // DIALOGUE DEFEAUT
+	                         #SurvDosBenne.Dial_Def.Num_Def_Etape := 1;
+	                         #Msg_Defaut := CONCAT(IN1 := #SurvDosBenne.Dial_Def.Text_Reponse, IN2 := ' : Cellule invalide pour composant ', IN3 := #SurvDosBenne.Benne.Composant.Code_MP, IN4:=' dans ', IN5 := #SurvDosBenne.Benne.Nom);
+	                         #SurvDosBenne.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base:=#Fg_Base, Msg_Defaut := #Msg_Defaut,
+	                                                                                Type_Defaut := 0,
+	                                                                                Automatisme := #SurvDosBenne.Pt_Zs._SuiviCommun._CdProc,
+	                                                                                Num_Lot := #SurvDosBenne.Pt_Zs._SuiviCommun._NoLot,
+	                                                                                Origine_Defaut := #SurvDosBenne.Benne.Nom,
+	                                                                                Libelle_Origine := #SurvDosBenne.Dos_Commun.Module_Commun._NomTache,
+	                                                                                Acq1 := 'Relance',
+	                                                                                Acq2 := 'Abandon',
+	                                                                                Acq3 := 'Cellule',
+	                                                                                Acq4 := 'CelVide',
+	                                                                                Acq5 := 'Decal',
+	                                                                                Acq6 := 'ChangBenne',
+	                                                                                Acq7 := 'Versac',
+	                                                                                Acq8 := 'Subst',
+	                                                                                Acq_Choisi := -1,
+	                                                                                Date_Arrivee := #Tps_Act);
+	                         // Transition vers l'etape defaut
+	                         #SurvDosBenne.Dos_Commun.Module_Commun._Etp := #Etp_Att_Acquit;
+	                         RETURN;
+	                     END_IF;
+	                     
+	                     // Vider la reponse defaut
+	                     //#SurvDosBenne.Dial_Def.Reponse_Def := '';
+	                     RETURN;
+	                 END_IF;
+	                 IF (#SurvDosBenne.Dial_Def.Reponse_Def = 'CelVide') THEN
+	                     // Vider la reponse defaut
+	                     #SurvDosBenne.Dial_Def.Reponse_Def := '';
+	                     RETURN;
+	                 END_IF;
+	                 IF (#SurvDosBenne.Dial_Def.Reponse_Def = 'Decal') THEN
+	                     // Demande de reprise extraction
+	                     #SurvDosBenne.Benne.Demande := #Demande_Dosage;
+	                     IF #SurvDosBenne.Benne.Niv_Grafcet <> #Niveau_Benne_Attente_Stabilite_Remplissage THEN
+	                         RETURN;
+	                     END_IF;
+	                     "FC_Decal_Compos"(#SurvDosBenne);
+	                     #SurvDosBenne.Dos_Commun.Module_Commun._Etp := #Etp_Dosage_Lance;
+	                     // Vider la reponse defaut
+	                     #SurvDosBenne.Dial_Def.Reponse_Def := '';
+	                     RETURN;
+	                 END_IF;
+	                 IF (#SurvDosBenne.Dial_Def.Reponse_Def = 'ChangBenne') THEN
+	                     // Vider la reponse defaut
+	                     #SurvDosBenne.Dial_Def.Reponse_Def := '';
+	                     RETURN;
+	                 END_IF;
+	                 IF (#SurvDosBenne.Dial_Def.Reponse_Def = 'Versac') THEN
+	                     // Vider la reponse defaut
+	                     #SurvDosBenne.Dial_Def.Reponse_Def := '';
+	                     RETURN;
+	                 END_IF;
+	                 IF (#SurvDosBenne.Dial_Def.Reponse_Def = 'Subst') THEN
+	                     // Vider la reponse defaut
+	                     #SurvDosBenne.Dial_Def.Reponse_Def := '';
+	                     RETURN;
+	                 END_IF;
+	                 //============ Traitement des reponses pour le defaut1 Evolution Poids ============//
+	             Dosage_Lance_DEF0:
+	                 //============ Traitement des reponses pour le defaut Proc_MAJ_Stock ============//
+	                 IF (#SurvDosBenne.Dial_Def.Reponse_Def = 'Relance') THEN
+	                     // Vider la reponse defaut
+	                     #SurvDosBenne.Dial_Def.Reponse_Def := '';
+	                     RETURN;
+	                 END_IF;
+	                 //============Traitement des reponses pour le defaut Proc_MAJ_Stock ============//
+	                   Dosage_Lance_DEF2:
+	                 //============ Traitement des reponses pour le defaut Proc_Chang_Org ============//
+	                 IF (#SurvDosBenne.Dial_Def.Reponse_Def = 'Relance') THEN
+	                     // Vider la reponse defaut
+	                     #SurvDosBenne.Dial_Def.Reponse_Def := '';
+	                     RETURN;
+	                 END_IF;
+	                 //============ Traitement des reponses pour le defaut Proc_Chang_Org ============//
+	                 // Attente fin de dosage 
+	                 IF #SurvDosBenne.Benne.Niv_Grafcet = #Niveau_Benne_Fin_Dosage THEN
+	                     // Action eventuelle apres dosage benne
+	                     "FC_ActionApDosage"(Surv_Benne := #SurvDosBenne);
+	                     #SurvDosBenne.Dos_Commun.Module_Commun._Etp := #Etp_Ctrl_Tol;
+	                     RETURN;
+	                 END_IF;
+	             END_REGION Traitement Cyclique "Dosage Lance"
+	         #Etp_Ctrl_Tol:
+	             REGION Traitement Preliminaire "Ctrl_Tol"
+	                 IF #SurvDosBenne.Dos_Commun.Module_Commun._Etp <> #SurvDosBenne.Dos_Commun.Module_Commun._EtpMemo THEN
+	                     #SurvDosBenne.Dos_Commun.Module_Commun._DescEtp := 'CTRL TOL.';
+	                     #SurvDosBenne.Dos_Commun.Module_Commun._EtpPrec := #SurvDosBenne.Dos_Commun.Module_Commun._Etp;
+	                     //=== Traitement cas retour de defaut ===//
+	                     IF #SurvDosBenne.Dial_Def.Reponse_Def <> '' THEN
+	                         CASE #SurvDosBenne.Dial_Def.Num_Def_Etape OF
+	                             1:
+	                                 GOTO Ctrl_Tol_DEF1;
+	                             2:
+	                                 GOTO Ctrl_Tol_DEF2;
+	                         END_CASE;
+	                     END_IF;
+	                     //=== Traitement cas retour de defaut ===//
+	                     #SurvDosBenne.Dos_Commun.Module_Commun._EtpMemo := #SurvDosBenne.Dos_Commun.Module_Commun._Etp;
+	                 END_IF;
+	             END_REGION Traitement Preliminaire "Ctrl_Tol"
+	             REGION Traitement Cyclique "Ctrl_Tol"
+	                 // Controle de la conformite
+	                 IF "FC_Ctrl_Conform"(#SurvDosBenne.Benne) = -1 THEN
+	                     "Fc_Calcul_Tempo_Relance_PV"(#SurvDosBenne.Benne);
+	                     #SurvDosBenne.Benne.Demande := #Demande_Reprise_Extraction_PV;
+	                     #SurvDosBenne.Dos_Commun.Module_Commun._Etp := #Etp_Dosage_Lance;
+	                     RETURN;
+	                 END_IF;
+	                 IF #SurvDosBenne.Fg_Ctrl_Conf AND "FC_Ctrl_Conform"(#SurvDosBenne.Benne) = -2 THEN
+	                     // DIALOGUE DEFAUT
+	                     #SurvDosBenne.Dial_Def.Num_Def_Etape := 1;
+	                     VAL_STRG(IN := #SurvDosBenne.Benne.Composant.Tol_Confor_Sup,
+	                              SIZE := 6,
+	                              PREC := 2,
+	                              FORMAT := 0,
+	                              P := 1,
+	                              OUT => #Tol_Sup_conform);
+	                     VAL_STRG(IN := #SurvDosBenne.Benne.Composant.Ecart,
+	                              SIZE := 6,
+	                              PREC := 2,
+	                              FORMAT := 0,
+	                              P := 1,
+	                              OUT => #Ecart);
+	                     #Msg_Defaut := CONCAT(IN1 := #SurvDosBenne.Benne.Composant.Code_MP, IN2 := ' Hors Tol Sup: Tol_sup_Conf =', IN3 := #Tol_Sup_conform, IN4 := ' Ecart =', IN5 := #Ecart);
+	                     #Msg_Defaut := CONCAT(IN1 := #SurvDosBenne.Benne.Composant.Code_MP, IN2 := ' Hors Conf Sup');
+	                     #SurvDosBenne.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base:=#Fg_Base, Msg_Defaut := #Msg_Defaut,
+	                                                                            Type_Defaut := 0,
+	                                                                            Automatisme := #SurvDosBenne.Pt_Zs._SuiviCommun._CdProc,
+	                                                                            Num_Lot := #SurvDosBenne.Pt_Zs._SuiviCommun._NoLot,
+	                                                                            Origine_Defaut := #SurvDosBenne.Benne.Nom,
+	                                                                            Libelle_Origine := #SurvDosBenne.Dos_Commun.Module_Commun._NomTache,
+	                                                                            Acq1 := 'Abandon',
+	                                                                            Acq2 := 'Hopital',
+	                                                                            Acq3 := '',
+	                                                                            Acq4 := '',
+	                                                                            Acq5 := '',
+	                                                                            Acq6 := '',
+	                                                                            Acq7 := '',
+	                                                                            Acq8 := '',
+	                                                                            Acq_Choisi := -1,
+	                                                                            Date_Arrivee := #Tps_Act);
+	                     #SurvDosBenne.Dos_Commun.Module_Commun._Etp := #Etp_Att_Acquit;
+	                     RETURN;
+	                 END_IF;
+	             Ctrl_Tol_DEF1:
+	                 //============ Traitement des reponses pour le defaut1 du Controle Tolerance ============//
+	                 IF (#SurvDosBenne.Dial_Def.Reponse_Def = 'Abandon') THEN
+	                     #SurvDosBenne.Dos_Commun.Module_Commun._Etp := #Etp_Fin_Dosage;
+	                     // Vider la reponse defaut
+	                     #SurvDosBenne.Dial_Def.Reponse_Def := '';
+	                     RETURN;
+	                 END_IF;
+	                 IF (#SurvDosBenne.Dial_Def.Reponse_Def = 'Hopital') THEN
+	                     // Vider la reponse defaut
+	                     #SurvDosBenne.Dial_Def.Reponse_Def := '';
+	                     RETURN;
+	                 END_IF;
+	                 //============ Traitement des reponses pour le defaut1 du Controle Tolerance ============//
+	                 // Controle de la tolerance
+	                 IF "FC_Ctrl_Tol"(#SurvDosBenne.Benne) = -1 THEN
+	                     "Fc_Calcul_Tempo_Relance_PV"(#SurvDosBenne.Benne);
+	                     #SurvDosBenne.Benne.Demande := #Demande_Reprise_Extraction_PV;
+	                     RETURN;
+	                 END_IF;
+	                 IF "FC_Ctrl_Tol"(#SurvDosBenne.Benne) = -2 THEN
+	                     // DIALOGUE DEFAUT
+	                     #SurvDosBenne.Dial_Def.Num_Def_Etape := 2;
+	                     VAL_STRG(IN := #SurvDosBenne.Benne.Composant.Tol_Sup,
+	                              SIZE := 6,
+	                              PREC := 2,
+	                              FORMAT := 0,
+	                              P := 1,
+	                              OUT => #Tol_Sup);
+	                     VAL_STRG(IN := #SurvDosBenne.Benne.Composant.Ecart,
+	                              SIZE := 6,
+	                              PREC := 2,
+	                              FORMAT := 0,
+	                              P := 1,
+	                              OUT => #Ecart);
+	                     #Msg_Defaut := CONCAT(IN1 := #SurvDosBenne.Benne.Composant.Code_MP, IN2 := ' Hors Tol Sup: Tol_sup =', IN3 :=#Tol_Sup, IN4 := ' Ecart =' , IN5 := #Ecart);
+	                     #SurvDosBenne.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base:=#Fg_Base, Msg_Defaut := #Msg_Defaut,
+	                                                                            Type_Defaut := 0,
+	                                                                            Automatisme := #SurvDosBenne.Pt_Zs._SuiviCommun._CdProc,
+	                                                                            Num_Lot := #SurvDosBenne.Pt_Zs._SuiviCommun._NoLot,
+	                                                                            Origine_Defaut := #SurvDosBenne.Benne.Nom,
+	                                                                            Libelle_Origine := #SurvDosBenne.Dos_Commun.Module_Commun._NomTache,
+	                                                                            Acq1 := 'Abandon',
+	                                                                            Acq2 := '',
+	                                                                            Acq3 := '',
+	                                                                            Acq4 := '',
+	                                                                            Acq5 := '',
+	                                                                            Acq6 := '',
+	                                                                            Acq7 := '',
+	                                                                            Acq8 := '',
+	                                                                            Acq_Choisi := -1,
+	                                                                            Date_Arrivee := #Tps_Act);
+	                     #SurvDosBenne.Dos_Commun.Module_Commun._Etp := #Etp_Att_Acquit;
+	                     RETURN;
+	                 END_IF;
+	             Ctrl_Tol_DEF2:
+	                 //============ Traitement des reponses pour le defaut1 du Controle Tolerance ============//
+	                 IF (#SurvDosBenne.Dial_Def.Reponse_Def = 'Abandon') THEN
+	                     #SurvDosBenne.Dos_Commun.Module_Commun._Etp := #Etp_Fin_Dosage;
+	                     // Vider la reponse defaut
+	                     #SurvDosBenne.Dial_Def.Reponse_Def := '';
+	                     RETURN;
+	                 END_IF;
+	                 //============ Traitement des reponses pour le defaut1 du Controle Tolerance ============//
+	                 #SurvDosBenne.Dos_Commun.Module_Commun._Etp := #Etp_Fin_Dosage;
+	             END_REGION Traitement Cyclique "Ctrl_Tol"
+	         #Etp_Fin_Dosage:
+	             REGION Traitement Preliminaire "Fin_Dosage"
+	                 IF #SurvDosBenne.Dos_Commun.Module_Commun._Etp <> #SurvDosBenne.Dos_Commun.Module_Commun._EtpMemo THEN
+	                     #SurvDosBenne.Dos_Commun.Module_Commun._EtpPrec := #SurvDosBenne.Dos_Commun.Module_Commun._Etp;
+	                     //=== Traitement cas retour de defaut ===//
+	                     IF #SurvDosBenne.Dial_Def.Reponse_Def <> '' THEN
+	                         CASE #SurvDosBenne.Dial_Def.Num_Def_Etape OF
+	                             1:
+	                                 GOTO Fin_Dosage_Def1;
+	                         END_CASE;
+	                     END_IF;
+	                     //=== Traitement cas retour de defaut ===//
+	                     #SurvDosBenne.Dos_Commun.Module_Commun._DescEtp := 'FIN DOSAGE';
+	                     #SurvDosBenne.Benne.Composant.Tps_Extr := "Tps_Mob"(#SurvDosBenne.Benne.Circuit_Extr[0]._IndexMob) - #SurvDosBenne.Benne.Composant.Deb_Extr;
+	                     #SurvDosBenne.Benne.Composant.Tps_Dos := T_DIFF(IN1 := #Tps_Act, IN2 := #SurvDosBenne.Benne.Composant.Tps_Picke_Deb_Dos);
+	                     // MAJ stock compo
+	                     #Ret_Proc_Maj_Stock := "Proc_MAJ_Stock"(Compo := #SurvDosBenne.Benne.Composant, Err_Sql => #Err_Sql, Msg_Def => #Msg_Defaut, Data_Dosage := #SurvDosBenne.Pt_Zs);
+	                     IF ("dbSql4SiemensInterface".stSql4SiemensInterface.Observer.xTimeout) THEN
+	                         #Aff_Def := TRUE;
+	                         #Mess_Def := 'Connexion avec la base interrompue';
+	                         // ELSIF NOT ((#Ret_Proc_Maj_Stock = 'NOK') OR (#Ret_Proc_Maj_Stock = 'OK')) THEN
+	                         //     #Aff_Def := TRUE;
+	                         //     #Mess_Def := #Err_Sql;
+	                     ELSIF #Ret_Proc_Maj_Stock = 'NOK' OR (#Ret_Proc_Maj_Stock = 'OK' AND #Msg_Defaut <> 'VIDE') THEN
+	                         #Aff_Def := TRUE;
+	                         #Mess_Def := #Msg_Defaut;
+	                     END_IF;
+	                     IF #Aff_Def THEN
+	                         #Aff_Def := FALSE;
+	                         #SurvDosBenne.Dial_Def.Num_Def_Etape := 1;
+	                         #SurvDosBenne.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base,
+	                                                                                Msg_Defaut := #Mess_Def,
+	                                                                                Type_Defaut := 0,
+	                                                                                Automatisme := #SurvDosBenne.Pt_Zs._SuiviCommun._CdProc,
+	                                                                                Num_Lot := #SurvDosBenne.Pt_Zs._SuiviCommun._NoLot,
+	                                                                                Origine_Defaut := 'SurvDosBenne',
+	                                                                                Libelle_Origine := 'Proc_MAJ_Stock',
+	                                                                                Acq1 := 'Relance',
+	                                                                                Acq2 := '',
+	                                                                                Acq3 := '',
+	                                                                                Acq4 := '',
+	                                                                                Acq5 := '',
+	                                                                                Acq6 := '',
+	                                                                                Acq7 := '',
+	                                                                                Acq8 := '',
+	                                                                                Acq_Choisi := -1,
+	                                                                                Date_Arrivee := #Tps_Act);
+	                         #SurvDosBenne.Dos_Commun.Module_Commun._Etp := #Etp_Att_Acquit;
+	                         RETURN;
+	                     END_IF;
+	                 Fin_Dosage_Def1:
+	                     //============ Traitement des reponses pour le defaut Proc_MAJ_Stock ============//
+	                     IF (#SurvDosBenne.Dial_Def.Reponse_Def = 'Relance') THEN
+	                         // Vider la reponse defaut
+	                         #SurvDosBenne.Dial_Def.Reponse_Def := '';
+	                         RETURN;
+	                     END_IF;
+	                     //============Traitement des reponses pour le defaut Proc_MAJ_Stock ============//
+	                     #SurvDosBenne.Dos_Commun.Module_Commun._EtpMemo := #SurvDosBenne.Dos_Commun.Module_Commun._Etp;
+	                 END_IF;
+	             END_REGION Traitement Preliminaire "Fin_Dosage"
+	             REGION Traitement Cyclique "Fin_Dosage"
+	                 IF NOT #SurvDosBenne.Fg_Compo_Trouv THEN
+	                     #SurvDosBenne.Benne.Composant.Fin_Dos := TRUE;
+	                     #SurvDosBenne.Lst_Compos[#SurvDosBenne.Benne.Index_Compo_Enc] := #SurvDosBenne.Benne.Composant;
+	                     #SurvDosBenne.Benne.Circuit_Extr := #Raz_Circ_Ext;
+	                     //============  Recherche Prochain Composant ============//
+	                     FOR #i := 0 TO "Nbr_Max_Compo" DO
+	                         IF NOT #SurvDosBenne.Lst_Compos[#i].Fin_Dos AND #SurvDosBenne.Lst_Compos[#i].Code_MP <> '' THEN
+	                             #SurvDosBenne.Benne.Composant := #SurvDosBenne.Lst_Compos[#i];
+	                             //============ RENSEIGNEMENT DU COMPOSANT ============//
+	                             #SurvDosBenne.Benne.Composant.Incorpo_Reel := #SurvDosBenne.Benne.Nom;
+	                             //============ RENSEIGNEMENT DU COMPOSANT ============//
+	                             #SurvDosBenne.Benne.Index_Compo_Enc := #i;
+	                             #SurvDosBenne.Fg_Compo_Trouv := TRUE;
+	                             EXIT;
+	                         END_IF;
+	                     END_FOR;
+	                     //============  Recherche Prochain Composant ============//
+	                 END_IF;
+	                 IF #SurvDosBenne.Fg_Compo_Trouv THEN
+	                     #SurvDosBenne.Benne.Demande := #Demande_NV_Compo;
+	                     "FC_Rech_Cir_Ext"(#SurvDosBenne);
+	                     IF #SurvDosBenne.Benne.Niv_Grafcet <> #Niveau_Benne_Attente_Stabilite_Remplissage THEN
+	                         RETURN;
+	                     END_IF;
+	                    
+	                     #SurvDosBenne.Fg_Compo_Trouv := FALSE;
+	                     #SurvDosBenne.Benne.Demande := 0;
+	                     #SurvDosBenne.Dos_Commun.Module_Commun._Etp := #Etp_Dosage_Lance;
+	                     RETURN;
+	                 END_IF;
+	                 // Pour dernier composant
+	                 #SurvDosBenne.Benne.Composant.Fin_Dos := TRUE;
+	                 #SurvDosBenne.Lst_Compos[#SurvDosBenne.Benne.Index_Compo_Enc] := #SurvDosBenne.Benne.Composant;
+	                 #SurvDosBenne.Dos_Commun.Module_Commun._Etp := #Etp_Att_Aval_Libre;
+	             END_REGION Traitement Cyclique "Fin_Dosage"
+	         #Etp_Att_Aval_Libre:
+	             REGION Traitement Preliminaire "Att_Aval_Libre"
+	                 IF #SurvDosBenne.Dos_Commun.Module_Commun._Etp <> #SurvDosBenne.Dos_Commun.Module_Commun._EtpMemo THEN
+	                     #SurvDosBenne.Dos_Commun.Module_Commun._DescEtp := 'ATT AVAL LIBRE';
+	                     "Maj_Qte_Tache"(Num_Tache := #SurvDosBenne.Dos_Commun.Module_Commun._Tache,
+	                                     Num_Zone := #SurvDosBenne.Dos_Commun.Module_Commun._NumZone,
+	                                     Qte := "Calc_Qte_Tache_Incorpo"(#SurvDosBenne.Lst_Compos));
+	                     #SurvDosBenne.Dos_Commun.Module_Commun._EtpMemo := #SurvDosBenne.Dos_Commun.Module_Commun._Etp;
+	                 END_IF;
+	             END_REGION Traitement Preliminaire "Att_Aval_Libre"
+	             REGION Traitement Cyclique "Att_Aval_Libre"
+	                 
+	                 IF NOT "FC_Test_Niv_AmontAval"(Num_Zone := #SurvDosBenne.Dos_Commun.Module_Commun._NumZone, Lst_Taches := #SurvDosBenne.Lst_Taches_Att_Vidange) THEN
+	                     RETURN;
+	                 END_IF;
+	                 #SurvDosBenne.Dos_Commun.Module_Commun._Etp := #Etp_Vidange_Benne;
+	             END_REGION Traitement Cyclique "Att_Aval_Libre"
+	         #Etp_Vidange_Benne:
+	             REGION Traitement Preliminaire "Vidange_Benne"
+	                 IF #SurvDosBenne.Dos_Commun.Module_Commun._Etp <> #SurvDosBenne.Dos_Commun.Module_Commun._EtpMemo THEN
+	                     #SurvDosBenne.Dos_Commun.Module_Commun._DescEtp := 'VIDANGE BENNE';
+	                     #Ret_Maj_Niv := "Maj_Niv"(Num_Zone := #SurvDosBenne.Dos_Commun.Module_Commun._NumZone,
+	                                               Num_Tache := #SurvDosBenne.Dos_Commun.Module_Commun._Tache,
+	                                               Niveau := "NIV_SURDOS_DEBUT_VIDANGE_BENNE");
+	                     #SurvDosBenne.Dos_Commun.Module_Commun._EtpMemo := #SurvDosBenne.Dos_Commun.Module_Commun._Etp;
+	                 END_IF;
+	             END_REGION Traitement Preliminaire "Vidange_Benne"
+	             REGION Traitement Cyclique "Vidange_Benne"
+	                 #SurvDosBenne.Benne.Demande := #Demande_Vidange;
+	                 IF #SurvDosBenne.Benne.Niv_Grafcet = #Niveau_Benne_Vidange THEN
+	                     #SurvDosBenne.Benne.Demande := 0;
+	                 END_IF;
+	                 #Ret_Maj_Niv := "Maj_Niv"(Num_Zone := #SurvDosBenne.Dos_Commun.Module_Commun._NumZone,
+	                                           Num_Tache := #SurvDosBenne.Dos_Commun.Module_Commun._Tache,
+	                                           Niveau := "NIV_SURDOS_BENNE_VIDE");
+	                 IF #SurvDosBenne.Benne.Niv_Grafcet = #Niveau_Benne_Fin_Vidange THEN
+	                      // Maj niveau NIV_SURDOS_FIN_VIDANGE_BENNE
+	                     #Ret_Maj_Niv := "Maj_Niv"(Num_Zone := #SurvDosBenne.Dos_Commun.Module_Commun._NumZone,
+	                                               Num_Tache := #SurvDosBenne.Dos_Commun.Module_Commun._Tache,
+	                                               Niveau := "NIV_SURDOS_FIN_VIDANGE_BENNE");
+	                     #SurvDosBenne.Dos_Commun.Module_Commun._Etp := #Etp_Arret_Vidange_Benne;
+	                 END_IF;
+	                 
+	             END_REGION Traitement Cyclique "Vidange_Benne"
+	         #Etp_Arret_Vidange_Benne:
+	             REGION Traitement Preliminaire "Arret_Vidange_Benne"
+	                 IF #SurvDosBenne.Dos_Commun.Module_Commun._Etp <> #SurvDosBenne.Dos_Commun.Module_Commun._EtpMemo THEN
+	                     #SurvDosBenne.Dos_Commun.Module_Commun._DescEtp := 'ARR VIDANGE BENNE';
+	                     // Maj niveau NIV_SURDOS_ARRET_VIDANGE_BENNE
+	                     #Ret_Maj_Niv := "Maj_Niv"(Num_Zone := #SurvDosBenne.Dos_Commun.Module_Commun._NumZone,
+	                                               Num_Tache := #SurvDosBenne.Dos_Commun.Module_Commun._Tache,
+	                                               Niveau := "NIV_SURDOS_ARRET_VIDANGE_BENNE");
+	                     #SurvDosBenne.Dos_Commun.Module_Commun._EtpMemo := #SurvDosBenne.Dos_Commun.Module_Commun._Etp;
+	                 END_IF;
+	             END_REGION Traitement Preliminaire "Arret_Vidange_Benne"
+	             REGION Traitement Cyclique "Arret_Vidange_Benne"
+	                 #SurvDosBenne.Dos_Commun.Module_Commun._Etp := #Etp_Fin_Vidange_Benne;
+	             END_REGION Traitement Cyclique "Arret_Vidange_Benne"
+	    #Etp_Fin_Vidange_Benne:
+	        REGION Traitement Preliminaire "Fin_Vidange_Benne"
+	            IF #SurvDosBenne.Dos_Commun.Module_Commun._Etp <> #SurvDosBenne.Dos_Commun.Module_Commun._EtpMemo THEN
+	                #SurvDosBenne.Dos_Commun.Module_Commun._DescEtp := 'FIN VIDANGE BENNE';
+	                #Ret_Maj_Niv := "Maj_Niv"(Num_Zone := #SurvDosBenne.Dos_Commun.Module_Commun._NumZone,
+	                                          Num_Tache := #SurvDosBenne.Dos_Commun.Module_Commun._Tache,
+	                                          Niveau := "NIV_SURDOS_FIN_VIDANGE_BENNE");
+	                #SurvDosBenne.Dos_Commun.Module_Commun._EtpMemo := #SurvDosBenne.Dos_Commun.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Traitement Preliminaire "Fin_Vidange_Benne"
+	        REGION Traitement Cyclique "Fin_Vidange_Benne"
+	            #SurvDosBenne.Dos_Commun.Module_Commun._Etp := #Etp_Att_Fin_Dos_Autres_Bennes;
+	        END_REGION Traitement Cyclique "Fin_Vidange_Benne" 
+	    #Etp_Att_Fin_Dos_Autres_Bennes:
+	        REGION Traitement Preliminaire "Att_Fin_Dos_Autres_Bennes"
+	            IF #SurvDosBenne.Dos_Commun.Module_Commun._Etp <> #SurvDosBenne.Dos_Commun.Module_Commun._EtpMemo THEN
+	                #SurvDosBenne.Dos_Commun.Module_Commun._DescEtp := 'ATT AUTRES BENNES';
+	                #SurvDosBenne.Dos_Commun.Module_Commun._EtpMemo := #SurvDosBenne.Dos_Commun.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Traitement Preliminaire "Att_Fin_Dos_Autres_Bennes"
+	        REGION Traitement Cyclique "Att_Fin_Dos_Autres_Bennes"
+	            #SurvDosBenne.Dos_Commun.Module_Commun._Etp := #Etp_Fin_Lot_Benne;
+	        END_REGION Traitement Cyclique "Att_Fin_Dos_Autres_Bennes"
+	    #Etp_Maj_Base:
+	        REGION Traitement Preliminaire "Maj_Base"
+	            IF #SurvDosBenne.Dos_Commun.Module_Commun._Etp <> #SurvDosBenne.Dos_Commun.Module_Commun._EtpMemo THEN
+	                #SurvDosBenne.Dos_Commun.Module_Commun._DescEtp := 'MAJ BASE';
+	                #SurvDosBenne.Dos_Commun.Module_Commun._EtpMemo := #SurvDosBenne.Dos_Commun.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Traitement Preliminaire "Maj_Base"
+	        REGION Traitement Cyclique "Maj_Base"
+	
+	        END_REGION Traitement Cyclique "Maj_Base"
+	    #Etp_Fin_Lot_Benne:
+	        REGION Traitement Preliminaire "Fin_Lot_Benne"
+	            IF #SurvDosBenne.Dos_Commun.Module_Commun._Etp <> #SurvDosBenne.Dos_Commun.Module_Commun._EtpMemo THEN
+	                #SurvDosBenne.Dos_Commun.Module_Commun._DescEtp := 'FIN LOT';
+	                #SurvDosBenne.Dos_Commun.Module_Commun._EtpMemo := #SurvDosBenne.Dos_Commun.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Traitement Preliminaire "Fin_Lot_Benne"
+	        REGION Traitement Cyclique "Fin_Lot_Benne"
+	            #SurvDosBenne.Benne.Demande := #Demande_Repos;
+	            IF #SurvDosBenne.Benne.Niv_Grafcet <> #Niveau_Benne_Repos THEN
+	                RETURN;
+	            END_IF;
+	            #Ret_Maj_Niv := "Maj_Niv"(Num_Zone := #SurvDosBenne.Dos_Commun.Module_Commun._NumZone,
+	                                      Num_Tache := #SurvDosBenne.Dos_Commun.Module_Commun._Tache,
+	                                      Niveau := "NIV_SURDOS_FIN_LOT");
+	            #SurvDosBenne.Fg_Compo_Trouv := FALSE;
+	            #SurvDosBenne.Benne.Demande := 0;
+	            #SurvDosBenne.Benne := #Raz_Benne;
+	            #SurvDosBenne.Dos_Commun.Module_Commun._Etp := #Etp_Repos;
+	            RETURN;
+	        END_REGION Traitement Cyclique "Fin_Lot_Benne"
+	    #Etp_Att_Acquit:
+	        REGION Traitement Preliminaire Attente Acquuitement
+	            IF #SurvDosBenne.Dos_Commun.Module_Commun._Etp <> #SurvDosBenne.Dos_Commun.Module_Commun._EtpMemo THEN
+	                #SurvDosBenne.Dos_Commun.Module_Commun._DescEtp := 'ATT ACQ';
+	                #SurvDosBenne.Dos_Commun.Module_Commun._EtpMemo := #SurvDosBenne.Dos_Commun.Module_Commun._Etp;
+	            END_IF;
+	        END_REGION Traitement Preliminaire Attente Acquuitement
+	        REGION Cyclique Attente Acquitement
+	            #SurvDosBenne.Dial_Def.Reponse_Def := "FC_Recup_Rep_Def"(Index_Def:=#SurvDosBenne.Dial_Def.Index_Defaut, Reponse_Ecrit=>#SurvDosBenne.Dial_Def.Text_Reponse);
+	            IF #SurvDosBenne.Dial_Def.Reponse_Def <> '' THEN
+	                "FC_Raz_Def"(#SurvDosBenne.Dial_Def.Index_Defaut);
+	                #SurvDosBenne.Dos_Commun.Module_Commun._Etp := #SurvDosBenne.Dos_Commun.Module_Commun._EtpPrec;
+	                RETURN;
+	            END_IF;
+	        END_REGION Cyclique Attente Acquitement 
+	END_CASE;
+END_FUNCTION
+

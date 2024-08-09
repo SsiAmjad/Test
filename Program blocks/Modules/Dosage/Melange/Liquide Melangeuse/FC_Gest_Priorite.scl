@@ -1,0 +1,40 @@
+﻿FUNCTION "FC_Gest_Priorite" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Liquide : "S_Liquide_Mel";
+   END_VAR
+
+   VAR_TEMP 
+      i : SInt;
+      Niveau : USInt;
+   END_VAR
+
+   VAR CONSTANT 
+      FIN_INJ_AUTRE : USInt := 40;
+   END_VAR
+
+
+BEGIN
+	FOR #i := 0 TO 4 DO
+	    // Test Lieu Incorporation
+	    IF "DB_Dosage".LIQUIDES_MLG[#i]._Mob_Mlg <> #Liquide._Mob_Mlg THEN
+	        CONTINUE;
+	    END_IF;
+	    // Test Autre Liquides
+	    IF #i = #Liquide._Num_Liq THEN
+	        CONTINUE;
+	    END_IF;
+	    // Test Priorite
+	    IF "DB_Dosage".LIQUIDES_MLG[#i]._Ordre <= #Liquide._Ordre THEN
+	        CONTINUE;
+	    END_IF;
+	    // Test Niveau
+	    IF "Test_Niv"(Num_Zone := #Liquide.CommunDos.Module_Commun._NumZone, Num_Tache := "DB_Dosage".LIQUIDES_MLG[#i].CommunDos.Module_Commun._Tache, Niveau := #FIN_INJ_AUTRE, Niveau_Tache => #Niveau) = 0 THEN
+	        #FC_Gest_Priorite := FALSE;
+	        RETURN;
+	    END_IF;
+	END_FOR;
+	#FC_Gest_Priorite := TRUE;
+END_FUNCTION
+

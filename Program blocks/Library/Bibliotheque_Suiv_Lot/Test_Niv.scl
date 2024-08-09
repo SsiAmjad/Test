@@ -1,0 +1,55 @@
+﻿FUNCTION "Test_Niv" : SInt
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Num_Zone : SInt;
+      Num_Tache : SInt;
+      Niveau : USInt;
+   END_VAR
+
+   VAR_OUTPUT 
+      Niveau_Tache : USInt;
+   END_VAR
+
+   VAR_TEMP 
+      Ret_Test_Valid_Zone : SInt;
+      Ret_Test_Valid_Tache : SInt;
+   END_VAR
+
+
+BEGIN
+	(*
+	La fonction récupère le niveau de la tache dans une zone de suivi donnée
+	- Paramètres d'entrés : + L'index de la zone libre
+	                        + L'index de la tache
+	- Paramètre de sortie : + Niveau de la tache
+	- Valeurs de retour : + 1 si la  fonction a récupéré le niveau de la tache
+	                      + -1 si la zone de suivi ou la tache n'existe pas
+	*)
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | Version | Date       | Autheur     | Ajouts/Modifications                                                   |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | V_1     | 12.10.2023 | I.DAOUDI    | Creation du block                                                      |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// Test de la validite du numero de la zone
+	#Ret_Test_Valid_Zone := "Test_Valid_Zone"(#Num_Zone);
+	IF #Ret_Test_Valid_Zone = -1 THEN
+	    #Test_Niv := -1;
+	    RETURN;
+	END_IF;
+	// Test de la validite du numero de la tache
+	#Ret_Test_Valid_Tache := "Test_Valid_Tache"(Num_Tache := #Num_Tache, Num_Zone := #Num_Zone);
+	IF #Ret_Test_Valid_Tache = -1 THEN
+	    #Test_Niv := -1;
+	    RETURN;
+	END_IF;
+	IF "DB_BIBLIOTHEQUE".Zones_Suivi[#Num_Zone].Taches[#Num_Tache].Niveau >= #Niveau THEN
+	    #Niveau_Tache := "DB_BIBLIOTHEQUE".Zones_Suivi[#Num_Zone].Taches[#Num_Tache].Niveau;
+	    #Test_Niv := 1;
+	    RETURN;     
+	ELSE
+	    #Test_Niv := 0;
+	    #Niveau_Tache := 0;
+	END_IF;
+END_FUNCTION
+

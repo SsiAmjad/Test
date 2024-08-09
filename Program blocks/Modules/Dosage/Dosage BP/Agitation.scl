@@ -1,0 +1,33 @@
+﻿FUNCTION "Agitation" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Index_Mobile : USInt;
+   END_VAR
+
+   VAR_TEMP 
+      Ret_Dem_Mobile : SInt;
+      Ret_Test_Etat_Mobile : SInt;
+      Etat_Mobile : USInt;
+      Ret_Vidange_Mobile : SInt;
+   END_VAR
+
+
+BEGIN
+	IF "Test_Etat_Mobile"(Index_Mobile := #Index_Mobile, Etat:="Libre") THEN
+	    #Ret_Dem_Mobile := "Dem_Mobile"(#Index_Mobile);
+	    #Agitation := FALSE;
+	    RETURN;
+	END_IF;
+	IF "Test_Etat_Mobile"(Index_Mobile := #Index_Mobile, Etat:="Pret") THEN
+	    #Ret_Vidange_Mobile := "Vid_Mobile"(#Index_Mobile);
+	    #Agitation := FALSE;
+	    RETURN;
+	END_IF;
+	IF NOT "Test_Etat_Mobile"(Index_Mobile := #Index_Mobile, Etat:="Enc_Fin_Pos") THEN
+	    #Agitation := FALSE;
+	    RETURN;
+	END_IF;
+	#Agitation := TRUE;
+END_FUNCTION
+

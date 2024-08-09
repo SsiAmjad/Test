@@ -1,0 +1,80 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Document>
+  <Engineering version="V17" />
+  <DocumentInfo>
+    <Created>2024-08-09T12:50:29.2185844Z</Created>
+    <ExportSetting>WithDefaults</ExportSetting>
+    <InstalledProducts>
+      <Product>
+        <DisplayName>Totally Integrated Automation Portal</DisplayName>
+        <DisplayVersion>V17 Update 7</DisplayVersion>
+      </Product>
+      <OptionPackage>
+        <DisplayName>TIA Portal Openness</DisplayName>
+        <DisplayVersion>V17 Update 7</DisplayVersion>
+      </OptionPackage>
+      <OptionPackage>
+        <DisplayName>TIA Portal Version Control Interface</DisplayName>
+        <DisplayVersion>V17</DisplayVersion>
+      </OptionPackage>
+      <Product>
+        <DisplayName>STEP 7 Professional</DisplayName>
+        <DisplayVersion>V17 Update 7</DisplayVersion>
+      </Product>
+      <OptionPackage>
+        <DisplayName>STEP 7 Safety</DisplayName>
+        <DisplayVersion>V17 Update 6</DisplayVersion>
+      </OptionPackage>
+      <Product>
+        <DisplayName>WinCC Professional</DisplayName>
+        <DisplayVersion>V17 Update 7</DisplayVersion>
+      </Product>
+    </InstalledProducts>
+  </DocumentInfo>
+  <SW.Blocks.InstanceDB ID="0">
+    <AttributeList>
+      <AutoNumber>true</AutoNumber>
+      <DBAccessibleFromOPCUA>true</DBAccessibleFromOPCUA>
+      <DBAccessibleFromWebserver>true</DBAccessibleFromWebserver>
+      <HeaderAuthor />
+      <HeaderFamily />
+      <HeaderName />
+      <HeaderVersion>0.1</HeaderVersion>
+      <InstanceOfName>S_MOD_CEL</InstanceOfName>
+      <InstanceOfType>UDT</InstanceOfType>
+      <Interface><Sections xmlns="http://www.siemens.com/automation/Openness/SW/Interface/v5">
+  <Section Name="Static">
+    <Member Name="_TabCel" Datatype="Array[0..&quot;NB_CEL_MAX&quot;] of &quot;S_Cellule&quot;" Remanence="NonRetain" Accessibility="Public"><AttributeList><BooleanAttribute Name="ExternalAccessible" SystemDefined="true">true</BooleanAttribute><BooleanAttribute Name="ExternalVisible" SystemDefined="true">true</BooleanAttribute><BooleanAttribute Name="ExternalWritable" SystemDefined="true">true</BooleanAttribute><BooleanAttribute Name="SetPoint" SystemDefined="true">false</BooleanAttribute></AttributeList><Sections><Section Name="None"><Member Name="_Extrac" Datatype="Array[0..&quot;NB_MOB_EXT&quot;] of &quot;S_CirExt&quot;"><Sections><Section Name="None"><Member Name="_IndexMob" Datatype="Int" /><Member Name="_PosPv" Datatype="SInt" /><Member Name="_PosGv" Datatype="SInt" /><Member Name="_PosArret" Datatype="SInt" /><Member Name="_TypMob" Datatype="SInt" /></Section></Sections></Member><Member Name="_Cel" Datatype="String[&quot;T_CD_CEL&quot;]" /><Member Name="_Tpvidbois" Datatype="Time" /><Member Name="_TpMarteau" Datatype="Time" /><Member Name="_Moborg" Datatype="Int" /><Member Name="_Mobdest" Datatype="Int" /><Member Name="_Vibreur" Datatype="Int" /><Member Name="_Marteau" Datatype="Int" /><Member Name="_NumBouche" Datatype="USInt" /><Member Name="_NumBenne" Datatype="USInt" /><Member Name="_TauxRemplissage" Datatype="USInt" /><Member Name="_FgColChuteChgtCase" Datatype="USInt" /><Member Name="_NumPont" Datatype="USInt" /><Member Name="_Type" Datatype="USInt" /><Member Name="_SAV" Datatype="USInt" /><Member Name="_FgDosageDebit" Datatype="Bool" /><Member Name="_VoyantBouche" Datatype="Bool" /><Member Name="_Remp" Datatype="Bool" /><Member Name="_NivHaut" Datatype="Bool" /><Member Name="_NivBas" Datatype="Bool" /><Member Name="_NivInterm" Datatype="Bool" /><Member Name="_FgVibreur" Datatype="Bool" /><Member Name="_ExtractionEnCours" Datatype="Bool" /><Member Name="_SeuilAppel" Datatype="Bool" /></Section></Sections></Member>
+  </Section>
+</Sections></Interface>
+      <IsOnlyStoredInLoadMemory>false</IsOnlyStoredInLoadMemory>
+      <IsWriteProtectedInAS>false</IsWriteProtectedInAS>
+      <MemoryLayout>Optimized</MemoryLayout>
+      <Name>DB_Mod_Cellule</Name>
+      <Number>7</Number>
+      <ProgrammingLanguage>DB</ProgrammingLanguage>
+    </AttributeList>
+    <ObjectList>
+      <MultilingualText ID="1" CompositionName="Comment">
+        <ObjectList>
+          <MultilingualTextItem ID="2" CompositionName="Items">
+            <AttributeList>
+              <Culture>en-US</Culture>
+              <Text />
+            </AttributeList>
+          </MultilingualTextItem>
+        </ObjectList>
+      </MultilingualText>
+      <MultilingualText ID="3" CompositionName="Title">
+        <ObjectList>
+          <MultilingualTextItem ID="4" CompositionName="Items">
+            <AttributeList>
+              <Culture>en-US</Culture>
+              <Text />
+            </AttributeList>
+          </MultilingualTextItem>
+        </ObjectList>
+      </MultilingualText>
+    </ObjectList>
+  </SW.Blocks.InstanceDB>
+</Document>

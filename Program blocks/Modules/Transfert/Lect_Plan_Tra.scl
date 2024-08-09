@@ -1,0 +1,54 @@
+﻿FUNCTION "Lect_Plan_Tra" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      fgbase : Bool;
+   END_VAR
+
+   VAR_IN_OUT 
+      GprodTransfert : "S_Gprod_Trans";
+   END_VAR
+
+   VAR_TEMP 
+      Traitement_EC_TRANSF : Bool;
+      i : Int;
+      Prog_Trans : "S_SUIVI_TRANSF";
+      Niveau_Tache : USInt;
+      ret : SInt;
+   END_VAR
+
+   VAR CONSTANT 
+      REPOS : SInt := 0;
+   END_VAR
+
+
+BEGIN
+	
+	(* IF #Marche_Transfert THEN *)
+	IF  NOT #GprodTransfert._PtModuleTransf._FgLanc THEN
+	    #ret := "Test_Niv"(Num_Zone := #GprodTransfert._NiGprod, Num_Tache := "TAC_TRANSF", Niveau := "TRANSF_FinLot_Niv", Niveau_Tache => #Niveau_Tache);
+	    IF #ret = 1 THEN
+	        #GprodTransfert._PtModuleTransf._FgLanc := FALSE;
+	    ELSE
+	        #GprodTransfert._fdtrans := 0;
+	    END_IF;
+	END_IF;
+	
+	(* IF #GprodTransfert._PtModuleTransf._FgLanc THEN
+	    #GprodTransfert._fdtrans := 0;
+	ELSE
+	    #GprodTransfert._fdtrans := 1;
+	END_IF; *)
+	IF #fgbase AND NOT #GprodTransfert._PtModuleTransf._FgLanc THEN // #Traitement_EC_TRANSF
+	    #GprodTransfert._ProgTransf := #Prog_Trans;
+	    #GprodTransfert._fdtrans := 1;
+	    #GprodTransfert._PtModuleTransf._FgLanc := TRUE;//#Traitement_EC_TRANSF 
+	END_IF;
+	
+	
+	(* END_IF; *)
+	
+	
+	
+END_FUNCTION
+

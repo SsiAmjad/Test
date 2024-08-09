@@ -1,0 +1,12 @@
+﻿FUNCTION "FC_Lot_Suiv" : SInt
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Tache : SInt;
+   END_VAR
+
+
+BEGIN
+	#FC_Lot_Suiv:="DB_BIBLIOTHEQUE".Lots_Taches[#Tache].Zones_Suiv[1];
+END_FUNCTION
+

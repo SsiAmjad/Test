@@ -1,0 +1,49 @@
+﻿FUNCTION "Fin_Pos_Circuit" : SInt
+TITLE = Arret progressif du circuit
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : 'I.Daoudi'
+FAMILY : Mobile
+VERSION : 1.0
+//Arret progressif du circuit
+   VAR_INPUT 
+      Circuit : "S_Circuit";
+   END_VAR
+
+   VAR_TEMP 
+      i_1 : USInt;
+      Ret_Test_Valid_Index : SInt;
+      Ret_Fin_Pos_Mobile : SInt;
+      i : USInt;
+   END_VAR
+
+
+BEGIN
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | Version | Date       | Autheur     | Ajouts/Modifications                                                   |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | V_1     | 03.10.2023 | I.DAOUDI    | Creation du block                                                      |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// Test du Valid_Index origine
+	IF NOT "Valid_Index"(#Circuit.Mob_Circuit[0].Mobile) THEN
+	    #Fin_Pos_Circuit := -1;
+	    RETURN;
+	END_IF;
+	WHILE (#Circuit.Mob_Circuit[#i].Mobile <> -1) DO
+	    #Ret_Fin_Pos_Mobile := "Fin_Pos_Mobile"(#Circuit.Mob_Circuit[#i].Mobile);
+	    // Test du Ret_Fin_Pos_Mobile
+	    IF #Ret_Fin_Pos_Mobile = -1 THEN
+	        #Fin_Pos_Circuit := -1;
+	        RETURN;
+	    END_IF;
+	    #i := #i + 1;
+	END_WHILE;
+	// Test fin circuit
+	IF #Circuit.Mob_Circuit[#i].Mobile = -1 THEN
+	    #Fin_Pos_Circuit := 1;
+	    RETURN;
+	ELSE
+	    #Fin_Pos_Circuit := 0;
+	    RETURN;
+	END_IF;
+END_FUNCTION
+

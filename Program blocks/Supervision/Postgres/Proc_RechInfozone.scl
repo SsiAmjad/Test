@@ -1,0 +1,120 @@
+﻿FUNCTION "Proc_RechInfozone" : String[254]
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Procede : String;
+      "Type" : String;
+      fgbase : Bool;
+   END_VAR
+
+   VAR_IN_OUT 
+      Resultat_Decode : WString;
+   END_VAR
+
+   VAR_TEMP 
+      parameters_value : Array[0..20] of String;
+      ErreurMessage : String;
+      status : Int;
+      j : USInt;
+      i : USInt;
+      POSITION_CLE : Int;
+      Rep_temp : String;
+      INFOZONE : "S_Anim_Silo";
+   END_VAR
+
+
+BEGIN
+	IF #fgbase THEN //Insertion des parametres 
+	    #parameters_value[0] := #Procede;
+	    #parameters_value[1] := #Type;
+	    #i := 0;
+	    #POSITION_CLE := 0;
+	    //++++++++++++++++++++++++++++++++++++
+	    #Resultat_Decode := "COMBASE"(procedure_name := 'SP_General_Infoszone',
+	                                  values_of_record := #parameters_value,
+	                                  parameters_number := 2,
+	                                  ERROR_MESSAGE => #ErreurMessage);
+	    
+	    
+	    
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := 'REPONSE:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Proc_RechInfozone);
+	    
+	    IF #Proc_RechInfozone <> 'OK' THEN
+	        RETURN;
+	    END_IF;
+	    WHILE LEN(#Resultat_Decode) > 0 DO
+	        #status := "FCT_DECODE_TRAME"(KEYWORD := 'ZONE:',     //EXTRACT THE VALUE OF NUM_RECEPTION"DB_RECH_RECEPTION".RECEP_DECODE_KEYWORDS[1], 
+	                                      BUFFER := #Resultat_Decode,
+	                                      Retour_VAL => #INFOZONE.Zone);     //"DB_RECH_RECEPTION".RECEPTION.RECEPTION.NUM_RECEPTION); //STORE THE VALUE IN DB RECEPTION   ; ;
+	        #status := "FCT_DECODE_TRAME"(KEYWORD := '|LBZONE:',     //EXTRACT THE VALUE OF NUM_RECEPTION"DB_RECH_RECEPTION".RECEP_DECODE_KEYWORDS[1], 
+	                                      BUFFER := #Resultat_Decode,
+	                                      Retour_VAL => #INFOZONE.Libelle_Zone);     //"DB_RECH_RECEPTION".RECEPTION.RECEPTION.NUM_RECEPTION); //STORE THE VALUE IN DB RECEPTION   ; ;
+	        #status := "FCT_DECODE_TRAME"(KEYWORD := '|MASQE:',     //EXTRACT THE VALUE OF NUM_RECEPTION"DB_RECH_RECEPTION".RECEP_DECODE_KEYWORDS[1], 
+	                                      BUFFER := #Resultat_Decode,
+	                                      Retour_VAL => #Rep_temp);     //"DB_RECH_RECEPTION".RECEPTION.RECEPTION.NUM_RECEPTION); //STORE THE VALUE IN DB RECEPTION   ; ;
+	        #INFOZONE.Masque_Ent := (#Rep_temp <> 'f');
+	        #status := "FCT_DECODE_TRAME"(KEYWORD := '|MASQS:',     //EXTRACT THE VALUE OF NUM_RECEPTION"DB_RECH_RECEPTION".RECEP_DECODE_KEYWORDS[1], 
+	                                      BUFFER := #Resultat_Decode,
+	                                      Retour_VAL => #Rep_temp);     //"DB_RECH_RECEPTION".RECEPTION.RECEPTION.NUM_RECEPTION); //STORE THE VALUE IN DB RECEPTION   ; ;
+	        #INFOZONE.Masque_Sort := (#Rep_temp <> 'f');
+	        
+	        #status := "FCT_DECODE_TRAME"(KEYWORD := '|QTE:',     //EXTRACT THE VALUE OF NUM_RECEPTION"DB_RECH_RECEPTION".RECEP_DECODE_KEYWORDS[1], 
+	                                      BUFFER := #Resultat_Decode,
+	                                      Retour_VAL => #Rep_temp);     //"DB_RECH_RECEPTION".RECEPTION.RECEPTION.NUM_RECEPTION); //STORE THE VALUE IN DB RECEPTION   ; ;
+	        #INFOZONE.Quantite := STRING_TO_REAL(#Rep_temp);
+	        
+	        #status := "FCT_DECODE_TRAME"(KEYWORD := '|VOL:',     //EXTRACT THE VALUE OF NUM_RECEPTION"DB_RECH_RECEPTION".RECEP_DECODE_KEYWORDS[1], 
+	                                      BUFFER := #Resultat_Decode,
+	                                      Retour_VAL => #Rep_temp);     //"DB_RECH_RECEPTION".RECEPTION.RECEPTION.NUM_RECEPTION); //STORE THE VALUE IN DB RECEPTION   ; ;
+	        #INFOZONE.Volume := STRING_TO_REAL(#Rep_temp);
+	        
+	        #status := "FCT_DECODE_TRAME"(KEYWORD := '|SEUILAP:',     //EXTRACT THE VALUE OF NUM_RECEPTION"DB_RECH_RECEPTION".RECEP_DECODE_KEYWORDS[1], 
+	                                      BUFFER := #Resultat_Decode,
+	                                      Retour_VAL => #Rep_temp);     //"DB_RECH_RECEPTION".RECEPTION.RECEPTION.NUM_RECEPTION); //STORE THE VALUE IN DB RECEPTION   ; ;
+	        #INFOZONE.SeuilApp := STRING_TO_REAL(#Rep_temp);
+	        
+	        #status := "FCT_DECODE_TRAME"(KEYWORD := '|MAT:',     //EXTRACT THE VALUE OF NUM_RECEPTION"DB_RECH_RECEPTION".RECEP_DECODE_KEYWORDS[1], 
+	                                      BUFFER := #Resultat_Decode,
+	                                      Retour_VAL => #INFOZONE.Matiere);     //"DB_RECH_RECEPTION".RECEPTION.RECEPTION.NUM_RECEPTION); //STORE THE VALUE IN DB RECEPTION   ; ;
+	        #status := "FCT_DECODE_TRAME"(KEYWORD := '|LBMAT:',     //EXTRACT THE VALUE OF NUM_RECEPTION"DB_RECH_RECEPTION".RECEP_DECODE_KEYWORDS[1], 
+	                                      BUFFER := #Resultat_Decode,
+	                                      Retour_VAL => #INFOZONE.Libelle_Mat);     //"DB_RECH_RECEPTION".RECEPTION.RECEPTION.NUM_RECEPTION); //STORE THE VALUE IN DB RECEPTION   ; ;
+	        #status := "FCT_DECODE_TRAME"(KEYWORD := '|DENS:',     //EXTRACT THE VALUE OF NUM_RECEPTION"DB_RECH_RECEPTION".RECEP_DECODE_KEYWORDS[1], 
+	                                      BUFFER := #Resultat_Decode,
+	                                      Retour_VAL => #Rep_temp);     //"DB_RECH_RECEPTION".RECEPTION.RECEPTION.NUM_RECEPTION); //STORE THE VALUE IN DB RECEPTION   ; ;
+	        #INFOZONE.Densite := STRING_TO_REAL(#Rep_temp);
+	        #status := "FCT_DECODE_TRAME"(KEYWORD := '|COUL:',     //EXTRACT THE VALUE OF NUM_RECEPTION"DB_RECH_RECEPTION".RECEP_DECODE_KEYWORDS[1], 
+	                                      BUFFER := #Resultat_Decode,
+	                                      Retour_VAL =>#INFOZONE.Code_Couleur  );     //"DB_RECH_RECEPTION".RECEPTION.RECEPTION.NUM_RECEPTION); //STORE THE VALUE IN DB RECEPTION   ; ;
+	        
+	   
+	        
+	        FOR #j := 0 TO 109 DO
+	            IF ("DB_Anim_Cell"."THIS"[#j].Zone = #INFOZONE.Zone) THEN
+	                "DB_Anim_Cell"."THIS"[#j] := #INFOZONE;
+	                
+	            END_IF;
+	            
+	        END_FOR;
+	        #i := #i + 1;
+	        //#POSITION_CLE := FIND(IN1 := #Resultat_1, IN2 := STRING_TO_WSTRING('$R$L'));
+	         #POSITION_CLE := FIND(IN1 := #Resultat_Decode, IN2 := STRING_TO_WSTRING('\n'));
+	        
+	        IF #POSITION_CLE > 0 THEN
+	           // #Resultat_1 := DELETE(IN := #Resultat_1, L := LEN('$R$L') + #POSITION_CLE - 1, P := 1);
+	           #Resultat_Decode := DELETE(IN := #Resultat_Decode, L := LEN('\n') + #POSITION_CLE - 1, P := 1);
+	        ELSE
+	            EXIT;
+	        END_IF;
+	        
+	        
+	        
+	    END_WHILE;
+	ELSE
+	    #Proc_RechInfozone := 'Vide';
+	END_IF;
+	
+END_FUNCTION
+

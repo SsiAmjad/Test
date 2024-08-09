@@ -1,0 +1,69 @@
+﻿FUNCTION "Proc_ControleAffectation" : String
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      NumPoste : UInt;
+      zone : String;
+      CodeMat : String;
+      Formule : String;
+      NoLot : String;
+      ModeMasquage : Char;
+      ModeBloc : Char;
+      Cveriflot : Char;
+      Typezone : Char;
+      Procede : String;
+   END_VAR
+
+   VAR_OUTPUT 
+      Msg_Def : String;
+   END_VAR
+
+   VAR_TEMP 
+      parameters_value : Array[0..20] of String;
+      ErreurMessage : String;
+      Resultat_Decode : WString;
+      status : Int;
+   END_VAR
+
+
+BEGIN
+	//Insertion des parametres 
+	#parameters_value[0] := ULINT_TO_STRING(#NumPoste);
+	#parameters_value[1] := #zone;
+	#parameters_value[2] := #CodeMat;
+	#parameters_value[3] := #Formule;
+	#parameters_value[4] := #NoLot;
+	#parameters_value[5] := #ModeMasquage;
+	#parameters_value[6] := #ModeBloc;
+	#parameters_value[7] := #Cveriflot;
+	#parameters_value[8] := #Typezone;
+	#parameters_value[9] := #Procede;
+	
+	
+	#Resultat_Decode := "COMBASE"(procedure_name := 'SP_general_ctrlzone',
+	                              values_of_record := #parameters_value,
+	                              parameters_number := 10,
+	                              ERROR_MESSAGE => #ErreurMessage);
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := 'REPONSE:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Proc_ControleAffectation);
+	
+	IF #Proc_ControleAffectation = 'NOK' THEN
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := 'MESS:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Msg_Def);
+	    
+	ELSIF #Proc_ControleAffectation = 'OK' THEN
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := 'MESS:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Msg_Def);
+	    IF #Msg_Def = 'VIDE' THEN
+	        RETURN;
+	    END_IF;
+	ELSE
+	    RETURN;
+	END_IF;
+	
+END_FUNCTION
+

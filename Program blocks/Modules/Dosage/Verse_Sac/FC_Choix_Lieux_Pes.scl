@@ -1,0 +1,21 @@
+﻿FUNCTION "FC_Choix_Lieux_Pes" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      VS : "S_Verse_Sac";
+   END_VAR
+
+
+BEGIN
+	IF #VS.Poids_Petit_Plat + #VS.Compo.Poids < #VS.Seuil_Petit_Grand_Plat THEN
+	    #VS.Choix_Pesage_Compo := 2;
+	    RETURN;
+	END_IF;
+	IF #VS.Poids_Grand_Plat + #VS.Compo.Poids < #VS.Seuil_Grand_Plat_Benne THEN
+	    #VS.Choix_Pesage_Compo := 1;
+	    RETURN;
+	END_IF;
+	#VS.Choix_Pesage_Compo := 0;
+	RETURN;
+END_FUNCTION
+

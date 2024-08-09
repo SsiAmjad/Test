@@ -1,0 +1,24 @@
+﻿FUNCTION "FC_Ctrl_Vid_Benne" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Benne : "S_Benne";
+   END_VAR
+
+   VAR_TEMP 
+      Ret_Test_Etat_Mobile : SInt;
+      Etat_Vibreur : USInt;
+   END_VAR
+
+
+BEGIN
+	IF #Benne.Tol0 < #Benne.Poids_Net THEN
+	    #FC_Ctrl_Vid_Benne := FALSE;
+	    RETURN;
+	END_IF;
+	
+	// Controle OK
+	#FC_Ctrl_Vid_Benne := TRUE;
+	RETURN;
+END_FUNCTION
+

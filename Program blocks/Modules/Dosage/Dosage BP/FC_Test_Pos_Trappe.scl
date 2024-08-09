@@ -1,0 +1,29 @@
+﻿FUNCTION "FC_Test_Pos_Trappe" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Index_Trappe : Int;
+      Pos : USInt;
+   END_VAR
+
+   VAR_TEMP 
+      Etat_Trappe : USInt;
+      Ret_Test_Etat_Mobile : SInt;
+   END_VAR
+
+
+BEGIN
+	// Test si mobile en defaut
+	IF "Test_Etat_Mobile"(Index_Mobile := #Index_Trappe, Etat:="Defaut") THEN
+	    #FC_Test_Pos_Trappe := FALSE;
+	    RETURN;
+	END_IF;
+	// Test de la position du mobile
+	IF "DB_BIBLIOTHEQUE".Mobile[#Index_Trappe].Pos_Enc <> #Pos THEN
+	    #FC_Test_Pos_Trappe := FALSE;
+	    RETURN;
+	END_IF;
+	// Test OK
+	#FC_Test_Pos_Trappe := True;
+END_FUNCTION
+

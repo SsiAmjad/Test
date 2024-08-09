@@ -1,0 +1,36 @@
+﻿FUNCTION "FC_Affich_Liquides_Superv" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Melangeuse : "S_Melangeuse";
+   END_VAR
+
+   VAR_TEMP 
+      i : SInt;
+      j : SInt;
+      k : SInt;
+   END_VAR
+
+
+BEGIN
+	FOR #i := 0 TO 4 DO
+	    #Melangeuse.Lst_Compo_Affiche[#i].Code_MP := #Melangeuse.Lst_Compos[#i].Code_MP;
+	    #Melangeuse.Lst_Compo_Affiche[#i].Libelle := #Melangeuse.Lst_Compos[#i].Libel_MP;
+	    #Melangeuse.Lst_Compo_Affiche[#i].Cellule := #Melangeuse.Lst_Compos[#i].Code_Cel;
+	    #Melangeuse.Lst_Compo_Affiche[#i].Qte := #Melangeuse.Lst_Compos[#i].Poids;
+	END_FOR;
+	FOR #i := 0 TO 9 DO
+	    FOR #j := 0 TO 9 DO
+	        IF #Melangeuse.Lst_Compo_Affiche[#i].Code_MP = "DB_Dosage".LIQUIDES_MLG[#j].Comp.Code_MP AND #Melangeuse.Lst_Compo_Affiche[#i].Code_MP <> '' THEN
+	            #Melangeuse.Lst_Compo_Affiche[#i].Qte_Reelle := "DB_Dosage".LIQUIDES_MLG[#j].Comp.Net;
+	            #Melangeuse.Lst_Compo_Affiche[#i].Ecart := "DB_Dosage".LIQUIDES_MLG[#j].Comp.Ecart;
+	            IF #Melangeuse.Lst_Compo_Affiche[#i].Qte_Reelle < #Melangeuse.Lst_Compo_Affiche[#i].Qte THEN
+	                #Melangeuse.Lst_Compo_Affiche[#i].Enc := TRUE;
+	            ELSE
+	                #Melangeuse.Lst_Compo_Affiche[#i].Enc := FALSE;
+	            END_IF;
+	        END_IF;
+	    END_FOR;
+	END_FOR;
+END_FUNCTION
+

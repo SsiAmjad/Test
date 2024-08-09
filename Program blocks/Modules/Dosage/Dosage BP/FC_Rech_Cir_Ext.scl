@@ -1,0 +1,28 @@
+﻿FUNCTION "FC_Rech_Cir_Ext" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      SurvDosBenne : "S_DOSBENNE";
+   END_VAR
+
+   VAR_TEMP 
+      i : USInt;
+      Ret_Rech_Cir : SInt;
+      RET : SInt;
+   END_VAR
+
+
+BEGIN
+	FOR #i := 0 TO "NB_CEL_MAX" DO
+	    IF #SurvDosBenne.Dos_Commun.Module_Commun._PtCel._TabCel[#i]._Cel = #SurvDosBenne.Benne.Composant.Code_Cel THEN
+	        IF ("Index_Mobile"("Nom_Mobile" := #SurvDosBenne.Benne.Composant.Code_Cel) = -1) THEN
+	            RETURN;
+	        END_IF;
+	        #SurvDosBenne.Benne.Composant.Index_Cel := #i;
+	        #SurvDosBenne.Benne.Circuit_Extr := #SurvDosBenne.Dos_Commun.Module_Commun._PtCel._TabCel[#i]._Extrac;
+	        EXIT;
+	    END_IF;
+	END_FOR;
+	RETURN;
+END_FUNCTION
+

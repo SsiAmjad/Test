@@ -1,0 +1,48 @@
+﻿FUNCTION "fcSql4Siemens_ReadString" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      diOffset : DInt;
+      iLength : Int;
+   END_VAR
+
+   VAR_OUTPUT 
+      WsValue : WString;
+   END_VAR
+
+   VAR_IN_OUT 
+      stSql4SiemensInterface : "utSql4SiemensInterface";
+   END_VAR
+
+   VAR_TEMP 
+      i : Int;
+      WabChar : Array[0..8100] of WChar;
+   END_VAR
+
+
+BEGIN
+	// +------------------------------------------------------------------------------------------------------------------+
+	// | Read a string by known offset and length from the response buffer                                                |
+	// +------------------------------------------------------------------------------------------------------------------+
+	
+	// +-------------+-------------+-------------+------------------------------------------------------------------------+
+	// | Version     | Date        | Author      | Comment                                                                |
+	// +-------------+-------------+-------------+------------------------------------------------------------------------+
+	// | 4.0.0.0     | 08.05.2019  | BaM         | Initial version                                                        |
+	// +-------------+-------------+-------------+------------------------------------------------------------------------+
+	
+	IF (#iLength >= 0) THEN
+	    FOR #i := 0 TO 8100 DO
+	        #WabChar[#i] := BYTE_TO_WCHAR(#stSql4SiemensInterface.abResponseData[#i]);
+	    END_FOR;
+	    Chars_TO_Strg(Chars := #WabChar,
+	                  pChars := #diOffset,
+	                  Cnt := INT_TO_UINT(#iLength),
+	                  Strg => #WsValue);
+	    #fcSql4Siemens_ReadString := TRUE;
+	ELSE
+	    #WsValue := STRING_TO_WSTRING('');
+	    #fcSql4Siemens_ReadString := FALSE;
+	END_IF;
+END_FUNCTION
+

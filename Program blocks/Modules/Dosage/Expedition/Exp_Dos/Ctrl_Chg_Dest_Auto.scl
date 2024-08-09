@@ -1,0 +1,7 @@
+﻿FUNCTION "Ctrl_Chg_Dest_Auto" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+BEGIN
+END_FUNCTION
+

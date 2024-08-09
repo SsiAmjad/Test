@@ -1,0 +1,60 @@
+﻿FUNCTION "Suiv_Noeud" : UInt
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Noeud_Dep : String;
+      Noeud_Arriv : String;
+   END_VAR
+
+   VAR_TEMP 
+      Dern_Mob_Test : Int;
+      i : UInt;
+      j : UInt;
+      Test_Suiv : UInt;
+      Noeud : Bool;
+   END_VAR
+
+
+BEGIN
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | Version | Date       | Autheur     | Ajouts/Modifications                                                   |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | V_1     | 11.08.2023 | I.DAOUDI    | Creation du block                                                      |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	//------------------------------------------   HISTORIQUE DES VERSIONS  ------------------------------------------ 
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | Version | Date       | Autheur     | Commentaire                                                            |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | V_1     | 11.08.2023 | I.DAOUDI    | Version initiale                                                       |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	FOR #i := 0 TO "Nbr_Mob_Suiv" DO
+	    #Dern_Mob_Test := "DB_BIBLIOTHEQUE".Mobile["Index_Mobile"(#Noeud_Dep)].Mob_Suiv[#i];
+	    IF #Dern_Mob_Test < 0 THEN
+	        EXIT;
+	    END_IF;
+	    IF "Nom_Mobile"(#Dern_Mob_Test) = #Noeud_Arriv THEN
+	        EXIT;
+	    ELSE
+	        #Noeud := "Est_Noeud"(#Dern_Mob_Test);
+	        IF #Noeud THEN
+	            CONTINUE;
+	        ELSE
+	            WHILE "Nom_Mobile"(#Dern_Mob_Test) <> #Noeud_Arriv AND NOT #Noeud DO
+	                #Dern_Mob_Test := "DB_BIBLIOTHEQUE".Mobile[#Dern_Mob_Test].Mob_Suiv[0];
+	                IF #Dern_Mob_Test = -1 THEN
+	                    EXIT;
+	                END_IF;
+	                #Noeud := "Est_Noeud"(#Dern_Mob_Test);
+	                IF #Noeud THEN
+	                    EXIT;
+	                END_IF;
+	            END_WHILE;
+	        END_IF;
+	    END_IF;
+	    IF "Nom_Mobile"(#Dern_Mob_Test) = #Noeud_Arriv THEN
+	        EXIT;
+	    END_IF;
+	END_FOR;
+	#Suiv_Noeud := #i;
+END_FUNCTION
+

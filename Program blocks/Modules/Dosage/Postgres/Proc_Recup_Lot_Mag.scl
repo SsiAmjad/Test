@@ -1,0 +1,103 @@
+﻿FUNCTION "Proc_Recup_Lot_Mag" : String
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Compo : "S_Com_Fab";
+   END_VAR
+
+   VAR_OUTPUT 
+      Err_Sql : String;
+      Msg_Def : String;
+   END_VAR
+
+   VAR_IN_OUT 
+      Lst_Compos_Mag : Array[0..14] of "S_Compo_Mag";
+      Data_Dosage : "S_Suivi_Dosage";
+   END_VAR
+
+   VAR_TEMP 
+      parameters_value : Array[0..20] of String;
+      Resultat_Decode : WString[4000];
+      status : Int;
+      i : USInt;
+      POSITION_CLE : Int;
+      Rep_temp : String;
+   END_VAR
+
+
+BEGIN
+	//Insertion des parametres 
+	#parameters_value[0] := UINT_TO_STRING("Num_Poste");
+	#parameters_value[1] := #Compo.Code_MP;
+	#parameters_value[2] := #Compo.Incorpo;
+	
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	
+	#Resultat_Decode := "COMBASE"(procedure_name := 'SP_Dos_Getlotmag',
+	                              values_of_record := #parameters_value,
+	                              parameters_number := 2,
+	                              ERROR_MESSAGE => #Err_Sql);
+	
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := 'REPONSE:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Proc_Recup_Lot_Mag);
+	
+	IF #Proc_Recup_Lot_Mag = 'NOK' THEN
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := 'MESS:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Msg_Def);
+	    RETURN;
+	ELSIF #Proc_Recup_Lot_Mag = 'OK' THEN
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := 'MESS:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Msg_Def);
+	    IF #Msg_Def = 'VIDE' THEN
+	        RETURN;
+	    END_IF;
+	ELSE
+	    RETURN;
+	END_IF;
+	
+	WHILE (LEN(#Resultat_Decode) > 0) AND (#i < 14) DO
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := '|ZONE:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Lst_Compos_Mag[#i].Magasin);
+	    
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := '|MAT:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Lst_Compos_Mag[#i].Cd_Mat);
+	    
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := '|LBMAT:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Lst_Compos_Mag[#i].Lib_Mat);
+	    
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := '|LOT:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Lst_Compos_Mag[#i].Num_Lot);
+	    
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := '|QtLot:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Rep_temp);
+	    #Lst_Compos_Mag[#i].Qte_Lot := STRING_TO_REAL(#Rep_temp);
+	    
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := '|PEREMP:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Lst_Compos_Mag[#i].Peremp);
+	    
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := 'COND:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Rep_temp);
+	    #Lst_Compos_Mag[#i].Cond := STRING_TO_UINT(#Rep_temp);
+	    
+	    #POSITION_CLE := FIND(IN1 := #Resultat_Decode, IN2 := STRING_TO_WSTRING('\n'));
+	    IF #POSITION_CLE > 0 THEN
+	        #Resultat_Decode := DELETE(IN := #Resultat_Decode, L := LEN('\n') + #POSITION_CLE - 1, P := 1);
+	        #i := #i + 1;
+	    ELSE
+	        EXIT;
+	    END_IF;
+	END_WHILE;
+END_FUNCTION
+

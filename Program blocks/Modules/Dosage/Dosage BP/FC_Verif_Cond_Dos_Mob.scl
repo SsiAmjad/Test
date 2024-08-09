@@ -1,0 +1,58 @@
+﻿FUNCTION "FC_Verif_Cond_Dos_Mob" : SInt
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Benne : "S_Benne";
+   END_VAR
+
+   VAR_TEMP 
+      Ret_Arr_Imm_Mobile : SInt;
+      Ret_Test_Etat_Mobile : SInt;
+      Etat_Mobile : USInt;
+   END_VAR
+
+   VAR CONSTANT 
+      Position_Fermeture : USInt := 0;
+      Position_Ouverture : USInt := 1;
+   END_VAR
+
+
+BEGIN
+	// Verification Fermeture de decompression
+	IF "Valid_Index"(#Benne.Mob_Decomp) THEN
+	    IF NOT "FC_Test_Pos_Trappe"(Index_Trappe := #Benne.Mob_Decomp, Pos := #Position_Fermeture) THEN
+	        #FC_Verif_Cond_Dos_Mob := -1;
+	        RETURN;
+	    END_IF;
+	END_IF;
+	// Verification Ouverture de la vanne d'air
+	IF "Valid_Index"(#Benne.Mob_VanneAir) THEN
+	    IF NOT "FC_Test_Pos_Trappe"(Index_Trappe := #Benne.Mob_VanneAir, Pos := #Position_Ouverture) THEN
+	        #FC_Verif_Cond_Dos_Mob := -1;
+	        RETURN;
+	    END_IF;
+	END_IF;
+	// Verification Fermeture trappes eventuelles sous Benne
+	IF "Valid_Index"(#Benne.Mob_Trappe1) THEN
+	    IF NOT "FC_Test_Pos_Trappe"(Index_Trappe := #Benne.Mob_Trappe1, Pos := #Position_Fermeture) THEN
+	        #FC_Verif_Cond_Dos_Mob := -1;
+	        RETURN;
+	    END_IF;
+	END_IF;
+	IF "Valid_Index"(#Benne.Mob_Trappe2) THEN
+	    IF NOT "FC_Test_Pos_Trappe"(Index_Trappe := #Benne.Mob_Trappe2, Pos := #Position_Fermeture) THEN
+	        #FC_Verif_Cond_Dos_Mob := -1;
+	        RETURN;
+	    END_IF;
+	END_IF;
+	// Verification transporteur eventuel arrete
+	IF "Valid_Index"(#Benne.Mob_Trans) THEN
+	    IF NOT "Test_Etat_Mobile"("Index_Mobile" := #Benne.Mob_Trans, Etat:="Libre") THEN
+	        #FC_Verif_Cond_Dos_Mob := -1;
+	        RETURN;
+	    END_IF;
+	END_IF;
+	// Verification OK
+	#FC_Verif_Cond_Dos_Mob := 1;
+END_FUNCTION
+

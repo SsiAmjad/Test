@@ -1,0 +1,20 @@
+﻿FUNCTION "CondSuspCirCompo" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      ChCompo : "S_ChargCompo";
+   END_VAR
+
+
+BEGIN
+	IF NOT #ChCompo._EPmMobCharg  AND
+	    (#ChCompo._SeuilQteFinCharg< #ChCompo._Ptcompo._ConsQte-#ChCompo._Ptzs._QteNet) AND // Consigne Quantit presque atteinte
+	    NOT "FC_Test_Niv_AmontAval"(Num_Zone := #ChCompo._ChargCommun._CommunGeneral._NumZone, Lst_Taches := #ChCompo._ListeTaAttAttAutVidange)   /// Niveau de tache attFinLotCharg
+	    THEN
+	        #CondSuspCirCompo := TRUE;
+	    ELSE
+	        #CondSuspCirCompo := FALSE;
+	END_IF;
+	
+END_FUNCTION
+

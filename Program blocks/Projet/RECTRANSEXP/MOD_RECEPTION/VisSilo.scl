@@ -1,0 +1,34 @@
+﻿FUNCTION "VisSilo" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      VisSilo : "Vis_Silo";
+   END_VAR
+
+   VAR_TEMP 
+      ret : SInt;
+   END_VAR
+
+
+BEGIN
+	CASE #VisSilo._Etp OF
+	    0:
+	        IF #VisSilo._Etp <> #VisSilo._EtpPrec THEN
+	            #VisSilo._EtpPrec := #VisSilo._Etp;
+	        END_IF;
+	        IF  #VisSilo._Nb AND #VisSilo._Marche AND #VisSilo._SecPorte THEN
+	            #ret:="Dem_Mobile"(#VisSilo._Mobile);
+	            #VisSilo._Etp := 1;
+	        END_IF;
+	    1:
+	        IF #VisSilo._Etp <> #VisSilo._EtpPrec THEN
+	            #VisSilo._EtpPrec := #VisSilo._Etp;
+	        END_IF;
+	        IF NOT #VisSilo._Nb OR NOT  #VisSilo._Marche OR NOT  #VisSilo._SecPorte  THEN
+	            #ret := "Arr_Imm_Mobile"(#VisSilo._Mobile);
+	            #VisSilo._Etp := 0;
+	        END_IF;
+	END_CASE;
+	
+END_FUNCTION
+

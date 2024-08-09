@@ -1,0 +1,23 @@
+﻿FUNCTION "SuspCalculDebit" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      "Type" : USInt;
+   END_VAR
+
+   VAR_IN_OUT 
+      ParCal : "S_CAL_FAR";
+   END_VAR
+
+
+BEGIN
+	IF #Type="BTSUSP" THEN
+	    #ParCal._FgCalFar := 0;
+	    #ParCal._FgCalTps := 0;
+	ELSE
+	    #ParCal._FgCalFar := 1;
+	    #ParCal._FgCalTps := 1;
+	END_IF;
+	
+END_FUNCTION
+

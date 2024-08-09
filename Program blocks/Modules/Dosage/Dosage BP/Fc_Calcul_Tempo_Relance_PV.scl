@@ -1,0 +1,26 @@
+﻿FUNCTION "Fc_Calcul_Tempo_Relance_PV" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Benne : "S_Benne";
+   END_VAR
+
+   VAR_TEMP 
+      Reste_Dose : Real;
+   END_VAR
+
+
+BEGIN
+	// Calcul du reste a doser
+	#Reste_Dose := #Benne.Composant.Poids - #Benne.Composant.Net;
+	
+	// Calcul de la tempo
+	#Benne.Tps_Relance_Extr_PV := DINT_TO_TIME(ROUND(#Reste_Dose / (0.28*#Benne.Composant.Debit_PV)));
+	IF #Benne.Composant.Debit_PV = 0 THEN
+	    #Benne.Tps_Relance_Extr_PV := T#0ms;
+	END_IF;
+	
+	// Comparaison avec la tempo min d'extraction
+	#Benne.Tps_Relance_Extr_PV := MAX(IN1 := #Benne.Tps_Relance_Extr_PV, IN2 := #Benne.Tps_Min_Extrat);
+END_FUNCTION
+

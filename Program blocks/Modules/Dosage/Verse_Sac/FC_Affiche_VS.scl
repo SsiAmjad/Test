@@ -1,0 +1,40 @@
+﻿FUNCTION "FC_Affiche_VS" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      VS : "S_Verse_Sac";
+   END_VAR
+
+
+BEGIN
+	#VS.Affich_Vsac.Code_PF := #VS.Pt_Zs._SuiviCommun._CdMat;
+	#VS.Affich_Vsac.Code_PF_LB := #VS.Pt_Zs._SuiviCommun._LibMat;
+	#VS.Affich_Vsac.Formule := #VS.Pt_Zs._SuiviCommun._CdForm;
+	#VS.Affich_Vsac.Formule_LB := #VS.Pt_Zs._SuiviCommun._LibFor;
+	#VS.Affich_Vsac.Version := #VS.Pt_Zs._SuiviCommun._Version;
+	#VS.Affich_Vsac.Repartition := #VS.Pt_Zs._SuiviCommun._Repart;
+	#VS.Affich_Vsac.Supplementation := #VS.Pt_Zs._Suppl;
+	#VS.Affich_Vsac.Msg_Oper := #VS.Msg_Oper;
+	#VS.Affich_Vsac.Supplementation := #VS.Pt_Zs._Suppl;
+	#VS.Affich_Vsac.Lot := #VS.Pt_Zs._SuiviCommun._NoLot;
+	//#VS.Affich_Vsac.Lot_LB;
+	#VS.Affich_Vsac.Produit := #VS.Compo.Code_MP;
+	// #VS.Affich_Vsac.Produit_1 := #VS.Compo.;
+	#VS.Affich_Vsac.Produit_LB := #VS.Compo.Libel_MP;
+	#VS.Affich_Vsac.Poids_Dmd := #VS.Compo.Poids;
+	#VS.Affich_Vsac.Poids_Dose := #VS.Compo.Net;
+	#VS.Affich_Vsac.Tare := #VS.Compo.Tare;
+	#VS.Affich_Vsac.Brut := #VS.Poids_Reel_VS;
+	#VS.Affich_Vsac.Reste := #VS.Compo.Ecart;
+	#VS.Affich_Vsac.Quantite := #VS.Pt_Zs._Poids_Lot;
+	#VS.Affich_Vsac.Choix_Lieux_Pese := #VS.Choix_Pesage_Compo;
+	
+	
+	
+	#VS.Poids_Petit_Plat := #VS.Affich_Vsac.Poids_Petit_Plat;
+	#VS.Poids_Grand_Plat := #VS.Affich_Vsac.Poids_Moyen_Plat;
+	#VS.Poids_Benne := #VS.Affich_Vsac.Poids_Benne;
+	#VS.CB_Lu := #VS.Affich_Vsac.CB_Lu;
+	#VS.Code_Barre := #VS.Affich_Vsac.Cd_Barre;
+END_FUNCTION
+

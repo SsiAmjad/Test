@@ -1,0 +1,68 @@
+﻿FUNCTION "Gestion_DeportBande" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      DeportBande : "S_DEPORT_BANDE";
+   END_VAR
+
+   VAR_TEMP 
+      Ret_RD_Sys_T : Int;
+      tpspasse : Time;
+      ret : Bool;
+   END_VAR
+
+
+BEGIN
+	//suspension amont
+	IF (#DeportBande._DBBD = FALSE AND
+	    #DeportBande._DBBG = FALSE AND
+	    #DeportBande._DBHD = FALSE AND
+	    #DeportBande._DBHG = FALSE) OR
+	    ("DB_BIBLIOTHEQUE".Mobile[#DeportBande._Mobile].Etat <> 4 AND "DB_BIBLIOTHEQUE".Mobile[#DeportBande._Mobile].Etat <> 3 AND "DB_BIBLIOTHEQUE".Mobile[#DeportBande._Mobile].Etat <> 5)
+	THEN
+	    IF #DeportBande._FgAlerte = FALSE THEN
+	        #Ret_RD_Sys_T := RD_SYS_T(#DeportBande._DebutSuspensionAmont);
+	    END_IF;
+	    IF #DeportBande._FgDefaut = FALSE THEN
+	        #Ret_RD_Sys_T := RD_SYS_T(#DeportBande._DebutArretMobile);
+	    END_IF;
+	END_IF;
+	#ret := "Tempo"(Duree := #DeportBande._TpAvSuspAmo, Tps_Picke := #DeportBande._DebutSuspensionAmont, Anticip := FALSE, Tps_Passe => #tpspasse);
+	IF #ret THEN
+	    // #DeportBande._FgAcqAlerte := TRUE;
+	    #DeportBande._FgAlerte := TRUE;
+	END_IF;
+	//redemarrage amont
+	IF //#DeportBande._FgAcqAlerte AND
+	    (#DeportBande._DBBD OR
+	    #DeportBande._DBBG OR
+	    #DeportBande._DBHD OR
+	    #DeportBande._DBHG) THEN
+	    #Ret_RD_Sys_T := RD_SYS_T(#DeportBande._DebutRedemarrageAmont);
+	END_IF;
+	#ret := "Tempo"(Duree := #DeportBande._TpAvRedAmo, Tps_Picke := #DeportBande._DebutRedemarrageAmont, Anticip := FALSE, Tps_Passe => #tpspasse);
+	IF #ret AND #DeportBande._FgAcqAlerte THEN
+	    //  #DeportBande._FgAcqAlerte := FALSE;
+	    #DeportBande._FgAlerte := FALSE;
+	END_IF;
+	//arret mobile
+	#ret := "Tempo"(Duree := #DeportBande._TpAvArrMobi, Tps_Picke := #DeportBande._DebutArretMobile, Anticip := FALSE, Tps_Passe => #tpspasse);
+	IF #ret THEN
+	    // #DeportBande._FgAcqDefaut := TRUE;
+	    #DeportBande._FgDefaut := TRUE;
+	END_IF;
+	//redemarrage mobile
+	IF (#DeportBande._DBBD OR
+	    #DeportBande._DBBG OR
+	    #DeportBande._DBHD OR
+	    #DeportBande._DBHG) THEN
+	    #Ret_RD_Sys_T := RD_SYS_T(#DeportBande._DebutRedemarrageMobile);
+	END_IF;
+	#ret := "Tempo"(Duree := #DeportBande._TpAvRedMob, Tps_Picke := #DeportBande._DebutRedemarrageMobile, Anticip := FALSE, Tps_Passe => #tpspasse);
+	IF #ret AND #DeportBande._FgAcqDefaut THEN
+	    #DeportBande._FgAcqDefaut := FALSE;
+	    #DeportBande._FgDefaut := FALSE;
+	END_IF;
+	
+END_FUNCTION
+

@@ -1,0 +1,49 @@
+﻿FUNCTION "FC_Cond_Lanc_Benne" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Benne : "S_Benne";
+   END_VAR
+
+
+BEGIN
+	// Verification du renseignement du composant
+	IF #Benne.Composant.Code_MP = '' THEN
+	    #FC_Cond_Lanc_Benne := FALSE;
+	    RETURN;
+	END_IF;
+	// Verification du renseignement de la grande vitesse
+	IF (#Benne.Composant.Vit_GV > 100)OR (#Benne.Composant.Vit_GV < 0) THEN
+	    #FC_Cond_Lanc_Benne := FALSE;
+	    RETURN;
+	END_IF;
+	// Verification de la logique de la petite vitesse
+	IF (#Benne.Composant.Vit_PV <= 0) OR (#Benne.Composant.Vit_PV >= #Benne.Composant.Vit_GV) THEN
+	    #FC_Cond_Lanc_Benne := FALSE;
+	    RETURN;
+	END_IF;
+	// Controle du renseignement de la tolerance au zero
+	IF #Benne.Tol0 <= 0 THEN
+	    #FC_Cond_Lanc_Benne := FALSE;
+	    RETURN;
+	END_IF;
+	// Controle du renseignement de la tempo de vidange
+	IF #Benne.Tps_Vidange <= T#0s THEN
+	    #FC_Cond_Lanc_Benne := FALSE;
+	    RETURN;
+	END_IF;
+	
+	// Controle de la validites des tempos de vidange
+	IF #Benne.Tps_Max_Vidange <= #Benne.Tps_Vidange THEN
+	    #FC_Cond_Lanc_Benne := FALSE;
+	    RETURN;
+	END_IF;
+	// Controle de la tolerance au zero
+	IF (#Benne.Tol0 < ABS(#Benne.Poids_Net)) THEN
+	    #FC_Cond_Lanc_Benne := FALSE;
+	    RETURN;
+	END_IF;
+	#FC_Cond_Lanc_Benne := TRUE;
+	RETURN;
+END_FUNCTION
+

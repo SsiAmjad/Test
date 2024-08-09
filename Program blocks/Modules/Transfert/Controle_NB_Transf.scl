@@ -1,0 +1,86 @@
+﻿FUNCTION "Controle_NB_Transf" : SInt
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : SAS
+VERSION : 0.1
+   VAR_INPUT 
+      TempoAffNB : Time;
+   END_VAR
+
+   VAR_IN_OUT 
+      Transf : "S_Transfert";
+   END_VAR
+
+   VAR_TEMP 
+      Ret_RD_Sys_T : Int;
+      ret : Bool;
+      tpspasse : Time;
+      retu : SInt;
+      NB : Bool;
+      Ret_Int : Int;
+   END_VAR
+
+   VAR CONSTANT 
+      PosOuv : SInt := 1;
+      PosFerm : SInt := 0;
+   END_VAR
+
+
+BEGIN
+	//MODIF POUR ARRETER DIRECTEMENT LORIGINE APRES UN NH
+	"F_TRIG_DB"(CLK := #Transf._ptOrig._NivBas);
+	IF #Transf._ptOrig._NivBas THEN
+	     #Ret_Int := "RechIndexCel"("Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._PtOrig));
+	    // "Arret_Ext_Libere"(Origine := "DB_Mod_Cellule"._TabCel[#Ret_Int]);
+	     "MarcheExt"(Origine := #Transf._TransfCommun.CommunGeneral._PtOrig,
+	                 Position := #PosFerm,
+	                 Vitesse := 0);
+	END_IF;
+	
+	IF NOT  #Transf._ptOrig._NivBas OR #Transf._FgDemVid THEN
+	    #Ret_RD_Sys_T := RD_SYS_T(#Transf._TpsPickeNB);
+	END_IF;
+	
+	#ret := "Tempo"(Duree := #TempoAffNB, Tps_Picke :=#Transf._TpsPickeNB, Anticip := FALSE, Tps_Passe => #tpspasse);
+	// #ret := "Tempo"(Duree := #R._TpVidCircuit, Tps_Picke :=#R._TpsPicke, Anticip := FALSE, Tps_Passé => #tpspasse);
+	IF NOT #ret AND "F_TRIG_DB".Q  THEN
+	    #Ret_Int := "RechIndexCel"("Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._PtOrig));
+	    //"Marche_Ext_Libere"(Origine := "DB_Mod_Cellule"._TabCel[#Ret_Int]); 
+	    "MarcheExt"(Origine := #Transf._TransfCommun.CommunGeneral._PtOrig,
+	                Position := #PosOuv,
+	                Vitesse := 0);
+	END_IF;
+	
+	IF #ret AND #Transf._ptOrig._NivBas THEN
+	    #NB := TRUE;
+	    #Controle_NB_Transf := 1;
+	    RETURN;
+	ELSE
+	    #NB := FALSE;
+	    #Controle_NB_Transf := -1;
+	    RETURN;
+	END_IF;
+	
+	
+	(* //#R._NiveauHaut := #R._ptTabDest._NivHaut;
+	IF #NB  OR #Transf._FgChangDest THEN
+	  
+	    
+	    IF #Transf._FgChangDest THEN
+	        #Transf._Ptzs._FgChgDestNh := FALSE;
+	    ELSE
+	        IF #Transf._FgGestStockNh THEN
+	            #Transf._Ptzs._FgChgDestNh := FALSE;
+	        ELSE
+	            #Transf._Ptzs._FgChgDestNh := TRUE;
+	        END_IF;
+	    END_IF;
+	    #Controle_NB_Transf := 1;
+	    RETURN;
+	END_IF;
+	#Controle_NB_Transf := -1; *)
+	
+	/// ajouter traitement défaut si pas de cellule trouvé
+	 
+	
+END_FUNCTION
+

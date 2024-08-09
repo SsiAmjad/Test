@@ -1,0 +1,70 @@
+﻿FUNCTION "Filtrage_IO" : Void
+TITLE = Traitement des entrees sorties
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : 'I.Daoudi'
+VERSION : 1.0
+   VAR_IN_OUT 
+      IO : "S_D_IO";
+   END_VAR
+
+   VAR_TEMP 
+      Ret_RD_SYS_T : Int;   // Retour de la fonction RD_SYS_T
+      Tps_Passé : Time;
+   END_VAR
+
+
+BEGIN
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | Version | Date       | Autheur     | Ajouts/Modifications                                                   |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | V_1     | 01.08.2023 | I.DAOUDI    | Creation du block                                                      |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	////----------------------------------------   HISTORIQUE DES VERSIONS  ------------------------------------------
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | Version | Date       | Autheur     | Commentaire                                                            |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | V_1     | 01.08.2023 | I.DAOUDI    | Version initiale                                                       |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// 
+	
+	// Test si l'IO a change d'etat
+	IF #IO.Adr_IO <> #IO.Etat THEN
+	    IF (NOT #IO.Init_Tps_Filtre) THEN
+	        #IO.Init_Tps_Filtre := TRUE;
+	        #Ret_RD_SYS_T := RD_SYS_T(#IO.Tps_Picke);
+	    END_IF;
+	    // Si passage de True en False
+	    IF #IO.Etat THEN
+	                //Filtrage
+	        IF "Tempo"(Duree := #IO.Filtr_1_0,
+	                       Tps_Picke := #IO.Tps_Picke,
+	                       Anticip := FALSE, Tps_Passe => #Tps_Passé) THEN
+	            IF (#IO.Type_IO = 'E') THEN
+	                #IO.Etat := #IO.Adr_IO;
+	            END_IF;
+	            IF (#IO.Type_IO = 'S') THEN
+	                #IO.Adr_IO := #IO.Etat;
+	            END_IF;
+	            #IO.Init_Tps_Filtre := FALSE;
+	            RETURN;
+	        END_IF;
+	    ELSE // Si passage de False en True
+	        //Filtrage 
+	        IF "Tempo"(Duree := #IO.Filtr_0_1,
+	                       Tps_Picke := #IO.Tps_Picke,
+	                       Anticip := FALSE, Tps_Passe => #Tps_Passé) THEN
+	            IF (#IO.Type_IO = 'E') THEN
+	                #IO.Etat := #IO.Adr_IO;
+	            END_IF;
+	            IF (#IO.Type_IO = 'S') THEN
+	                #IO.Adr_IO := #IO.Etat;
+	            END_IF;
+	            #IO.Init_Tps_Filtre := FALSE;
+	            RETURN;
+	        END_IF;
+	    END_IF;
+	    
+	END_IF;
+	
+END_FUNCTION
+

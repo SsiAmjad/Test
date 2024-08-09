@@ -1,0 +1,15 @@
+﻿FUNCTION "ArretVibreur" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Ptcel : "S_Cellule";
+   END_VAR
+
+
+BEGIN
+	//Arret vibreur
+	#Ptcel._FgVibreur := FALSE;
+	
+	
+END_FUNCTION
+

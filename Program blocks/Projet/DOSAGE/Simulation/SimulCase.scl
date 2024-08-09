@@ -1,0 +1,26 @@
+﻿FUNCTION "SimulCase" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      GeTour : "S_GEST_TOUR";
+   END_VAR
+
+   VAR_TEMP 
+      NoComp : USInt;
+      NumLigne : USInt;
+      Nocase : USInt;
+   END_VAR
+
+
+BEGIN
+	
+	     (*   #GeTour._Ptzs._CasesRelle[0]._Nocase:=#GeTour._Tournee._Commande[0]._Case:=7;
+	        #GeTour._Ptzs._CasesRelle[0]._Nocase := #GeTour._Tournee._Commande[1]._Compo._Case := 9;
+	        #GeTour._Ptzs._CasesRelle[0]._Nocase := #GeTour._Tournee._Commande[2]._Compo._Case := 11;
+	        #NoComp := #NoComp + 1; *)
+	        
+	      
+	        
+	     
+END_FUNCTION
+

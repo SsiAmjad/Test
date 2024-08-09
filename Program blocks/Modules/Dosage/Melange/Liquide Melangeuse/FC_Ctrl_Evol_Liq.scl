@@ -1,0 +1,25 @@
+﻿FUNCTION "FC_Ctrl_Evol_Liq" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Liq : "S_Liquide_Mel";
+   END_VAR
+
+   VAR_TEMP 
+      Ret_RD_SYS_T : Int;
+   END_VAR
+
+
+BEGIN
+	IF (#Liq.Comp.Poids_Reel - #Liq.Comp.Poids_Reel_Prec) <= #Liq._Pas_Mini THEN
+	    #FC_Ctrl_Evol_Liq := FALSE;
+	    RETURN;
+	END_IF;
+	// Reprise du poids memo pour le prochain controle
+	#Liq.Comp.Poids_Reel_Prec:= #Liq.Comp.Poids_Reel;
+	// Reprise du temps picke pour le prochain controle
+	#Ret_RD_SYS_T := RD_SYS_T(#Liq.CommunDos.Module_Commun._TpsPicke);
+	#FC_Ctrl_Evol_Liq := TRUE;
+	RETURN;
+END_FUNCTION
+

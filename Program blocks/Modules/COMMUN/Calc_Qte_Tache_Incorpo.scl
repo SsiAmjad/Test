@@ -1,0 +1,20 @@
+﻿FUNCTION "Calc_Qte_Tache_Incorpo" : Real
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Lst_Compos : Array[0..19] of "S_Com_Fab";
+   END_VAR
+
+   VAR_TEMP 
+      i : SInt;
+      Somme : Real;
+   END_VAR
+
+
+BEGIN
+	FOR #i := 0 TO 19 DO
+	    #Somme := #Somme + #Lst_Compos[#i].Net;
+	END_FOR;
+	#Calc_Qte_Tache_Incorpo := #Somme;
+END_FUNCTION
+

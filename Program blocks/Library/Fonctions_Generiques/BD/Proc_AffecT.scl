@@ -1,0 +1,65 @@
+﻿FUNCTION "Proc_AffecT" : String[254]
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      NumPoste : UInt;
+      zone : String;
+      CodeMat : String;
+      Formule : String;
+      LieuDos : String;
+      Qte : Real;
+      TypeMvmnt : String;
+      Procede : String;
+      NoLotOrig : String;
+      NoLotDest : String;
+      Utilisateur : String;
+      SCb : Char;
+      Sof : String;
+   END_VAR
+
+   VAR_OUTPUT 
+      Msg_Def : String;
+   END_VAR
+
+   VAR_TEMP 
+      parameters_value : Array[0..20] of String;
+      ErreurMessage : String;
+      Resultat_Decode : WString;
+      status : Int;
+   END_VAR
+
+
+BEGIN
+	//Insertion des parametres 
+	#parameters_value[0] := UINT_TO_STRING(#NumPoste);
+	#parameters_value[1] := #zone;
+	#parameters_value[2] := #CodeMat;
+	#parameters_value[3] := #Formule;
+	#parameters_value[4] := #LieuDos;
+	#parameters_value[5] := REAL_TO_STRING(#Qte);
+	#parameters_value[6] := #TypeMvmnt;
+	#parameters_value[7] := #Procede;
+	#parameters_value[8] := #NoLotOrig;
+	#parameters_value[9] := #NoLotDest;
+	#parameters_value[10] := #Utilisateur;
+	#parameters_value[11] := #SCb;
+	#parameters_value[12] :=  #Sof;
+	
+	//++++++++++++++++++++++++++++++++++++
+	#Resultat_Decode := "COMBASE"(procedure_name := 'SP_general_AffectationAuto',
+	                                 values_of_record := #parameters_value,
+	                                 parameters_number := 13,
+	                                 ERROR_MESSAGE => #ErreurMessage);
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := 'REPONSE:',     
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Proc_AffecT);    
+	
+	IF #Proc_AffecT = 'NOK' THEN
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := 'MESS:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Msg_Def);
+	    
+	END_IF;
+END_FUNCTION
+

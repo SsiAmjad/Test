@@ -1,0 +1,22 @@
+﻿FUNCTION "MajAffichage" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Ensachage : "S_ENSACHAGE";
+   END_VAR
+
+
+BEGIN
+	#Ensachage._EnsaCommun._Affichage._Conditionnement := #Ensachage._Ptzs._Conditionnement;
+	#Ensachage._EnsaCommun._Affichage._QtePrev := #Ensachage._Ptzs._QtePrev;
+	#Ensachage._EnsaCommun._Affichage._NbSacsPrev := #Ensachage._Ptzs._SacsPrev;
+	#Ensachage._EnsaCommun._Affichage._TypeArret := #Ensachage._Ptzs._TypeArret;
+	#Ensachage._EnsaCommun._Affichage._QteChgtOrg := #Ensachage._Ptzs._QteArret;
+	#Ensachage._EnsaCommun._Affichage._NoLotOrg := #Ensachage._Ptzs._NoLot;
+	#Ensachage._EnsaCommun._Affichage._Origine := #Ensachage._Ptzs._PtcelOrig._Cel;
+	#Ensachage._EnsaCommun._Affichage._Dest := #Ensachage._Ptzs._Dest;
+	#Ensachage._EnsaCommun._Affichage._CdMatOrig := #Ensachage._Ptzs._CdMatOrg;
+	
+	
+END_FUNCTION
+

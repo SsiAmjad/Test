@@ -1,0 +1,98 @@
+﻿FUNCTION "Proc_MAJ_Stock" : String
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Compo : "S_Com_Fab";
+   END_VAR
+
+   VAR_OUTPUT 
+      Err_Sql : String;
+      Msg_Def : String;
+   END_VAR
+
+   VAR_IN_OUT 
+      Data_Dosage : "S_Suivi_Dosage";
+   END_VAR
+
+   VAR_TEMP 
+      parameters_value : Array[0..20] of String;
+      Resultat_Decode : WString[4000];
+      net : String;
+      chute : String;
+      anc_chute : String;
+      poids : String;
+      status : Int;
+   END_VAR
+
+
+BEGIN
+	//Insertion des parametres 
+	#parameters_value[0] := UINT_TO_STRING("Num_Poste");
+	#parameters_value[1] := ULINT_TO_STRING(#Compo.IHDOSLIG);
+	#parameters_value[2] := #Compo.Code_MP;
+	#parameters_value[3] := #Compo.Code_Cel;
+	#parameters_value[4] := #Compo.Incorpo_Reel;
+	#parameters_value[5] := ULINT_TO_STRING(#Data_Dosage._IdHDos);
+	VAL_STRG(IN := (#Compo.Net -  #Compo.Poids_Deja_Mouv),
+	         SIZE := 10,
+	         PREC := 3,
+	         FORMAT := 0004,
+	         P := 1,
+	         OUT => #net);
+	#parameters_value[6] := #net;
+	VAL_STRG(IN := #Compo.Col_Chute,
+	         SIZE := 10,
+	         PREC := 3,
+	         FORMAT := 0004,
+	         P := 1,
+	         OUT => #chute);
+	#parameters_value[7] := #chute;
+	#parameters_value[8] := #Compo.Compo_Mag.Num_Lot;
+	#parameters_value[9] := '010';
+	#parameters_value[10] := 'T';
+	#parameters_value[11] := UINT_TO_STRING(#Compo.Tps_Extr);
+	VAL_STRG(IN := #Compo.Poids,
+	         SIZE := 10,
+	         PREC := 3,
+	         FORMAT := 0,
+	         P := 1,
+	         OUT => #poids);
+	#parameters_value[12] := #poids;
+	VAL_STRG(IN := #Compo.Anc_Chute,
+	         SIZE := 10,
+	         PREC := 3,
+	         FORMAT := 0004,
+	         P := 1,
+	         OUT => #anc_chute);
+	#parameters_value[13] := #anc_chute;
+	
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	
+	#Resultat_Decode := "COMBASE"(procedure_name := 'SP_Dos_udpstock',
+	                              values_of_record := #parameters_value,
+	                              parameters_number := 13,
+	                              ERROR_MESSAGE => #Err_Sql);
+	
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := 'REPONSE:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Proc_MAJ_Stock);
+	
+	IF #Proc_MAJ_Stock = 'NOK' THEN
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := 'MESS:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Msg_Def);
+	    RETURN;
+	ELSIF #Proc_MAJ_Stock = 'OK' THEN
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := 'MESS:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Msg_Def);
+	    IF #Msg_Def = 'VIDE' THEN
+	        RETURN;
+	    END_IF;
+	ELSE
+	    RETURN;
+	END_IF;
+END_FUNCTION
+

@@ -1,0 +1,37 @@
+﻿FUNCTION "Tempo" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 1.0
+   VAR_INPUT 
+      Duree : Time;   // Duree de la temporisation
+      Tps_Picke : Date_And_Time;   // Le temps preleve a l'entree de l'etape
+      Anticip : Bool;   // Condition d'anticipation
+   END_VAR
+
+   VAR_OUTPUT 
+      Tps_Passe : Time;
+   END_VAR
+
+   VAR_TEMP 
+      Tps_Act : Date_And_Time;   // Le temps actuel
+      Ret_Tps_Act : Int;   // Le retour de la fonction RD_SYS_T
+      Ret_Tps_Ref : Int;   // Le retour de la fonction RD_SYS_T
+   END_VAR
+
+
+BEGIN
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | Version | Date       | Autheur     | Ajouts/Modifications                                                   |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | V_1     | 07.07.2023 | I.DAOUDI    | Creation du block                                                      |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	#Ret_Tps_Act := RD_SYS_T(#Tps_Act);
+	IF NOT #Anticip THEN
+	    #Tempo := T_DIFF(IN1 := #Tps_Act, IN2 := #Tps_Picke) >= #Duree;
+	    #Tps_Passe := T_DIFF(IN1 := #Tps_Act, IN2 := #Tps_Picke);
+	    RETURN;
+	ELSE
+	    #Tempo := TRUE;
+	    RETURN;
+	END_IF;
+END_FUNCTION
+

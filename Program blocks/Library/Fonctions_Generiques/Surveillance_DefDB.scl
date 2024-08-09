@@ -1,0 +1,149 @@
+﻿FUNCTION "Surveillance_DefDB" : Void
+TITLE = Fonction de la gestion module reception
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : SAS
+VERSION : 1.0
+   VAR_INPUT 
+      fgbase : Bool;
+      No_Lot : String;
+      Automatisme : String;
+   END_VAR
+
+   VAR_IN_OUT 
+      DeportBande : "S_DEPORT_BANDE";
+   END_VAR
+
+   VAR_TEMP 
+      Ret_RD_Sys_T : Int;
+      Mess_Defaut : String;
+      Mess_Defaut0 : String;
+      Mess_Defaut1 : String;
+      Mess_Defaut2 : String;
+      Mess_Defaut3 : String;
+      Reponse_Ecrite : String;
+   END_VAR
+
+
+BEGIN
+	CASE #DeportBande._EtpDef OF
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║            Etape REPOS             ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                    
+	*)
+	    0:
+	        
+	        REGION Traitement preliminaire 'REPOS'
+	            IF (#DeportBande._EtpDef <> #DeportBande._EtpPrecDef) THEN
+	                //Memorisation de l'etape encours
+	                #DeportBande._EtpPrecDef := #DeportBande._EtpDef;
+	            END_IF;
+	            #DeportBande._FgAcqDefaut := FALSE;
+	        END_REGION Traitement preliminaire 'REPOS'
+	        
+	        REGION Traitement cyclique 'REPOS'
+	            IF #DeportBande._FgDefaut AND NOT #DeportBande._FgAcqDefaut THEN
+	                #DeportBande._EtpDef := 1;
+	            END_IF;
+	        END_REGION Traitement cyclique 'REPOS'
+	        RETURN;
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║       Etape "Surveillance"         ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                    
+	*)
+	    1:
+	        REGION Traitement preliminaire 'Surveillance'
+	            IF (#DeportBande._EtpDef <> #DeportBande._EtpPrecDef) THEN
+	                #DeportBande._EtpPrecDef := #DeportBande._EtpDef;
+	                #Ret_RD_Sys_T := RD_SYS_T(#DeportBande._TpsPicke);
+	                IF #DeportBande.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #DeportBande.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO DB_DEF1;
+	                    END_CASE;
+	                END_IF;
+	            END_IF;
+	        END_REGION Traitement preliminaire 'SURVEILLANCE'
+	        
+	        REGION Traitement cyclique 'SURVEILLANCE'
+	            #DeportBande.Dial_Def.Num_Def_Etape := 1;
+	            IF #DeportBande._DBBD THEN
+	                #Mess_Defaut0 := ' BD';
+	            END_IF;
+	            IF #DeportBande._DBBG THEN
+	                #Mess_Defaut1 := ' BG';
+	            END_IF;
+	            IF #DeportBande._DBHD THEN
+	                #Mess_Defaut2 := ' HD';
+	            END_IF;
+	            IF #DeportBande._DBHG THEN
+	                #Mess_Defaut3 := ' HG';
+	            END_IF;
+	            #Mess_Defaut := CONCAT(IN1 := 'Defaut deport de bande ',
+	                                   IN2 := #Mess_Defaut0,
+	                                   IN3 := #Mess_Defaut1,
+	                                   IN4 := #Mess_Defaut2,
+	                                   IN5 := #Mess_Defaut3,
+	                                   IN6 := ' du mobile ',
+	                                   IN7 := "Nom_Mobile"(#DeportBande._Mobile));
+	            #DeportBande.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase,
+	                                                                  Msg_Defaut := #Mess_Defaut,
+	                                                                  Type_Defaut := 2,
+	                                                                  Automatisme := #Automatisme,
+	                                                                  Num_Lot := #No_Lot,
+	                                                                  Origine_Defaut := 'deport de bande',
+	                                                                  Libelle_Origine := 'deport de bande',
+	                                                                  Acq1 := 'Acquittement',
+	                                                                  Acq2 := '',
+	                                                                  Acq3 := '',
+	                                                                  Acq4 := '',
+	                                                                  Acq5 := '',
+	                                                                  Acq6 := '',
+	                                                                  Acq7 := '',
+	                                                                  Acq8 := '',
+	                                                                  Acq_Choisi := -1,
+	                                                                  Date_Arrivee := #DeportBande._TpsPicke);
+	            #DeportBande._EtpDef := 2;
+	            RETURN;
+	        DB_DEF1:
+	            //======================= Traitement des reponses pour le defaut1 Deport de bande  ======================================//
+	            IF #DeportBande.Dial_Def.Reponse_Def = 'Acquittement' THEN
+	                #DeportBande._FgAcqDefaut := TRUE;
+	                #DeportBande._EtpDef := 0;
+	                #DeportBande.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	        END_REGION Traitement cyclique 'SURVEILLANCE'
+	        RETURN;
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║ Etape "Attente Reponse Dialogue"   ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                    
+	*)
+	    2:
+	        REGION Preliminaire Attente Acquuitement
+	            IF #DeportBande._EtpDef <> #DeportBande._EtpPrecDef THEN
+	                //Memorisation de l'etape encours
+	                #DeportBande._EtpMemoDef := #DeportBande._EtpPrecDef;
+	                #DeportBande._EtpPrecDef := #DeportBande._EtpDef;
+	            END_IF;
+	        END_REGION Preliminaire Attente Acquuitement
+	        REGION Cyclique Attente Acquitement
+	            #DeportBande.Dial_Def.Reponse_Def := "FC_Recup_Rep_Def"(Index_Def := #DeportBande.Dial_Def.Index_Defaut, Reponse_Ecrit => #Reponse_Ecrite);
+	            IF #DeportBande.Dial_Def.Reponse_Def <> '' THEN
+	                "FC_Raz_Def"(#DeportBande.Dial_Def.Index_Defaut);
+	                #DeportBande._EtpDef := #DeportBande._EtpMemoDef;
+	                RETURN;
+	            END_IF;
+	        END_REGION Cyclique Attente Acquitement   
+	END_CASE;
+	
+END_FUNCTION
+

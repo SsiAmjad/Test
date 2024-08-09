@@ -1,0 +1,31 @@
+﻿FUNCTION "Test_Valid_Zone" : SInt
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Num_Zone : SInt;
+   END_VAR
+
+   VAR_TEMP 
+      Ret_RD_Sys_T : Int;
+      Sys_T : Date_And_Time;
+      Index_Acquit : Int;
+   END_VAR
+
+
+BEGIN
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | Version | Date       | Autheur     | Ajouts/Modifications                                                   |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	// | V_1     | 12.10.2023 | I.DAOUDI    | Creation du block                                                      |
+	// +---------+------------+-------------+------------------------------------------------------------------------+
+	#Ret_RD_Sys_T := RD_SYS_T(#Sys_T);
+	//Test de la validite du numero de la zone
+	IF #Num_Zone < 0  OR #Num_Zone > "Nbr_Max_Lots" THEN
+	    #Test_Valid_Zone := -1;
+	    RETURN;
+	END_IF;
+	// Test valide
+	#Test_Valid_Zone := 1;
+	RETURN;
+END_FUNCTION
+

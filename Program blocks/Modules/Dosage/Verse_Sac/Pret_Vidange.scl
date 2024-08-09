@@ -1,0 +1,21 @@
+﻿FUNCTION "Pret_Vidange" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Verse_Sac : "S_Verse_Sac";
+   END_VAR
+
+
+BEGIN
+	IF NOT  "Test_Etat_Mobile"(Index_Mobile:=#Verse_Sac.Mob_Trappe1, Etat:="Pret") THEN
+	    #Pret_Vidange := FALSE;
+	    RETURN;
+	END_IF;
+	IF NOT "Test_Etat_Mobile"(Index_Mobile := #Verse_Sac.Mob_Trappe2, Etat := "Pret") THEN
+	    #Pret_Vidange := FALSE;
+	    RETURN;
+	END_IF;
+	#Pret_Vidange := TRUE;
+	RETURN;
+END_FUNCTION
+

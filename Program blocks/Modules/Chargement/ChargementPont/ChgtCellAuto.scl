@@ -1,0 +1,30 @@
+﻿FUNCTION "ChgtCellAuto" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Chpont : "S_ChargPont";
+   END_VAR
+
+   VAR_TEMP 
+      Cellule : String;
+      nouvCelAVider : Bool;
+      Ret_Sint : SInt;
+   END_VAR
+
+
+BEGIN
+	#Cellule:=#Chpont. _Commande._PtcelOrig._Cel;
+	//Appel Proc RechCelluleSuiv RechCelluleSuiv(pt_compo, Cellule, pt_zs->ConsQte - pt_zs->QteNet, &nouvCelAVider, mesDef);
+	 IF #Ret_Sint = -1 THEN  //Pas de nouvelle cellule en auto
+	     //Pas de nouvelle cellule en auto
+	     #ChgtCellAuto := FALSE;
+	 ELSE
+	     #Chpont._ChargCommun._NouvCellule := #Cellule;
+	     #Chpont. _Commande._FgaVider := #nouvCelAVider;
+	     #ChgtCellAuto := TRUE;
+	END_IF;
+	
+	
+	
+END_FUNCTION
+

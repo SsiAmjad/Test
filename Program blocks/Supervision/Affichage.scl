@@ -1,0 +1,16 @@
+﻿FUNCTION "Affichage" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      AnimSilo : "S_Anim_Silo";
+   END_VAR
+
+
+BEGIN
+	// densite := (masse/ volume) / ghu eau (1000)
+	// quantite total = densite* 1000 * volume
+	IF #AnimSilo.Densite <> 0 AND #AnimSilo.Volume <> 0 THEN
+	    #AnimSilo.T_Remplissage := (#AnimSilo.Quantite / (#AnimSilo.Densite * #AnimSilo.Volume * 1000)) * 100.0;
+	END_IF;
+END_FUNCTION
+

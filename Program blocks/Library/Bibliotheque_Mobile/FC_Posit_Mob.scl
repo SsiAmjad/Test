@@ -1,0 +1,21 @@
+﻿FUNCTION "FC_Posit_Mob" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Index_Mob : Int;
+      Position : SInt;
+   END_VAR
+
+   VAR_TEMP 
+      Ret_Dem_Mobile : Int;
+      Ret_Test_Valid_Index : SInt;
+      Ret_Test_Etat_Mobile : SInt;
+      Etat_Mobile : USInt;
+   END_VAR
+
+
+BEGIN
+	#Ret_Dem_Mobile := "Dem_Mobile"(#Index_Mob);
+	"DB_BIBLIOTHEQUE".Mobile[#Index_Mob].Pos_Dmd := #Position;
+END_FUNCTION
+

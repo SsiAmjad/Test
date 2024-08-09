@@ -1,0 +1,20 @@
+﻿FUNCTION "Verif_Code_Bare" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      VS : "S_Verse_Sac";
+      Code_Bare : String;
+   END_VAR
+
+   VAR_TEMP 
+      Err_Sql : String;
+      Mess_Def : String;
+      Ret_Proc_Valid_CB : String;
+   END_VAR
+
+
+BEGIN
+	
+	#Verif_Code_Bare := TRUE;
+END_FUNCTION
+

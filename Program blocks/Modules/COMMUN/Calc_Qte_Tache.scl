@@ -1,0 +1,24 @@
+﻿FUNCTION "Calc_Qte_Tache" : Real
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Num_Zone : SInt;
+      Lst_Amont : Array[0.."T_MAX_AMONTAVAL"] of SInt;
+   END_VAR
+
+   VAR_TEMP 
+      i : USInt;
+      Somme : Real;
+   END_VAR
+
+
+BEGIN
+	FOR #i := 0 TO "T_MAX_AMONTAVAL" DO
+	    IF #Lst_Amont[#i] = -1 THEN
+	        EXIT;
+	    END_IF;
+	    #Somme := #Somme + "DB_BIBLIOTHEQUE".Zones_Suivi[#Num_Zone].Taches[#Lst_Amont[#i]].Qte;
+	END_FOR;
+	#Calc_Qte_Tache := #Somme;
+END_FUNCTION
+

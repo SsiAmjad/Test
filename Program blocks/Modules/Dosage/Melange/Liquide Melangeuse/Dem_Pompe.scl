@@ -1,0 +1,19 @@
+﻿FUNCTION "Dem_Pompe" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Index_Pompe : Int;
+      Vitesse : USInt;
+   END_VAR
+
+   VAR_TEMP 
+      Ret_Dem_Mobile : SInt;
+   END_VAR
+
+
+BEGIN
+	#Ret_Dem_Mobile := "Dem_Mobile"("Index_Mobile":= #Index_Pompe);
+	"DB_BIBLIOTHEQUE".Mobile[#Index_Pompe].SA_Vitesse := #Vitesse;
+	
+END_FUNCTION
+

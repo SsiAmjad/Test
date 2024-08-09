@@ -1,0 +1,178 @@
+﻿FUNCTION "Proc_RechTour" : String[254]
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      NumPoste : UInt;
+      NoBadge : String;
+      CodeCamion : String;
+      Pont : String;
+   END_VAR
+
+   VAR_OUTPUT 
+      Msg_Def : String;
+   END_VAR
+
+   VAR_IN_OUT 
+      Ptzs : "S_SuiviCommande";
+      Resultat_Decode : WString;
+   END_VAR
+
+   VAR_TEMP 
+      parameters_value : Array[0..20] of String;
+      ErreurMessage : String;
+      status : Int;
+      Rep_temp : String;
+      POSITION_CLE : Int;
+      i : USInt;
+   END_VAR
+
+
+BEGIN
+	//Insertion des parametres 
+	#parameters_value[0] := UINT_TO_STRING(#NumPoste);
+	#parameters_value[1] := #NoBadge;
+	#parameters_value[2] := #CodeCamion;
+	#parameters_value[3] := #Pont;
+	
+	
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	
+	#Resultat_Decode := "COMBASE"(procedure_name := '"EXP".sp_exp_rechtour',
+	                              values_of_record := #parameters_value,
+	                              parameters_number := 4,
+	                              ERROR_MESSAGE => #ErreurMessage);
+	
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := 'REPONSE:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Proc_RechTour);
+	
+	IF #Proc_RechTour = 'NOK' THEN
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := 'MESS:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Msg_Def);
+	    RETURN;
+	ELSIF #Proc_RechTour = 'OK' THEN
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := '|ENTETE:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Msg_Def);
+	   
+	ELSE
+	    RETURN;
+	END_IF;
+	//++++++++++++++++++++++++++++++++++++
+	
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|SLOT:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Ptzs._InfoTour._NoLot);
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|SCAM:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Ptzs._InfoTour._Camion);
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|SCHAUF:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Ptzs._InfoTour._Chauffeur);
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|STOUR:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Ptzs._InfoTour._NoTour);
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|NTARE:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	#Ptzs._InfoTour._Tare := STRING_TO_REAL(#Rep_temp);
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|SBADGE:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Ptzs._InfoTour._Badge);
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|IDTOUR:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	#Ptzs._InfoTour._IdTourn:= STRING_TO_ULINT(#Rep_temp);
+	//================ Decode des informations generales ================//
+	//#POSITION_CLE := FIND(IN1 := #Resultat_Decode, IN2 := STRING_TO_WSTRING('\n'));
+	#POSITION_CLE := FIND(IN1 := #Resultat_Decode, IN2 := STRING_TO_WSTRING('LIGNES'));
+	IF #POSITION_CLE > 0 THEN
+	   // #Resultat_Decode := DELETE(IN := #Resultat_Decode, L := LEN('\n') + #POSITION_CLE - 1, P := 1);
+	    #Resultat_Decode := DELETE(IN := #Resultat_Decode, L := LEN('LIGNES') + #POSITION_CLE - 1, P := 1);
+	END_IF;
+	//================ Decode des Commandes================//
+	WHILE LEN(#Resultat_Decode) > 0 DO
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := '|SCOMM:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Ptzs._ComLig[#i]._NoCommande);// ;
+	    
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := '|NUMLIG:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL =>#Rep_temp);
+	    #Ptzs._ComLig[#i]._NoLigne := STRING_TO_USINT(#Rep_temp);
+	    
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := '|NORDRECHAR:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Rep_temp);
+	    #Ptzs._ComLig[#i]._NmOrdre := STRING_TO_USINT(#Rep_temp);
+	    
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := '|CLI:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Ptzs._ComLig[#i]._CdClient);
+	    
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := '|VIL:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Ptzs._ComLig[#i]._Ville);
+	    
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := '|MAT:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Ptzs._ComLig[#i]._CdMat);
+	    
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := '|LBMAT:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Ptzs._ComLig[#i]._LbMat);
+	    
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := '|MATORG:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Ptzs._ComLig[#i]._CdMatOrg);
+	    
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := '|LIBMATORG:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Ptzs._ComLig[#i]._LbMatOrg);
+	    
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := '|QTECOM:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Rep_temp);
+	    #Ptzs._ComLig[#i]._QteTotComm := STRING_TO_REAL(#Rep_temp);
+	    
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := '|QTENET:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Rep_temp);
+	    #Ptzs._ComLig[#i]._QteDejaCharg := STRING_TO_REAL(#Rep_temp);
+	    
+	    #Ptzs._ComLig[#i]._ConsQteTot := #Ptzs._ComLig[#i]._QteTotComm - #Ptzs._ComLig[#i]._QteDejaCharg;
+	    
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := '|IDCOMLIG:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Rep_temp);
+	    #Ptzs._ComLig[#i]._IdComLig := STRING_TO_ULINT(#Rep_temp);
+	    #Ptzs._ComLig[#i]._NbCase := 1;
+	    
+	    
+	    "ResultProc".Resultat_Decode := #Resultat_Decode;
+	    #POSITION_CLE := FIND(IN1 := #Resultat_Decode, IN2 := STRING_TO_WSTRING('\n'));
+	    IF #POSITION_CLE > 0 THEN
+	        "ResultProc".Resultat_Decode := #Resultat_Decode;
+	        
+	         #Resultat_Decode := DELETE(IN := #Resultat_Decode, L := LEN('\n') + #POSITION_CLE - 1, P := 1);
+	        //#Resultat_Decode := DELETE(IN := #Resultat_Decode, L := #POSITION_CLE +LEN('\n') , P := 1);
+	        "ResultProc".Resultat_Decode := #Resultat_Decode;
+	        #i := #i + 1;
+	    ELSE
+	        
+	        EXIT;
+	    END_IF;
+	END_WHILE;
+	//================ Decode des Commandes= ================//
+	
+	
+	
+	
+	
+	
+END_FUNCTION
+

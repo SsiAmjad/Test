@@ -1,0 +1,55 @@
+﻿FUNCTION "LireActionBoutonChPont" : USInt
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      ChPont : "S_ChargPont";
+   END_VAR
+
+
+BEGIN
+	IF #ChPont._ChargCommun._CommunGeneral._Etp <> #ChPont._MemoEtapeBt THEN
+	    #ChPont._MemoAppuiBP := 0;
+	END_IF;
+	#ChPont._MemoEtapeBt := #ChPont._ChargCommun._CommunGeneral._Etp;
+	IF #ChPont._BtAdandonLigne = 2 OR #ChPont._ChargCommun._BpFinChar OR #ChPont._ChargCommun._BtFinChar = 2 THEN
+	    #ChPont._ChargCommun._BtFinChar := 1;
+	    #ChPont._MemoAppuiBP := "ABANDONCHARG";
+	END_IF;
+	IF  #ChPont._BpDepCycle OR #ChPont._BtDepCycle = 2 THEN
+	    #ChPont._BtDepCycle := 1;
+	    #ChPont._MemoAppuiBP := "DEBCYCLE";
+	END_IF;
+	IF #ChPont._BpDemTare OR #ChPont._BtDemTare = 2 THEN
+	    #ChPont._BtDemTare := 1;
+	    #ChPont._MemoAppuiBP := "DEMTARE";
+	END_IF;
+	IF #ChPont._BpAjout OR #ChPont._BtAjout = 2 THEN
+	    #ChPont._MemoAppuiBP := "BTAJOUT";
+	END_IF;
+	IF #ChPont._BpSusp OR #ChPont._BtSusp = 2 THEN
+	    #ChPont._MemoAppuiBP := "BTSUSP";
+	END_IF;
+	IF #ChPont._BtChgCellule  = 2 THEN
+	    #ChPont._BtChgCellule := 1;
+	    #ChPont._MemoAppuiBP := "BTCHGCEL";
+	END_IF;
+	#ChPont._AttRelBt := #ChPont._BpSusp OR #ChPont._BpDemTare OR #ChPont._BpDepCycle OR #ChPont._ChargCommun._BpFinChar;
+	IF NOT #ChPont._AttRelBt THEN
+	    #LireActionBoutonChPont := #ChPont._MemoAppuiBP;
+	ELSE
+	    #LireActionBoutonChPont := 0;
+	END_IF; 
+	//#LireActionBouton := #ChPont._MemoAppuiBP;
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+END_FUNCTION
+

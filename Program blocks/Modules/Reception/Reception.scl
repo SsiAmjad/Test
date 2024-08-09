@@ -1,0 +1,2046 @@
+﻿FUNCTION "Reception" : Void
+TITLE = Fonction de la gestion module reception
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : SAS
+VERSION : 1.0
+   VAR_INPUT 
+      fgbase : Bool;
+      PtSuivRec : "S_MODULE_SUIVI_COMMUNREC";
+   END_VAR
+
+   VAR_IN_OUT 
+      REC : "S_REC";   // UDT Reception
+   END_VAR
+
+   VAR_TEMP 
+      ResultProcChangmtdestRec : String[254];
+      TempString : String;
+      MajNiv : SInt;
+      TestNumZone : SInt;
+      Ret : Int;
+      NivActuel : USInt;   // Niveau Actuel
+      RepDialog : SInt;
+      RetFct : Bool;
+      k : USInt;
+      i : Int;
+      j : Int;
+      Tps_Picke : Date_And_Time;
+      Ret_RD_Sys_T : Int;
+      Return : Bool;
+      Tps_Passe : Time;
+      Coef : Int;
+      Text_Def : String;
+      ResultProcCancelRec : String;
+      ResultProcDebutRec : String[254];
+      ResultProcFinRec : String[254];
+      CdZoneDest : String;
+      Anc_Dest : String;
+      Ret_Int : Int;
+      ReturnChngDest : SInt;
+      y : UInt;
+      Ret_Bool : Bool;
+      ret_string : String;
+      Temp_Char : Char;
+      ret_sint : SInt;
+      x : USInt;
+   END_VAR
+
+   VAR CONSTANT 
+      ListeDestParcourue : SInt := 30;   // Constante pour lire prochainement a partir de texte reponse
+      Etape_Repos : SInt := 0;
+      Etape_Attente_Aval : SInt := 1;
+      Etape_Attente_Amont : SInt := 2;
+      Etape_Lancement : SInt := 3;
+      Etape_prepositionnement : SInt := 4;
+      Etape_attente_circuit_positionne : SInt := 5;
+      Etape_attente_produit : SInt := 6;
+      Etape_surveillance : SInt := 7;
+      Etape_changement_destination : SInt := 8;
+      Etape_ChgDestNoeud : SInt := 9;
+      Etape_suspension : SInt := 10;
+      Etape_test_qte_passee : SInt := 11;
+      Etape_attente_acquit_nettoyage : SInt := 12;
+      Etape_vidange : SInt := 13;
+      Etape_maj_base : SInt := 14;
+      Etape_fin_lot : SInt := 15;
+      Etape_Attente_RepDial : SInt := 16;
+   END_VAR
+
+
+BEGIN
+	IF #REC._IndexDestEc > -1 THEN
+	    #REC._ptDestEc := "DB_Mod_Cellule"._TabCel[#REC._IndexDestEc];
+	END_IF;
+	#REC._FgChangDest := #REC.RecCommun.SUPREC.Commande._FgChangDest;
+	#REC._FgSusp := #REC.RecCommun.SUPREC.Commande._Suspension;
+	#REC._FgDemVid := #REC.RecCommun.SUPREC.Commande._Vidange;
+	#REC._FgArretImm := #REC.RecCommun.SUPREC.Commande._ArretImmediat;
+	IF #REC.RecCommun.SUPREC.Commande._Depart THEN
+	    #REC._FgBpDepart := 1;
+	    #REC._BpDepart := TRUE;
+	ELSE
+	    #REC._FgBpDepart := 0;
+	    #REC._BpDepart := FALSE;
+	END_IF;
+	(* #REC._pm := #PM;
+	#REC.RecCommun.CommunGeneral._ParCal._PM := #REC._pm;
+	#REC.RecCommun.CommunGeneral._ParCal._PM2 := #REC._pm2; *)
+	IF "Valid_Index"(#REC._PtCir.Origine) THEN
+	    IF "DB_BIBLIOTHEQUE".Mobile[#REC._PtCir.Origine].Mob_Suiv[0] > -1 THEN
+	        #REC._pm := #REC.RecCommun.CommunGeneral._ParCal._PM := "DB_BIBLIOTHEQUE".Mobile["DB_BIBLIOTHEQUE".Mobile[#REC._PtCir.Origine].Mob_Suiv[0]].Pass_Mat;
+	    END_IF;
+	END_IF;
+	CASE #REC.RecCommun.CommunGeneral._Etp OF
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                        ╔════════════════════════════════════╗
+	                                                                        ║          Etape "repos"             ║
+	                                                                        ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	    #Etape_Repos:
+	        REGION Traitement preliminaire 
+	            IF (#REC.RecCommun.CommunGeneral._Etp <> #REC.RecCommun.CommunGeneral._EtpPrec) THEN
+	                //Memorisation de l'etape encours
+	                #REC.RecCommun.CommunGeneral._EtpPrec := #REC.RecCommun.CommunGeneral._Etp;
+	                //Reperer le niveau du grafcet
+	                //Nomination l'etape en cours
+	                #REC.RecCommun.CommunGeneral._DescEtp := 'Etape repos';
+	                //lecture du temps local 
+	                #Ret_RD_Sys_T := RD_SYS_T(#REC._TpsPicke);
+	                //Initialisation des flags
+	                #REC._FgArret := FALSE;
+	                #REC._FgSusp := FALSE;
+	                #REC._FgChangDest := FALSE;
+	                #REC._FgLanc := FALSE;
+	                #REC.RecCommun.SUPREC.Commande._FgChangDest := FALSE;
+	                #REC._FgDemVid := FALSE;
+	                #REC._FgDemFinNett := FALSE;
+	                #REC._FgDemQteP := FALSE;
+	                #REC._CumulQteNh := 0;
+	                #REC.RecCommun.CommunGeneral._IndxDest := 0;
+	                "Supervision"(RAZ := TRUE,
+	                              REC := #REC);
+	                IF #REC.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #REC.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO Repos_DEF1;
+	                    END_CASE;
+	                END_IF;
+	                
+	            END_IF;
+	        END_REGION Traitement preliminaire
+	        REGION Traitement cyclique "repos" 
+	            //Attente de l'activation de la tâche en utilisant la fonction "Lecni".
+	            #TestNumZone := "Test_Lot_Att_Tache"(Num_Tache := #REC.RecCommun.CommunGeneral._Tache, Num_Zone => #REC.RecCommun.CommunGeneral._NumZone);
+	            // Récupération de l'adresse de la zone de suivi de lot 
+	            IF (#TestNumZone = 1) THEN
+	                //#REC._Ptzs := #PtSuivRec.Tab_Lots[#REC.RecCommun.CommunGeneral._NumZone];
+	                #REC._Ptzs := #PtSuivRec.Tab_Lots[#REC.RecCommun.CommunGeneral._NumZone];
+	                FOR #i := 0 TO "NB_MAX_DEST" DO
+	                    #REC.RecCommun.CommunGeneral._Dest[#i] := "Index_Mobile"(#REC._Ptzs._Dest[#i]);
+	                    #REC.RecCommun.CommunGeneral._Orig[#i] := "Index_Mobile"(#REC._Ptzs._Orig[#i]);
+	                END_FOR;
+	                
+	                IF ((#REC.RecCommun.CommunGeneral._Dest[0] = -1) OR (#REC.RecCommun.CommunGeneral._Orig[0] = -1)) THEN
+	                    //appel dialogue defaut
+	                    ;
+	                ELSE
+	                    #REC.RecCommun.CommunGeneral._Ptdest := #REC.RecCommun.CommunGeneral._Dest[0];
+	                    #REC.RecCommun.CommunGeneral._PtOrig := #REC.RecCommun.CommunGeneral._Orig[0];
+	                END_IF;
+	                //Initialisation de la structure du circuit 
+	                #REC._Ptzs._Fg_Abandon := FALSE;
+	                #REC._PremierPassageDate := FALSE;
+	                #REC._Ptzs._Fg_Premier_Demarrage := FALSE;
+	                #REC.RecCommun.CommunGeneral._ParCal._QteTrans := 0; // qte passée sur le transporteur
+	                #REC.RecCommun.CommunGeneral._ParCal._TpsTran := T#0S;//temps de transfer sur le transporteur
+	                #REC.RecCommun.CommunGeneral._ParCal._QteSuivi := 0; //qte memorisé en zone de suivi pour reprise
+	                #REC.RecCommun.CommunGeneral._ParCal._TpsSuivi := T#0S;//temps memorise en ZS
+	                #REC._TheoTrans := #REC._Ptzs._Qte_Prev;
+	                //appel focntion aff lot
+	                
+	                // Initialisation memorisation acquit fosse propre
+	                #REC._Ptzs._Fg_Dem_Acq_Fosse_Propre := FALSE;
+	                #REC._Ptzs._Fg_Acq_Fosse_Propre := FALSE;
+	                #REC._Ptzs._Fg_Rincage := FALSE;
+	                #REC.RecCommun.CommunGeneral._ParCal._CdMatOrg := #REC._Ptzs._CdMatOrg;
+	                #REC.RecCommun.CommunGeneral._ParCal._CdMatDest := #REC._Ptzs._CdMat;
+	                // Lecture du coef d'ajustement densite farine
+	                IF (#REC._FgGestDens = TRUE) AND #REC._IdCoeffDens[0] <> 0 AND #REC._IdCoeffDens[0] <> 32 THEN
+	                    #Coef := 1;
+	                    #REC._Ptzs._CoefDens := #Coef;
+	                    IF #fgbase THEN
+	                        // Appel Proc Lect Coeff Dens
+	                        (*  "Proc_LectCoefDens"(NumPoste:="NumPort",
+	                                           Article:=#REC._Ptzs._CdMat,
+	                                           Lieu:=_string_in_,
+	                                           Procede:=#REC.RecCommun.CommunGeneral._Autom,
+	                                           SUIV_REC:=#REC._Ptzs); *)
+	                        ;
+	                    END_IF;
+	                    
+	                    
+	                    IF #REC._Ptzs._CoefDens > 0 THEN
+	                        #REC._Ptzs._Densite := #REC._Ptzs._Densite * #REC._Ptzs._CoefDens;
+	                    ELSE
+	                        #REC._Ptzs._CoefDens := 1;
+	                    END_IF;
+	                    #REC._AffCoefCor := #REC._Ptzs._CoefDens;
+	                END_IF;
+	                #REC._AffDensCours := #REC._Ptzs._Densite;
+	                "Supervision"(RAZ := FALSE,
+	                              REC := #REC);
+	                //Initialisation du tableau des destinations du circuit dans "pt_zs"
+	                #REC._Ptzs._DestInit := #REC._Ptzs._Dest[0];
+	                #REC.RecCommun.CommunGeneral._AncDest := "Index_Mobile"(#REC._Ptzs._DestInit);
+	                #REC._Ptzs._FgChgDestNh := FALSE;
+	                #REC._CumulQteNh := 0;
+	                #REC._debutCir := #REC._TpsPicke;
+	                (* #REC.RecCommun.CommunGeneral._Etp :=  #Etape_Attente_Aval;
+	               RETURN; *)
+	                IF #fgbase THEN
+	                    #ResultProcDebutRec := "Proc_Debut_Recep"(NumPoste := "Num_Poste",
+	                                                              IdRecep := #REC._Ptzs._Id_Rec,
+	                                                              Dest := #REC._Ptzs._Dest[0], Msg_Def => #Text_Def);
+	                    
+	                ELSE
+	                    #ResultProcDebutRec := 'OK';
+	                END_IF;
+	                
+	                IF #ResultProcDebutRec = 'NOK' THEN
+	                    #REC.Dial_Def.Num_Def_Etape := 1;
+	                    #REC.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase,
+	                                                                  Msg_Defaut := #Text_Def,
+	                                                                  Type_Defaut := 2,
+	                                                                  Automatisme := #REC.RecCommun.CommunGeneral._Autom,
+	                                                                  Num_Lot := #REC._Ptzs._NoLot,
+	                                                                  Origine_Defaut := 'Base de donnees',
+	                                                                  Libelle_Origine := 'Base de donnees',
+	                                                                  Acq1 := 'Abandon',
+	                                                                  Acq2 := 'Relance',
+	                                                                  Acq3 := '',
+	                                                                  Acq4 := '',
+	                                                                  Acq5 := '',
+	                                                                  Acq6 := '',
+	                                                                  Acq7 := '',
+	                                                                  Acq8 := '',
+	                                                                  Acq_Choisi := -1,
+	                                                                  Date_Arrivee := #REC._TpsPicke);
+	                    #REC.RecCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                    RETURN;
+	                END_IF;
+	                IF #ResultProcDebutRec = 'OK' THEN
+	                    #REC.RecCommun.CommunGeneral._Etp := #Etape_Attente_Aval;
+	                    RETURN;
+	                END_IF;
+	                
+	            END_IF;
+	        Repos_DEF1:
+	            //================================== Traitement des reponses pour le defaut1  =============================================================//
+	            IF #REC.Dial_Def.Reponse_Def = 'Abandon' THEN
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_fin_lot;
+	                #REC.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            IF #REC.Dial_Def.Reponse_Def = 'Relance' THEN
+	                #REC.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            //============================================  Fin traitement  ====================================================================//
+	            
+	            
+	            
+	        END_REGION Traitement cyclique "Repos" 
+	        RETURN;
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                    ╔════════════════════════════════════╗
+	                                                                                    ║        Etape "Attente Aval"        ║
+	                                                                                    ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                    
+	*)
+	    #Etape_Attente_Aval:
+	        REGION Traitement preliminaire 'Attente_Aval'
+	            IF (#REC.RecCommun.CommunGeneral._Etp <> #REC.RecCommun.CommunGeneral._EtpPrec) THEN
+	                //Memorisation de l'etape encours
+	                #REC.RecCommun.CommunGeneral._EtpPrec := #REC.RecCommun.CommunGeneral._Etp;
+	                //Reperer le niveau du grafcet
+	                #MajNiv := "Maj_Niv"(Num_Zone := #REC.RecCommun.CommunGeneral._NumZone, Num_Tache := #REC.RecCommun.CommunGeneral._Tache, Niveau := "REC_AttenteAval_Niv");
+	                //Nomination l'etape en cours
+	                #REC.RecCommun.CommunGeneral._DescEtp := 'Etape Attente Aval';
+	            END_IF;
+	        END_REGION Traitement preliminaire 'Attente_Aval'
+	        
+	        REGION Traitement cyclique "Attente_Aval" 
+	            FOR #k := 0 TO "T_MAX_AMONTAVAL" DO
+	                IF (#REC.RecCommun.CommunGeneral._TabTachAval[#k]._Tache = -1) THEN
+	                    EXIT;
+	                END_IF;
+	                // #Ret := "Test_Niv"(Num_Zone := #REC.RecCommun.CommunGeneral._NumZone, Num_Tache := #REC.RecCommun.CommunGeneral._TabTachAval[#i]._Tache, Niveau:=_usint_in_);
+	                IF (#Ret = -1) THEN
+	                    EXIT;
+	                END_IF;
+	            END_FOR;
+	            IF (#Ret <> -1) THEN
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_Attente_Amont;   // Appel fct MAJ ETAPE
+	            END_IF;
+	        END_REGION Traitement cyclique "Attente_Aval" 
+	        
+	        RETURN;
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║       Etape "Attente Amont"        ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                    
+	*)
+	    #Etape_Attente_Amont:
+	        REGION Traitement preliminaire 'Attente_Amont'
+	            IF (#REC.RecCommun.CommunGeneral._Etp <> #REC.RecCommun.CommunGeneral._EtpPrec) THEN
+	                //Memorisation de l'etape encours
+	                #REC.RecCommun.CommunGeneral._EtpPrec := #REC.RecCommun.CommunGeneral._Etp;
+	                //Reperer le niveau du grafcet
+	                #MajNiv := "Maj_Niv"(Num_Zone := #REC.RecCommun.CommunGeneral._NumZone, Num_Tache := #REC.RecCommun.CommunGeneral._Tache, Niveau := "REC_AttenteAmont_Niv");
+	                //Nomination l'etape en cours
+	                #REC.RecCommun.CommunGeneral._DescEtp := 'Etape Attente Amont';
+	            END_IF;
+	        END_REGION Traitement preliminaire 'Attente_Amont'
+	        REGION Traitement cyclique "Attente_Amont" 
+	            FOR #k := 0 TO "T_MAX_AMONTAVAL" DO
+	                IF (#REC.RecCommun.CommunGeneral._TabTachAmont[#k]._Tache = -1) THEN
+	                    EXIT;
+	                END_IF;
+	                //   #Ret := "Test_Niv"(Num_Zone := #REC.RecCommun.CommunGeneral._NumZone, Num_Tache := #REC.RecCommun.CommunGeneral._TabTachAmont[#i]._Tache,Niveau:=_usint_in_);
+	                IF (#Ret = -1) THEN
+	                    EXIT;
+	                END_IF;
+	            END_FOR;
+	            IF (#Ret <> -1) THEN
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_Lancement; // Appel fct MAJ ETAPE
+	            END_IF;
+	            RETURN;
+	        END_REGION Traitement cyclique "Attente_Amont"
+	        
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║          Etape "Lancement"         ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                        
+	*)
+	    #Etape_Lancement:
+	        REGION Traitement preliminaire 'Lancement'
+	            IF (#REC.RecCommun.CommunGeneral._Etp <> #REC.RecCommun.CommunGeneral._EtpPrec) THEN
+	                //Memorisation de l'etape encours
+	                #REC.RecCommun.CommunGeneral._EtpPrec := #REC.RecCommun.CommunGeneral._Etp;
+	                //Reperer le niveau du grafcet
+	                #MajNiv := "Maj_Niv"(Num_Zone := #REC.RecCommun.CommunGeneral._NumZone, Num_Tache := #REC.RecCommun.CommunGeneral._Tache, Niveau := "REC_Lancement_Niv");
+	                //Nomination l'etape en cours
+	                #REC.RecCommun.CommunGeneral._DescEtp := 'Etape Lancement';
+	                IF #REC.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #REC.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO LANCEMENT_DEF1;
+	                            
+	                        2:
+	                            GOTO LANCEMENT_DEF2;
+	                    END_CASE;
+	                    
+	                END_IF;
+	                //Initialisation des flags
+	                #REC._FgMaskCtrlNh := FALSE;
+	                #REC._FgChangDest := FALSE;
+	                #REC.RecCommun.SUPREC.Commande._FgChangDest := FALSE;
+	                IF #REC._fgTestQtePossible THEN
+	                    #REC._FgActQtePossible := TRUE;
+	                ELSE
+	                    #REC._FgActQtePossible := FALSE;
+	                END_IF;
+	                #Ret_RD_Sys_T := RD_SYS_T(#REC._TpsPicke);
+	            END_IF;
+	        END_REGION Traitement preliminaire 'Lancement'
+	        REGION Traitement cyclique "Lancement"  
+	            //  Contrôle de la fosse.
+	            IF ((#REC._FgVerifQte = TRUE) AND (#REC._FgArretFosPleine = TRUE)) THEN
+	                //      La Reception prcdente s'est arrte avec du produit dans la fosse"
+	                #REC.Dial_Def.Num_Def_Etape := 1;
+	                #REC.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := 'Confirmez vous le lancement?',
+	                                                              Type_Defaut := 1,
+	                                                              Automatisme := #REC.RecCommun.CommunGeneral._Autom,
+	                                                              Num_Lot := #REC._Ptzs._NoLot,
+	                                                              Origine_Defaut := 'Fosse pleine',
+	                                                              Libelle_Origine := 'Fosse pleine',
+	                                                              Acq1 := 'Oui',
+	                                                              Acq2 := 'Non',
+	                                                              Acq3 := '',
+	                                                              Acq4 := '',
+	                                                              Acq5 := '',
+	                                                              Acq6 := '',
+	                                                              Acq7 := '',
+	                                                              Acq8 := '',
+	                                                              Acq_Choisi := -1,
+	                                                              Date_Arrivee := #REC._TpsPicke);
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                RETURN;
+	            END_IF;
+	        LANCEMENT_DEF1:
+	            
+	            //============ Traitement des reponses pour le defaut1 Etape lancement Controle la fosse  ====================================//
+	            IF #REC.Dial_Def.Reponse_Def = 'Oui' THEN //oui
+	                #REC._FgArretFosPleine := FALSE;
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_Lancement;
+	                #REC.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            IF #REC.Dial_Def.Reponse_Def = 'Non' THEN //non
+	                #REC._Ptzs._Fg_Abandon := TRUE;
+	                #ResultProcCancelRec := "Proc_Cancel_REC"(IdRec := #REC._Ptzs._Id_Rec, NumPoste := "Num_Poste", Msg_Def => #Text_Def);
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_fin_lot;
+	                #REC.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            
+	            
+	            //============================================  Fin traitement  ====================================================================//
+	            
+	            
+	            // recuperation d'origine destination et num circuit
+	            #REC._PtCir.Origine := #REC.RecCommun.CommunGeneral._PtOrig; //#REC.RecCommun.CommunGeneral._Orig[0];
+	            #REC._PtCir.Destination := #REC.RecCommun.CommunGeneral._Ptdest;
+	            #REC._PtCir.Num_Circuit := #REC._NoCir;
+	            // Prise en compte critres de circuit 
+	            #i := 0;
+	            FOR #x := 0 TO "Nbr_Criteres" DO
+	                IF "Valid_Index"(#REC._Ptzs._Criteres[#x]._Mobile) THEN
+	                    #REC._PtCir.Criteres[#i].Mobile := #REC._Ptzs._Criteres[#x]._Mobile;
+	                    #REC._PtCir.Criteres[#i].Critere := #REC._Ptzs._Criteres[#x]._Valeur;
+	                END_IF;
+	            END_FOR;
+	            
+	            
+	            
+	            
+	            
+	            //recherche du circuit
+	            #Ret := "Rech_Cir"(Circuit := #REC._PtCir);
+	            (* IF #Ret = -1 THEN
+	                #REC.RecCommun.CommunGeneral._Etp :=  #Etape_Lancement;  ;
+	            END_IF; *)
+	            
+	            IF #Ret = -1 THEN
+	                //appel dialogue defaut
+	                #REC.Dial_Def.Num_Def_Etape := 2;
+	                #Text_Def := CONCAT(IN1 := 'Circuit de ', IN2 := "Nom_Mobile"(#REC._PtCir.Origine), IN3 := ' vers ', IN4 := "Nom_Mobile"(#REC.RecCommun.CommunGeneral._Ptdest), IN5 := ' introuvable ou reserve ');
+	                #REC.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := #Text_Def,
+	                                                              Type_Defaut := 3,
+	                                                              Automatisme := #REC.RecCommun.CommunGeneral._Autom,
+	                                                              Num_Lot := #REC._Ptzs._NoLot,
+	                                                              Origine_Defaut := 'Circuit Introuvable ou reserve',
+	                                                              Libelle_Origine := 'Circuit Introuvable ou reserve',
+	                                                              Acq1 := 'Relance',
+	                                                              Acq2 := 'Cellule',
+	                                                              Acq3 := 'Abandon',
+	                                                              Acq4 := '',
+	                                                              Acq5 := '',
+	                                                              Acq6 := '',
+	                                                              Acq7 := '',
+	                                                              Acq8 := '',
+	                                                              Acq_Choisi := -1,
+	                                                              Date_Arrivee := #REC._TpsPicke);
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                RETURN;
+	            END_IF;
+	        LANCEMENT_DEF2:
+	            //============ Traitement des reponses pour le defaut2 Etape lancement Recherche circuit  ====================================//
+	            IF #REC.Dial_Def.Reponse_Def = 'Relance' THEN //Relance
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_Lancement;
+	                #REC.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            IF #REC.Dial_Def.Reponse_Def = 'Abandon' THEN
+	                #REC._Ptzs._Fg_Abandon := TRUE;
+	                #ResultProcCancelRec := "Proc_Cancel_REC"(IdRec := #REC._Ptzs._Id_Rec, NumPoste := "Num_Poste", Msg_Def => #Text_Def);
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_fin_lot;
+	                #REC.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            IF #REC.Dial_Def.Reponse_Def = 'Cellule' THEN //cellule
+	                #Ret := "Index_Mobile"(#REC.Dial_Def.Text_Reponse);
+	                #REC.Dial_Def.Reponse_Def := '';
+	                IF #Ret = -1 THEN
+	                    // Cellule choisie est incorrecte
+	                    #REC.Dial_Def.Num_Def_Etape := 3;
+	                    #Text_Def := CONCAT(IN1 := 'Cellule ', IN2 := #REC.Dial_Def.Text_Reponse, IN3 := ' Inexistante');
+	                    #REC.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := #Text_Def,
+	                                                                  Type_Defaut := 3,
+	                                                                  Automatisme := #REC.RecCommun.CommunGeneral._Autom,
+	                                                                  Num_Lot := #REC._Ptzs._NoLot,
+	                                                                  Origine_Defaut := 'Recherche circuit ',
+	                                                                  Libelle_Origine := 'Cellule choisie inexistante',
+	                                                                  Acq1 := 'Relance',
+	                                                                  Acq2 := 'Cellule',
+	                                                                  Acq3 := '',
+	                                                                  Acq4 := '',
+	                                                                  Acq5 := '',
+	                                                                  Acq6 := '',
+	                                                                  Acq7 := '',
+	                                                                  Acq8 := '',
+	                                                                  Acq_Choisi := -1,
+	                                                                  Date_Arrivee := #REC._TpsPicke);
+	                    #REC.RecCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                    RETURN;
+	                END_IF;
+	                //============================================  Fin traitement  ====================================================================//
+	                //Cellule saisie existe dans la table cellule
+	                IF #Ret > -1 THEN
+	                    #REC._CelluleTrouve := 0;
+	                    #REC._CelluleTrouve := "Controle_Cellule"(FgMaskNh := #REC._FgMaskCtrlNh,
+	                                                              NvCellule := #REC.Dial_Def.Text_Reponse,
+	                                                              TypeCelDest := #REC._TypeCelDest,
+	                                                              Cel := "DB_Mod_Cellule",
+	                                                              NiveauHautDestNh => #REC._NiveauHautDestNh);
+	                    
+	                    IF #REC._CelluleTrouve = 2 THEN
+	                        #Ret := "Libere_Circuit"(#REC._PtCir);              //liberer circuit
+	                        #REC.RecCommun.CommunGeneral._Ptdest := "Index_Mobile"(#REC.Dial_Def.Text_Reponse);
+	                        #REC._IndexDestEc := "RechIndexCel"("Nom_Mobile"(#REC.RecCommun.CommunGeneral._Ptdest));
+	                        #REC.RecCommun.CommunGeneral._Etp := #Etape_Lancement;
+	                        RETURN;
+	                    END_IF;
+	                    //circuit impossible
+	                    IF #REC._CelluleTrouve = -1 THEN
+	                        RETURN;
+	                    END_IF;
+	                END_IF;
+	            END_IF;
+	            #REC._Ptzs._FgChgDestNh := FALSE;
+	            #REC._IndexDestEc := "RechIndexCel"("Nom_Mobile"(#REC.RecCommun.CommunGeneral._Ptdest));
+	            #REC._vitesseFosse := #REC._Ptzs._Cons_TC; //consigne vitesse transporteur associé a la matiere
+	            
+	            // recherche de circuit est validé
+	            #REC.RecCommun.CommunGeneral._Etp := #Etape_prepositionnement;
+	            RETURN;
+	        END_REGION Traitement cyclique "Lancement"  
+	        RETURN;
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║      Etape "Prepositionnement"     ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** *************************************** 
+	*)
+	    #Etape_prepositionnement:
+	        REGION Traitement preliminaire 'Prepositionnement'
+	            IF (#REC.RecCommun.CommunGeneral._Etp <> #REC.RecCommun.CommunGeneral._EtpPrec) THEN
+	                //Memorisation de l'etape encours
+	                #REC.RecCommun.CommunGeneral._EtpPrec := #REC.RecCommun.CommunGeneral._Etp;
+	                //Reperer le niveau du grafcet
+	                #MajNiv := "Maj_Niv"(Num_Zone := #REC.RecCommun.CommunGeneral._NumZone, Num_Tache := #REC.RecCommun.CommunGeneral._Tache, Niveau := "REC_Prepositionnement_Niv");
+	                //Nomination l'etape en cours
+	                #REC.RecCommun.CommunGeneral._DescEtp := 'Etape prepositionnement';
+	                //Initialisation des flags
+	                #REC._SortieAlarme := FALSE;
+	            END_IF;
+	        END_REGION Traitement preliminaire 'prepositionnement'
+	        
+	        REGION Traitement cyclique "Prepositionnement" 
+	            IF #REC._ptDestEc._NivHaut THEN
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_changement_destination;
+	                RETURN;
+	            END_IF;
+	            
+	            IF NOT #REC._FgDepartAuto THEN
+	                IF #REC._FgBpDepart = 1 AND #REC._BpDepart = TRUE THEN
+	                    #REC.RecCommun.CommunGeneral._Etp := #Etape_attente_circuit_positionne;
+	                END_IF;
+	            ELSE
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_attente_circuit_positionne;
+	            END_IF;
+	            // la fonction vérifie si la quantité à recevoir est inférieure à la quantité possible en cellule.
+	            IF (#REC._fgTestQtePossible) THEN
+	                IF #REC._QtePossible < (#REC.RecCommun.CommunGeneral._ParCal._QteTrans - #REC._CumulQteNh) AND
+	                    (#REC._FgMaskCtrlNh = FALSE OR #REC._FgChangDest) THEN
+	                    IF #REC._FgChangDest OR #REC._FgGestStockNh THEN
+	                        #REC._Ptzs._FgChgDestNh := 0;
+	                    ELSE
+	                        #REC._Ptzs._FgChgDestNh := 1;
+	                    END_IF;
+	                    #REC.RecCommun.CommunGeneral._Etp := #Etape_changement_destination;
+	                END_IF;
+	            END_IF;
+	            // Contrle niveau haut destination
+	            #Ret := "Controle_NH"(TempoAffNH := T#0s, R := #REC);
+	            IF #Ret = 1 THEN
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_changement_destination;
+	            END_IF;
+	        END_REGION Traitement cyclique 'Prepositionnement'   
+	        RETURN;
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║ Etape "Attente circuit positionne" ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                            
+	*)
+	        
+	    #Etape_attente_circuit_positionne:
+	        REGION Traitement preliminaire 'Attente circuit positionne'
+	            IF (#REC.RecCommun.CommunGeneral._Etp <> #REC.RecCommun.CommunGeneral._EtpPrec) THEN
+	                //Memorisation de l'etape encours
+	                #REC.RecCommun.CommunGeneral._EtpPrec := #REC.RecCommun.CommunGeneral._Etp;
+	                //Reperer le niveau du grafcet
+	                #MajNiv := "Maj_Niv"(Num_Zone := #REC.RecCommun.CommunGeneral._NumZone, Num_Tache := #REC.RecCommun.CommunGeneral._Tache, Niveau := "REC_AttenteCircuitPositionne_Niv");
+	                
+	                #ret_string := "Proc_AffecT"(NumPoste := "Num_Poste",
+	                                             zone := "Nom_Mobile"(#REC.RecCommun.CommunGeneral._Ptdest),
+	                                             CodeMat := #REC._Ptzs._CdMat,
+	                                             Formule := #Temp_Char,
+	                                             LieuDos := '',
+	                                             Qte := 0,
+	                                             TypeMvmnt := '040',
+	                                             Procede := #REC.RecCommun.CommunGeneral._Autom,
+	                                             NoLotOrig := '',
+	                                             NoLotDest := #REC._Ptzs._NoLot,
+	                                             Utilisateur := 'SAS',
+	                                             SCb := '0',
+	                                             Sof := #REC._Ptzs._Cd_Rec, Msg_Def => #Text_Def);
+	                
+	                
+	                //Nomination l'etape en cours
+	                #Ret := "Dem_Circuit"(#REC._PtCir);
+	                #REC.RecCommun.CommunGeneral._DescEtp := 'Attente circuit positionne';
+	                #Ret_RD_Sys_T := RD_SYS_T(#REC._TpsPicke);
+	            END_IF;
+	        END_REGION Traitement preliminaire 'Attente circuit positionne'
+	        
+	        REGION Traitement cyclique "Attente_circuit_positionne"
+	            #REC._FgChangDest := false;
+	            #REC.RecCommun.SUPREC.Commande._FgChangDest := FALSE;
+	            // _niveauHaut=_ptTabDest->nh;
+	            // _niveauBas=_ptOrig->nb;
+	            #REC._HeureDeb := #REC._TpsPicke;
+	            #REC._FgAbandon := 0;
+	            IF #REC._PremierPassageDate = FALSE THEN
+	                #REC._debutCir := #REC._TpsPicke;
+	                #REC._PremierPassageDate := TRUE;
+	            END_IF;
+	            #REC._Ptzs._Fg_Premier_Demarrage := TRUE;
+	            #RetFct := "Test_Etat_Circuit"(Etat := "Pret", Debut := 0, CIRCUIT := #REC._PtCir);
+	            // IF "DB_BIBLIOTHEQUE".Mobile[#REC._PtCir.Origine].Etat = 3 THEN
+	            IF #RetFct THEN
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_attente_produit;
+	            END_IF;
+	        END_REGION Traitement cyclique "Attente_circuit_positionne"
+	        
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║       Etape "Attente Produit"      ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	    #Etape_attente_produit:
+	        REGION Traitement preliminaire 'Attente Produit'
+	            IF (#REC.RecCommun.CommunGeneral._Etp <> #REC.RecCommun.CommunGeneral._EtpPrec) THEN
+	                IF #REC.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #REC.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO ATTENTE_PRODUIT_DEF1;
+	                    END_CASE;
+	                END_IF;
+	                //Memorisation de l'etape encours
+	                #REC.RecCommun.CommunGeneral._EtpPrec := #REC.RecCommun.CommunGeneral._Etp;
+	                //Reperer le niveau du grafcet
+	                #MajNiv := "Maj_Niv"(Num_Zone := #REC.RecCommun.CommunGeneral._NumZone, Num_Tache := #REC.RecCommun.CommunGeneral._Tache, Niveau := "REC_AttenteProduit_Niv");
+	                //Nomination l'etape en cours
+	                #REC.RecCommun.CommunGeneral._DescEtp := 'Etape attente produit';
+	                //lecture du temps local 
+	                #Ret_RD_Sys_T := RD_SYS_T(#REC._TpsPicke);
+	                // Test si (produit deja vu) 
+	                IF #REC._Ptzs._Fg_Produit_Vu THEN
+	                    #REC.RecCommun.CommunGeneral._Etp := #Etape_surveillance;
+	                END_IF;
+	                (*  IF (#REC._Ptzs._Fg_Produit_Vu = TRUE OR #REC._Ptzs._Fg_Reeng = TRUE OR #REC._Ptzs._Fg_RincNet = TRUE OR #REC._tpDefPm = T#0S OR #REC._FgTestPm = FALSE) THEN  //OR (#REC._pm = FALSE AND #REC._pm2 = FALSE
+	                      //Maj_Etape"surveillance"
+	                      #REC.RecCommun.CommunGeneral._Etp :=  #Etape_surveillance;
+	                      RETURN;
+	                  END_IF; *)
+	                #REC._LibelPm := FALSE;
+	                #REC._LibelPm2 := FALSE;
+	                #REC._Debut := #REC._TpsPicke;
+	                #REC._DebutPresPm := #REC._TpsPicke;
+	            END_IF;
+	        END_REGION Traitement preliminaire 'Attente Produit'
+	        
+	        REGION Traitement cyclique "Attente_produit"
+	            // si passage de matiere non declare 
+	            IF #REC._CaptPm = FALSE THEN
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_surveillance;
+	                RETURN;
+	            END_IF;
+	            // le cas ou jai un capteur je teste le passage matiere   
+	            IF #REC._pm = FALSE AND #REC._pm2 = FALSE THEN
+	                //je recupere le temps du premier passage
+	                #Ret_RD_Sys_T := RD_SYS_T(#REC._DebutPresPm);
+	            END_IF;
+	            #Return := "Tempo"(Duree := #REC._tpPresPm, Tps_Picke := #REC._DebutPresPm, Anticip := FALSE, Tps_Passe => #Tps_Passe);
+	            //
+	            IF #Return THEN
+	                #REC._Ptzs._Fg_Produit_Vu := TRUE;
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_surveillance;
+	                RETURN;
+	            END_IF;
+	            // Test demande de suspension
+	            IF (#REC._FgSusp = TRUE) THEN
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_suspension;
+	                RETURN;
+	            END_IF;
+	            // Test demande d'arret
+	            IF (#REC._FgArret = TRUE) THEN
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_vidange;
+	                RETURN;
+	            END_IF;
+	            IF (#REC._Ptzs._Fg_RincNet = FALSE) THEN
+	                #Return := "Tempo"(Duree := #REC._tpDefPm, Tps_Picke := #REC._Debut, Anticip := FALSE, Tps_Passe => #Tps_Passe);
+	                IF #Return THEN
+	                    // #REC._Debut := #REC._TpsPicke;
+	                    #REC.Dial_Def.Num_Def_Etape := 1;
+	                    #REC.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := 'Probleme detection du passage matiere',
+	                                                                  Type_Defaut := 3,
+	                                                                  Automatisme := #REC.RecCommun.CommunGeneral._Autom,
+	                                                                  Num_Lot := #REC._Ptzs._NoLot,
+	                                                                  Origine_Defaut := 'Pas de presence du matiere',
+	                                                                  Libelle_Origine := 'Pas de presence du matiere',
+	                                                                  Acq1 := 'Relance',
+	                                                                  Acq2 := 'Abandon',
+	                                                                  Acq3 := '',
+	                                                                  Acq4 := '',
+	                                                                  Acq5 := '',
+	                                                                  Acq6 := '',
+	                                                                  Acq7 := '',
+	                                                                  Acq8 := '',
+	                                                                  Acq_Choisi := -1,
+	                                                                  Date_Arrivee := #REC._TpsPicke);
+	                    #REC.RecCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	        ATTENTE_PRODUIT_DEF1:
+	            //============ Traitement des reponses pour le defaut1 Etape ATTENTE PRODUIT  PAS DE PM  ====================================//
+	            IF #REC.Dial_Def.Reponse_Def = 'Abandon' THEN    //abandon
+	                #REC._Ptzs._Fg_Produit_Vu := 1;
+	                #REC.Dial_Def.Reponse_Def := '';
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_surveillance;
+	                #REC._Ptzs._Fg_Produit_Vu := TRUE;
+	                RETURN;
+	            END_IF;
+	            IF #REC.Dial_Def.Reponse_Def = 'Relance' THEN //relance
+	                #REC.Dial_Def.Reponse_Def := '';
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_attente_produit;
+	                #Ret_RD_Sys_T := RD_SYS_T(#REC._TpsPicke);
+	                RETURN;
+	            END_IF;
+	            //============================================  Fin traitement  ====================================================================//
+	            
+	            // Test si quantite a receptionner inferieure a la quantite possible en cellule
+	            IF #REC._fgTestQtePossible = TRUE THEN
+	                IF #REC._QtePossible < (#REC.RecCommun.CommunGeneral._ParCal._QteTrans - #REC._CumulQteNh) AND (#REC._FgMaskCtrlNh = FALSE OR #REC._FgChangDest) THEN
+	                    
+	                    IF #REC._FgChangDest THEN
+	                        #REC._Ptzs._FgChgDestNh := FALSE;
+	                    ELSE
+	                        IF #REC._FgGestStockNh = FALSE THEN
+	                            #REC._Ptzs._FgChgDestNh := FALSE;
+	                        ELSE
+	                            #REC._Ptzs._FgChgDestNh := TRUE;
+	                        END_IF;
+	                    END_IF;
+	                    //Appel fct  MAJ_Cumul_Dest
+	                    
+	                    "MAJ_Cumul_Dest"(Dest := "Nom_Mobile"(#REC.RecCommun.CommunGeneral._Ptdest),
+	                                     Increment := FALSE,
+	                                     DestR := #REC._Ptzs._DestR,
+	                                     PARCAL := #REC.RecCommun.CommunGeneral._ParCal);
+	                    #REC.RecCommun.CommunGeneral._Etp := #Etape_changement_destination;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	            // Controle niveau haut destination
+	            #Ret := "Controle_NH"(TempoAffNH := "TpDefNh", R := #REC);
+	            IF #Ret = 1 THEN
+	                //Appel fct  MAJ_Cumul_Dest
+	                "MAJ_Cumul_Dest"(Dest := "Nom_Mobile"(#REC.RecCommun.CommunGeneral._Ptdest),
+	                                 Increment := FALSE,
+	                                 DestR := #REC._Ptzs._DestR,
+	                                 PARCAL := #REC.RecCommun.CommunGeneral._ParCal);
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_changement_destination;
+	                RETURN;
+	            END_IF;
+	        END_REGION Traitement cyclique "Attente_produit"
+	        RETURN;
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║         Etape "Surveillance"       ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                
+	*)
+	    #Etape_surveillance:
+	        
+	        REGION Traitement preliminaire 'Surveillance'
+	            IF (#REC.RecCommun.CommunGeneral._Etp <> #REC.RecCommun.CommunGeneral._EtpPrec) THEN
+	                //Memorisation de l'etape encours
+	                #REC.RecCommun.CommunGeneral._EtpPrec := #REC.RecCommun.CommunGeneral._Etp;
+	                //Reperer le niveau du grafcet
+	                #MajNiv := "Maj_Niv"(Num_Zone := #REC.RecCommun.CommunGeneral._NumZone, Num_Tache := #REC.RecCommun.CommunGeneral._Tache, Niveau := "REC_Surveillance_Niv");
+	                //Nomination l'etape en cours
+	                #REC.RecCommun.CommunGeneral._DescEtp := 'Etape surveillance';
+	                IF #REC.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #REC.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO SURVEILLANCE_DEF1;
+	                        2:
+	                            GOTO SURVEILLANCE_DEF2;
+	                        3:
+	                            GOTO SURVEILLANCE_DEF3;
+	                        4:
+	                            GOTO SURVEILLANCE_DEF4;
+	                    END_CASE;
+	                END_IF;
+	                //Initialisation des flags
+	                #REC._Ptzs._FgChgDestNh := 0;
+	                #REC._IndexDestEc := "RechIndexCel"("Nom_Mobile"(#REC.RecCommun.CommunGeneral._Ptdest));
+	                // Calcul debit massique transporteur
+	                "Debit_Massique"(SAV := #REC._vitesseFosse,
+	                                 Densite := #REC._Ptzs._Densite,
+	                                 PARCAL := #REC.RecCommun.CommunGeneral._ParCal);
+	                //Lancement Calcul quantité farine
+	                #REC.RecCommun.CommunGeneral._ParCal._FgCalFar := TRUE;
+	                //Lancement calcul temps de passage
+	                #REC.RecCommun.CommunGeneral._ParCal._FgCalTps := TRUE;
+	                //initialiation flag
+	                #REC._FgDemQteP := FALSE;
+	                #REC._FgEnchainPossible := TRUE;
+	                //recuperation heure systeme
+	                #Ret_RD_Sys_T := RD_SYS_T(#REC._Debut);
+	                #Ret_RD_Sys_T := RD_SYS_T(#REC._DebutNett);
+	                // Recuperation niveau haut
+	                #REC._ptDestEc := "DB_Mod_Cellule"._TabCel[#REC._IndexDestEc];
+	                //Appel fct  MAJ_Cumul_Dest
+	                "MAJ_Cumul_Dest"(Dest := "Nom_Mobile"(#REC.RecCommun.CommunGeneral._Ptdest),
+	                                 Increment := FALSE,
+	                                 DestR := #REC._Ptzs._DestR,
+	                                 PARCAL := #REC.RecCommun.CommunGeneral._ParCal);
+	            END_IF;
+	        END_REGION Traitement preliminaire 'Surveillance'
+	        
+	        
+	        REGION Traitement cyclique "Surveillance"
+	            //  #Ret_RD_Sys_T := RD_SYS_T(#REC._TpsPicke);
+	            // Mise  jour quantité théorique calcule en zone de suivi
+	            #REC._Ptzs._Qte_Rec := #REC.RecCommun.CommunGeneral._ParCal._QteTrans;
+	            // Mise à jour temps de marche transporteur dans zone de suivi
+	            #REC._Ptzs._Tps_Tc := #REC.RecCommun.CommunGeneral._ParCal._TpsTran;
+	            //calcul debit massique
+	            "Debit_Massique"(SAV := #REC._vitesseFosse,
+	                             Densite := #REC._Ptzs._Densite,
+	                             PARCAL := #REC.RecCommun.CommunGeneral._ParCal);
+	            //Affichage
+	            "Supervision"(RAZ := FALSE,
+	                          REC := #REC);
+	            // Teste demande d'arret circuit par bouton ARRET supervision en mode reengrainement ou arret oprateur si pas de passage matire
+	            IF (#REC._FgArret = TRUE AND #REC._FgTestFinPm = FALSE) THEN
+	                #REC._FgArret := FALSE;
+	                IF (#REC._CaptPm = FALSE) THEN
+	                    #REC._FgEnchainPossible := FALSE;
+	                    #REC.RecCommun.CommunGeneral._Etp := #Etape_vidange;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	            //Test demande d'arret immediat du circuit
+	            IF #REC._FgArretImm THEN
+	                #REC.Dial_Def.Num_Def_Etape := 3;
+	                #REC.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := 'Confirmation arret immediat',
+	                                                              Type_Defaut := 1,
+	                                                              Automatisme := #REC.RecCommun.CommunGeneral._Autom,
+	                                                              Num_Lot := #REC._Ptzs._NoLot,
+	                                                              Origine_Defaut := 'Supervision',
+	                                                              Libelle_Origine := 'Confirmez vous arret immediat',
+	                                                              Acq1 := 'Oui',
+	                                                              Acq2 := 'Non',
+	                                                              Acq3 := '',
+	                                                              Acq4 := '',
+	                                                              Acq5 := '',
+	                                                              Acq6 := '',
+	                                                              Acq7 := '',
+	                                                              Acq8 := '',
+	                                                              Acq_Choisi := -1,
+	                                                              Date_Arrivee := #REC._TpsPicke);
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                RETURN;
+	            END_IF;
+	        SURVEILLANCE_DEF3:
+	            //============ Traitement des reponses pour le defaut3 Etape Surveillance  Confirmation arret immediat ====================================//
+	            IF #REC.Dial_Def.Reponse_Def = 'Non' THEN //non
+	                #REC._FgArretImm := FALSE;
+	                #REC.RecCommun.SUPREC.Commande._ArretImmediat := FALSE;
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_surveillance;
+	                #REC.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            ///le cas la reponse et oui et passage de matier
+	            IF #REC.Dial_Def.Reponse_Def = 'Oui' THEN //oui
+	                IF #REC._CaptPm AND (#REC._pm OR #REC._pm2) THEN   //traiter au cas ou j'ai encore du pm
+	                    #REC.Dial_Def.Num_Def_Etape := 4;
+	                    #REC.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := 'Attention la Fosse est  Pleine',
+	                                                                  Type_Defaut := 1,
+	                                                                  Automatisme := #REC.RecCommun.CommunGeneral._Autom,
+	                                                                  Num_Lot := #REC._Ptzs._NoLot,
+	                                                                  Origine_Defaut := 'Demande arret Fosse Pleine',
+	                                                                  Libelle_Origine := 'Confirmez vous arret sachant que fosse pleine',
+	                                                                  Acq1 := 'Confirmez',
+	                                                                  Acq2 := 'Annuler',
+	                                                                  Acq3 := '',
+	                                                                  Acq4 := '',
+	                                                                  Acq5 := '',
+	                                                                  Acq6 := '',
+	                                                                  Acq7 := '',
+	                                                                  Acq8 := '',
+	                                                                  Acq_Choisi := -1,
+	                                                                  Date_Arrivee := #REC._TpsPicke);
+	                    #REC.RecCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                    RETURN;
+	                ELSE
+	                    #REC.Dial_Def.Reponse_Def := 'Confirmez';
+	                END_IF;
+	                
+	            END_IF;
+	            //============ Traitement des reponses pour le defaut4 Etape Surveillance  Confirmation arret immediat fosse pleine ====================================//
+	        SURVEILLANCE_DEF4:
+	            IF #REC.Dial_Def.Reponse_Def = 'Confirmez' THEN //oui
+	                #REC.Dial_Def.Reponse_Def := '';
+	                #REC._FgEnchainPossible := FALSE;
+	                #Ret := "Arr_Imm_Circuit"(#REC._PtCir);
+	                #Ret := "Libere_Circuit"(#REC._PtCir);
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_maj_base;
+	                RETURN;
+	            END_IF;
+	            IF #REC.Dial_Def.Reponse_Def = 'Annuler' THEN //non
+	                #REC.Dial_Def.Reponse_Def := '';
+	                #REC._FgArretImm := FALSE;
+	                #REC.RecCommun.SUPREC.Commande._ArretImmediat := FALSE;
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_surveillance;
+	                RETURN;
+	            END_IF;
+	            //============ Traitement des reponses pour le defaut4 Etape Surveillance  Confirmation arret immediat fosse vide =========================
+	            ///le cas la reponse et oui et pas passage de matier
+	            IF #REC.Dial_Def.Reponse_Def = 'Oui' THEN //oui
+	                IF #REC._CaptPm = FALSE AND #REC._pm = FALSE AND #REC._pm2 = FALSE THEN
+	                    #REC.Dial_Def.Reponse_Def := '';
+	                    #REC._FgEnchainPossible := FALSE;
+	                    #Ret := "Arr_Imm_Circuit"(#REC._PtCir);
+	                    #Ret := "Libere_Circuit"(#REC._PtCir);
+	                    #REC.RecCommun.CommunGeneral._Etp := #Etape_maj_base;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	            
+	            //============================================  Fin traitement  ====================================================================//
+	            //
+	            
+	            
+	            //Teste demande de vidange 
+	            IF #REC._FgDemVid THEN
+	                #REC.Dial_Def.Num_Def_Etape := 2;
+	                #REC.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := 'Confirmation de vidange',
+	                                                              Type_Defaut := 1,
+	                                                              Automatisme := #REC.RecCommun.CommunGeneral._Autom,
+	                                                              Num_Lot := #REC._Ptzs._NoLot,
+	                                                              Origine_Defaut := 'Supervision',
+	                                                              Libelle_Origine := 'Confirmez vous le vidange',
+	                                                              Acq1 := 'Oui',
+	                                                              Acq2 := 'Non',
+	                                                              Acq3 := '',
+	                                                              Acq4 := '',
+	                                                              Acq5 := '',
+	                                                              Acq6 := '',
+	                                                              Acq7 := '',
+	                                                              Acq8 := '',
+	                                                              Acq_Choisi := -1,
+	                                                              Date_Arrivee := #REC._TpsPicke);
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                RETURN;
+	            END_IF;
+	        SURVEILLANCE_DEF2:
+	            //============ Traitement des reponses pour le defaut2 Etape Surveillance  Confirmation de vidange ====================================//
+	            IF #REC.Dial_Def.Reponse_Def = 'Oui' THEN //oui
+	                #REC.Dial_Def.Reponse_Def := '';
+	                #REC._FgEnchainPossible := FALSE;
+	                #REC.RecCommun.SUPREC.Commande._Vidange := FALSE;
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_test_qte_passee;
+	                RETURN;
+	            ELSIF #REC.Dial_Def.Reponse_Def = 'Non' THEN //non
+	                #REC.Dial_Def.Reponse_Def := '';
+	                #REC._FgDemVid := FALSE;
+	                #REC.RecCommun.SUPREC.Commande._Vidange := FALSE;
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_surveillance;
+	                RETURN;
+	            END_IF;
+	            //============================================  Fin traitement  ====================================================================//
+	            
+	            
+	            // Test si quantite passe supérieure a la quantit prévue + une tolérance
+	            IF #REC._FgVerifQte AND #REC.RecCommun.CommunGeneral._ParCal._QteTrans >= #REC._TheoTrans + #REC._SeuilVerifQte THEN
+	                // sur defaut de quantité on fait une suspension du circuit
+	                #REC._FgDemQteP := True;
+	                #REC._FgSusp := TRUE;
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_suspension;
+	                RETURN;
+	            END_IF;
+	            // Test niveau haut destination OU changement de destination
+	            #Ret := "Controle_NH"(TempoAffNH := "TpDefNh", R := #REC);
+	            IF #Ret = 1 THEN
+	                #REC._Ptzs._Fg_Dem_Acq_Fosse_Propre := 0;
+	                //renitialisation temps restant si niveau haut 
+	                #REC._TpsResteNettoyage := T#0s;
+	                #REC._FgEnchainPossible := FALSE;
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_changement_destination;
+	                RETURN;
+	            END_IF;
+	            // Test demande de suspension
+	            IF (#REC._FgSusp = TRUE AND (#REC._Ptzs._Fg_Rincage_Debut = FALSE OR #REC._Ptzs._Fg_Rincage_Debut_Ok = FALSE)) THEN
+	                // Maj_Etape(_ta,"suspension");
+	                #REC._FgEnchainPossible := FALSE;
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_suspension;
+	                RETURN;
+	            END_IF;
+	            //test si quantité a receptionner est superrieur a la quantité possible en cellule
+	            IF #REC._fgTestQtePossible THEN
+	                IF #REC._QtePossible < (#REC.RecCommun.CommunGeneral._ParCal._QteTrans - #REC._CumulQteNh) AND
+	                    (#REC._FgMaskCtrlNh = FALSE OR #REC._FgChangDest) THEN
+	                    IF #REC._FgChangDest OR #REC._FgGestStockNh THEN
+	                        #REC._Ptzs._FgChgDestNh := FALSE;
+	                    ELSE
+	                        #REC._Ptzs._FgChgDestNh := TRUE;
+	                    END_IF;
+	                    #REC._TpsResteNettoyage := T#0s;
+	                    #REC._Ptzs._Fg_Dem_Acq_Fosse_Propre := 0;
+	                    #REC._FgEnchainPossible := FALSE;
+	                    #REC.RecCommun.CommunGeneral._Etp := #Etape_changement_destination;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	            IF #REC._CaptPm THEN
+	                IF #REC._FgTestFinPm AND #REC._FgDemAcqFossePropre = FALSE THEN
+	                    IF #REC._pm OR #REC._pm2 THEN
+	                        #REC._Debut := #REC._TpsPicke;
+	                    ELSE
+	                        // Test si fin passage matiere
+	                        #Return := "Tempo"(Duree := #REC._TpFPm, Tps_Picke := #REC._Debut, Anticip := FALSE, Tps_Passe => #Tps_Passe);
+	                        IF #Return THEN
+	                            //Appel dialogue pour Confirmez le vidange ou non
+	                            // IF #REC._FgConfVid THEN
+	                            //demande confirmation vidange
+	                            #REC.Dial_Def.Num_Def_Etape := 1;
+	                            #REC.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := 'Perte du passage matiere,Confirmez vous la vidange',
+	                                                                          Type_Defaut := 1,
+	                                                                          Automatisme := #REC.RecCommun.CommunGeneral._Autom,
+	                                                                          Num_Lot := #REC._Ptzs._NoLot,
+	                                                                          Origine_Defaut := 'Fin passage matiere',
+	                                                                          Libelle_Origine := 'Confirmez vous le vidange',
+	                                                                          Acq1 := 'Oui',
+	                                                                          Acq2 := 'Non',
+	                                                                          Acq3 := '',
+	                                                                          Acq4 := '',
+	                                                                          Acq5 := '',
+	                                                                          Acq6 := '',
+	                                                                          Acq7 := '',
+	                                                                          Acq8 := '',
+	                                                                          Acq_Choisi := -1,
+	                                                                          Date_Arrivee := #REC._TpsPicke);
+	                            #REC.RecCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                            RETURN;
+	                        END_IF;
+	                    END_IF;
+	                END_IF;
+	            END_IF;
+	        SURVEILLANCE_DEF1:
+	            //============ Traitement des reponses pour le defaut1 Etape Surveillance  Confirmation de vidange ====================================//
+	            IF #REC.Dial_Def.Reponse_Def = 'Oui' THEN //oui
+	                #REC.Dial_Def.Reponse_Def := '';
+	                #REC._FgEnchainPossible := FALSE;
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_vidange;
+	                RETURN;
+	            ELSIF #REC.Dial_Def.Reponse_Def = 'Non' THEN //non
+	                #REC.Dial_Def.Reponse_Def := '';
+	                #Ret_RD_Sys_T := RD_SYS_T(#REC._Debut);
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_surveillance;
+	                RETURN;
+	            END_IF;
+	            //============================================  Fin traitement  ====================================================================//
+	        END_REGION Traitement cyclique 
+	        RETURN;
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║  Etape "Changement de destination" ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                
+	*)
+	    #Etape_changement_destination:
+	        
+	        REGION Traitement preliminaire 'Changement de destination'
+	            IF (#REC.RecCommun.CommunGeneral._Etp <> #REC.RecCommun.CommunGeneral._EtpPrec) THEN
+	                //Memorisation de l'etape encours
+	                #REC.RecCommun.CommunGeneral._EtpPrec := #REC.RecCommun.CommunGeneral._Etp;
+	                //Reperer le niveau du grafcet
+	                #MajNiv := "Maj_Niv"(Num_Zone := #REC.RecCommun.CommunGeneral._NumZone, Num_Tache := #REC.RecCommun.CommunGeneral._Tache, Niveau := "REC_ChangementDestination_Niv");
+	                //Nomination l'etape en cours
+	                #REC.RecCommun.CommunGeneral._DescEtp := 'Changement de destination';
+	                
+	                IF #REC.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #REC.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO CHANGEMENT_DEST_DEF1;
+	                        2:
+	                            GOTO CHANGEMENT_DEST_DEF2;
+	                    END_CASE;
+	                ELSE
+	                    #REC.Dial_Def.Num_Def_Etape := 0;
+	                END_IF;
+	                "Recup_Noeud"(Circuit := #REC._PtCir,
+	                              ListeNoeuds => #REC.ChNoeud._ListeNoeaudAnc);
+	                
+	                (* "Recup_Noeud"(Origine := #REC.RecCommun.CommunGeneral._PtOrig,
+	                               Destination := #REC.RecCommun.CommunGeneral._Ptdest,
+	                               ListeNoeuds => #REC.ChNoeud._ListeNoeaudAnc); *)
+	                IF #REC._FgChangDest = FALSE THEN
+	                    #REC._Ptzs._DestR._Liste[#REC._Ptzs._DestR._Index]._Nh := 1;
+	                END_IF;
+	                #REC._SortieAlarme := TRUE;
+	                IF #REC.RecCommun.CommunGeneral._IndxDest > "NB_MAX_DEST" THEN
+	                    IF #REC._CelluleTrouve <> 3 THEN
+	                        #REC._CelluleTrouve := -1;
+	                    END_IF;
+	                ELSE
+	                    IF #REC._CelluleTrouve <> 3 THEN
+	                        #REC._CelluleTrouve := 0;
+	                    END_IF;
+	                END_IF;
+	                
+	                #Ret_RD_Sys_T := RD_SYS_T(#REC._TpsPicke);
+	                // Arreter l'origine
+	                #Ret := "Arr_Imm_Mobile"("DB_BIBLIOTHEQUE".Mobile[#REC._PtCir.Origine].Mob_Suiv[0]);
+	                //memorisation ancienne destination 
+	                #REC.RecCommun.CommunGeneral._AncDest := #REC.RecCommun.CommunGeneral._Ptdest;
+	                //MAJ CUMUL
+	                "MAJ_Cumul_Dest"(Dest := "Nom_Mobile"(#REC.RecCommun.CommunGeneral._AncDest),
+	                                 Increment := TRUE,
+	                                 DestR := #REC._Ptzs._DestR,
+	                                 PARCAL := #REC.RecCommun.CommunGeneral._ParCal);
+	                
+	            END_IF;
+	        END_REGION Traitement preliminaire 'Changement de destination'
+	        REGION Traitement cyclique "Changement_de_destination"
+	            IF #REC.RecCommun.CommunGeneral._IndxDest < 0 THEN
+	                #REC.RecCommun.CommunGeneral._IndxDest := 0;
+	            END_IF;
+	            // IF #REC._CelluleTrouve = 0 AND #REC.Dial_Def.Reponse_Def = '' THEN
+	            IF #REC._CelluleTrouve = 0 THEN
+	                IF #REC.RecCommun.CommunGeneral._IndxDest >= "NB_MAX_DEST" THEN
+	                    #REC._CelluleTrouve := -1;
+	                END_IF;
+	                //Boucle for qui parcoure la liste des destinations recuperes depuis la Base
+	                FOR #i := #REC.RecCommun.CommunGeneral._IndxDest TO "NB_MAX_DEST" DO
+	                    IF #i >= "NB_MAX_DEST" THEN
+	                        #REC._CelluleTrouve := -1;
+	                        #REC.RecCommun.CommunGeneral._IndxDest := #ListeDestParcourue;
+	                        EXIT;
+	                        EXIT;
+	                    END_IF;
+	                    IF (#REC.RecCommun.CommunGeneral._Dest[#i + 1] > -1) THEN
+	                        //#REC._CelluleTrouve := "Controle_Cellule"(Indice := #i + 1, Cel := "DB_Mod_Cellule", R := #REC);
+	                        
+	                        #REC._CelluleTrouve := "Controle_Cellule"(FgMaskNh := #REC._FgMaskCtrlNh,
+	                                                                  NvCellule := "Nom_Mobile"(#REC.RecCommun.CommunGeneral._Dest[#i + 1]),
+	                                                                  TypeCelDest := #REC._TypeCelDest,
+	                                                                  Cel := "DB_Mod_Cellule",
+	                                                                  NiveauHautDestNh => #REC._NiveauHautDestNh);
+	                        IF (#REC._CelluleTrouve = 2) THEN //controle valide
+	                            #REC.RecCommun.CommunGeneral._IndxDest := #i + 1;
+	                            EXIT;
+	                        END_IF;
+	                    END_IF;
+	                END_FOR;
+	            END_IF;
+	            
+	            ////Test invalide de la destination recuperee de la Base cellule n'existe pas
+	            IF #REC._CelluleTrouve = -1 THEN
+	                #REC.Dial_Def.Num_Def_Etape := 1;
+	                #REC.Dial_Def.Reponse_Def := '';
+	                #REC.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := 'Veuillez saisir la nouvelle destination',
+	                                                              Type_Defaut := 2,
+	                                                              Automatisme := #REC.RecCommun.CommunGeneral._Autom,
+	                                                              Num_Lot := #REC._Ptzs._NoLot,
+	                                                              Origine_Defaut := 'Circuit Impossible ',
+	                                                              Libelle_Origine := 'Circuit Impossible ',
+	                                                              Acq1 := 'Relance',
+	                                                              Acq2 := 'Cellule',
+	                                                              Acq3 := '',
+	                                                              Acq4 := '',
+	                                                              Acq5 := '',
+	                                                              Acq6 := '',
+	                                                              Acq7 := '',
+	                                                              Acq8 := '',
+	                                                              Acq_Choisi := -1,
+	                                                              Date_Arrivee := #REC._TpsPicke);
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                RETURN;
+	            END_IF;
+	        CHANGEMENT_DEST_DEF1:
+	            //============ Traitement des reponses pour le defaut1 Etape CHANGEMENT DE DESTINATION cellule introuvable  ====================================//
+	            IF #REC.Dial_Def.Reponse_Def = 'Relance' AND #REC.Dial_Def.Num_Def_Etape = 1 THEN //relance
+	                #REC._SortieAlarme := FALSE;
+	                #REC._FgChangDest := FALSE;
+	                #REC.RecCommun.SUPREC.Commande._FgChangDest := FALSE;
+	                #REC._CelluleTrouve := 2;
+	                #REC.Dial_Def.Reponse_Def := '';
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_changement_destination;
+	                RETURN;
+	            END_IF;
+	            IF #REC.Dial_Def.Reponse_Def = 'Cellule' AND #REC.Dial_Def.Num_Def_Etape = 1 THEN // cellule
+	                #Ret := "Index_Mobile"(#REC.Dial_Def.Text_Reponse);
+	                #REC.Dial_Def.Reponse_Def := '';
+	                IF #Ret <= -1 THEN
+	                    #Text_Def := CONCAT(IN1 := 'Cellule ', IN2 := #REC.Dial_Def.Text_Reponse, IN3 := ' Inexistante');
+	                    #REC.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := #Text_Def,
+	                                                                  Type_Defaut := 3,
+	                                                                  Automatisme := #REC.RecCommun.CommunGeneral._Autom,
+	                                                                  Num_Lot := #REC._PtCir.Num_Lot,
+	                                                                  Origine_Defaut := #Text_Def,
+	                                                                  Libelle_Origine := 'Cellule inexistante',
+	                                                                  Acq1 := 'Relance',
+	                                                                  Acq2 := 'Cellule',
+	                                                                  Acq3 := '',
+	                                                                  Acq4 := '',
+	                                                                  Acq5 := '',
+	                                                                  Acq6 := '',
+	                                                                  Acq7 := '',
+	                                                                  Acq8 := '',
+	                                                                  Acq_Choisi := -1,
+	                                                                  Date_Arrivee := #REC._TpsPicke);
+	                    #REC.RecCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                    #REC.Dial_Def.Text_Reponse := '';
+	                    RETURN;
+	                ELSE
+	                    
+	                    #REC._CelluleTrouve := "Controle_Cellule"(FgMaskNh := #REC._FgMaskCtrlNh,
+	                                                              NvCellule := #REC.Dial_Def.Text_Reponse,
+	                                                              TypeCelDest := #REC._TypeCelDest,
+	                                                              Cel := "DB_Mod_Cellule",
+	                                                              NiveauHautDestNh => #REC._NiveauHautDestNh);
+	                    
+	                END_IF;
+	            END_IF;
+	            //============ fIN Traitement des reponses pour le defaut1 Etape CHANGEMENT DE DESTINATION cellule introuvable  ===============================//    
+	            
+	            
+	            
+	            
+	            
+	            
+	            
+	            
+	            
+	            ////Test invalide de la destination recuperee de la Base, cellule est en nh
+	            IF #REC._CelluleTrouve = 1 THEN
+	                #REC.Dial_Def.Num_Def_Etape := 2;
+	                #Text_Def := CONCAT(IN1 := 'Cellule ', IN2 := #REC.Dial_Def.Text_Reponse, IN3 := '  est en NH');
+	                #REC.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := #Text_Def,
+	                                                              Type_Defaut := 2,
+	                                                              Automatisme := #REC.RecCommun.CommunGeneral._Autom,
+	                                                              Num_Lot := #REC._Ptzs._NoLot,
+	                                                              Origine_Defaut := 'Cellule est en NH',
+	                                                              Libelle_Origine := 'Cellule est en NH',
+	                                                              Acq1 := 'Relance',
+	                                                              Acq2 := 'Cellule',
+	                                                              Acq3 := '', //'Forçage',
+	                                                              Acq4 := '',
+	                                                              Acq5 := '',
+	                                                              Acq6 := '',
+	                                                              Acq7 := '',
+	                                                              Acq8 := '',
+	                                                              Acq_Choisi := -1,
+	                                                              Date_Arrivee := #REC._TpsPicke);
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                RETURN;
+	            END_IF;
+	        CHANGEMENT_DEST_DEF2:
+	            //============ Traitement des reponses pour le defaut2 Etape CHANGEMENT DE DESTINATION cellule en nh  ====================================//
+	            IF #REC.Dial_Def.Reponse_Def = 'Relance' AND #REC.Dial_Def.Num_Def_Etape = 2 THEN
+	                #REC._CelluleTrouve := "Controle_Cellule"(FgMaskNh := #REC._FgMaskCtrlNh,
+	                                                          NvCellule := #REC.Dial_Def.Text_Reponse,
+	                                                          TypeCelDest := #REC._TypeCelDest,
+	                                                          Cel := "DB_Mod_Cellule",
+	                                                          NiveauHautDestNh => #REC._NiveauHautDestNh);
+	                #REC.Dial_Def.Text_Reponse := '';
+	                RETURN;
+	            END_IF;
+	            IF #REC.Dial_Def.Reponse_Def = 'Forcage' AND #REC.Dial_Def.Num_Def_Etape = 2 THEN
+	                #REC._FgMaskCtrlNh := TRUE;
+	                #REC._SortieAlarme := FALSE;
+	                #REC._FgChangDest := FALSE;
+	                #REC.RecCommun.SUPREC.Commande._FgChangDest := FALSE;
+	                #REC._Ptzs._DestR._Liste[#REC._Ptzs._DestR._Index]._Nh := FALSE;
+	                #REC._CelluleTrouve := 2;
+	                #REC.RecCommun.CommunGeneral._Ptdest := "Index_Mobile"(#REC.Dial_Def.Text_Reponse);
+	                #REC._IndexDestEc := "RechIndexCel"("Nom_Mobile"(#REC.RecCommun.CommunGeneral._Ptdest));
+	                IF #REC._IndexDestEc > -1 THEN
+	                    #REC._ptDestEc := "DB_Mod_Cellule"._TabCel[#REC._IndexDestEc];
+	                END_IF;
+	                (*
+	                "MAJ_Cumul_Dest"(Dest := "Nom_Mobile"(#REC.RecCommun.CommunGeneral._Ptdest),
+	                                 Increment := FALSE,
+	                                 DestR := #REC._Ptzs._DestR,
+	                                 PARCAL := #REC.RecCommun.CommunGeneral._ParCal);
+	                #REC._CumulQteNh := #REC._Ptzs._DestR._Liste[#REC._Ptzs._DestR._Index]._CumulQte;
+	              
+	                
+	                
+	                
+	                "ChngDestNoeud"(REC := #REC); *)
+	                #REC.Dial_Def.Reponse_Def := '';
+	            END_IF;
+	            IF #REC.Dial_Def.Reponse_Def = 'Cellule' AND #REC.Dial_Def.Num_Def_Etape = 2 THEN // cellule
+	                #Ret := "Index_Mobile"(#REC.Dial_Def.Text_Reponse);
+	                #REC.Dial_Def.Reponse_Def := '';
+	                IF #Ret <= -1 THEN
+	                    #REC._CelluleTrouve := 0;
+	                    #REC.Dial_Def.Num_Def_Etape := 1;
+	                    #Text_Def := CONCAT(IN1 := 'Cellule ', IN2 := #REC.Dial_Def.Text_Reponse, IN3 := '  inexistante');
+	                    #REC.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := #Text_Def,
+	                                                                  Type_Defaut := 2,
+	                                                                  Automatisme := #REC.RecCommun.CommunGeneral._Autom,
+	                                                                  Num_Lot := #REC._PtCir.Num_Lot,
+	                                                                  Origine_Defaut := 'Cellule inexistante',
+	                                                                  Libelle_Origine := 'Cellule inexistante',
+	                                                                  Acq1 := 'Relance',
+	                                                                  Acq2 := 'Cellule',
+	                                                                  Acq3 := '',
+	                                                                  Acq4 := '',
+	                                                                  Acq5 := '',
+	                                                                  Acq6 := '',
+	                                                                  Acq7 := '',
+	                                                                  Acq8 := '',
+	                                                                  Acq_Choisi := -1,
+	                                                                  Date_Arrivee := #REC._TpsPicke);
+	                    #REC.RecCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                    #REC.Dial_Def.Text_Reponse := '';
+	                    RETURN;
+	                ELSE
+	                    #REC._CelluleTrouve := "Controle_Cellule"(FgMaskNh := #REC._FgMaskCtrlNh,
+	                                                              NvCellule := #REC.Dial_Def.Text_Reponse,
+	                                                              TypeCelDest := #REC._TypeCelDest,
+	                                                              Cel := "DB_Mod_Cellule",
+	                                                              NiveauHautDestNh => #REC._NiveauHautDestNh);
+	                    
+	                END_IF;
+	            END_IF;
+	            
+	            //============ FIN Traitement des reponses pour le defaut2 Etape CHANGEMENT DE DESTINATION cellule en nh  ====================================// 
+	            
+	            
+	            IF #REC._CelluleTrouve = 3 THEN // CELLULE RECUP VALID MAIS LA RECHERCHERCHE DU NV CIRC RETURN-1
+	                #REC.Dial_Def.Num_Def_Etape := 1;
+	                #Text_Def := CONCAT(IN1 := 'Circuit de ', IN2 := "Nom_Mobile"(#REC._PtCir.Origine), IN3 := ' vers ', IN4 := #REC.Dial_Def.Text_Reponse, IN5 := ' introuvable ou reserve ');
+	                #REC.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := #Text_Def,
+	                                                              Type_Defaut := 2,
+	                                                              Automatisme := #REC.RecCommun.CommunGeneral._Autom,
+	                                                              Num_Lot := #REC._Ptzs._NoLot,
+	                                                              Origine_Defaut := 'Circuit Introuvable',
+	                                                              Libelle_Origine := 'Circuit Introuvable',
+	                                                              Acq1 := 'Relance',
+	                                                              Acq2 := 'Cellule',
+	                                                              Acq3 := '',
+	                                                              Acq4 := '',
+	                                                              Acq5 := '',
+	                                                              Acq6 := '',
+	                                                              Acq7 := '',
+	                                                              Acq8 := '',
+	                                                              Acq_Choisi := -1,
+	                                                              Date_Arrivee := #REC._TpsPicke);
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                RETURN;
+	            END_IF;
+	            
+	            
+	            
+	            
+	            
+	            
+	            
+	            //Test valide de la destination recuperee 
+	            IF #REC._CelluleTrouve = 2 THEN
+	                IF #REC.RecCommun.CommunGeneral._IndxDest <> #ListeDestParcourue THEN
+	                    #CdZoneDest := "Nom_Mobile"(#REC.RecCommun.CommunGeneral._Dest[#REC.RecCommun.CommunGeneral._IndxDest]);
+	                ELSE
+	                    #CdZoneDest := #REC.Dial_Def.Text_Reponse;
+	                END_IF;
+	                #Anc_Dest := "Nom_Mobile"(#REC.RecCommun.CommunGeneral._AncDest);
+	                "ControleDest"(fgbase := #fgbase,
+	                               TypeCelDest := #REC._TypeCelDest,
+	                               FgMaskCtrlNh := #REC._FgMaskCtrlNh,
+	                               "Return" => #Ret_Int,
+	                               FgLanc => #REC._FgLanc,
+	                               NiveauHautDestNh => #REC._NiveauHautDestNh,
+	                               CntlDest := #REC.CntlDest,
+	                               Dial_Def := #REC.Dial_Def,
+	                               NoLot := #REC._Ptzs._NoLot,
+	                               CdZoneDest := #CdZoneDest,
+	                               Anc_Dest := #Anc_Dest,
+	                               Nouv_Dest := #REC._Ptzs._NouvDest,
+	                               CdMat := #REC._Ptzs._CdMat,
+	                               NomAuto := #REC.RecCommun.CommunGeneral._Autom);
+	                IF #Ret_Int = -1 THEN
+	                    #REC._CelluleTrouve := 0;
+	                END_IF;
+	                IF #Ret_Int = 1 THEN
+	                    #REC._CumulQteNh := #REC._Ptzs._DestR._Liste[#REC._Ptzs._DestR._Index]._CumulQte;
+	                    IF #REC.RecCommun.CommunGeneral._IndxDest <> #ListeDestParcourue THEN
+	                        #REC.RecCommun.CommunGeneral._Ptdest := #REC.RecCommun.CommunGeneral._Dest[#REC.RecCommun.CommunGeneral._IndxDest];
+	                    ELSE
+	                        #REC.RecCommun.CommunGeneral._Ptdest := "Index_Mobile"(#REC.Dial_Def.Text_Reponse);
+	                    END_IF;
+	                    #REC._IndexDestEc := "RechIndexCel"("Nom_Mobile"(#REC.RecCommun.CommunGeneral._Ptdest));
+	                    IF #REC._IndexDestEc > -1 THEN
+	                        #REC._ptDestEc := "DB_Mod_Cellule"._TabCel[#REC._IndexDestEc];
+	                    END_IF;
+	                    #REC.RecCommun.CommunGeneral._Etp := #Etape_ChgDestNoeud;
+	                    RETURN;
+	                    (* "ChngDestNoeud"(REC := #REC); *)
+	                END_IF;
+	            END_IF;
+	        END_REGION Traitement cyclique "Changement_de_destination"
+	        RETURN;
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║          ChgmtDestNoeud            ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                
+	*)
+	    #Etape_ChgDestNoeud:
+	        REGION Traitement preliminaire 'ChgmtDestNoeud'
+	            IF (#REC.RecCommun.CommunGeneral._Etp <> #REC.RecCommun.CommunGeneral._EtpPrec) THEN
+	                //Memorisation de l'etape encours
+	                #REC.RecCommun.CommunGeneral._EtpPrec := #REC.RecCommun.CommunGeneral._Etp;
+	                //Reperer le niveau du grafcet
+	                #MajNiv := "Maj_Niv"(Num_Zone := #REC.RecCommun.CommunGeneral._NumZone, Num_Tache := #REC.RecCommun.CommunGeneral._Tache, Niveau := "REC_ChangementNoeud_Niv");
+	                //Nomination l'etape en cours
+	                #REC.RecCommun.CommunGeneral._DescEtp := 'Etape ChgmtDestNoeud';
+	                //lecture du temps local 
+	                #Ret_RD_Sys_T := RD_SYS_T(#REC._TpsPicke);
+	                
+	                IF #REC.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #REC.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO ProcChangDest_DEF1;
+	                    END_CASE;
+	                END_IF;
+	            END_IF;
+	        END_REGION Traitement preliminaire 'ChgmtDestNoeud'   
+	        REGION Traitement cyclique 'ChgmtDestNoeud'
+	            
+	            #ReturnChngDest := "ChngDest"(NouvDest := #REC.RecCommun.CommunGeneral._Ptdest,
+	                                          AncDest := #REC.RecCommun.CommunGeneral._AncDest,
+	                                          IndxDestEncours := #REC.RecCommun.CommunGeneral._IndxDest,
+	                                          ChNoeud := #REC.ChNoeud,
+	                                          AncCircuit := #REC._PtCir,
+	                                          CelluleTrouve := #REC._CelluleTrouve,
+	                                          FgChangementDest := #REC._FgChangDest);
+	            IF #ReturnChngDest = -3 THEN //rech circ return -1 et
+	                #REC._CelluleTrouve := 3;
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_changement_destination;
+	                RETURN;
+	            END_IF;
+	            IF #ReturnChngDest = -2 THEN //rech circ return -1
+	                #REC._CelluleTrouve := 0;
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_changement_destination;
+	                RETURN;
+	            END_IF;
+	            IF #ReturnChngDest = 1 THEN // valide
+	                IF #fgbase THEN
+	                    IF #REC._Ptzs._DestR._Index > 1 THEN
+	                        #ResultProcChangmtdestRec := "Proc_Changement_Dest_REC"(NumPoste := "Num_Poste", IdRecep := #REC._Ptzs._Id_Rec,
+	                                                                                AncDest := "Nom_Mobile"(#REC.RecCommun.CommunGeneral._AncDest),
+	                                                                                NvDest := "Nom_Mobile"(#REC.RecCommun.CommunGeneral._Ptdest),
+	                                                                                QTE := #REC._Ptzs._DestR._Liste[#REC._Ptzs._DestR._Index - 1]._Qte,
+	                                                                                TpsMarche := #REC._Ptzs._DestR._Liste[#REC._Ptzs._DestR._Index - 1]._Tps / 1000, Msg_Def => #Text_Def);
+	                    ELSE
+	                        #ResultProcChangmtdestRec := "Proc_Changement_Dest_REC"(NumPoste := "Num_Poste", IdRecep := #REC._Ptzs._Id_Rec,
+	                                                                                AncDest := "Nom_Mobile"(#REC.RecCommun.CommunGeneral._AncDest),
+	                                                                                NvDest := "Nom_Mobile"(#REC.RecCommun.CommunGeneral._Ptdest),
+	                                                                                QTE := #REC.RecCommun.CommunGeneral._ParCal._QteTrans,
+	                                                                                TpsMarche := #REC.RecCommun.CommunGeneral._ParCal._TpsTran / 1000, Msg_Def => #Text_Def);
+	                    END_IF;
+	                ELSE
+	                    #ResultProcChangmtdestRec := 'OK';
+	                END_IF;
+	                
+	                
+	                
+	                
+	                
+	                IF #ResultProcChangmtdestRec = 'OK' THEN
+	                    #ret_string := "Proc_AffecT"(NumPoste := "Num_Poste",
+	                                                 zone := "Nom_Mobile"(#REC.RecCommun.CommunGeneral._Ptdest),
+	                                                 CodeMat := #REC._Ptzs._CdMat,
+	                                                 Formule := #Temp_Char,
+	                                                 LieuDos := '',
+	                                                 Qte := 0,
+	                                                 TypeMvmnt := '040',
+	                                                 Procede := #REC.RecCommun.CommunGeneral._Autom,
+	                                                 NoLotOrig := '',
+	                                                 NoLotDest := #REC._Ptzs._NoLot,
+	                                                 Utilisateur := 'SAS',
+	                                                 SCb := '0',
+	                                                 Sof := #REC._Ptzs._Cd_Rec, Msg_Def => #Text_Def);
+	                    
+	                    
+	                    
+	                    
+	                    
+	                    #REC.Dial_Def.Reponse_Def := '';
+	                    #REC.Dial_Def.Text_Reponse := '';
+	                    #REC._CelluleTrouve := 0;
+	                    #REC._FgChangDest := FALSE;
+	                    #REC.RecCommun.SUPREC.Commande._FgChangDest := FALSE;
+	                    IF #REC._Ptzs._Fg_Produit_Vu = TRUE THEN
+	                        #REC.RecCommun.CommunGeneral._Etp := #Etape_surveillance;
+	                    ELSE
+	                        #REC.RecCommun.CommunGeneral._Etp := #Etape_attente_produit;
+	                    END_IF;
+	                    RETURN;
+	                END_IF;
+	                IF #ResultProcChangmtdestRec <> 'OK' THEN
+	                    #REC.Dial_Def.Num_Def_Etape := 1;
+	                    #REC.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase,
+	                                                                  Msg_Defaut := #ResultProcChangmtdestRec,
+	                                                                  Type_Defaut := 3,
+	                                                                  Automatisme := #REC.RecCommun.CommunGeneral._Autom,
+	                                                                  Num_Lot := #REC._Ptzs._NoLot,
+	                                                                  Origine_Defaut := 'Base de donnees',
+	                                                                  Libelle_Origine := 'Base de donnees',
+	                                                                  Acq1 := 'Abandon',
+	                                                                  Acq2 := 'Relance',
+	                                                                  Acq3 := '',
+	                                                                  Acq4 := '',
+	                                                                  Acq5 := '',
+	                                                                  Acq6 := '',
+	                                                                  Acq7 := '',
+	                                                                  Acq8 := '',
+	                                                                  Acq_Choisi := -1,
+	                                                                  Date_Arrivee := #REC._TpsPicke);
+	                    #REC.RecCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	        ProcChangDest_DEF1:
+	            //============ Traitement des reponses pour le defaut1   Traitement_Badge=============================================================//
+	            IF #REC.Dial_Def.Reponse_Def = 'Relance' THEN
+	                #REC.Dial_Def.Reponse_Def := '';
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_ChgDestNoeud;
+	                RETURN;
+	            END_IF;
+	            IF #REC.Dial_Def.Reponse_Def = 'Abandon' THEN
+	                #REC._FgChangDest := FALSE;
+	                #REC.RecCommun.SUPREC.Commande._FgChangDest := FALSE;
+	                IF #REC._Ptzs._Fg_Produit_Vu = TRUE THEN
+	                    #REC.RecCommun.CommunGeneral._Etp := #Etape_surveillance;
+	                    
+	                ELSE
+	                    #REC.RecCommun.CommunGeneral._Etp := #Etape_attente_produit;
+	                END_IF;
+	                #REC.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            //============================================  Fin traitement  ====================================================================//
+	            
+	        END_REGION Traitement cyclique  
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║        Etape "Suspension"          ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                  
+	*)
+	    #Etape_suspension:
+	        
+	        REGION Traitement preliminaire 'Suspension'
+	            IF (#REC.RecCommun.CommunGeneral._Etp <> #REC.RecCommun.CommunGeneral._EtpPrec) THEN
+	                
+	                //Memorisation de l'etape encours
+	                #REC.RecCommun.CommunGeneral._EtpPrec := #REC.RecCommun.CommunGeneral._Etp;
+	                //Reperer le niveau du grafcet
+	                #MajNiv := "Maj_Niv"(Num_Zone := #REC.RecCommun.CommunGeneral._NumZone, Num_Tache := #REC.RecCommun.CommunGeneral._Tache, Niveau := "REC_Suspension_Niv");
+	                //Nomination l'etape en cours
+	                #REC.RecCommun.CommunGeneral._DescEtp := 'Etape Suspension';
+	                IF #REC.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #REC.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO SUSPENSION_DEF1;
+	                    END_CASE;
+	                END_IF;
+	                // Arreter l'origine
+	                #Ret := "Arr_Imm_Mobile"("DB_BIBLIOTHEQUE".Mobile[#REC._PtCir.Origine].Mob_Suiv[0]);
+	                #Ret_RD_Sys_T := RD_SYS_T(#REC._TpsPicke);
+	            END_IF;
+	        END_REGION Traitement preliminaire 'Suspension'
+	        REGION Traitement cyclique "Suspension"
+	            IF NOT #REC._FgConfArret THEN
+	                #Return := "Tempo"(Duree := T#3m, Tps_Picke := #REC._TpsPicke, Anticip := FALSE, Tps_Passe => #Tps_Passe);
+	            END_IF;
+	            
+	            
+	            IF #Return = TRUE THEN
+	                IF #REC._FgDemArr = TRUE THEN
+	                    #REC.Dial_Def.Num_Def_Etape := 1;
+	                    #REC.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := 'Arret immediat',
+	                                                                  Type_Defaut := 2,
+	                                                                  Automatisme := #REC.RecCommun.CommunGeneral._Autom,
+	                                                                  Num_Lot := #REC._Ptzs._NoLot,
+	                                                                  Origine_Defaut := 'Pas daction durant la suspension',
+	                                                                  Libelle_Origine := 'Confirmez vous larret',
+	                                                                  Acq1 := 'Confirmez',
+	                                                                  Acq2 := 'Annuler',
+	                                                                  Acq3 := '',
+	                                                                  Acq4 := '',
+	                                                                  Acq5 := '',
+	                                                                  Acq6 := '',
+	                                                                  Acq7 := '',
+	                                                                  Acq8 := '',
+	                                                                  Acq_Choisi := -1,
+	                                                                  Date_Arrivee := #REC._TpsPicke);
+	                    #REC.RecCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                    RETURN;
+	                ELSE
+	                    #Ret := "Arr_Imm_Circuit"(#REC._PtCir);
+	                    #REC.Dial_Def.Reponse_Def := '';
+	                    #REC._FgConfArret := TRUE;
+	                    (* #Ret := "Arr_Imm_Circuit"(#REC._PtCir);
+	                    #REC.RecCommun.CommunGeneral._Etp :=  #Etape_fin_lot; *)
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	        SUSPENSION_DEF1:
+	            //======================== Traitement des reponses pour le defaut1 Etape Suspension  ====================================//  
+	            IF #REC.Dial_Def.Reponse_Def = 'Confirmez' THEN
+	                #Ret := "Arr_Imm_Circuit"(#REC._PtCir);
+	                #REC.Dial_Def.Reponse_Def := '';
+	                #REC._FgConfArret := TRUE;
+	                // #REC.RecCommun.CommunGeneral._Etp :=  #Etape_fin_lot;
+	                RETURN;
+	            END_IF;
+	            IF #REC.Dial_Def.Reponse_Def = 'Annuler' THEN
+	                //Renitialiser la temporisation pour refaire le test
+	                #Ret_RD_Sys_T := RD_SYS_T(#REC._TpsPicke);
+	                #REC.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            //======================================  Fin traitement====================================//  
+	            (* //pas de dialogue pour Confirmez l'arret
+	            IF #Return AND #REC._FgDemArr = FALSE THEN
+	                #Ret := "Arr_Imm_Circuit"(#REC._PtCir);
+	                #REC.Dial_Def.Reponse_Def := '';
+	                #REC._FgConfArret := TRUE;
+	                (* #Ret := "Arr_Imm_Circuit"(#REC._PtCir);
+	                #REC.RecCommun.CommunGeneral._Etp :=  #Etape_fin_lot; *)
+	                RETURN;
+	            END_IF; *)
+	            IF (#REC._FgArret = TRUE) THEN
+	                #REC._Ptzs._QteLot := #REC.RecCommun.CommunGeneral._ParCal._QteTrans;
+	                
+	                "MAJ_Cumul_Dest"(Dest := "Nom_Mobile"(#REC.RecCommun.CommunGeneral._Ptdest),
+	                                 Increment := FALSE,
+	                                 DestR := #REC._Ptzs._DestR,
+	                                 PARCAL := #REC.RecCommun.CommunGeneral._ParCal);
+	                //Fin_Lot_Circuit(_ptCir, _ptCir->Origine.Mobile, _ptCir->Destination.Mobile, pt_zs->QteLot);  
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_maj_base;
+	                RETURN;
+	            END_IF;
+	            IF #REC._FgSusp = FALSE THEN
+	                //APPEL FCT MARCHE MOB
+	                //"DB_BIBLIOTHEQUE".Mobile["DB_BIBLIOTHEQUE".Mobile[#REC._PtCir.Origine].Mob_Suiv[0]].Ord := 0; // Appl fct arrt mob
+	                IF NOT #REC._FgConfArret THEN
+	                    #Ret := "Dem_Mobile"("DB_BIBLIOTHEQUE".Mobile[#REC._PtCir.Origine].Mob_Suiv[0]);
+	                    #REC.RecCommun.CommunGeneral._Etp := #Etape_surveillance;
+	                    RETURN;
+	                ELSE
+	                    #REC.RecCommun.CommunGeneral._Etp := #Etape_prepositionnement;
+	                    RETURN;
+	                END_IF;
+	                
+	                
+	                
+	                
+	            END_IF;
+	            IF (#REC._FgDemVid = TRUE) THEN
+	                //#REC._FgSusp := FALSE;
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_vidange;
+	                RETURN;
+	            END_IF;
+	            
+	            
+	        END_REGION Traitement cyclique "Suspension"
+	        RETURN;
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║        Etape "Test Qte passée"     ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                    
+	*)
+	    #Etape_test_qte_passee:
+	        REGION Traitement preliminaire 'Test qte passee'
+	            IF (#REC.RecCommun.CommunGeneral._Etp <> #REC.RecCommun.CommunGeneral._EtpPrec) THEN
+	                
+	                //Memorisation de l'etape encours
+	                #REC.RecCommun.CommunGeneral._EtpPrec := #REC.RecCommun.CommunGeneral._Etp;
+	                //Reperer le niveau du grafcet
+	                #MajNiv := "Maj_Niv"(Num_Zone := #REC.RecCommun.CommunGeneral._NumZone, Num_Tache := #REC.RecCommun.CommunGeneral._Tache, Niveau := "REC_TestQtePassee_Niv");
+	                //Nomination l'etape en cours
+	                #REC.RecCommun.CommunGeneral._DescEtp := 'Test qte pasee';
+	                IF #REC.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #REC.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO TEST_QTE_PASSEE_DEF1;
+	                    END_CASE;
+	                END_IF;
+	                #Ret_RD_Sys_T := RD_SYS_T(#REC._TpsPicke);
+	                #REC._DebutMax := #REC._TpsPicke;
+	                IF #REC.RecCommun.CommunGeneral._ParCal._DebVolTrans = 0 OR #REC.RecCommun.CommunGeneral._ParCal._DebMasTrans = 0 OR
+	                    #REC.RecCommun.CommunGeneral._ParCal._QteTrans = 0 OR #REC._TheoTrans = 0 OR #REC._SeuilTrans = 0
+	                    OR #REC._FgTestQtP = FALSE THEN
+	                    #REC.RecCommun.CommunGeneral._Etp := #Etape_vidange;
+	                    RETURN;
+	                END_IF;
+	                #REC._FgAbandon := FALSE;
+	            END_IF;
+	        END_REGION Traitement preliminaire 'Test qte passee'
+	        
+	        REGION Traitement cyclique "Test qte passee"
+	            // mise a jour quantité theorique calculé en zone de suivi
+	            #REC._Ptzs._Qte_Rec := #REC.RecCommun.CommunGeneral._ParCal._QteTrans;
+	            // mise a jour temps de marche transporteur dans zone de suivi
+	            #REC._Ptzs._Tps_Tc := #REC.RecCommun.CommunGeneral._ParCal._TpsTran;
+	            //calcul debit massique
+	            "Debit_Massique"(SAV := #REC._vitesseFosse,
+	                             Densite := #REC._Ptzs._Densite,
+	                             PARCAL := #REC.RecCommun.CommunGeneral._ParCal);
+	            //test demande d'arret par bouton sur supervision
+	            IF #REC._FgArret THEN
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_vidange;
+	                RETURN;
+	            END_IF;
+	            //test demande de vidange par bouton sur supervision
+	            IF #REC._FgDemVid THEN
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_vidange;
+	                RETURN;
+	            END_IF;
+	            //test demande de suspension par bouton sur supervision
+	            IF #REC._FgSusp THEN
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_suspension;
+	                RETURN;
+	            END_IF;
+	            //teste niveau haut
+	            #Ret := "Controle_NH"(TempoAffNH := "TpDefNh", R := #REC);
+	            IF #Ret = 1 THEN
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_changement_destination;
+	                RETURN;
+	            END_IF;
+	            //Controle quantité passée
+	            IF #REC.RecCommun.CommunGeneral._ParCal._QteTrans >= (#REC._TheoTrans - #REC._SeuilTrans) OR #REC._FgAbandon THEN
+	                IF #REC._FgAbandon = FALSE THEN
+	                    #REC._Ptzs._Fg_Qte_Passee := TRUE;
+	                END_IF;
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_vidange;
+	                RETURN;
+	            END_IF;
+	            //decompte tempo maxi avant dialogue de defaut
+	            #Return := "Tempo"(Duree := #REC._TpMaxFPm, Tps_Picke := #REC._DebutMax, Anticip := FALSE, Tps_Passe => #Tps_Passe);
+	            IF #Return AND #REC._FgAbandon = false THEN
+	                #REC.Dial_Def.Num_Def_Etape := 1;
+	                #REC.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := 'Perte de matiere',
+	                                                              Type_Defaut := 2,
+	                                                              Automatisme := #REC.RecCommun.CommunGeneral._Autom,
+	                                                              Num_Lot := #REC._Ptzs._NoLot,
+	                                                              Origine_Defaut := 'Pas de presence du matiere',
+	                                                              Libelle_Origine := 'Pas de presence du matiere',
+	                                                              Acq1 := 'Relance',
+	                                                              Acq2 := 'Abandon',
+	                                                              Acq3 := '',
+	                                                              Acq4 := '',
+	                                                              Acq5 := '',
+	                                                              Acq6 := '',
+	                                                              Acq7 := '',
+	                                                              Acq8 := '',
+	                                                              Acq_Choisi := -1,
+	                                                              Date_Arrivee := #REC._TpsPicke);
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                RETURN;
+	            END_IF;
+	        TEST_QTE_PASSEE_DEF1:
+	            //======================== Traitement des reponses pour le defaut1 Etape TEST QTE PASSEE Perte PM  ====================================//  
+	            IF #REC.Dial_Def.Reponse_Def = 'Relance' THEN //relance
+	                #REC._DebutMax := #REC._TpsPicke;
+	                #REC.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            IF #REC.Dial_Def.Reponse_Def = 'Abandon' THEN //abandon
+	                #REC._FgAbandon := TRUE;
+	                #REC.Dial_Def.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            //======================================  Fin traitement====================================//
+	        END_REGION Traitement cyclique "Test qte passee"
+	        
+	        RETURN;
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║   Etape "Attente Acq nettoyage"    ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	    #Etape_attente_acquit_nettoyage:
+	        
+	        REGION Traitement preliminaire 'Attente_acquit_nettoyage'
+	            IF (#REC.RecCommun.CommunGeneral._Etp <> #REC.RecCommun.CommunGeneral._EtpPrec) THEN
+	                //Memorisation de l'etape encours
+	                #REC.RecCommun.CommunGeneral._EtpPrec := #REC.RecCommun.CommunGeneral._Etp;
+	                //Reperer le niveau du grafcet
+	                #MajNiv := "Maj_Niv"(Num_Zone := #REC.RecCommun.CommunGeneral._NumZone, Num_Tache := #REC.RecCommun.CommunGeneral._Tache, Niveau := "REC_AttenteAcquitNettoyage_Niv");
+	                //Nomination l'etape en cours
+	                #REC.RecCommun.CommunGeneral._DescEtp := 'Attente acquit nettoyage';
+	            END_IF;
+	        END_REGION Traitement preliminaire 'Attente_acquit_nettoyage'
+	        
+	        REGION Traitement cyclique "Attente acquit nettoyage"
+	            
+	        END_REGION Traitement cyclique "Attente acquit nettoyage"
+	        RETURN;
+	        RETURN;
+	        
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║          Etape "Vidange"           ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                    
+	*)
+	        
+	    #Etape_vidange:
+	        REGION Traitement preliminaire 'Vidange'
+	            
+	            IF (#REC.RecCommun.CommunGeneral._Etp <> #REC.RecCommun.CommunGeneral._EtpPrec) THEN
+	                #Ret_RD_Sys_T := RD_SYS_T(#REC._TpsPicke);
+	                #REC._Ptzs._DateArretTC := #REC._TpsPicke;
+	                //Memorisation de l'etape encours
+	                #REC.RecCommun.CommunGeneral._EtpPrec := #REC.RecCommun.CommunGeneral._Etp;
+	                //Reperer le niveau du grafcet
+	                #MajNiv := "Maj_Niv"(Num_Zone := #REC.RecCommun.CommunGeneral._NumZone, Num_Tache := #REC.RecCommun.CommunGeneral._Tache, Niveau := "REC_Vidange_Niv");
+	                //Nomination l'etape en cours
+	                #REC.RecCommun.CommunGeneral._DescEtp := 'Etape Vidange';
+	                #REC._FgDemVid := FALSE;
+	                
+	                #REC._Ptzs._QteLot := #REC.RecCommun.CommunGeneral._ParCal._QteTrans;
+	                
+	                //#REC._FgDemQteP := FALSE;
+	                // #REC._FgRepQteP := FALSE;
+	                #REC._FgActQtePossible := FALSE;
+	                //#Ret := "Fin_Pos_Circuit"(#REC._PtCir);
+	            END_IF;
+	        END_REGION Traitement preliminaire 'Vidange'
+	        
+	        REGION Traitement cyclique "Vidange"
+	            #Ret_Bool := "Vid_Circuit_Cycl"(#REC._PtCir);
+	            IF #Ret_Bool AND "Test_Etat_Circuit"(Etat := "Libre", Debut := 0, CIRCUIT := #REC._PtCir) THEN
+	                // IF "Test_Etat_Circuit"(Etat := "Enc_Fin_Pos", Debut := 0, CIRCUIT := #REC._PtCir) THEN
+	                #Ret := "Libere_Circuit"(#REC._PtCir);
+	                
+	                "MAJ_Cumul_Dest"(Dest := "Nom_Mobile"(#REC.RecCommun.CommunGeneral._Ptdest),
+	                                 Increment := FALSE,
+	                                 DestR := #REC._Ptzs._DestR,
+	                                 PARCAL := #REC.RecCommun.CommunGeneral._ParCal);
+	                #REC._CumulQteNh := #REC._Ptzs._DestR._Liste[#REC._Ptzs._DestR._Index]._CumulQte;
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_maj_base;
+	            END_IF;
+	        END_REGION Traitement cyclique "Vidange"
+	        
+	        
+	        RETURN;
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║          Etape "MAJ Base"          ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                    
+	*)
+	    #Etape_maj_base:
+	        
+	        REGION Traitement preliminaire 'Maj Base'
+	            IF (#REC.RecCommun.CommunGeneral._Etp <> #REC.RecCommun.CommunGeneral._EtpPrec) THEN
+	                //Memorisation de l'etape encours
+	                #REC.RecCommun.CommunGeneral._EtpPrec := #REC.RecCommun.CommunGeneral._Etp;
+	                //Reperer le niveau du grafcet
+	                
+	                #MajNiv := "Maj_Niv"(Num_Zone := #REC.RecCommun.CommunGeneral._NumZone, Num_Tache := #REC.RecCommun.CommunGeneral._Tache, Niveau := "REC_MajBase_Niv");
+	                //Nomination l'etape en cours
+	                #REC.RecCommun.CommunGeneral._DescEtp := 'Maj Base';
+	            END_IF;
+	        END_REGION Traitement preliminaire 'Maj Base'
+	        
+	        REGION Traitement cyclique "Maj Base"
+	            IF NOT #REC._FgAbandon THEN
+	                IF #REC._FgGestDens THEN
+	                    #ret_sint := "CorDensite"(QteReelle := #REC._Ptzs._Qte_Prev,
+	                                              QteCalculee := #REC.RecCommun.CommunGeneral._ParCal._QteTrans,
+	                                              AncCoeff := #REC._Ptzs._CoefDens,
+	                                              PasMaxCorCoeff := #REC._PasMaxCorCoeff,
+	                                              DensCorMax := #REC._DensMaxi,
+	                                              DensCorMin := #REC._DensMini,
+	                                              DensInitial := #REC._Ptzs._Densite,
+	                                              TolMax := #REC._TolMax,
+	                                              TolMin := #REC._TolMin,
+	                                              NvCoeff := #REC._AffCoefCor,
+	                                              DensCor := #REC._AffDensCours);
+	                END_IF;
+	                IF #fgbase AND #ret_sint = 0 THEN
+	                    // Appel Proc RecrCoef Proc_RecrCoef(pt_zs->Cd_Mat,LireIdIdCoeffDens(),AnsiString(WLireProcede()).c_str(),_nouvCoef);
+	                    ;
+	                END_IF;
+	                
+	                
+	            END_IF;
+	            
+	            
+	            
+	            
+	            #REC.RecCommun.CommunGeneral._Etp := #Etape_fin_lot;
+	        END_REGION Traitement cyclique "Maj Base"
+	        RETURN;
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║          Etape "Fin Lot"           ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                    
+	*)
+	    #Etape_fin_lot:
+	        REGION Traitement preliminaire 'Fin Lot'
+	            IF (#REC.RecCommun.CommunGeneral._Etp <> #REC.RecCommun.CommunGeneral._EtpPrec) THEN
+	                //Memorisation de l'etape encours
+	                #REC.RecCommun.CommunGeneral._EtpPrec := #REC.RecCommun.CommunGeneral._Etp;
+	                //Nomination l'etape en cours
+	                #REC.RecCommun.CommunGeneral._DescEtp := 'Fin Lot';
+	                #REC._FgArret := FALSE;
+	                #REC._FgActQtePossible := FALSE;
+	                IF #REC.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #REC.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO FinLot_DEF1;
+	                    END_CASE;
+	                END_IF;
+	                // Appel fonction fn réception
+	                IF #fgbase THEN
+	                    #ResultProcFinRec := "Proc_Fin_Recep"(NumPoste := "Num_Poste", IdRecep := #REC._Ptzs._Id_Rec,
+	                                                          CumulTps := #REC.RecCommun.CommunGeneral._ParCal._TpsTran / 1000, Msg_Def => #Text_Def);
+	                    #ResultProcFinRec := 'OK';
+	                ELSE
+	                    #ResultProcFinRec := 'OK';
+	                END_IF;
+	                
+	                
+	            END_IF;
+	        END_REGION Traitement preliminaire 'Fin Lot'
+	        
+	        REGION Traitement cyclique "Fin Lot"
+	            IF #ResultProcFinRec <> 'OK' THEN
+	                #REC.Dial_Def.Num_Def_Etape := 1;
+	                #REC.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base := #fgbase, Msg_Defaut := #ResultProcFinRec,
+	                                                              Type_Defaut := 2,
+	                                                              Automatisme := #REC.RecCommun.CommunGeneral._Autom,
+	                                                              Num_Lot := #REC._Ptzs._NoLot,
+	                                                              Origine_Defaut := 'Base de donnees',
+	                                                              Libelle_Origine := 'Base de donnees',
+	                                                              Acq1 := 'Abandon',
+	                                                              Acq2 := 'Relance',
+	                                                              Acq3 := '',
+	                                                              Acq4 := '',
+	                                                              Acq5 := '',
+	                                                              Acq6 := '',
+	                                                              Acq7 := '',
+	                                                              Acq8 := '',
+	                                                              Acq_Choisi := -1,
+	                                                              Date_Arrivee := #REC._TpsPicke);
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                RETURN;
+	            END_IF;
+	        FinLot_DEF1:
+	            //================================== Traitement des reponses pour le defaut1  =============================================================//
+	            IF #REC.Dial_Def.Reponse_Def = 'Abandon' THEN
+	                #ResultProcFinRec := 'OK';
+	                #REC.Dial_Def.Reponse_Def := '';
+	            END_IF;
+	            IF #REC.Dial_Def.Reponse_Def = 'Relance' THEN
+	                #REC.Dial_Def.Reponse_Def := '';
+	                #ResultProcFinRec := "Proc_Fin_Recep"(NumPoste := "Num_Poste", IdRecep := #REC._Ptzs._Id_Rec,
+	                                                      CumulTps := #REC.RecCommun.CommunGeneral._ParCal._TpsTran / 1000, Msg_Def => #Text_Def);
+	            END_IF;
+	            //============================================  Fin traitement  ====================================================================//
+	            IF #ResultProcFinRec = 'OK' THEN
+	                #MajNiv := "Maj_Niv"(Num_Zone := #REC.RecCommun.CommunGeneral._NumZone, Num_Tache := #REC.RecCommun.CommunGeneral._Tache, Niveau := "REC_FinLot_Niv");
+	                #Ret := "Libere_Zone_Suiv_Lot"(Num_Zone := #REC.RecCommun.CommunGeneral._NumZone);
+	                #REC.RecCommun.SUPREC.Commande._Suspension := FALSE;
+	                #REC.RecCommun.SUPREC.Commande._Vidange := FALSE;
+	                #REC.RecCommun.SUPREC.Commande._ArretImmediat := FALSE;
+	                #REC.RecCommun.SUPREC.Commande._Depart := FALSE;
+	                "Supervision"(RAZ := TRUE,
+	                              REC := #REC);
+	                #REC.TraitRec.Etape := 0;
+	                #REC.RecCommun.CommunGeneral._Etp := #Etape_Repos;
+	                RETURN;
+	            END_IF;
+	        END_REGION Traitement cyclique "Fin Lot"
+	        RETURN;
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║ Etape "Attente Reponse Dialogue"   ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                    
+	*)
+	    #Etape_Attente_RepDial:
+	        REGION Preliminaire Attente Acquuitement
+	            IF #REC.RecCommun.CommunGeneral._Etp <> #REC.RecCommun.CommunGeneral._EtpPrec THEN
+	                //Memorisation de l'etape encours
+	                #REC.RecCommun.CommunGeneral._EtpMemo := #REC.RecCommun.CommunGeneral._EtpPrec;
+	                
+	                #REC.RecCommun.CommunGeneral._DescEtp := 'Etape_Attente_RepDial';
+	                #REC.RecCommun.CommunGeneral._EtpPrec := #REC.RecCommun.CommunGeneral._Etp;
+	                
+	            END_IF;
+	        END_REGION Preliminaire Attente Acquuitement
+	        REGION Cyclique Attente Acquitement
+	            #REC.Dial_Def.Reponse_Def := "FC_Recup_Rep_Def"(Index_Def := #REC.Dial_Def.Index_Defaut, Reponse_Ecrit => #REC.Dial_Def.Text_Reponse);
+	            IF #REC.Dial_Def.Reponse_Def <> '' THEN
+	                "FC_Raz_Def"(#REC.Dial_Def.Index_Defaut);
+	                #REC.RecCommun.CommunGeneral._Etp := #REC.RecCommun.CommunGeneral._EtpMemo;
+	                RETURN;
+	            END_IF;
+	        END_REGION Cyclique Attente Acquitement   
+	END_CASE;
+	
+END_FUNCTION
+

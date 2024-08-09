@@ -1,0 +1,559 @@
+﻿FUNCTION "Gest_Dosage_Compo" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Fg_Base : Bool;
+   END_VAR
+
+   VAR_IN_OUT 
+      Verse_Sac : "S_Verse_Sac";
+   END_VAR
+
+   VAR_TEMP 
+      Msg_Defaut : String;
+      Tps_Act : Date_And_Time;
+      Ret_RD_SYS_T : Int;
+      Tps_Passe : Time;
+      ret : Bool;
+      Ret_Proc_MAJ_Stock : String;
+      Err_Sql : String;
+      Aff_Def : Bool;
+      Mess_Def : String;
+      Conditionnement : String;
+      Reste : String;
+      Tol_Sup : String;
+      ecart : String;
+      Tol_inf : String;
+   END_VAR
+
+   VAR CONSTANT 
+      Etp_Repos : SInt := 0;
+      Etp_Affich_Glyphe : SInt := 1;
+      Etp_Att_Tare : SInt := 2;
+      Etp_Dos_Compo : SInt := 3;
+      Etp_Sac_Entier : SInt := 4;
+      Etp_Ctrl_Tol : SInt := 5;
+      Etp_Acq_Incorpo : SInt := 6;
+      Etp_Fin_Dosage : SInt := 7;
+      Etp_Att_Acq : SInt := 8;
+   END_VAR
+
+
+BEGIN
+	#Ret_RD_SYS_T := RD_SYS_T(#Tps_Act);
+	
+	CASE #Verse_Sac.Etp_Dosage_Compo OF
+	    #Etp_Repos:
+	        REGION Preliminaire Repos
+	            IF #Verse_Sac.Etp_Dosage_Compo <> #Verse_Sac.Etp_Memo_Dosage_Compo THEN
+	                
+	                #Verse_Sac.Etp_Memo_Dosage_Compo := #Verse_Sac.Etp_Dosage_Compo;
+	            END_IF;
+	        END_REGION Preliminaire Repos
+	        REGION Cyclique Repos
+	            IF #Verse_Sac.Dem_Dos_Compo = 1 THEN
+	                #Verse_Sac.Compo := #Verse_Sac.Lst_Compos[#Verse_Sac.Index_Compo];
+	                #Verse_Sac.Etp_Dosage_Compo := #Etp_Affich_Glyphe;
+	                RETURN;
+	            END_IF;
+	        END_REGION Cyclique Repos
+	    #Etp_Affich_Glyphe:
+	        REGION Preliminaire Affich Glyphe
+	            IF #Verse_Sac.Etp_Dosage_Compo <> #Verse_Sac.Etp_Memo_Dosage_Compo THEN
+	                #Verse_Sac.Msg_Oper := 'Att Glyphe';
+	                #Verse_Sac.Etp_Memo_Dosage_Compo := #Verse_Sac.Etp_Dosage_Compo;
+	            END_IF;
+	        END_REGION Preliminaire Affich Glyphe
+	        REGION Cyclique Affich Glyphe
+	            
+	             #Verse_Sac.Etp_Dosage_Compo := #Etp_Att_Tare;
+	            RETURN;
+	        END_REGION Cyclique Affich Glyphe
+	    #Etp_Att_Tare:
+	        REGION Preliminaire Att Tare
+	            IF #Verse_Sac.Etp_Dosage_Compo <> #Verse_Sac.Etp_Memo_Dosage_Compo THEN
+	                #Verse_Sac.Msg_Oper := 'Att Tare';
+	                "FC_Choix_Lieux_Pes"(#Verse_Sac);
+	                #Verse_Sac.Etp_Memo_Dosage_Compo := #Verse_Sac.Etp_Dosage_Compo;
+	            END_IF;
+	        END_REGION Preliminaire Att Tare
+	        REGION Cyclique Att Tare
+	            #Verse_Sac.Compo.Net := #Verse_Sac.Compo.Poids - #Verse_Sac.Compo.Ecart;
+	            IF  ("FM_Bp_Tare".Q) OR (#Verse_Sac.Type_Tare = 1 AND #Verse_Sac.Compo.LPes = #Verse_Sac.Lieu_Pes) OR (#Verse_Sac.Type_Tare = 2 AND #Verse_Sac.Compo.CB) THEN
+	                #Verse_Sac.Compo.Tare := "Recup_Poids_Pesage_Compo"(#Verse_Sac);
+	                #Verse_Sac.Etp_Dosage_Compo := #Etp_Dos_Compo;
+	            END_IF;
+	            IF "FM_Bp_Sac_Entier".Q THEN
+	                #Verse_Sac.Compo.Tare := "Recup_Poids_Pesage_Compo"(#Verse_Sac);
+	                #Verse_Sac.Compo.Net := "Recup_Poids_Pesage_Compo"(#Verse_Sac) - #Verse_Sac.Compo.Tare + #Verse_Sac.Compo.Poids_Reel_Prec;
+	                #Verse_Sac.Etp_Dosage_Compo := #Etp_Sac_Entier;
+	            END_IF;
+	        END_REGION Cyclique Att Tare
+	    #Etp_Dos_Compo:
+	        REGION Preliminaire Dos Compo
+	            IF #Verse_Sac.Etp_Dosage_Compo <> #Verse_Sac.Etp_Memo_Dosage_Compo THEN
+	                #Verse_Sac.Etp_Prec_Dosage_Compo := #Verse_Sac.Etp_Dosage_Compo;
+	                //=== Traitement cas retour de defaut ===//
+	                IF #Verse_Sac.Dial_Def_Compo.Reponse_Def <> '' THEN
+	                    #Verse_Sac.Etp_Memo_Dosage_Compo := #Verse_Sac.Etp_Dosage_Compo;
+	                    CASE #Verse_Sac.Dial_Def_Compo.Num_Def_Etape OF
+	                        1:
+	                            GOTO DOS_COMPO_DEF1;
+	                    END_CASE;
+	                END_IF;
+	                //=== Traitement cas retour de defaut ===//
+	                #Verse_Sac.Msg_Oper := 'Attente Acquitement Pesee';
+	                #Verse_Sac.Etp_Memo_Dosage_Compo := #Verse_Sac.Etp_Dosage_Compo;
+	            END_IF;
+	        END_REGION Preliminaire Dos Compo
+	        REGION Cyclique Dos Compo
+	            //TEST
+	            IF "Recup_Poids_Pesage_Compo"(#Verse_Sac) >= #Verse_Sac.Compo.Tare THEN
+	                #Verse_Sac.Compo.Ecart := #Verse_Sac.Compo.Poids - ("Recup_Poids_Pesage_Compo"(#Verse_Sac) - #Verse_Sac.Compo.Tare + #Verse_Sac.Compo.Poids_Reel_Prec);
+	                #Verse_Sac.Compo.Net := "Recup_Poids_Pesage_Compo"(#Verse_Sac) - #Verse_Sac.Compo.Tare + #Verse_Sac.Compo.Poids_Reel_Prec;
+	            ELSE
+	                #Verse_Sac.Dial_Def_Compo.Num_Def_Etape := 1;
+	                #Verse_Sac.Dial_Def_Compo.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base,
+	                                                                          Msg_Defaut := 'Tare erronee, veuillez reprendre la tare',
+	                                                                          Type_Defaut := 0,
+	                                                                          Automatisme := #Verse_Sac.Pt_Zs._SuiviCommun._CdProc,
+	                                                                          Num_Lot := #Verse_Sac.Pt_Zs._SuiviCommun._NoLot,
+	                                                                          Origine_Defaut := #Verse_Sac.Incor_Prep,
+	                                                                          Libelle_Origine := #Verse_Sac.DosCommun.Module_Commun._NomTache,
+	                                                                          Acq1 := 'Retarer',
+	                                                                          Acq2 := '',
+	                                                                          Acq3 := '',
+	                                                                          Acq4 := '',
+	                                                                          Acq5 := '',
+	                                                                          Acq6 := '',
+	                                                                          Acq7 := '',
+	                                                                          Acq8 := '',
+	                                                                          Acq_Choisi := -1,
+	                                                                          Date_Arrivee := #Tps_Act);
+	                #Verse_Sac.Etp_Dosage_Compo := #Etp_Att_Acq;
+	                RETURN;
+	            END_IF;
+	        DOS_COMPO_DEF1:
+	            //========================== Traitement des reponses defaut ==========================//
+	            IF (#Verse_Sac.Dial_Def_Compo.Reponse_Def = 'Retarer') THEN
+	                #Verse_Sac.Compo.Tare := "Recup_Poids_Pesage_Compo"(#Verse_Sac);
+	                #Verse_Sac.Dial_Def_Compo.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            //========================== Traitement des reponses defaut ==========================//
+	            //TEST
+	            // #Verse_Sac.Compo.Ecart := #Verse_Sac.Compo.Poids - ("Recup_Poids_Pesage_Compo"(#Verse_Sac) - #Verse_Sac.Compo.Tare + #Verse_Sac.Compo.Poids_Reel_Prec);
+	            // #Verse_Sac.Compo.Net := "Recup_Poids_Pesage_Compo"(#Verse_Sac) - #Verse_Sac.Compo.Tare + #Verse_Sac.Compo.Poids_Reel_Prec;
+	            IF "FM_Bp_Acq_Total".Q THEN
+	                #Verse_Sac.Etp_Dosage_Compo := #Etp_Ctrl_Tol;
+	                RETURN;
+	            END_IF;
+	            IF "FM_Bp_Acq_Part".Q THEN
+	                #ret := (#Verse_Sac.Compo.Ecart < #Verse_Sac.Compo.Tol_Confor_Sup) AND (#Verse_Sac.Compo.Ecart > -#Verse_Sac.Compo.Tol_Confor_Sup);
+	                IF #ret THEN
+	                    #Verse_Sac.Etp_Dosage_Compo := #Etp_Ctrl_Tol;
+	                    RETURN;
+	                END_IF;
+	                #Verse_Sac.Dem_Dos_Compo := 3;
+	                #Verse_Sac.Compo.Poids_Reel_Prec := #Verse_Sac.Compo.Poids - #Verse_Sac.Compo.Ecart;
+	                #Verse_Sac.Etp_Dosage_Compo := #Etp_Acq_Incorpo;
+	                RETURN;
+	            END_IF;
+	            IF "FM_Bp_Sac_Entier".Q THEN
+	                #Verse_Sac.Etp_Dosage_Compo := #Etp_Sac_Entier;
+	                RETURN;
+	            END_IF;
+	        END_REGION Cyclique Dos Compo
+	    #Etp_Sac_Entier:
+	        REGION Preliminaire Sac Entier
+	            IF #Verse_Sac.Etp_Dosage_Compo <> #Verse_Sac.Etp_Memo_Dosage_Compo THEN
+	                #Verse_Sac.Etp_Prec_Dosage_Compo := #Verse_Sac.Etp_Dosage_Compo;
+	                //=== Traitement cas retour de defaut ===//
+	                IF #Verse_Sac.Dial_Def_Compo.Reponse_Def <> '' THEN
+	                    #Verse_Sac.Etp_Memo_Dosage_Compo := #Verse_Sac.Etp_Dosage_Compo;
+	                    CASE #Verse_Sac.Dial_Def_Compo.Num_Def_Etape OF
+	                        1:
+	                            GOTO SAC_ENTIER_DEF1;
+	                    END_CASE;
+	                END_IF;
+	                //=== Traitement cas retour de defaut ===//
+	                #Verse_Sac.Msg_Oper := 'Attente Confirmation Sac Entier';
+	                #Verse_Sac.Etp_Memo_Dosage_Compo := #Verse_Sac.Etp_Dosage_Compo;
+	            END_IF;
+	        END_REGION Preliminaire Sac Entier
+	        REGION Cyclique Sac Entier
+	            #Verse_Sac.Compo.Ecart := #Verse_Sac.Compo.Poids - #Verse_Sac.Compo.Net;
+	            IF #Verse_Sac.Compo.Compo_Mag.Cond > #Verse_Sac.Compo.Ecart + #Verse_Sac.Compo.Tol_Sup THEN
+	                #Conditionnement := UINT_TO_STRING(#Verse_Sac.Compo.Compo_Mag.Cond);
+	                VAL_STRG(IN := #Verse_Sac.Compo.Ecart,
+	                         SIZE := 6,
+	                         PREC := 2,
+	                         FORMAT := 0,
+	                         P := 1,
+	                         OUT => #Reste);
+	                #Verse_Sac.Dial_Def_Compo.Num_Def_Etape := 1;
+	                #Msg_Defaut := CONCAT(IN1 := 'Acquit sac entier impossible pour ', IN2 := #Verse_Sac.Compo.Code_MP, IN3 := ' conditionnement =', IN4 := #Conditionnement, IN5:= 'reste=', IN6:=#Reste);
+	                #Verse_Sac.Dial_Def_Compo.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base, Msg_Defaut := #Msg_Defaut,
+	                                                                    Type_Defaut := 0,
+	                                                                    Automatisme := #Verse_Sac.Pt_Zs._SuiviCommun._CdProc,
+	                                                                    Num_Lot := #Verse_Sac.Pt_Zs._SuiviCommun._NoLot,
+	                                                                    Origine_Defaut := #Verse_Sac.Incor_Prep,
+	                                                                    Libelle_Origine := #Verse_Sac.DosCommun.Module_Commun._NomTache,
+	                                                                    Acq1 := 'Relance',
+	                                                                    Acq2 := 'Abandon',
+	                                                                    Acq3 := '',
+	                                                                    Acq4 := '',
+	                                                                    Acq5 := '',
+	                                                                    Acq6 := '',
+	                                                                    Acq7 := '',
+	                                                                    Acq8 := '',
+	                                                                    Acq_Choisi := -1,
+	                                                                    Date_Arrivee := #Tps_Act);
+	          #Verse_Sac.Etp_Dosage_Compo := #Etp_Att_Acq;
+	          RETURN;
+	            END_IF;
+	        SAC_ENTIER_DEF1:
+	            //========================== Traitement des reponses defaut ==========================//
+	            IF (#Verse_Sac.Dial_Def_Compo.Reponse_Def = 'Relance') THEN
+	                #Verse_Sac.Etp_Dosage_Compo := #Etp_Att_Tare;
+	                #Verse_Sac.Dial_Def_Compo.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            IF (#Verse_Sac.Dial_Def_Compo.Reponse_Def = 'Abandon') THEN
+	                
+	                #Verse_Sac.Dial_Def_Compo.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            //========================== Traitement des reponses defaut ==========================//
+	            //#Verse_Sac.Compo.Net := #Verse_Sac.Compo.Compo_Mag.Cond;
+	            #Verse_Sac.Compo.Net := #Verse_Sac.Compo.Compo_Mag.Cond +  #Verse_Sac.Compo.Poids_Reel_Prec;
+	            #Verse_Sac.Compo.Ecart := #Verse_Sac.Compo.Poids - #Verse_Sac.Compo.Net (* - #Verse_Sac.Compo.Poids_Reel_Prec *);
+	            #Verse_Sac.Compo.Poids_Reel_Prec := #Verse_Sac.Compo.Poids - #Verse_Sac.Compo.Ecart;
+	            IF #Verse_Sac.Compo.Ecart <= #Verse_Sac.Compo.Tol_Inf THEN
+	                #Verse_Sac.Dem_Dos_Compo := 2;
+	            END_IF;
+	            #Verse_Sac.Compo.Fin_Dos := true;
+	            #Verse_Sac.Etp_Dosage_Compo := #Etp_Acq_Incorpo;
+	        END_REGION Cyclique Sac Entier
+	    #Etp_Ctrl_Tol:
+	        REGION Preliminaire Ctrl Tol
+	            IF #Verse_Sac.Etp_Dosage_Compo <> #Verse_Sac.Etp_Memo_Dosage_Compo THEN
+	                #Verse_Sac.Etp_Prec_Dosage_Compo := #Verse_Sac.Etp_Dosage_Compo;
+	                //=== Traitement cas retour de defaut ===//
+	                IF #Verse_Sac.Dial_Def_Compo.Reponse_Def <> '' THEN
+	                    #Verse_Sac.Etp_Memo_Dosage_Compo := #Verse_Sac.Etp_Dosage_Compo;
+	                    CASE #Verse_Sac.Dial_Def_Compo.Num_Def_Etape OF
+	                        1:
+	                            GOTO Ctrl_Tol_DEF1;
+	                        2:
+	                            GOTO Ctrl_Tol_DEF2;
+	                    END_CASE;
+	                END_IF;
+	                //=== Traitement cas retour de defaut ===//
+	                #Verse_Sac.Msg_Oper := 'Controle Poids Compo';
+	                #Verse_Sac.Etp_Memo_Dosage_Compo := #Verse_Sac.Etp_Dosage_Compo;
+	            END_IF;
+	        END_REGION Preliminaire Ctrl Tol
+	        REGION Cyclique Ctrl Tol
+	            IF #Verse_Sac.Compo.Ecart > #Verse_Sac.Compo.Tol_Inf THEN
+	                VAL_STRG(IN := #Verse_Sac.Compo.Tol_Inf,
+	                         SIZE := 6,
+	                         PREC := 2,
+	                         FORMAT := 0,
+	                         P := 1,
+	                         OUT => #Tol_inf);
+	                VAL_STRG(IN := #Verse_Sac.Compo.Ecart,
+	                         SIZE := 6,
+	                         PREC := 2,
+	                         FORMAT := 0,
+	                         P := 1,
+	                         OUT => #ecart);
+	                #Verse_Sac.Dial_Def_Compo.Num_Def_Etape := 1;
+	                #Msg_Defaut := CONCAT(IN1 := #Verse_Sac.Compo.Code_MP, IN2 := ' : Hors Tolerance Inferieure: Tol_Inf=', IN3 := #Tol_inf, IN4 := 'ecart=', IN5 := #ecart);
+	                #Verse_Sac.Dial_Def_Compo.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base, Msg_Defaut := #Msg_Defaut,
+	                                                                          Type_Defaut := 0,
+	                                                                          Automatisme := #Verse_Sac.Pt_Zs._SuiviCommun._CdProc,
+	                                                                          Num_Lot := #Verse_Sac.Pt_Zs._SuiviCommun._NoLot,
+	                                                                          Origine_Defaut := #Verse_Sac.Incor_Prep,
+	                                                                          Libelle_Origine := #Verse_Sac.DosCommun.Module_Commun._NomTache,
+	                                                                          Acq1 := 'Relance',
+	                                                                          Acq2 := 'Abandon',
+	                                                                          Acq3 := '',
+	                                                                          Acq4 := '',
+	                                                                          Acq5 := '',
+	                                                                          Acq6 := '',
+	                                                                          Acq7 := '',
+	                                                                          Acq8 := '',
+	                                                                          Acq_Choisi := -1,
+	                                                                          Date_Arrivee := #Tps_Act);
+	                #Verse_Sac.Etp_Dosage_Compo := #Etp_Att_Acq;
+	                RETURN;
+	            END_IF;
+	        Ctrl_Tol_DEF1:
+	            //========================== Traitement des reponses defaut ==========================//
+	            IF (#Verse_Sac.Dial_Def_Compo.Reponse_Def = 'Relance') THEN
+	                #Verse_Sac.Etp_Dosage_Compo := #Etp_Dos_Compo;
+	                #Verse_Sac.Dial_Def_Compo.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            IF (#Verse_Sac.Dial_Def_Compo.Reponse_Def = 'Abandon') THEN
+	                #Verse_Sac.Dem_Dos_Compo := 2;
+	                // #Verse_Sac.Etp_Dosage_Compo := #Etp_Acq_Incorpo;
+	                #Verse_Sac.Etp_Dosage_Compo := #Etp_Fin_Dosage;
+	                #Verse_Sac.Dial_Def_Compo.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            //========================== Traitement des reponses defaut ==========================//
+	            IF (- #Verse_Sac.Compo.Ecart > #Verse_Sac.Compo.Tol_Sup )THEN
+	                VAL_STRG(IN := #Verse_Sac.Compo.Tol_Sup,
+	                         SIZE := 6,
+	                         PREC := 2,
+	                         FORMAT := 0,
+	                         P := 1,
+	                         OUT => #Tol_Sup);
+	                VAL_STRG(IN := #Verse_Sac.Compo.Ecart,
+	                         SIZE := 6,
+	                         PREC := 2,
+	                         FORMAT := 0,
+	                         P := 1,
+	                         OUT => #ecart);
+	                #Verse_Sac.Dial_Def_Compo.Num_Def_Etape := 2;
+	                #Msg_Defaut := CONCAT(IN1 := #Verse_Sac.Compo.Code_MP, IN2 := ' : Hors Tolerance Superieure: Tol_Sup=', IN3:=#Tol_Sup, IN4:='ecart=', IN5:=#ecart);
+	                #Verse_Sac.Dial_Def_Compo.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base, Msg_Defaut := #Msg_Defaut,
+	                                                                          Type_Defaut := 0,
+	                                                                          Automatisme := #Verse_Sac.Pt_Zs._SuiviCommun._CdProc,
+	                                                                          Num_Lot := #Verse_Sac.Pt_Zs._SuiviCommun._NoLot,
+	                                                                          Origine_Defaut := #Verse_Sac.Incor_Prep,
+	                                                                          Libelle_Origine := #Verse_Sac.DosCommun.Module_Commun._NomTache,
+	                                                                          Acq1 := 'Relance',
+	                                                                          Acq2 := 'Abandon',
+	                                                                          Acq3 := '',
+	                                                                          Acq4 := '',
+	                                                                          Acq5 := '',
+	                                                                          Acq6 := '',
+	                                                                          Acq7 := '',
+	                                                                          Acq8 := '',
+	                                                                          Acq_Choisi := -1,
+	                                                                          Date_Arrivee := #Tps_Act);
+	                #Verse_Sac.Etp_Dosage_Compo := #Etp_Att_Acq;
+	                RETURN;
+	            END_IF;
+	        Ctrl_Tol_DEF2:
+	            //========================== Traitement des reponses defaut ==========================//
+	            IF (#Verse_Sac.Dial_Def_Compo.Reponse_Def = 'Relance') THEN
+	                #Verse_Sac.Etp_Dosage_Compo := #Etp_Dos_Compo;
+	                #Verse_Sac.Dial_Def_Compo.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            IF (#Verse_Sac.Dial_Def_Compo.Reponse_Def = 'Abandon') THEN
+	                #Verse_Sac.Dem_Dos_Compo := 2;
+	                // #Verse_Sac.Etp_Dosage_Compo := #Etp_Acq_Incorpo;
+	                #Verse_Sac.Etp_Dosage_Compo := #Etp_Fin_Dosage;
+	                #Verse_Sac.Dial_Def_Compo.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            //========================== Traitement des reponses defaut ==========================//
+	            #Verse_Sac.Dem_Dos_Compo := 2;
+	            #Verse_Sac.Etp_Dosage_Compo := #Etp_Acq_Incorpo;
+	            RETURN;
+	        END_REGION Cyclique Ctrl Tol
+	    #Etp_Acq_Incorpo:
+	        REGION Preliminaire Acq Incorpo
+	            IF #Verse_Sac.Etp_Dosage_Compo <> #Verse_Sac.Etp_Memo_Dosage_Compo THEN
+	                #Verse_Sac.Etp_Prec_Dosage_Compo := #Verse_Sac.Etp_Dosage_Compo;
+	                //=== Traitement cas retour de defaut ===//
+	                IF #Verse_Sac.Dial_Def_Compo.Reponse_Def <> '' THEN
+	                    #Verse_Sac.Etp_Memo_Dosage_Compo := #Verse_Sac.Etp_Dosage_Compo;
+	                    CASE #Verse_Sac.Dial_Def_Compo.Num_Def_Etape OF
+	                        1:
+	                            GOTO ACQ_INCORPO_DEF1;
+	                        2:
+	                            GOTO ACQ_INCORPO_DEF2;
+	                    END_CASE;
+	                END_IF;
+	                //=== Traitement cas retour de defaut ===//
+	                #Verse_Sac.Msg_Oper := 'Attente Incorporation Benne';
+	                IF #Verse_Sac.Type_Acq_Incor = 0 OR #Verse_Sac.Compo.LPes = #Verse_Sac.Lieu_Pes THEN
+	                    #Verse_Sac.Etp_Dosage_Compo := #Etp_Fin_Dosage;
+	                    RETURN;
+	                END_IF;
+	                #Verse_Sac.Tare_Ctrl_Pds_Incorpo_Compo := #Verse_Sac.Poids_Benne;
+	                #Ret_RD_SYS_T := RD_SYS_T(#Verse_Sac.DosCommun.Module_Commun._TpsPicke);
+	                #Verse_Sac.Etp_Memo_Dosage_Compo := #Verse_Sac.Etp_Dosage_Compo;
+	            END_IF;
+	        END_REGION Preliminaire Acq Incorpo
+	        REGION Cyclique Acq Incorpo
+	            IF #Verse_Sac.Type_Acq_Incor = 1 OR #Verse_Sac.Type_Acq_Incor = 2 THEN
+	                IF "FM_Bp_Acq_Incor_Ben".Q THEN
+	                    IF #Verse_Sac.Type_Acq_Incor = 1 OR ABS(#Verse_Sac.Poids_Benne - #Verse_Sac.Tare_Ctrl_Pds_Incorpo_Compo - #Verse_Sac.Compo.Net) < #Verse_Sac.Tol_Ctrl_Pds THEN
+	                        #Verse_Sac.Etp_Dosage_Compo := #Etp_Fin_Dosage;
+	                        RETURN;
+	                    ELSE
+	                        #Verse_Sac.Msg_Oper := 'Controle Poids Benne';
+	                        #Verse_Sac.Dial_Def_Compo.Num_Def_Etape := 1;
+	                        #Msg_Defaut := CONCAT(IN1 := #Verse_Sac.Incor_Prep, IN2 := ' Incoherence entre le poids dose et le poids benne');
+	                        #Verse_Sac.Dial_Def_Compo.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base, Msg_Defaut := #Msg_Defaut,
+	                                                                                  Type_Defaut := 0,
+	                                                                                  Automatisme := #Verse_Sac.Pt_Zs._SuiviCommun._CdProc,
+	                                                                                  Num_Lot := #Verse_Sac.Pt_Zs._SuiviCommun._NoLot,
+	                                                                                  Origine_Defaut := #Verse_Sac.Incor_Prep,
+	                                                                                  Libelle_Origine := #Verse_Sac.DosCommun.Module_Commun._NomTache,
+	                                                                                  Acq1 := 'Relance',
+	                                                                                  Acq2 := 'Abandon',
+	                                                                                  Acq3 := '',
+	                                                                                  Acq4 := '',
+	                                                                                  Acq5 := '',
+	                                                                                  Acq6 := '',
+	                                                                                  Acq7 := '',
+	                                                                                  Acq8 := '',
+	                                                                                  Acq_Choisi := -1,
+	                                                                                  Date_Arrivee := #Tps_Act);
+	                        #Verse_Sac.Etp_Dosage_Compo := #Etp_Att_Acq;
+	                        RETURN;
+	                    END_IF;
+	                END_IF;
+	            END_IF;
+	        ACQ_INCORPO_DEF1:
+	            //========================== Traitement des reponses defaut ==========================//
+	            IF (#Verse_Sac.Dial_Def_Compo.Reponse_Def = 'Relance') THEN
+	                #Verse_Sac.Dial_Def_Compo.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            IF (#Verse_Sac.Dial_Def_Compo.Reponse_Def = 'Abandon') THEN
+	                #Verse_Sac.Etp_Dosage_Compo := #Etp_Fin_Dosage;
+	                #Verse_Sac.Dial_Def_Compo.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            //========================== Traitement des reponses defaut ==========================//
+	            IF #Verse_Sac.Type_Acq_Incor = 3 THEN
+	                #Verse_Sac.Msg_Oper := 'Controle Poids Benne';
+	                IF ABS(#Verse_Sac.Poids_Benne - #Verse_Sac.Tare_Ctrl_Pds_Incorpo_Compo - #Verse_Sac.Compo.Net) < #Verse_Sac.Tol_Ctrl_Pds THEN
+	                    #Verse_Sac.Etp_Dosage_Compo := #Etp_Fin_Dosage;
+	                END_IF;
+	                IF "Tempo"(Duree:=#Verse_Sac.Tps_Max_Incorpo, Tps_Picke:=#Verse_Sac.DosCommun.Module_Commun._TpsPicke, Anticip:=FALSE, Tps_Passe=>#Tps_Passe) THEN
+	                    #Verse_Sac.Dial_Def_Compo.Num_Def_Etape := 2;
+	                    #Msg_Defaut := CONCAT(IN1 := #Verse_Sac.Incor_Prep, IN2 := ' Incoherence entre le poids dose et le poids benne');
+	                    #Verse_Sac.Dial_Def_Compo.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base, Msg_Defaut := #Msg_Defaut,
+	                                                                              Type_Defaut := 0,
+	                                                                              Automatisme := #Verse_Sac.Pt_Zs._SuiviCommun._CdProc,
+	                                                                              Num_Lot := #Verse_Sac.Pt_Zs._SuiviCommun._NoLot,
+	                                                                              Origine_Defaut := #Verse_Sac.Incor_Prep,
+	                                                                              Libelle_Origine := #Verse_Sac.DosCommun.Module_Commun._NomTache,
+	                                                                              Acq1 := 'Relance',
+	                                                                              Acq2 := 'Abandon',
+	                                                                              Acq3 := '',
+	                                                                              Acq4 := '',
+	                                                                              Acq5 := '',
+	                                                                              Acq6 := '',
+	                                                                              Acq7 := '',
+	                                                                              Acq8 := '',
+	                                                                              Acq_Choisi := -1,
+	                                                                              Date_Arrivee := #Tps_Act);
+	                    #Verse_Sac.Etp_Dosage_Compo := #Etp_Att_Acq;
+	                    RETURN;
+	                END_IF;
+	            END_IF;
+	        ACQ_INCORPO_DEF2:
+	            //========================== Traitement des reponses defaut ==========================//
+	            IF (#Verse_Sac.Dial_Def_Compo.Reponse_Def = 'Relance') THEN
+	                #Ret_RD_SYS_T := RD_SYS_T(#Verse_Sac.DosCommun.Module_Commun._TpsPicke);
+	                #Verse_Sac.Dial_Def_Compo.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            IF (#Verse_Sac.Dial_Def_Compo.Reponse_Def = 'Abandon') THEN
+	                #Verse_Sac.Etp_Dosage_Compo := #Etp_Fin_Dosage;
+	                #Verse_Sac.Dial_Def_Compo.Reponse_Def := '';
+	                RETURN;
+	            END_IF;
+	            //========================== Traitement des reponses defaut ==========================// 
+	            #Verse_Sac.Etp_Dosage_Compo := #Etp_Fin_Dosage;
+	            RETURN;
+	        END_REGION Cyclique Acq Incorpo
+	    #Etp_Fin_Dosage:
+	        REGION Preliminaire Fin Dosage
+	            IF #Verse_Sac.Etp_Dosage_Compo <> #Verse_Sac.Etp_Memo_Dosage_Compo THEN
+	                #Verse_Sac.Msg_Oper := 'MAJ Base';
+	                //=== Traitement cas retour de defaut ===//
+	                IF #Verse_Sac.Dial_Def.Reponse_Def <> '' THEN
+	                    CASE #Verse_Sac.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO Fin_Dosage_DEF1;
+	                    END_CASE;
+	                END_IF;
+	                //=== Traitement cas retour de defaut ===//
+	                // MAJ stock compo
+	                #Ret_Proc_MAJ_Stock := "Proc_MAJ_Stock"(Compo := #Verse_Sac.Compo, Err_Sql=> #Err_Sql, Msg_Def => #Msg_Defaut, Data_Dosage := #Verse_Sac.Pt_Zs);
+	                #Verse_Sac.Compo.Poids_Deja_Mouv := #Verse_Sac.Compo.Net;
+	                IF ("dbSql4SiemensInterface".stSql4SiemensInterface.Observer.xTimeout) THEN
+	                    #Aff_Def := TRUE;
+	                    #Mess_Def := 'Connexion avec la base interrompue';
+	                ELSIF #Ret_Proc_MAJ_Stock = 'NOK' OR (#Ret_Proc_MAJ_Stock = 'OK' AND #Msg_Defaut <> 'VIDE') THEN
+	                    #Aff_Def := TRUE;
+	                    #Mess_Def := #Msg_Defaut;
+	                END_IF;
+	                IF #Aff_Def THEN
+	                    #Verse_Sac.Dial_Def_Compo.Num_Def_Etape := 1;
+	                    #Verse_Sac.Dial_Def_Compo.Index_Defaut := "Dialog_Defaut"(Fg_Base := #Fg_Base, Msg_Defaut := #Mess_Def,
+	                                                                              Type_Defaut := 0,
+	                                                                              Automatisme := #Verse_Sac.Pt_Zs._SuiviCommun._CdProc,
+	                                                                              Num_Lot := #Verse_Sac.Pt_Zs._SuiviCommun._NoLot,
+	                                                                              Origine_Defaut := 'VS Dos Compo',
+	                                                                              Libelle_Origine := 'Proc_MAJ_Stock',
+	                                                                              Acq1 := 'Relance',
+	                                                                              Acq2 := '',
+	                                                                              Acq3 := '',
+	                                                                              Acq4 := '',
+	                                                                              Acq5 := '',
+	                                                                              Acq6 := '',
+	                                                                              Acq7 := '',
+	                                                                              Acq8 := '',
+	                                                                              Acq_Choisi := -1,
+	                                                                              Date_Arrivee := #Tps_Act);
+	                    #Verse_Sac.Etp_Dosage_Compo := #Etp_Att_Acq;
+	                    RETURN;
+	                END_IF;
+	            Fin_Dosage_DEF1:
+	                //============ Traitement des reponses pour le defaut Proc_MAJ_Stock ============//
+	                IF (#Verse_Sac.Dial_Def_Compo.Reponse_Def = 'Relance') THEN
+	                    // Vider la reponse defaut
+	                    #Verse_Sac.Dial_Def_Compo.Reponse_Def := '';
+	                    RETURN;
+	                END_IF;
+	                //============Traitement des reponses pour le defaut Proc_MAJ_Stock ============//
+	                #Verse_Sac.Etp_Memo_Dosage_Compo := #Verse_Sac.Etp_Dosage_Compo;
+	            END_IF;
+	        END_REGION Preliminaire Fin Dosage
+	        REGION Cyclique Fin Dosage
+	            IF #Verse_Sac.Dem_Dos_Compo = 4 THEN
+	                #Verse_Sac.Etp_Dosage_Compo := #Etp_Att_Tare;
+	                RETURN;
+	            END_IF;
+	            IF #Verse_Sac.Dem_Dos_Compo = 2 THEN
+	                #Verse_Sac.Compo.Fin_Dos := TRUE;
+	            END_IF;
+	            #Verse_Sac.Compo.Net := #Verse_Sac.Compo.Poids - #Verse_Sac.Compo.Ecart;
+	            #Verse_Sac.Lst_Compos[#Verse_Sac.Index_Compo] := #Verse_Sac.Compo;
+	            "Maj_Qte_Tache"(Num_Tache := #Verse_Sac.DosCommun.Module_Commun._Tache,
+	                            Num_Zone := #Verse_Sac.DosCommun.Module_Commun._NumZone,
+	                            Qte := "Calc_Qte_Tache_Incorpo"(#Verse_Sac.Lst_Compos));
+	            #Verse_Sac.Etp_Dosage_Compo := #Etp_Repos;
+	            RETURN;
+	        END_REGION Cyclique Fin Dosage
+	    #Etp_Att_Acq:
+	        REGION Preliminaire Att Acq
+	            IF #Verse_Sac.Etp_Dosage_Compo <> #Verse_Sac.Etp_Memo_Dosage_Compo THEN
+	               
+	                #Verse_Sac.Etp_Memo_Dosage_Compo := #Verse_Sac.Etp_Dosage_Compo;
+	            END_IF;
+	        END_REGION Preliminaire Att Acq
+	        REGION Cyclique Att Acq
+	            #Verse_Sac.Dial_Def_Compo.Reponse_Def := "FC_Recup_Rep_Def"(Index_Def := #Verse_Sac.Dial_Def_Compo.Index_Defaut, Reponse_Ecrit => #Verse_Sac.Dial_Def_Compo.Text_Reponse);
+	            IF #Verse_Sac.Dial_Def_Compo.Reponse_Def <> '' THEN
+	                "FC_Raz_Def"(#Verse_Sac.Dial_Def_Compo.Index_Defaut);
+	                #Verse_Sac.Etp_Dosage_Compo := #Verse_Sac.Etp_Prec_Dosage_Compo;
+	                RETURN;
+	            END_IF;
+	        END_REGION Cyclique Att Acq
+	END_CASE;
+END_FUNCTION
+

@@ -1,0 +1,149 @@
+﻿FUNCTION "Initialisation_Taches_Dosage" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_TEMP 
+      i : SInt;
+   END_VAR
+
+
+BEGIN
+	//--------- Initialisation des taches de SURVDOSBENNE ---------//
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._Tache := "TAC_BP1";
+	"DB_Dosage".BP[0].Dos_Commun.Module_Commun._NomTache := 'Dosage SBP1';
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._Tache := "TAC_BP2";
+	"DB_Dosage".BP[1].Dos_Commun.Module_Commun._NomTache := 'Dosage SBP2';
+	"DB_Dosage".BP[2].Dos_Commun.Module_Commun._Tache := "TAC_BP3";
+	"DB_Dosage".BP[2].Dos_Commun.Module_Commun._NomTache := 'Dosage SBP3';
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._Tache := "TAC_BP4";
+	"DB_Dosage".BP[3].Dos_Commun.Module_Commun._NomTache := 'Dosage SBP4';
+	"DB_Dosage".BP[4].Dos_Commun.Module_Commun._Tache := "TAC_BP5";
+	"DB_Dosage".BP[4].Dos_Commun.Module_Commun._NomTache := 'Dosage BP5';
+	//--------- Initialisation des taches de TREMIES SUR TRANSPORTEURS ---------//
+	"DB_Dosage".TRM_TRANS[0].DosCommun.Module_Commun._Tache := "TAC_TREMSS_BP1";
+	"DB_Dosage".TRM_TRANS[0].DosCommun.Module_Commun._NomTache := 'Reserve SS SBP1';
+	"DB_Dosage".TRM_TRANS[1].DosCommun.Module_Commun._Tache := "TAC_TREMSS_BP2";
+	"DB_Dosage".TRM_TRANS[1].DosCommun.Module_Commun._NomTache := 'Reserve SS SBP2';
+	"DB_Dosage".TRM_TRANS[2].DosCommun.Module_Commun._Tache := "TAC_TREMSS_BP3";
+	"DB_Dosage".TRM_TRANS[2].DosCommun.Module_Commun._NomTache := 'Reserve SS SBP3';
+	"DB_Dosage".TRM_TRANS[3].DosCommun.Module_Commun._Tache := "TAC_TREMSS_BP5";
+	"DB_Dosage".TRM_TRANS[3].DosCommun.Module_Commun._NomTache := 'Reserve SS SBP5';
+	"DB_Dosage".TRM_TRANS[4].DosCommun.Module_Commun._Tache := "TAC_TREMSS_BR1";
+	"DB_Dosage".TRM_TRANS[4].DosCommun.Module_Commun._NomTache := 'Reserve Sous BR1';
+	"DB_Dosage".TRM_TRANS[5].DosCommun.Module_Commun._Tache := "TAC_TREMSS_BR2";
+	"DB_Dosage".TRM_TRANS[5].DosCommun.Module_Commun._NomTache := 'Reserve Sous BR2';
+	"DB_Dosage".TRM_TRANS[6].DosCommun.Module_Commun._Tache := "TAC_TREMSS_MLG1";
+	"DB_Dosage".TRM_TRANS[6].DosCommun.Module_Commun._NomTache := 'Reserve SS MLG1';
+	"DB_Dosage".TRM_TRANS[7].DosCommun.Module_Commun._Tache := "TAC_TREMSS_MLG2";
+	"DB_Dosage".TRM_TRANS[7].DosCommun.Module_Commun._NomTache := 'Reserve SS MLG2';
+	//--------- Initialisation des taches de CIRCUIT TRANSFERT ---------//
+	"DB_Dosage".TRANSF[0].DosCommun.Module_Commun._Tache := "TAC_CIRREMP_BR1";
+	"DB_Dosage".TRANSF[0].DosCommun.Module_Commun._NomTache := 'Trans Vers BR1';
+	"DB_Dosage".TRANSF[1].DosCommun.Module_Commun._Tache := "TAC_CIRREMP_BR2";
+	"DB_Dosage".TRANSF[1].DosCommun.Module_Commun._NomTache := 'Trans Vers BR2';
+	"DB_Dosage".TRANSF[2].DosCommun.Module_Commun._Tache := "TAC_CIRREMP_MLG1";
+	"DB_Dosage".TRANSF[2].DosCommun.Module_Commun._NomTache := 'Trans Vers MLG1';
+	"DB_Dosage".TRANSF[3].DosCommun.Module_Commun._Tache := "TAC_CIRREMP_MLG2";
+	"DB_Dosage".TRANSF[3].DosCommun.Module_Commun._NomTache := 'Trans Vers MLG2';
+	"DB_Dosage".TRANSF[4].DosCommun.Module_Commun._Tache := "TAC_CIRSS_BP1";
+	"DB_Dosage".TRANSF[4].DosCommun.Module_Commun._NomTache := 'Circuit Sous BP1';
+	//--------- Initialisation des taches de BROYAGE ---------//
+	"DB_Dosage".BR[0].CommunDos.Module_Commun._Tache := "TAC_BR1";
+	"DB_Dosage".BR[0].CommunDos.Module_Commun._NomTache := 'Broyage BR1';
+	"DB_Dosage".BR[1].CommunDos.Module_Commun._Tache := "TAC_BR2";
+	"DB_Dosage".BR[1].CommunDos.Module_Commun._NomTache := 'Broyage BR2';
+	//--------- Initialisation des taches TREMIES SUR TRAPPE ---------//
+	"DB_Dosage".TRM_TRP[0].DosCommun.Module_Commun._Tache := "TAC_TREMSR_BR1";
+	"DB_Dosage".TRM_TRP[0].DosCommun.Module_Commun._NomTache := 'Reserve Sur BR1';
+	"DB_Dosage".TRM_TRP[1].DosCommun.Module_Commun._Tache := "TAC_TREMSR_BR2";
+	"DB_Dosage".TRM_TRP[1].DosCommun.Module_Commun._NomTache := 'Reserve Sur BR2';
+	"DB_Dosage".TRM_TRP[2].DosCommun.Module_Commun._Tache := "TAC_TREMSR_MLG1";
+	"DB_Dosage".TRM_TRP[2].DosCommun.Module_Commun._NomTache := 'Reserve Sur MLG1';
+	"DB_Dosage".TRM_TRP[3].DosCommun.Module_Commun._Tache := "TAC_TREMSR_MLG2";
+	"DB_Dosage".TRM_TRP[3].DosCommun.Module_Commun._NomTache := 'Reserve Sur MLG2';
+	"DB_Dosage".TRM_TRP[4].DosCommun.Module_Commun._Tache := "TAC_TREMSS_BP4";
+	"DB_Dosage".TRM_TRP[4].DosCommun.Module_Commun._NomTache := 'Reserve Sous BP4';
+	//--------- Initialisation de la tache MELANGEUSE ---------//
+	"DB_Dosage".MLG[0].CommunDos.Module_Commun._Tache := "TAC_MELANG1";
+	"DB_Dosage".MLG[0].CommunDos.Module_Commun._NomTache := 'Melangeuse1';
+	"DB_Dosage".MLG[1].CommunDos.Module_Commun._Tache := "TAC_MELANG2";
+	"DB_Dosage".MLG[1].CommunDos.Module_Commun._NomTache := 'Melangeuse2';
+	//--------- Initialisation des taches liquides melangeuse ---------//
+	"DB_Dosage".LIQUIDES_MLG[0].CommunDos.Module_Commun._Tache := "TAC_LIQ1_MLG1";
+	"DB_Dosage".LIQUIDES_MLG[0].CommunDos.Module_Commun._NomTache := 'Liquide1 MLG1';
+	"DB_Dosage".LIQUIDES_MLG[1].CommunDos.Module_Commun._Tache := "TAC_LIQ2_MLG1";
+	"DB_Dosage".LIQUIDES_MLG[1].CommunDos.Module_Commun._NomTache := 'Liquide2 MLG1';
+	"DB_Dosage".LIQUIDES_MLG[2].CommunDos.Module_Commun._Tache := "TAC_LIQ3_MLG1";
+	"DB_Dosage".LIQUIDES_MLG[2].CommunDos.Module_Commun._NomTache := 'Liquide3 MLG1';
+	"DB_Dosage".LIQUIDES_MLG[3].CommunDos.Module_Commun._Tache := "TAC_LIQ4_MLG1";
+	"DB_Dosage".LIQUIDES_MLG[3].CommunDos.Module_Commun._NomTache := 'Liquide4 MLG1';
+	"DB_Dosage".LIQUIDES_MLG[4].CommunDos.Module_Commun._Tache := "TAC_LIQ5_MLG1";
+	"DB_Dosage".LIQUIDES_MLG[4].CommunDos.Module_Commun._NomTache := 'Liquide5 MLG1';
+	"DB_Dosage".LIQUIDES_MLG[5].CommunDos.Module_Commun._Tache := "TAC_LIQ1_MLG2";
+	"DB_Dosage".LIQUIDES_MLG[5].CommunDos.Module_Commun._NomTache := 'Liquide1 MLG2';
+	"DB_Dosage".LIQUIDES_MLG[6].CommunDos.Module_Commun._Tache := "TAC_LIQ2_MLG2";
+	"DB_Dosage".LIQUIDES_MLG[6].CommunDos.Module_Commun._NomTache := 'Liquide2 MLG2';
+	"DB_Dosage".LIQUIDES_MLG[7].CommunDos.Module_Commun._Tache := "TAC_LIQ3_MLG2";
+	"DB_Dosage".LIQUIDES_MLG[7].CommunDos.Module_Commun._NomTache := 'Liquide3 MLG2';
+	"DB_Dosage".LIQUIDES_MLG[8].CommunDos.Module_Commun._Tache := "TAC_LIQ4_MLG2";
+	"DB_Dosage".LIQUIDES_MLG[8].CommunDos.Module_Commun._NomTache := 'Liquide4 MLG2';
+	"DB_Dosage".LIQUIDES_MLG[9].CommunDos.Module_Commun._Tache := "TAC_LIQ5_MLG2";
+	"DB_Dosage".LIQUIDES_MLG[9].CommunDos.Module_Commun._NomTache := 'Liquide5 MLG2';
+	//--------- Initialisation des taches circuit d expedition ---------//
+	"DB_Dosage".DEROUT.CommunDos.Module_Commun._Tache := "TAC_DEROUT_EXP";
+	"DB_Dosage".DEROUT.CommunDos.Module_Commun._NomTache := 'Deroutage EXP';
+	"DB_Dosage".LANC_EXP.CommunDos.Module_Commun._Tache := "TAC_LANC_EXP";
+	"DB_Dosage".LANC_EXP.CommunDos.Module_Commun._NomTache := 'Lancement EXP';
+	"DB_Dosage".EXP_DOS[0].CommunDos.Module_Commun._Tache := "TAC_EXP1";
+	//--------- Initialisation des taches verse sac ---------//
+	"DB_Dosage".VS[0].DosCommun.Module_Commun._Tache := "TAC_VS_MLG1";
+	"DB_Dosage".VS[0].DosCommun.Module_Commun._NomTache := 'Verse Sac';
+	"DB_Dosage".VS[1].DosCommun.Module_Commun._Tache := "TAC_VS_MLG2";
+	"DB_Dosage".VS[1].DosCommun.Module_Commun._NomTache := 'Verse Sac';
+	//--------- Nomination des taches dans les zones de suivi ---------//
+	FOR #i := 0 TO "Nbr_Max_Lots" DO
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_BP1"].Nom := 'Dosage SBP1';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_BP2"].Nom := 'Dosage SBP2';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_BP3"].Nom := 'Dosage SBP3';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_BP4"].Nom := 'Dosage SBP4';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_BP5"].Nom := 'Dosage SBP5';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_TREMSS_BP1"].Nom := 'Reserve Sous SBP1';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_TREMSS_BP2"].Nom := 'Reserve Sous SBP2';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_TREMSS_BP3"].Nom := 'Reserve Sous SBP3';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_TREMSS_BP4"].Nom := 'Reserve Sous SBP4';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_TREMSS_BP5"].Nom := 'Reserve Sous SBP5';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_CIRREMP_BR1"].Nom := 'Trans Vers BR1';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_CIRREMP_BR2"].Nom := 'Trans Vers BR2';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_BR1"].Nom := 'Broyage BR1';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_BR2"].Nom := 'Broyage BR2';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_TREMSS_BR1"].Nom := 'Reserve Sous BR1';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_TREMSS_BR2"].Nom := 'Reserve Sous BR2';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_TREMSR_BR1"].Nom := 'Reserve Sur BR1';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_TREMSR_BR2"].Nom := 'Reserve Sur BR2';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_CIRREMP_MLG1"].Nom := 'Trans Vers MLG1';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_CIRREMP_MLG2"].Nom := 'Trans Vers MLG2';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_TREMSR_MLG1"].Nom := 'Reserve Sur MLG1';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_TREMSR_MLG2"].Nom := 'Reserve Sur MLG2';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_MELANG1"].Nom := 'Melangeuse1';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_MELANG2"].Nom := 'Melangeuse2';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_TREMSS_MLG1"].Nom := 'Reserve Sous Mlg1';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_TREMSS_MLG2"].Nom := 'Reserve Sous Mlg2';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_LIQ1_MLG1"].Nom := 'Liquide1 MLG1';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_LIQ2_MLG1"].Nom := 'Liquide2 MLG1';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_LIQ3_MLG1"].Nom := 'Liquide3 MLG1';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_LIQ4_MLG1"].Nom := 'Liquide4 MLG1';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_LIQ5_MLG1"].Nom := 'Liquide5 MLG1';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_LIQ1_MLG2"].Nom := 'Liquide1 MLG2';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_LIQ2_MLG2"].Nom := 'Liquide2 MLG2';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_LIQ3_MLG2"].Nom := 'Liquide3 MLG2';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_LIQ4_MLG2"].Nom := 'Liquide4 MLG2';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_LIQ5_MLG2"].Nom := 'Liquide5 MLG2';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_DEROUT_EXP"].Nom := 'Deroutage Exp';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_LANC_EXP"].Nom := 'Lancement Exp';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_EXP1"].Nom := 'Ligne Exp1';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_EXP2"].Nom := 'Ligne Exp2';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_CIRSS_BP1"].Nom := 'Circuit Sous BP1';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_VS_MLG1"].Nom := 'Verse Sac MLG1';
+	    "DB_BIBLIOTHEQUE".Zones_Suivi[#i].Taches["TAC_VS_MLG2"].Nom := 'Verse Sac MLG2';
+	END_FOR;
+END_FUNCTION
+

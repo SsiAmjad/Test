@@ -1,0 +1,709 @@
+﻿FUNCTION "FC_Benne" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Fg_Base : Bool;
+   END_VAR
+
+   VAR_IN_OUT 
+      Benne : "S_Benne";
+      SurvDosBenne : "S_DOSBENNE";
+   END_VAR
+
+   VAR_TEMP 
+      Tps_Ecoul : Time;
+      Ret_Dem_Mobile : SInt;
+      Ret_RD_SYS_T : Int;
+      Tps_Act : Date_And_Time;
+      Qte_PV : Real;
+      Tps_PV : UDInt;
+      Ret_Arr_Imm_Mobile : SInt;
+      Ret_Test_Etat_Mobile : SInt;
+      Etat_Vibreur : SInt;
+      Msg_Defaut : String;
+   END_VAR
+
+   VAR CONSTANT 
+      Etape_Repos : USInt := 1;
+      Etape_Attente_Stabilite_Remplissage : USInt := 2;
+      Etape_Extract_GV : USInt := 3;
+      Etape_Extract_PV : USInt := 4;
+      Etape_Def_Evol_Poids : USInt := 5;
+      Etape_Attente_Stabilite_Fin_Dosage : USInt := 6;
+      Etape_Fin_Dosage : USInt := 7;
+      Etape_Vidange : USInt := 8;
+      Etape_Fin_Vidange : USInt := 9;
+      Etape_Attente_Acquitement : USInt := 10;
+      Niveau_Benne_Repos : USInt := 1;
+      Niveau_Benne_Attente_Stabilite_Remplissage : USInt := 10;
+      Niveau_Benne_Extract_GV : USInt := 30;
+      Niveau_Benne_Extract_PV : USInt := 40;
+      Niveau_Benne_Attente_Stabilite_Fin_Dosage : USInt := 50;
+      Niveau_Benne_Fin_Dosage : USInt := 60;
+      Niveau_Benne_Defaut_Evol_Poids : USInt := 70;
+      Niveau_Benne_Vidange : USInt := 100;
+      Niveau_Benne_Fin_Vidange : USInt := 150;
+      Niveau_Benne_Attente_Acquitement : USInt := 0;
+      Demande_Dosage : USInt := 1;
+      Demande_Reprise_Extraction : USInt := 2;
+      Demande_Reprise_Extraction_PV : USInt := 3;
+      Demande_Fin_Dosage : USInt := 4;
+      Demande_Vidange : USInt := 5;
+      Demande_NV_Compo : USInt := 6;
+      Demande_Repos : USInt := 7;
+   END_VAR
+
+
+BEGIN
+	// Simulateur de poids
+	IF #Benne.Simul._ModeSimul THEN
+	    "FC_Simul_Poids"(SAV := #SurvDosBenne.Dos_Commun.Module_Commun._PtCel._TabCel[#Benne.Composant.Index_Cel]._SAV,
+	                     Simul := #Benne.Simul,
+	                     Poids_Incorp := #Benne.Val_Basc);
+	    
+	END_IF;
+	// Simulateur de poids
+	
+	// Temps Actuel
+	#Ret_RD_SYS_T := RD_SYS_T(#Tps_Act);
+	// Calcul du poids net de la benne
+	#Benne.Poids_Net := #Benne.Val_Basc - #Benne.Tare;
+	// Calcul de la consigne d'arret d'extraction
+	#Benne.Cons_Arr_Ext := #Benne.Composant.Poids - #Benne.Composant.Col_Chute;
+	CASE #Benne.Etape OF
+	    #Etape_Repos:
+	        REGION Preliminaire Repos
+	            IF #Benne.Etape <> #Benne.Etape_Memo THEN
+	                //============ INITIALISATION ============//
+	                #Benne.Nbr_Cycles := 0;
+	                #Benne.Nbr_Cycles_Enc := 0;
+	                #Benne.Composant.Incorpo_Reel := '';
+	                // Arret du mobile fictif de la benne
+	                #Ret_Arr_Imm_Mobile := "Arr_Imm_Mobile"(#Benne.Mob_Benne);
+	                //============ INITIALISATION ============//
+	                //============ SIMULATEUR ============//
+	                #Benne.Simul._ValBascInc := FALSE;
+	                #Benne.Simul._ValBascDec := FALSE;
+	                //============ SIMULATEUR ============//
+	                IF NOT "FC_Posit_Mobs_Remp_Benne"(#Benne) THEN
+	                    RETURN;
+	                END_IF;
+	                // Maj Niveau Grafcet
+	                #Benne.Niv_Grafcet := #Niveau_Benne_Repos;
+	                // Sortir du preliminaire
+	                #Benne.Etape_Memo := #Benne.Etape;
+	            END_IF;
+	        END_REGION Preliminaire Repos
+	        REGION Cyclique Repos
+	            // Attente de la demande de dosage
+	            IF #Benne.Demande <> #Demande_Dosage THEN
+	                RETURN;
+	            END_IF;
+	            //Prise de la tare
+	            #Benne.Tare := #Benne.Val_Basc;
+	            // Demarrage du mobile fictif de la benne
+	            #Ret_Dem_Mobile := "Dem_Mobile"(#Benne.Mob_Benne);
+	            // Transition vers l'etape controles
+	            #Benne.Etape := #Etape_Attente_Stabilite_Remplissage;
+	            RETURN;
+	        END_REGION Cyclique Repos
+	    #Etape_Attente_Stabilite_Remplissage:
+	        REGION Preliminaire Attente Stabilite Remplissage
+	            IF #Benne.Etape <> #Benne.Etape_Memo THEN
+	                //============ SIMULATEUR ============//
+	                #Benne.Simul._ValBascInc := FALSE;
+	                #Benne.Simul._ValBascDec := FALSE;
+	                //============ SIMULATEUR ============//
+	                //=== Traitement cas retour de defaut ===//
+	                IF #Benne.Dial_Def.Reponse_Def <> '' THEN
+	                    #Benne.Etape_Memo := #Benne.Etape;
+	                    CASE #Benne.Dial_Def.Num_Def_Etape OF
+	                        #Demande_Dosage:
+	                            GOTO ATT_STAB_REM_DEF1;
+	                    END_CASE;
+	                END_IF;
+	                //=== Traitement cas retour de defaut ===//
+	                //============ RENSEIGNEMENT DU COMPOSANT ============//
+	                #Benne.Composant.Incorpo_Reel := #Benne.Nom;
+	                //============ RENSEIGNEMENT DU COMPOSANT ============//
+	                // Memorisation du poids net pour controle de la stabilite de la benne
+	                #Benne.Poids_Memo := #Benne.Poids_Net;
+	                // Prise du temps picke
+	                #Ret_RD_SYS_T := RD_SYS_T(#Benne.Tps_Picke);
+	                // Maj Niveau Grafcet
+	                #Benne.Niv_Grafcet := #Niveau_Benne_Attente_Stabilite_Remplissage;
+	                // Maj Etape Precedente
+	                #Benne.Etape_Prec := #Benne.Etape;
+	                // Sortir du preliminaire
+	                #Benne.Etape_Memo := #Benne.Etape;
+	            END_IF;
+	        END_REGION Preliminaire Attente Stabilite Remplissage
+	        REGION Cyclique Attente Stabilite Remplissage
+	            
+	            // Attente ecoulement de la tempo avant test de la stabilite
+	            IF NOT "Tempo"(Duree := #Benne.Tps_Stab, Tps_Picke := #Benne.Tps_Picke, Anticip := FALSE, Tps_Passe => #Tps_Ecoul) THEN
+	                RETURN;
+	            END_IF;
+	            // Test de la stabilite en remplissage de la benne
+	            IF NOT "FC_Test_Stab_Benne"(#Benne) THEN
+	                // DIALOGUE DEFAUT
+	                #Benne.Dial_Def.Num_Def_Etape := 1;
+	                #Msg_Defaut := CONCAT(IN1 := #SurvDosBenne.Dos_Commun.Module_Commun._Autom, IN2 := ': Defaut Stabilite ', IN3 := #Benne.Nom, IN4 := ' En Remplissage !');
+	                #Benne.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base:=#Fg_Base, Msg_Defaut := #Msg_Defaut,
+	                                                                Type_Defaut := 0,
+	                                                                Automatisme := #SurvDosBenne.Dos_Commun.Module_Commun._Autom,
+	                                                                Num_Lot := #SurvDosBenne.Pt_Zs._SuiviCommun._NoLot,
+	                                                                Origine_Defaut := #Benne.Nom,
+	                                                                Libelle_Origine := '',
+	                                                                Acq1 := 'Relance',
+	                                                                Acq2 := 'Abandon',
+	                                                                Acq3 := '',
+	                                                                Acq4 := '',
+	                                                                Acq5 := '',
+	                                                                Acq6 := '',
+	                                                                Acq7 := '',
+	                                                                Acq8 := '',
+	                                                                Acq_Choisi := -1,
+	                                                                Date_Arrivee := #Tps_Act);
+	                // Transition vers l'etape defaut
+	                #Benne.Etape := #Etape_Attente_Acquitement;
+	                RETURN;
+	            END_IF;
+	        ATT_STAB_REM_DEF1:
+	            //============ Traitement des reponses pour le defaut1 de la stabilite ============//
+	            IF (#Benne.Dial_Def.Reponse_Def = 'Relance') THEN
+	                // Vider la reponse defaut
+	                #Benne.Dial_Def.Reponse_Def := '';
+	                //Prise de la tare
+	                #Benne.Tare := #Benne.Val_Basc;
+	                // Reprise du temps picke apres acquitement defaut
+	                #Ret_RD_SYS_T := RD_SYS_T(#Benne.Tps_Picke);
+	                // Memorisation du poids net pour la relance controle de la stabilite de la benne
+	                #Benne.Poids_Memo := #Benne.Poids_Net;
+	                RETURN;
+	            END_IF;
+	            IF (#Benne.Dial_Def.Reponse_Def = 'Abandon') THEN
+	                // Vider la reponse defaut
+	                #Benne.Dial_Def.Reponse_Def := '';
+	                //============ RENSEIGNEMENT DU COMPOSANT ============//
+	                // Prise de la tare pour composant
+	                #Benne.Composant.Tare := #Benne.Poids_Net;
+	                //============ RENSEIGNEMENT DU COMPOSANT ============//
+	                // Passer a l'extraction en GV
+	                #Benne.Etape := #Etape_Extract_GV;
+	                //RETURN;
+	            END_IF;
+	            //============ Traitement des reponses pour le defaut1 de la stabilite ============//
+	            //============ RENSEIGNEMENT DU COMPOSANT ============//
+	            // Prise de la tare pour composant
+	            #Benne.Composant.Tare := #Benne.Poids_Net;
+	            //============ RENSEIGNEMENT DU COMPOSANT ============//
+	            // Renseignement de la colone de chute
+	            IF #Benne.Composant.Col_Chute = 0 THEN // Anc_Chute
+	                // Monter le flag indicant que aucune cln de chute renseignee
+	                #Benne.Fg_Constat_Cln_Chute := TRUE;
+	                // Transition vers l'etape extraction en PV
+	                #Benne.Etape := #Etape_Extract_PV;
+	                RETURN;
+	            END_IF;
+	            // Transition vers l'etape extraction en GV
+	            #Benne.Etape := #Etape_Extract_GV;
+	            RETURN;
+	        END_REGION Cyclique Attente Stabilite Remplissage
+	    #Etape_Extract_GV:
+	        REGION Preliminaire Extraction GV
+	            IF #Benne.Etape <> #Benne.Etape_Memo THEN
+	                // Demarrage Circuit Extraction GV
+	                "FC_Posit_Ext"(Position:='G',
+	                               CirExt:=#Benne.Circuit_Extr);
+	                "FC_SAV"(Index_Cell := #Benne.Composant.Index_Cel,
+	                         Vitesse := #Benne.Composant.Vit_GV,
+	                         SurvDosBenne := #SurvDosBenne);
+	                //============ SIMULATEUR ============//
+	                #Benne.Simul._ValBascInc := TRUE;
+	                #Benne.Simul._ValBascDec := FALSE;
+	                //============ SIMULATEUR ============//
+	                //RAZ du nombre de relances en cours
+	                #Benne.Nbr_Relance_Enc := 0;
+	                // Prise du poids memo pourle premier controle d'evolution de poids
+	                #Benne.Poids_Memo := #Benne.Poids_Net;
+	                // Prise du temps picke
+	                #Ret_RD_SYS_T := RD_SYS_T(#Benne.Tps_Picke);
+	                // Maj Niveau Grafcet
+	                #Benne.Niv_Grafcet := #Niveau_Benne_Extract_GV;
+	                // Maj Etape Precedente
+	                #Benne.Etape_Prec := #Benne.Etape;
+	                // Sortir du preliminaire
+	                #Benne.Etape_Memo := #Benne.Etape;
+	            END_IF;
+	        END_REGION Preliminaire Extraction GV
+	        REGION Cyclique Extraction GV
+	            // Test Communication Indicateur de poids
+	            IF NOT "FC_Com_Indicateur"() THEN
+	                ;
+	            END_IF;
+	            // Calcul du poids net du composant
+	            #Benne.Composant.Net := #Benne.Poids_Net - #Benne.Composant.Tare + #Benne.Composant.Poids_Reel_Prec;
+	            // Calcul du poids restant
+	            #Benne.Composant.Poids_Restant := #Benne.Composant.Poids - #Benne.Composant.Net;
+	            // Attente ecoulement de la tempo avant controle evolution poids
+	            IF NOT "Tempo"(Duree := #Benne.Tps_Evol_Poids, Tps_Picke := #Benne.Tps_Picke, Anticip := NOT (#Benne.Composant.Net < (#Benne.Composant.Poids - #Benne.Composant.Seuil_PV)), Tps_Passe => #Tps_Ecoul) THEN
+	                RETURN;
+	            END_IF;
+	            // Ignorer le controle evolution poids si la tempo est anticipee
+	            IF #Tps_Ecoul < #Benne.Tps_Evol_Poids THEN
+	                GOTO Tempo_Anticip_GV;
+	            END_IF;
+	            // Controle evolution de poids
+	            IF NOT "FC_Ctrl_Evol_Poids"(Benne := #Benne) THEN
+	                // Attente nombre de relances tolerables
+	                IF #Benne.Nbr_Relance_Enc < #Benne.Nbr_Relances THEN
+	                    // Memorisation du poids net pour prochain controle 
+	                    #Benne.Poids_Memo := #Benne.Poids_Net;
+	                    // Prise du temps picke
+	                    #Ret_RD_SYS_T := RD_SYS_T(#Benne.Tps_Picke);
+	                    // Incermentation de nbr de relances en cours 
+	                    #Benne.Nbr_Relance_Enc := #Benne.Nbr_Relance_Enc + 1;
+	                    RETURN;
+	                END_IF;
+	                //Modif
+	                #Benne.Composant.Poids_Reel_Prec := #Benne.Composant.Net;
+	                #Benne.Etape := #Etape_Def_Evol_Poids;
+	                RETURN;
+	            END_IF;
+	            // Label du jump pour tempo antiicipee
+	        Tempo_Anticip_GV:
+	            // Attente seuil PV
+	            IF (#Benne.Composant.Net < (#Benne.Composant.Poids - #Benne.Composant.Seuil_PV)) THEN
+	                RETURN;
+	            END_IF;
+	            // Transition vers l'etape extraction en PV
+	            #Benne.Etape := #Etape_Extract_PV;
+	            RETURN;
+	        END_REGION Cyclique Extraction GV
+	    #Etape_Extract_PV:
+	        REGION Preliminaire Extraction PV
+	            IF #Benne.Etape <> #Benne.Etape_Memo THEN
+	                // Passage en PV
+	                "FC_Posit_Ext"(Position:='P',
+	                               CirExt:=#Benne.Circuit_Extr);
+	                "FC_SAV"(Index_Cell := #Benne.Composant.Index_Cel,
+	                         Vitesse := #Benne.Composant.Vit_PV,
+	                         SurvDosBenne := #SurvDosBenne);
+	                //============ SIMULATEUR ============//
+	                #Benne.Simul._ValBascInc := TRUE;
+	                #Benne.Simul._ValBascDec := FALSE;
+	                //============ SIMULATEUR ============//
+	                //RAZ du nombre de relances en cours
+	                #Benne.Nbr_Relance_Enc := 0;
+	                // Memorisation du poids net du composant pour calcul debit
+	                #Benne.Poids_Memo_Debit := #Benne.Composant.Net;
+	                #Benne.Poids_Memo := #Benne.Composant.Net;
+	                // Prise du temps picke
+	                #Ret_RD_SYS_T := RD_SYS_T(#Benne.Tps_Picke);
+	                // Prise du temps picke pour calcul debit
+	                #Ret_RD_SYS_T := RD_SYS_T(#Benne.Tps_Picke_Debit);
+	                // Maj Niveau Grafcet
+	                #Benne.Niv_Grafcet := #Niveau_Benne_Extract_PV;
+	                // Maj Etape Precedente
+	                #Benne.Etape_Prec := #Benne.Etape;
+	                // Sortir du preliminaire
+	                #Benne.Etape_Memo := #Benne.Etape;
+	            END_IF;
+	        END_REGION Preliminaire Extraction PV
+	        REGION Cyclique Extraction PV
+	            // Test Communication Indicateur de poids
+	            IF NOT "FC_Com_Indicateur"() THEN
+	                ;
+	            END_IF;
+	            // Calcul du poids net du composant
+	            #Benne.Composant.Net := #Benne.Poids_Net - #Benne.Composant.Tare + #Benne.Composant.Poids_Reel_Prec;
+	            // Calcul du poids restant
+	            #Benne.Composant.Poids_Restant := #Benne.Composant.Poids - #Benne.Composant.Net;
+	            // Arret Extraction a Poids/2 pour constater la cln de chute
+	            IF (#Benne.Composant.Net >= (#Benne.Composant.Poids / 2)) AND #Benne.Fg_Constat_Cln_Chute THEN
+	                #Benne.Etape := #Etape_Attente_Stabilite_Fin_Dosage;
+	                RETURN;
+	            END_IF;
+	            //Calcul debit
+	            "FC_Calcul_Debit_PV_Benne"(#Benne);
+	            // Attente ecoulement de la tempo avant controle evolution poids
+	            IF NOT "Tempo"(Duree := #Benne.Tps_Evol_Poids, Tps_Picke := #Benne.Tps_Picke, Anticip := (#Benne.Composant.Net >= #Benne.Cons_Arr_Ext), Tps_Passe => #Tps_Ecoul) THEN
+	                RETURN;
+	            END_IF;
+	            // Ignorer le controle evolution poids si la tempo est anticipee
+	            IF #Tps_Ecoul < #Benne.Tps_Evol_Poids THEN
+	                GOTO Tempo_Anticip_PV;
+	            END_IF;
+	            // Controle evolution de poids
+	            IF NOT "FC_Ctrl_Evol_Poids"(Benne := #Benne) THEN
+	                // Attente nombre de relances tolerables
+	                IF #Benne.Nbr_Relance_Enc < #Benne.Nbr_Relances THEN
+	                    // Memorisation du poids net du composant pour prochain controle
+	                    #Benne.Poids_Memo := #Benne.Poids_Net;
+	                    // Prise du temps picke
+	                    #Ret_RD_SYS_T := RD_SYS_T(#Benne.Tps_Picke);
+	                    // Incermentation de nbr de relances en cours 
+	                    #Benne.Nbr_Relance_Enc := #Benne.Nbr_Relance_Enc + 1;
+	                    RETURN;
+	                END_IF;
+	                //Modif
+	                #Benne.Composant.Poids_Reel_Prec := #Benne.Composant.Net;
+	                #Benne.Etape := #Etape_Def_Evol_Poids;
+	                RETURN;
+	            END_IF;
+	        //Label du jump pour tempo anticipee
+	        Tempo_Anticip_PV:
+	            // Attente consigne d'arret d'extraction
+	            IF (#Benne.Composant.Net < #Benne.Cons_Arr_Ext) THEN
+	                RETURN;
+	            END_IF;
+	            // Transition vers l'etape attente stabilite Fin Dosage
+	            #Benne.Etape := #Etape_Attente_Stabilite_Fin_Dosage;
+	            RETURN;
+	        END_REGION Cyclique Extraction PV            
+	    #Etape_Def_Evol_Poids:
+	        REGION Preliminaire Defaut Evolution Poids
+	            IF #Benne.Etape <> #Benne.Etape_Memo THEN
+	                "FC_Posit_Ext"(Position:='A',
+	                               CirExt:=#Benne.Circuit_Extr);
+	                //============ SIMULATEUR ============//
+	                #Benne.Simul._ValBascInc := FALSE;
+	                #Benne.Simul._ValBascDec := FALSE;
+	                //============ SIMULATEUR ============//
+	                //Maj Niveau Grafcet Niveau_Benne_Defaut_Evol_Poids
+	                #Benne.Niv_Grafcet := #Niveau_Benne_Defaut_Evol_Poids;
+	                #Benne.Etape_Memo := #Benne.Etape;
+	            END_IF;
+	        END_REGION Preliminaire Defaut Evolution Poids
+	        REGION Cyclique Defaut Evolution Poids 
+	            // Attente de la nouvelle demande de la SurvDosBenne
+	            CASE #Benne.Demande OF
+	                #Demande_Dosage:
+	                    #Benne.Composant.Poids_Deja_Mouv := #Benne.Composant.Net;
+	                    #Benne.Etape := #Etape_Attente_Stabilite_Remplissage;
+	                    RETURN;
+	                #Demande_Reprise_Extraction:
+	                    #Benne.Composant.Poids_Reel_Prec := #Benne.Composant.Tare - #Benne.Poids_Net + #Benne.Composant.Net;
+	                    #Benne.Composant.Poids_Deja_Mouv := #Benne.Composant.Net;
+	                    #Benne.Etape := #Benne.Etape_Prec;
+	                    RETURN;
+	                #Demande_Fin_Dosage:
+	                    #Benne.Etape := #Etape_Fin_Dosage;
+	                    RETURN;
+	                #Demande_Vidange:
+	                    ;
+	            END_CASE;
+	        END_REGION Cyclique Defaut Evolution Poids 
+	    #Etape_Attente_Stabilite_Fin_Dosage:
+	        REGION Preliminaire Attente Stabilite Vidange
+	            IF #Benne.Etape <> #Benne.Etape_Memo THEN
+	                "FC_Posit_Ext"(Position:='A',
+	                               CirExt:=#Benne.Circuit_Extr);
+	                //============ SIMULATEUR ============//
+	                #Benne.Simul._ValBascInc := FALSE;
+	                #Benne.Simul._ValBascDec := FALSE;
+	                //============ SIMULATEUR ============//
+	                // Memorisation de l' ancienne colonne de chute
+	                #Benne.Composant.Anc_Chute := #Benne.Composant.Col_Chute;
+	                #Benne.Poids_Memo_Chute := #Benne.Composant.Net;
+	                //=== Traitement cas retour de defaut ===//
+	                IF #Benne.Dial_Def.Reponse_Def <> '' THEN
+	                    #Benne.Etape_Memo := #Benne.Etape;
+	                    CASE #Benne.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO ATT_STAB_Fin_Dos_DEF1;
+	                    END_CASE;
+	                END_IF;
+	                //=== Traitement cas retour de defaut ===//
+	                // Memorisation du poids net pour controle de la stabilite de la benne
+	                #Benne.Poids_Memo := #Benne.Poids_Net;
+	                
+	                // Prise du temps picke
+	                #Ret_RD_SYS_T := RD_SYS_T(#Benne.Tps_Picke);
+	                // Prise du temps picke max pour controle de la stabilite
+	                #Ret_RD_SYS_T := RD_SYS_T(#Benne.Tps_Picke_Max);
+	                // Maj Niveau Grafcet
+	                #Benne.Niv_Grafcet := #Niveau_Benne_Attente_Stabilite_Fin_Dosage;
+	                // Maj Etape Precedente
+	                #Benne.Etape_Prec := #Benne.Etape;
+	                // Sortir du preliminaire
+	                #Benne.Etape_Memo := #Benne.Etape;
+	            END_IF;
+	        END_REGION Preliminaire Attente Stabilite Vidange
+	        REGION Cyclique Attente Stabilite Vidange
+	            // Calcul du poids net du composant
+	            #Benne.Composant.Net := #Benne.Poids_Net - #Benne.Composant.Tare + #Benne.Composant.Poids_Reel_Prec;
+	            // Attente ecoulement de la tempo avant test de la stabilite
+	            IF NOT "Tempo"(Duree := #Benne.Tps_Stab, Tps_Picke := #Benne.Tps_Picke, Anticip := FALSE, Tps_Passe => #Tps_Ecoul) THEN
+	                RETURN;
+	            END_IF;
+	            
+	            // Test de la stabilite en vidange de la benne
+	            IF "Tempo"(Duree := #Benne.Tps_Max_Stab, Tps_Picke := #Benne.Tps_Picke_Max, Anticip := FALSE, Tps_Passe => #Tps_Ecoul) THEN
+	                // DIALOGUE DEFAUT
+	                #Benne.Dial_Def.Num_Def_Etape := 1;
+	                #Msg_Defaut := CONCAT(IN1 := #SurvDosBenne.Dos_Commun.Module_Commun._Autom, IN2 := ': Defaut Stabilite ', IN3 := #Benne.Nom, IN4 := ' En Fin Dosage!');
+	                #Benne.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base:=#Fg_Base, Msg_Defaut := #Msg_Defaut,
+	                                                                Type_Defaut := 0,
+	                                                                Automatisme := #SurvDosBenne.Dos_Commun.Module_Commun._Autom,
+	                                                                Num_Lot := #SurvDosBenne.Pt_Zs._SuiviCommun._NoLot,
+	                                                                Origine_Defaut := #Benne.Nom,
+	                                                                Libelle_Origine := '',
+	                                                                Acq1 := 'Relance',
+	                                                                Acq2 := 'Abandon',
+	                                                                Acq3 := '',
+	                                                                Acq4 := '',
+	                                                                Acq5 := '',
+	                                                                Acq6 := '',
+	                                                                Acq7 := '',
+	                                                                Acq8 := '',
+	                                                                Acq_Choisi := -1,
+	                                                                Date_Arrivee := #Tps_Act);
+	                // Transition vers l'etape defaut
+	                #Benne.Etape := #Etape_Attente_Acquitement;
+	                RETURN;
+	            END_IF;
+	        ATT_STAB_Fin_Dos_DEF1:
+	            //============ Traitement des reponses pour le defaut1 du Controle Stabilite Vidange ============//
+	            IF (#Benne.Dial_Def.Reponse_Def = 'Relance') THEN
+	                // Vider la reponse defaut
+	                #Benne.Dial_Def.Reponse_Def := '';
+	                // Reprise du temps picke apres acquitement defaut
+	                #Ret_RD_SYS_T := RD_SYS_T(#Benne.Tps_Picke);
+	                // Memorisation du poids net pour la relance controle de la stabilite de la benne
+	                #Benne.Poids_Memo := #Benne.Poids_Net;
+	                RETURN;
+	            END_IF;
+	            IF (#Benne.Dial_Def.Reponse_Def = 'Abandon') THEN
+	                // Vider la reponse defaut
+	                #Benne.Dial_Def.Reponse_Def := '';
+	                // Passer en vidange
+	                #Benne.Etape := #Etape_Fin_Dosage;
+	                RETURN;
+	            END_IF;
+	            //============ Traitement des reponses pour le defaut1 du Controle Stabilite Vidange ============//
+	            IF NOT "FC_Test_Stab_Benne"(#Benne) THEN
+	                #Ret_RD_SYS_T := RD_SYS_T(#Benne.Tps_Picke);
+	                #Benne.Poids_Memo := #Benne.Poids_Net;
+	                RETURN;
+	            END_IF;
+	            // Maj colonne de chute
+	            "FC_Corr_Col_Chute"(#Benne);
+	            #SurvDosBenne.Lst_Compos[#Benne.Index_Compo_Enc].Col_Chute := #Benne.Composant.Col_Chute;
+	            IF #Benne.Fg_Constat_Cln_Chute THEN
+	                // Raz le flag indicant que aucune cln de chute renseignee apres calcul de la colonne de chute
+	                #Benne.Fg_Constat_Cln_Chute := FALSE;
+	                #Benne.Etape := #Etape_Extract_GV;
+	                RETURN;
+	            END_IF;
+	            // Transition vers l'etape Controle Tolerance
+	            #Benne.Etape := #Etape_Fin_Dosage;
+	            RETURN;
+	        END_REGION Cyclique Attente Stabilite Vidange
+	    #Etape_Fin_Dosage:
+	        REGION Preliminaire Fin Dosage
+	            IF #Benne.Etape <> #Benne.Etape_Memo THEN
+	                //============ SIMULATEUR ============//
+	                #Benne.Simul._ValBascInc := FALSE;
+	                #Benne.Simul._ValBascDec := FALSE;
+	                //============ SIMULATEUR ============//
+	                //============ RENSEIGNEMENT DU COMPOSANT ============//
+	                //Calcul Ecart Composant
+	                #Benne.Composant.Ecart := #Benne.Composant.Net - #Benne.Composant.Poids;
+	                //============ RENSEIGNEMENT DU COMPOSANT ============//
+	                // Maj Niveau Grafcet
+	                #Benne.Niv_Grafcet := #Niveau_Benne_Fin_Dosage;
+	                // Sortir du preliminaire
+	                #Benne.Etape_Memo := #Benne.Etape;
+	            END_IF;
+	        END_REGION Preliminaire Fin Dosage
+	        REGION Cyclique Fin Dosage
+	            // Attente demande
+	            CASE #Benne.Demande OF
+	                #Demande_Dosage:
+	                    #Benne.Etape := #Etape_Attente_Stabilite_Remplissage;
+	                    RETURN;
+	                #Demande_Reprise_Extraction:
+	                    ;
+	                #Demande_Reprise_Extraction_PV:
+	                    #Benne.Etape := #Etape_Extract_PV;
+	                    RETURN;
+	                #Demande_Fin_Dosage:
+	                    ;
+	                #Demande_Vidange:
+	                    #Benne.Etape := #Etape_Vidange;
+	                    RETURN;
+	                #Demande_NV_Compo:
+	                    #Benne.Etape := #Etape_Attente_Stabilite_Remplissage;
+	                    RETURN;
+	            END_CASE;
+	        END_REGION Cyclique Fin Dosage   
+	    #Etape_Vidange:
+	        REGION Preliminaire Vidange
+	            IF #Benne.Etape <> #Benne.Etape_Memo THEN
+	                //============ SIMULATEUR ============//
+	                #Benne.Simul._ValBascInc := FALSE;
+	                #Benne.Simul._ValBascDec := TRUE;
+	                //============ SIMULATEUR ============//
+	                // Maj Niveau Grafcet
+	                #Benne.Niv_Grafcet := #Niveau_Benne_Vidange;
+	                //=== Traitement cas retour de defaut ===//
+	                IF #Benne.Dial_Def.Reponse_Def <> '' THEN
+	                    #Benne.Etape_Memo := #Benne.Etape;
+	                    CASE #Benne.Dial_Def.Num_Def_Etape OF
+	                        1:
+	                            GOTO Vidange_DEF1;
+	                    END_CASE;
+	                END_IF;
+	                //=== Traitement cas retour de defaut ===//
+	                //Attente positionnement des mobiles
+	                IF NOT "FC_Posit_Mobs_Vid_Benne"(#Benne) THEN
+	                    RETURN;
+	                END_IF;
+	                //Prise du temps pour tempo vidange
+	                #Ret_RD_SYS_T := RD_SYS_T(#Benne.Tps_Picke);
+	                //Prise du temps pour tempo vidange max
+	                #Ret_RD_SYS_T := RD_SYS_T(#Benne.Tps_Picke_Max);
+	                // Maj Etape Precedente
+	                #Benne.Etape_Prec := #Benne.Etape;
+	                // Sortir du preliminaire
+	                #Benne.Etape_Memo := #Benne.Etape;
+	            END_IF;
+	        END_REGION Preliminaire Vidange
+	        REGION Cyclique Vidange
+	            // Test Communication Indicateur de poids
+	            IF NOT "FC_Com_Indicateur"() THEN
+	                ;
+	            END_IF;
+	            // Test du renseignement du vibreur
+	            IF #Benne.Mob_VibreurBenne = -1 THEN
+	                GOTO Pas_Vibreur;
+	            END_IF;
+	            // Demarrage du vibreur
+	            IF #Benne.Poids_Net <= #Benne.Seuil_Vib_Benne THEN
+	                #Ret_Dem_Mobile := "Dem_Mobile"(#Benne.Mob_VibreurBenne);
+	            END_IF;
+	            // Label du jump
+	        Pas_Vibreur:
+	            // Conditions de reinitialisation tempo de vidange benne // Attente vidange de la benne
+	            IF NOT "FC_Ctrl_Vid_Benne"(#Benne) THEN
+	                #Ret_RD_SYS_T := RD_SYS_T(#Benne.Tps_Picke);
+	                GOTO Verif_Tempo_Max;
+	            END_IF;
+	            // Tempo de vidange
+	            IF "Tempo"(Duree := #Benne.Tps_Vidange, Tps_Picke := #Benne.Tps_Picke, Anticip := FALSE, Tps_Passe => #Tps_Ecoul) THEN
+	                // Arret vibreur si fin vidange
+	                #Ret_Arr_Imm_Mobile := "Arr_Imm_Mobile"(#Benne.Mob_VibreurBenne);
+	                // Test Arret Vibreur avant la transition
+	                IF #Benne.Mob_VibreurBenne > -1 THEN
+	                    IF NOT "Test_Etat_Mobile"("Index_Mobile" := #Benne.Mob_VibreurBenne, Etat := "Libre") THEN
+	                        RETURN;
+	                    END_IF;
+	                END_IF;
+	                // Transition vers l'etape Fin Vidange
+	                #Benne.Etape := #Etape_Fin_Vidange;
+	            END_IF;
+	            // Label du jump vers tempo max
+	        Verif_Tempo_Max:
+	            // Tempo max pour vidange de la benne
+	            IF "Tempo"(Duree := #Benne.Tps_Max_Vidange, Tps_Picke := #Benne.Tps_Picke_Max, Anticip := FALSE, Tps_Passe => #Tps_Ecoul) THEN
+	                // DIALOGUE DEFAUT
+	                #Benne.Dial_Def.Num_Def_Etape := 1;
+	                #Msg_Defaut := CONCAT(IN1 := 'Defaut Vidange ', IN2 := #Benne.Nom, IN3 := '!');
+	                #Benne.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base:=#Fg_Base, Msg_Defaut := #Msg_Defaut,
+	                                                                Type_Defaut := 0,
+	                                                                Automatisme := #SurvDosBenne.Dos_Commun.Module_Commun._Autom,
+	                                                                Num_Lot := #SurvDosBenne.Pt_Zs._SuiviCommun._NoLot,
+	                                                                Origine_Defaut := #Benne.Nom,
+	                                                                Libelle_Origine := '',
+	                                                                Acq1 := 'Relance',
+	                                                                Acq2 := 'Abandon',
+	                                                                Acq3 := '',
+	                                                                Acq4 := '',
+	                                                                Acq5 := '',
+	                                                                Acq6 := '',
+	                                                                Acq7 := '',
+	                                                                Acq8 := '',
+	                                                                Acq_Choisi := -1,
+	                                                                Date_Arrivee := #Tps_Act);
+	                // Arret vibreur si defaut vidange
+	                #Ret_Arr_Imm_Mobile := "Arr_Imm_Mobile"(#Benne.Mob_VibreurBenne);
+	                // Transition vers l'etape defaut
+	                #Benne.Etape := #Etape_Attente_Acquitement;
+	                RETURN;
+	            END_IF;
+	        Vidange_DEF1:
+	            //============ Traitement des reponses pour le defaut1 de la vidange ============//
+	            IF (#Benne.Dial_Def.Reponse_Def = 'Relance') THEN
+	                // Vider la reponse defaut
+	                #Benne.Dial_Def.Reponse_Def := '';
+	                // Reprise du temps picke apres acquitement defaut
+	                #Ret_RD_SYS_T := RD_SYS_T(#Benne.Tps_Picke_Max);
+	                RETURN;
+	            END_IF;
+	            IF (#Benne.Dial_Def.Reponse_Def = 'Abandon') THEN
+	                // Vider la reponse defaut
+	                #Benne.Dial_Def.Reponse_Def := '';
+	                // Passer au fin dosage
+	                #Benne.Etape := #Etape_Fin_Vidange;
+	                RETURN;
+	            END_IF;
+	            //============ Traitement des reponses pour le defaut1 de la vidange ============//
+	        END_REGION Cyclique Vidange
+	    #Etape_Fin_Vidange:
+	        REGION Preliminaire Fin Vidange
+	            IF #Benne.Etape <> #Benne.Etape_Memo THEN
+	                //============ SIMULATEUR ============//
+	                #Benne.Simul._ValBascInc := FALSE;
+	                #Benne.Simul._ValBascDec := FALSE;
+	                //============ SIMULATEUR ============//
+	                #Benne.Niv_Grafcet := #Niveau_Benne_Fin_Vidange;
+	                #Benne.Etape_Memo := #Benne.Etape;
+	            END_IF;
+	        END_REGION Preliminaire Fin Vidange
+	        REGION Cyclique Fin Vidange
+	            // Attente demande
+	            CASE #Benne.Demande OF
+	                #Demande_Dosage:
+	                    ;
+	                #Demande_Reprise_Extraction:
+	                    ;
+	                #Demande_Reprise_Extraction_PV:
+	                    #Benne.Etape := #Etape_Vidange;
+	                    RETURN;
+	                #Demande_Fin_Dosage:
+	                    ;
+	                #Demande_Vidange:
+	                    ;
+	                #Demande_NV_Compo:
+	                    ;
+	                #Demande_Repos:
+	                    #Benne.Etape := #Etape_Repos;
+	                    RETURN;
+	            END_CASE;
+	        END_REGION Cyclique Fin Vidange
+	    #Etape_Attente_Acquitement:
+	        REGION Preliminaire Attente Acquuitement
+	            IF #Benne.Etape <> #Benne.Etape_Memo THEN
+	                //============ SIMULATEUR ============//
+	                #Benne.Simul._ValBascInc := FALSE;
+	                #Benne.Simul._ValBascDec := FALSE;
+	                //============ SIMULATEUR ============//
+	                // Maj Niveau Grafcet
+	                #Benne.Niv_Grafcet := #Niveau_Benne_Attente_Acquitement;
+	                // Sortir du preliminaire
+	                #Benne.Etape_Memo := #Benne.Etape;
+	            END_IF;
+	        END_REGION Preliminaire Attente Acquuitement
+	        REGION Cyclique Attente Acquitement
+	            #Benne.Dial_Def.Reponse_Def := "FC_Recup_Rep_Def"(Index_Def := #Benne.Dial_Def.Index_Defaut, Reponse_Ecrit => #Benne.Dial_Def.Text_Reponse);
+	            IF #Benne.Dial_Def.Reponse_Def <> '' THEN
+	                "FC_Raz_Def"(#Benne.Dial_Def.Index_Defaut);
+	                #Benne.Etape := #Benne.Etape_Prec;
+	                RETURN;
+	            END_IF;
+	        END_REGION Cyclique Attente Acquitement    
+	END_CASE;
+END_FUNCTION
+

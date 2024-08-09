@@ -1,0 +1,37 @@
+﻿FUNCTION "FC_Affich_Compo_Superv" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Code_MP : String;
+      Net : Real;
+   END_VAR
+
+   VAR_IN_OUT 
+      Lst_Compos : Array[0..19] of "S_Com_Fab";
+      Lst_Compos_Affich : Array[0..19] of "Affich_Compo";
+   END_VAR
+
+   VAR_TEMP 
+      i : SInt;
+   END_VAR
+
+
+BEGIN
+	FOR #i := 0 TO 19 DO
+	    #Lst_Compos_Affich[#i].Code_MP := #Lst_Compos[#i].Code_MP;
+	    #Lst_Compos_Affich[#i].Libelle := #Lst_Compos[#i].Libel_MP;
+	    #Lst_Compos_Affich[#i].Cellule := #Lst_Compos[#i].Code_Cel;
+	    #Lst_Compos_Affich[#i].Qte := #Lst_Compos[#i].Poids;
+	    #Lst_Compos_Affich[#i].Qte_Reelle := #Lst_Compos[#i].Net;
+	    IF  #Lst_Compos_Affich[#i].Code_MP = #Code_MP  AND #Lst_Compos_Affich[#i].Code_MP <> '' THEN
+	       #Lst_Compos_Affich[#i].Qte_Reelle := #Net;
+	        #Lst_Compos_Affich[#i].Enc := TRUE;
+	    ELSE
+	        #Lst_Compos_Affich[#i].Enc := FALSE;
+	    END_IF;
+	    #Lst_Compos_Affich[#i].Ecart := #Lst_Compos[#i].Ecart;
+	    #Lst_Compos_Affich[#i].Cln_Chute := #Lst_Compos[#i].Col_Chute;
+	    #Lst_Compos_Affich[#i].Fin_Dos := #Lst_Compos[#i].Fin_Dos;
+	END_FOR;
+END_FUNCTION
+

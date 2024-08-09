@@ -1,0 +1,8 @@
+﻿FUNCTION "FC_Cond_Fermeture_Trappe" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+BEGIN
+	#FC_Cond_Fermeture_Trappe := TRUE;
+END_FUNCTION
+

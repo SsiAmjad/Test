@@ -1,0 +1,152 @@
+﻿FUNCTION_BLOCK "Lanc_Boucles"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR 
+      RAZ_Pt_Zs { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'; S7_SetPoint := 'False'} : "S_Suivi_Dosage";
+   END_VAR
+
+
+BEGIN
+	"DB_Dosage".BP[0].Benne.Simul._ModeSimul := "simul";
+	"DB_Dosage".BP[1].Benne.Simul._ModeSimul := "simul";
+	"DB_Dosage".BP[2].Benne.Simul._ModeSimul := "simul";
+	"DB_Dosage".BP[3].Benne.Simul._ModeSimul := "simul";
+	"DB_Dosage".BP[4].Benne.Simul._ModeSimul := "simul";
+	"DB_Dosage".BR[0].Simulateur.Simul := "simul";
+	"DB_Dosage".BR[1].Simulateur.Simul := "simul";
+	
+	// DOSAGE BP
+	"SurvDosBenne"(Fg_Base := "fgbase",
+	               Raz_Pt_Zs := #RAZ_Pt_Zs,
+	               SurvDosBenne := "DB_Dosage".BP[0]);
+	"SurvDosBenne"(Fg_Base := "fgbase",
+	               Raz_Pt_Zs := #RAZ_Pt_Zs,
+	               SurvDosBenne := "DB_Dosage".BP[1]);
+	"SurvDosBenne"(Fg_Base := "fgbase",
+	               Raz_Pt_Zs := #RAZ_Pt_Zs,
+	               SurvDosBenne := "DB_Dosage".BP[2]);
+	"SurvDosBenne"(Fg_Base := "fgbase",
+	               Raz_Pt_Zs := #RAZ_Pt_Zs,
+	               SurvDosBenne := "DB_Dosage".BP[3]);
+	"SurvDosBenne"(Fg_Base := "fgbase",
+	               Raz_Pt_Zs := #RAZ_Pt_Zs,
+	               SurvDosBenne := "DB_Dosage".BP[4]);
+	// TREMIES TRANS
+	"Gest_Tremie_Trans"(Fg_Base := "fgbase",
+	                    RAZ_Pt_Zs := #RAZ_Pt_Zs,
+	                    Tremie_Trans := "DB_Dosage".TRM_TRANS[0]);
+	"Gest_Tremie_Trans"(Fg_Base := "fgbase",
+	                    RAZ_Pt_Zs := #RAZ_Pt_Zs,
+	                    Tremie_Trans := "DB_Dosage".TRM_TRANS[1]);
+	"Gest_Tremie_Trans"(Fg_Base := "fgbase",
+	                    RAZ_Pt_Zs := #RAZ_Pt_Zs,
+	                    Tremie_Trans := "DB_Dosage".TRM_TRANS[2]);
+	"Gest_Tremie_Trans"(Fg_Base := "fgbase",
+	                    RAZ_Pt_Zs := #RAZ_Pt_Zs,
+	                    Tremie_Trans := "DB_Dosage".TRM_TRANS[3]);
+	"Gest_Tremie_Trans"(Fg_Base := "fgbase",
+	                    RAZ_Pt_Zs := #RAZ_Pt_Zs,
+	                    Tremie_Trans := "DB_Dosage".TRM_TRANS[4]);
+	"Gest_Tremie_Trans"(Fg_Base := "fgbase",
+	                    RAZ_Pt_Zs := #RAZ_Pt_Zs,
+	                    Tremie_Trans := "DB_Dosage".TRM_TRANS[5]);
+	"Gest_Tremie_Trans"(Fg_Base := "fgbase",
+	                    RAZ_Pt_Zs := #RAZ_Pt_Zs,
+	                    Tremie_Trans := "DB_Dosage".TRM_TRANS[6]);
+	"Gest_Tremie_Trans"(Fg_Base := "fgbase",
+	                    RAZ_Pt_Zs := #RAZ_Pt_Zs,
+	                    Tremie_Trans := "DB_Dosage".TRM_TRANS[7]);
+	// CIRCUITS TRANSFERT
+	"Gest_Circuit_Transfert"(Fg_Base := "fgbase",
+	                         RAZ_Pt_Zs := #RAZ_Pt_Zs,
+	                         Cir_Trans := "DB_Dosage".TRANSF[0]);
+	"Gest_Circuit_Transfert"(Fg_Base := "fgbase",
+	                         RAZ_Pt_Zs := #RAZ_Pt_Zs,
+	                         Cir_Trans := "DB_Dosage".TRANSF[1]);
+	"Gest_Circuit_Transfert"(Fg_Base := "fgbase",
+	                         RAZ_Pt_Zs := #RAZ_Pt_Zs,
+	                         Cir_Trans := "DB_Dosage".TRANSF[2]);
+	"Gest_Circuit_Transfert"(Fg_Base := "fgbase",
+	                         RAZ_Pt_Zs := #RAZ_Pt_Zs,
+	                         Cir_Trans := "DB_Dosage".TRANSF[3]);
+	"Gest_Circuit_Transfert"(Fg_Base := "fgbase",
+	                         RAZ_Pt_Zs := #RAZ_Pt_Zs,
+	                         Cir_Trans := "DB_Dosage".TRANSF[4]);
+	// BROYEURS
+	"Gestion_Broyeur"(Fg_Base := "fgbase",
+	                  RAZ_Pt_Zs := #RAZ_Pt_Zs,
+	                  Broyeur := "DB_Dosage".BR[0]);
+	"Gestion_Broyeur"(Fg_Base := "fgbase",
+	                  RAZ_Pt_Zs := #RAZ_Pt_Zs,
+	                  Broyeur := "DB_Dosage".BR[1]);
+	// TREMIES TRAPPE
+	"Gest_Tremie_Trappe"(Fg_Base := "fgbase",
+	                     RAZ_Pt_Zs := #RAZ_Pt_Zs,
+	                     Tremie_Trappe := "DB_Dosage".TRM_TRP[0]);
+	"Gest_Tremie_Trappe"(Fg_Base := "fgbase",
+	                     RAZ_Pt_Zs := #RAZ_Pt_Zs,
+	                     Tremie_Trappe := "DB_Dosage".TRM_TRP[1]);
+	"Gest_Tremie_Trappe"(Fg_Base := "fgbase",
+	                     RAZ_Pt_Zs := #RAZ_Pt_Zs,
+	                     Tremie_Trappe := "DB_Dosage".TRM_TRP[2]);
+	"Gest_Tremie_Trappe"(Fg_Base := "fgbase",
+	                     RAZ_Pt_Zs := #RAZ_Pt_Zs,
+	                     Tremie_Trappe := "DB_Dosage".TRM_TRP[3]);
+	"Gest_Tremie_Trappe"(Fg_Base := "fgbase",
+	                     RAZ_Pt_Zs := #RAZ_Pt_Zs,
+	                     Tremie_Trappe := "DB_Dosage".TRM_TRP[4]);
+	// MELANGEUSES
+	"Gestion_Melangeuse"(Fg_Base := "fgbase",
+	                     Raz_Pt_Zs := #RAZ_Pt_Zs,
+	                     Melangeuse := "DB_Dosage".MLG[0]);
+	"Gestion_Melangeuse"(Fg_Base := "fgbase",
+	                     Raz_Pt_Zs := #RAZ_Pt_Zs,
+	                     Melangeuse := "DB_Dosage".MLG[1]);
+	// LIQUIDES
+	"Gestion_Liquide_Melangeuse"(Fg_Base := "fgbase",
+	                             Raz_Pt_Zs := #RAZ_Pt_Zs,
+	                             Liq_Mel := "DB_Dosage".LIQUIDES_MLG[0]);
+	"Gestion_Liquide_Melangeuse"(Fg_Base := "fgbase",
+	                             Raz_Pt_Zs := #RAZ_Pt_Zs,
+	                             Liq_Mel := "DB_Dosage".LIQUIDES_MLG[1]);
+	"Gestion_Liquide_Melangeuse"(Fg_Base := "fgbase",
+	                             Raz_Pt_Zs := #RAZ_Pt_Zs,
+	                             Liq_Mel := "DB_Dosage".LIQUIDES_MLG[2]);
+	"Gestion_Liquide_Melangeuse"(Fg_Base := "fgbase",
+	                             Raz_Pt_Zs := #RAZ_Pt_Zs,
+	                             Liq_Mel := "DB_Dosage".LIQUIDES_MLG[3]);
+	"Gestion_Liquide_Melangeuse"(Fg_Base := "fgbase",
+	                             Raz_Pt_Zs := #RAZ_Pt_Zs,
+	                             Liq_Mel := "DB_Dosage".LIQUIDES_MLG[4]);
+	"Gestion_Liquide_Melangeuse"(Fg_Base := "fgbase",
+	                             Raz_Pt_Zs := #RAZ_Pt_Zs,
+	                             Liq_Mel := "DB_Dosage".LIQUIDES_MLG[5]);
+	"Gestion_Liquide_Melangeuse"(Fg_Base := "fgbase",
+	                             Raz_Pt_Zs := #RAZ_Pt_Zs,
+	                             Liq_Mel := "DB_Dosage".LIQUIDES_MLG[6]);
+	"Gestion_Liquide_Melangeuse"(Fg_Base := "fgbase",
+	                             Raz_Pt_Zs := #RAZ_Pt_Zs,
+	                             Liq_Mel := "DB_Dosage".LIQUIDES_MLG[7]);
+	"Gestion_Liquide_Melangeuse"(Fg_Base := "fgbase",
+	                             Raz_Pt_Zs := #RAZ_Pt_Zs,
+	                             Liq_Mel := "DB_Dosage".LIQUIDES_MLG[8]);
+	"Gestion_Liquide_Melangeuse"(Fg_Base := "fgbase",
+	                             Raz_Pt_Zs := #RAZ_Pt_Zs,
+	                             Liq_Mel := "DB_Dosage".LIQUIDES_MLG[9]);
+	// EXPEDITIONS
+	"Gest_Derout_Exp"(Fg_Base := "fgbase",
+	                  RAZ_Pt_Zs := #RAZ_Pt_Zs,
+	                  Derout := "DB_Dosage".DEROUT);
+	"Gest_Lanc_Exp"(Fg_Base := "fgbase",
+	                RAZ_Pt_Zs := #RAZ_Pt_Zs,
+	                Lanc_Exp := "DB_Dosage".LANC_EXP);
+	"Gest_Exp_Dos"(Fg_Base := "fgbase",
+	               Exp_Dos := "DB_Dosage".EXP_DOS[0]);
+	"Gest_Exp_Dos"(Fg_Base := "fgbase",
+	               Exp_Dos := "DB_Dosage".EXP_DOS[1]);
+	// VERSE SAC
+	"Gest_Verse_Sac"(Fg_Base := "fgbase",
+	                 RAZ_Pt_Zs := #RAZ_Pt_Zs,
+	                 Verse_Sac := "DB_Dosage".VS[0]);
+END_FUNCTION_BLOCK
+

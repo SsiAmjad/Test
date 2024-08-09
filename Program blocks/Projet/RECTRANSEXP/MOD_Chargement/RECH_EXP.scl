@@ -1,0 +1,74 @@
+﻿FUNCTION "RECH_EXP" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      fgbase : Bool;
+   END_VAR
+
+
+BEGIN
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                        ╔════════════════════════════════════╗
+	                                                                        ║         CHARGEMENT PONT 1          ║
+	                                                                        ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	
+	"GEST_TOUR"(Fgbase:=#fgbase,
+	            Raz_Ptzs:="DB_GestTournee".Raz_Ptzs,
+	            PtSuivCharg:="DB_PTSUIV_TOUR"."THIS"[0],
+	            GesTour:="DB_GestTournee".GestTour[0],
+	            ChPont:="DB_ChPont".ChPont[0]);                    //boucle gestion de tourne
+	"CHARG_PONT_1"(FgBase:=#fgbase,
+	               Ptzs:="DB_ChPont".RazPtzs,
+	               GestTour:="DB_GestTournee".GestTour[0], ChPont:="DB_ChPont".ChPont[0],
+	               PtSuivCharg:="DB_PTSUIV_TOUR"."THIS"[0]);                          //boucle gestion Chargement
+	"Ctrl_Evol"("DB_ChPont".ChPont[0]);                                                    //boucle controle evolution poids
+	"Cycle_O/F"("DB_ChPont".ChPont[0]);
+	"CalcDebitPont"("DB_ChPont".ChPont[0]);                                                // Calcul debit du pont         
+	 "Calcul_Quantité"("DB_ChPont".ChPont[0]._ChargCommun._CommunGeneral._ParCal);
+	 "VidangeCellule"(fgbase:="fgbase",
+	                  Cel:="DB_Mod_Cellule",
+	                  Chpont:="DB_ChPont".ChPont[0]);
+	 
+	
+	
+	 
+	 // Init_Boucle(10, ChargPont1.TEMPS_OUVERTURE, 4000, (Void*)&ChargPont1, L"Temps d'ouverture lorsque la colonne de chute est suprieur  la consigne");
+	    //Init_Boucle(15, Vidange_Cellule, 4000, (Void*)&ChargPont1, L"Vidange cellule");
+	
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                        ╔════════════════════════════════════╗
+	                                                                        ║          Ensacheuse 1              ║
+	                                                                        ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	 (* "Lancement"(FgBase:=#fgbase,
+	             Procede:= "DB_ENSACHAGE"."THIS"[0]._EnsaCommun.CommunGeneral._Autom,
+	             TraitEnsa:="DB_ENSACHAGE"."THIS"[0].TraitEnsa); *)
+	 
+	 "Ensachage"(FgBase := #fgbase,
+	             PtSuiv := "DB_PTSUIV_ENS",
+	             Ensachage := "DB_ENSACHAGE"."THIS"[0]); 
+	(* "Lancement"(FgBase := #fgbase,
+	             Procede:= "DB_ENSACHAGE"."THIS"[1]._EnsaCommun.CommunGeneral._Autom,
+	             TraitEnsa := "DB_ENSACHAGE"."THIS"[1].TraitEnsa); *)
+	 "Ensachage"(FgBase := #fgbase,
+	             PtSuiv := "DB_PTSUIV_ENS",
+	             Ensachage := "DB_ENSACHAGE"."THIS"[1]);
+	
+	 
+	 
+	
+	
+	
+	
+	
+	
+	
+	
+	
+END_FUNCTION
+

@@ -1,0 +1,184 @@
+﻿FUNCTION "Cal_Qte_Possi_Transfert" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      fgbase : Bool;
+   END_VAR
+
+   VAR_IN_OUT 
+      Transf : "S_Transfert";
+   END_VAR
+
+   VAR_TEMP 
+      Ret_RD_Sys_T : Int;
+      ret : Bool;
+      TpsPassé : Time;
+      Text_Def : String;
+   END_VAR
+
+   VAR CONSTANT 
+      Repos : SInt := 0;
+      Calcul_Qte : SInt := 1;
+      Etape_Attente_RepDial : SInt := 2;
+   END_VAR
+
+
+BEGIN
+	CASE #Transf.CalQte.Etape OF
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║            Etape "Repos"           ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)
+	    #Repos:
+	        REGION traitement preliminaire
+	            IF (#Transf.CalQte.Etape <> #Transf.CalQte.EtapeMemo) THEN
+	                #Transf.CalQte.EtapeMemo := #Transf.CalQte.Etape;
+	            END_IF;
+	       END_REGION
+	       REGION traitement_cyclique
+	           IF #Transf._fgDemQte = 2 AND #Transf._RepQte = 0 AND #Transf._FgLanc THEN
+	               #Transf.CalQte.Etape := #Calcul_Qte;
+	               RETURN;
+	           END_IF;
+	       END_REGION
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║         Etape "Calcul QTE"         ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                        
+	*)        
+	    #Calcul_Qte:
+	        REGION traitement preliminaire
+	            IF #Transf.CalQte.Etape <> #Transf.CalQte.EtapeMemo THEN
+	                #Transf.CalQte.EtapeMemo := #Transf.CalQte.Etape;
+	                #Ret_RD_Sys_T := RD_SYS_T(#Transf._TransfCommun.CommunGeneral._TpsPicke);
+	                #Transf.CalQte.DebutQtePos:=#Transf._TransfCommun.CommunGeneral._TpsPicke;
+	            END_IF;
+	        END_REGION
+	        REGION traitement cyclique
+	            
+	            // Calcul quantite restante possible dans la cellule 
+	            #Transf.CalQte.Capacite := #Transf._Volume * #Transf._Densite * 1000;
+	            #Transf.CalQte.Qte_Pos := #Transf.CalQte.Capacite - #Transf._Stock - #Transf._TransfCommun.CommunGeneral._ParCal._QteTrans;
+	            
+	            
+	            #Transf.Dial_Def.Num_Def_Etape := 1;
+	            #Text_Def := CONCAT(IN1 := 'Changement de la consigne de quantite a transferer ? Consigne actuelle: ', IN2 := REAL_TO_STRING(#Transf._Ptzs._QteArretDem), IN3 := ' Kg', IN4 := ' Capacite:', IN5 :=  REAL_TO_STRING(#Transf.CalQte.Capacite) , IN6 := ' Kg ', IN7 := 'Qte en cours: ', IN8 :=  REAL_TO_STRING(#Transf._TransfCommun.CommunGeneral._ParCal._QteTrans));
+	           
+	            #Transf.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base:=#fgbase, Msg_Defaut := #Text_Def,
+	                                                          Type_Defaut := 2,
+	                                                          Automatisme := #Transf._TransfCommun.CommunGeneral._Autom,
+	                                                          Num_Lot := #Transf._Ptzs._NoLot,
+	                                                          Origine_Defaut := 'Test quantite',
+	                                                          Libelle_Origine := 'Test quantite',
+	                                                          Acq1 := 'Oui',
+	                                                          Acq2 := 'Non',
+	                                                          Acq3 := '',
+	                                                          Acq4 := '',
+	                                                          Acq5 := '',
+	                                                          Acq6 := '',
+	                                                          Acq7 := '',
+	                                                          Acq8 := '',
+	                                                          Acq_Choisi := -1,
+	                                                          Date_Arrivee := #Transf._TpsPicke);
+	         #Transf._TransfCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	            RETURN;
+	            //============ Traitement des reponses pour le defaut1  ====================================//
+	            IF #Transf.Dial_Def.Reponse_Def = 'Oui' THEN
+	                #Transf.CalQte.Nouv_Qte_Dem := STRING_TO_REAL(#Transf.Dial_Def.Text_Reponse);
+	                IF  #Transf.CalQte.Nouv_Qte_Dem >  #Transf.CalQte.Qte_Pos THEN
+	                    #Transf.Dial_Def.Num_Def_Etape := 2;
+	                    #Text_Def := CONCAT(IN1 := 'Valeur saisie: ', IN2 := REAL_TO_STRING(#Transf.CalQte.Nouv_Qte_Dem), IN3 := ' Kg', IN4 := ' superieure a la quantite restante estime dans', IN5 := "Nom_Mobile"(#Transf._TransfCommun.CommunGeneral._Ptdest), IN6 :=  REAL_TO_STRING(#Transf.CalQte.Qte_Pos), IN7 := ' Kg');
+	                    #Transf.Dial_Def.Index_Defaut := "Dialog_Defaut"(Fg_Base:=#fgbase, Msg_Defaut := #Text_Def,
+	                                                                     Type_Defaut := 2,
+	                                                                     Automatisme := #Transf._TransfCommun.CommunGeneral._Autom,
+	                                                                     Num_Lot := #Transf._Ptzs._NoLot,
+	                                                                     Origine_Defaut := 'Fosse pleine',
+	                                                                     Libelle_Origine := 'Fosse pleine',
+	                                                                     Acq1 := 'Acquit',
+	                                                                     Acq2 := 'Abandon',
+	                                                                     Acq3 := 'Quantite',
+	                                                                     Acq4 := '',
+	                                                                     Acq5 := '',
+	                                                                     Acq6 := '',
+	                                                                     Acq7 := '',
+	                                                                     Acq8 := '',
+	                                                                     Acq_Choisi := -1,
+	                                                                     Date_Arrivee := #Transf._TpsPicke);
+	                    #Transf._TransfCommun.CommunGeneral._Etp := #Etape_Attente_RepDial;
+	                END_IF;
+	                IF #Transf.CalQte.Nouv_Qte_Dem <=  #Transf.CalQte.Qte_Pos THEN
+	                    #Transf._Ptzs._FgChgConsQte := TRUE;
+	                    #Transf._RepQte := #Transf.CalQte.Nouv_Qte_Dem;
+	                    #Transf._fgDemQte := 3;
+	                END_IF;
+	                
+	            END_IF;
+	            IF #Transf.Dial_Def.Reponse_Def = 'Non' THEN
+	                #Transf._fgDemQte := 3 ;
+	                
+	            END_IF;
+	            
+	            
+	            
+	            
+	            
+	            //============ Traitement des reponses pour le defaut 2  ====================================//
+	            IF #Transf.Dial_Def.Reponse_Def = 'Acquit' THEN
+	                #Transf._Ptzs._FgChgConsQte := TRUE;
+	                // Mise  jour nouvelle consigne
+	                #Transf._RepQte := #Transf.CalQte.Nouv_Qte_Dem;
+	                #Transf._fgDemQte := 3;
+	                #Transf.Dial_Def.Reponse_Def := '';
+	            END_IF;
+	            IF #Transf.Dial_Def.Reponse_Def = 'Abandon' THEN
+	                #Transf._fgDemQte := 1;
+	                #Transf.Dial_Def.Reponse_Def := '';
+	            END_IF;
+	            IF #Transf.Dial_Def.Reponse_Def = 'Quantite' THEN
+	                #Transf._Ptzs._FgChgConsQte := TRUE;
+	                // Mise  jour nouvelle consigne
+	                #Transf._RepQte := #Transf.CalQte.Nouv_Qte_Dem;
+	                #Transf._fgDemQte := 3;
+	                #Transf.Dial_Def.Reponse_Def := '';
+	            END_IF;
+	            
+	            
+	            
+	      
+	        END_REGION
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                                 ╔════════════════════════════════════╗
+	                                                                                 ║ Etape "Attente Reponse Dialogue"   ║
+	                                                                                 ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** *************************************** ***************************************                                                                                    
+	*)
+	    #Etape_Attente_RepDial:
+	        REGION Preliminaire Attente Acquuitement
+	            IF #Transf._TransfCommun.CommunGeneral._Etp <> #Transf._TransfCommun.CommunGeneral._EtpPrec THEN
+	                //Memorisation de l'etape encours
+	                #Transf._TransfCommun.CommunGeneral._EtpMemo := #Transf._TransfCommun.CommunGeneral._EtpPrec;
+	                
+	                #Transf._TransfCommun.CommunGeneral._DescEtp := 'Etape_Attente_RepDial';
+	                #Transf._TransfCommun.CommunGeneral._EtpPrec := #Transf._TransfCommun.CommunGeneral._Etp;
+	                
+	            END_IF;
+	        END_REGION Preliminaire Attente Acquuitement
+	        REGION Cyclique Attente Acquitement
+	            #Transf.Dial_Def.Reponse_Def := "FC_Recup_Rep_Def"(Index_Def := #Transf.Dial_Def.Index_Defaut, Reponse_Ecrit => #Transf.Dial_Def.Text_Reponse);
+	            IF #Transf.Dial_Def.Reponse_Def <> '' THEN
+	                "FC_Raz_Def"(#Transf.Dial_Def.Index_Defaut);
+	                #Transf._TransfCommun.CommunGeneral._Etp := #Transf._TransfCommun.CommunGeneral._EtpMemo;
+	                RETURN;
+	            END_IF;
+	        END_REGION Cyclique Attente Acquitement   
+	END_CASE;
+	
+	
+END_FUNCTION
+

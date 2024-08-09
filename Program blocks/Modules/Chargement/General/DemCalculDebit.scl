@@ -1,0 +1,22 @@
+﻿FUNCTION "DemCalculDebit" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Chpont : "S_ChargPont";
+   END_VAR
+
+
+BEGIN
+	#Chpont._ChargCommun._CommunGeneral._ParCal._FgCalFar := TRUE;
+	#Chpont._ChargCommun._CommunGeneral._ParCal._FgCalTps:= TRUE;
+	#Chpont._ChargCommun._CommunGeneral._ParCal._QteSuivi := 0;
+	#Chpont._ChargCommun._CommunGeneral._ParCal._QteTrans := 0;
+	IF #Chpont. _Commande._PtcelOrig._Moborg<>-1 THEN
+	    #Chpont._ChargCommun._CommunGeneral._ParCal._MbTrans := #Chpont._Commande._PtcelOrig._Moborg;
+	ELSE
+	    #Chpont._ChargCommun._CommunGeneral._ParCal._MbTrans :=#Chpont._Commande._PtcelOrig._Extrac[0]._IndexMob;
+	END_IF;
+	#Chpont._ChargCommun._CommunGeneral._ParCal._DebVolTrans := #Chpont._Commande._DebitCel;
+	#Chpont._ChargCommun._CommunGeneral._ParCal._DebMasTrans := #Chpont._Commande._DebitCel*#Chpont._Commande._Densite;
+END_FUNCTION
+

@@ -1,0 +1,63 @@
+﻿FUNCTION "Supervision" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      RAZ : Bool;
+   END_VAR
+
+   VAR_IN_OUT 
+      REC : "S_REC";
+   END_VAR
+
+   VAR_TEMP 
+      RET2 : Real;
+      Tempcomplet : Time;
+      TempRestant : Time;
+   END_VAR
+
+
+BEGIN
+	IF #RAZ THEN
+	    #REC.RecCommun.SUPREC.Affichage._Circuit := '';
+	    #REC.RecCommun.SUPREC.Affichage._Origine := '';
+	    #REC.RecCommun.SUPREC.Affichage._Destination := '';
+	    #REC.RecCommun.SUPREC.Affichage._NumLot := '';
+	    #REC.RecCommun.SUPREC.Affichage._Matiere := '';
+	    #REC.RecCommun.SUPREC.Affichage._QteTheorique := 0;
+	    #REC.RecCommun.SUPREC.Affichage._QteReelle := 0;
+	    #REC.RecCommun.SUPREC.Affichage._Debit := 0;
+	    #REC.RecCommun.SUPREC.Affichage._TpsDepuis := T#0s;
+	    #REC.RecCommun.SUPREC.Affichage._TpsRestant := T#0s;
+	    #REC.RecCommun.SUPREC.Affichage._Badge := '';
+	ELSE
+	    #REC.RecCommun.SUPREC.Affichage._Circuit := #REC.RecCommun.CommunGeneral._Autom;
+	    #REC.RecCommun.SUPREC.Affichage._Origine := "Nom_Mobile"(#REC.RecCommun.CommunGeneral._PtOrig);
+	    #REC.RecCommun.SUPREC.Affichage._Destination := "Nom_Mobile"(#REC.RecCommun.CommunGeneral._Ptdest);
+	    #REC.RecCommun.SUPREC.Affichage._NumLot := #REC._Ptzs._NoLot;
+	    #REC.RecCommun.SUPREC.Affichage._Matiere :=#REC._Ptzs._CdMat;
+	    #REC.RecCommun.SUPREC.Affichage._QteTheorique :=#REC._TheoTrans;// #REC._Ptzs._Qte_Prev;
+	    #REC.RecCommun.SUPREC.Affichage._QteReelle := #REC.RecCommun.CommunGeneral._ParCal._QteTrans;
+	    #REC.RecCommun.SUPREC.Affichage._Debit := #REC.RecCommun.CommunGeneral._ParCal._DebMasTrans;
+	    #REC.RecCommun.SUPREC.Affichage._TpsDepuis := #REC.RecCommun.CommunGeneral._ParCal._TpsTran;
+	   IF #REC.RecCommun.CommunGeneral._ParCal._DebMasTrans<=0 THEN
+	       #REC.RecCommun.SUPREC.Affichage._TpsRestant:=  #REC.RecCommun.SUPREC.Affichage._TpsRestant ;
+	    ELSE
+	        #RET2 := (#REC._TheoTrans/ 1000) / (#REC.RecCommun.CommunGeneral._ParCal._DebMasTrans / 3600);
+	        #Tempcomplet := DINT_TO_TIME(REAL_TO_DINT(#RET2) * 1000);
+	        
+	        IF #REC.RecCommun.CommunGeneral._ParCal._TpsTran <= #Tempcomplet THEN
+	            #TempRestant := #Tempcomplet - #REC.RecCommun.CommunGeneral._ParCal._TpsTran;
+	            #REC.RecCommun.SUPREC.Affichage._TpsRestant := #TempRestant;
+	        ELSE
+	            #REC.RecCommun.SUPREC.Affichage._TpsRestant := T#0s;
+	            
+	        END_IF;
+	
+	    END_IF;
+	    
+	 
+	END_IF;
+	
+	
+END_FUNCTION
+

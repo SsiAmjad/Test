@@ -1,0 +1,145 @@
+﻿FUNCTION "Proc_Recherche_Params_Auto_BR" : String[254]
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Resultat_Decode : WString;
+      Err_Sql : String;
+      Msg_Def : String;
+      Data_Dosage : "S_Suivi_Dosage";
+   END_VAR
+
+   VAR_TEMP 
+      parameters_value : Array[0..20] of String;
+      status : Int;
+      Rep_temp : String;
+      i : SInt;
+      POSITION_CLE : Int;
+   END_VAR
+
+
+BEGIN
+	//Insertion des parametres 
+	#parameters_value[0] := UINT_TO_STRING("Num_Poste");
+	#parameters_value[1] := #Data_Dosage._SuiviCommun._CdMat;
+	#parameters_value[2] := #Data_Dosage._SuiviCommun._CdProc;
+	#parameters_value[3] := 'BROYAGE';
+	
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	
+	#Resultat_Decode := "COMBASE"(procedure_name := 'SP_PARAUTO_RECHPARAM',
+	                              values_of_record := #parameters_value,
+	                              parameters_number := 4,
+	                              ERROR_MESSAGE => #Err_Sql);
+	
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := 'REPONSE:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Proc_Recherche_Params_Auto_BR);
+	
+	IF #Proc_Recherche_Params_Auto_BR = 'NOK' THEN
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := 'MESS:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Msg_Def);
+	    RETURN;
+	ELSIF #Proc_Recherche_Params_Auto_BR = 'OK' THEN
+	    #status := "FCT_DECODE_TRAME"(KEYWORD := 'MESS:',
+	                                  BUFFER := #Resultat_Decode,
+	                                  Retour_VAL => #Msg_Def);
+	    IF #Msg_Def = 'VIDE' THEN
+	        RETURN;
+	    END_IF;
+	ELSE
+	    RETURN;
+	END_IF;
+	
+	//================ Decode des parametres Broyeur ================//
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|VITALIMFMC:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	#Data_Dosage._ParamBro._Vit_Fin_Rampe_Alim := STRING_TO_USINT(#Rep_temp);
+	IF #Data_Dosage._ParamBro._Vit_Fin_Rampe_Alim <= 0 THEN
+	    #Msg_Def := 'VITALIMFMC,';
+	END_IF;
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|RAMPMONTCH:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	#Data_Dosage._ParamBro._Rampe_Montee := STRING_TO_REAL(#Rep_temp) / 10;
+	IF #Data_Dosage._ParamBro._Rampe_Montee <= 0 THEN
+	    #Msg_Def := CONCAT(IN1 := #Msg_Def, IN2 := 'RAMPMONTCH,');
+	END_IF;
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|VITALIMFIXE:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	#Data_Dosage._ParamBro._Vit_Fixe_Alim := STRING_TO_USINT(#Rep_temp);
+	IF #Data_Dosage._ParamBro._Vit_Fixe_Alim <= 0 THEN
+	    #Msg_Def := CONCAT(IN1 := #Msg_Def, IN2 := 'VITALIMFIXE, ');
+	END_IF;
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|VITMAXALIM:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	#Data_Dosage._ParamBro._Vit_Max_Alim := STRING_TO_USINT(#Rep_temp);
+	IF #Data_Dosage._ParamBro._Vit_Max_Alim <= 0 THEN
+	    #Msg_Def := CONCAT(IN1 := #Msg_Def, IN2 := 'VITMAXALIM, ');
+	END_IF;
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|VOLHC:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	#Data_Dosage._ParamBro._Hauteur_Couche := STRING_TO_CHAR(#Rep_temp);
+	IF NOT (#Data_Dosage._ParamBro._Hauteur_Couche = 'O' OR #Data_Dosage._ParamBro._Hauteur_Couche = 'I' OR #Data_Dosage._ParamBro._Hauteur_Couche = 'F') THEN
+	    #Msg_Def := CONCAT(IN1 := #Msg_Def, IN2 := 'VITMAXALIM, ');
+	END_IF;
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|VOLASP:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	#Data_Dosage._ParamBro._Volet_Air := STRING_TO_CHAR(#Rep_temp);
+	IF NOT (#Data_Dosage._ParamBro._Volet_Air = 'O' OR #Data_Dosage._ParamBro._Volet_Air = 'I' OR #Data_Dosage._ParamBro._Volet_Air = 'F') THEN
+	    #Msg_Def := CONCAT(IN1 := #Msg_Def, IN2 := 'VOLASP, ');
+	END_IF;
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|CONSCHARGE:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	#Data_Dosage._ParamBro._Charge := STRING_TO_USINT(#Rep_temp);
+	IF #Data_Dosage._ParamBro._Charge <= 0 THEN
+	    #Msg_Def := CONCAT(IN1 := #Msg_Def, IN2 := 'CONSCHARGE, ');
+	END_IF;
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|VITALIMDEP:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	#Data_Dosage._ParamBro._Vit_Debut_Alim := STRING_TO_USINT(#Rep_temp);
+	IF #Data_Dosage._ParamBro._Vit_Debut_Alim <= 0 THEN
+	    #Msg_Def := CONCAT(IN1 := #Msg_Def, IN2 := 'VITALIMDEP, ');
+	END_IF;
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|TPSAVMONTCH:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	#Data_Dosage._ParamBro._Tps_Avant_Montee := UINT_TO_TIME(STRING_TO_UINT(#Rep_temp))*1000;
+	IF #Data_Dosage._ParamBro._Tps_Avant_Montee <= T#0MS THEN
+	    #Msg_Def := CONCAT(IN1 := #Msg_Def, IN2 := 'TPSAVMONTCH, ');
+	END_IF;
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|VITBROY:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	#Data_Dosage._ParamBro._Vit_Bro := STRING_TO_UINT(#Rep_temp);
+	IF #Data_Dosage._ParamBro._Vit_Bro <= 0 THEN
+	    #Msg_Def := CONCAT(IN1 := #Msg_Def, IN2 := 'VITBROY, ');
+	END_IF;
+	
+	#status := "FCT_DECODE_TRAME"(KEYWORD := '|VITMINALIM:',
+	                              BUFFER := #Resultat_Decode,
+	                              Retour_VAL => #Rep_temp);
+	#Data_Dosage._ParamBro._Vit_Min_Alim := STRING_TO_USINT(#Rep_temp);
+	IF #Data_Dosage._ParamBro._Vit_Min_Alim <= 0 THEN
+	    #Msg_Def := CONCAT(IN1 := #Msg_Def, IN2 := 'VITMINALIM, ');
+	END_IF;
+END_FUNCTION
+

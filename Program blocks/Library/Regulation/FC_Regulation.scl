@@ -1,0 +1,267 @@
+﻿FUNCTION "FC_Regulation" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Regul : "S_Regul";
+   END_VAR
+
+   VAR_TEMP 
+      Ret_RD_SYS_T : Int;
+      tps_passe : Time;
+      _SANV : Real;
+   END_VAR
+
+   VAR CONSTANT 
+      STOP : SInt := 0;
+      AVANT_MONTEE_CHARGE : SInt := 1;
+      REGUL_MANU : SInt := 2;
+      SUSPENSION : SInt := 3;
+      REGULATION : SInt := 4;
+      MONTE_CHARGE : SInt := 5;
+      VITESSE_FIXE : SInt := 6;
+   END_VAR
+
+
+BEGIN
+	IF #Regul.Grand_Lim > 0 AND #Regul.Grand_Max_Lim > 0 THEN
+	    "FC_Val_Max_Calc"(Grandeur := #Regul.Grand_Lim,
+	                      Grandeur_Max := #Regul.Grand_Max_Lim,
+	                      Val_Max_Cal => #Regul.Val_Max_Calc);
+	END_IF;
+	CASE #Regul.Etape OF
+	    #STOP:  
+	        REGION Preliminaire Stop
+	            IF #Regul.Etape <> #Regul.Etape_Memo THEN
+	                #Regul.Reg_Plus := 0;
+	                #Regul.Reg_Moins := 0;
+	                #Regul.Reg_Rampe := 0;
+	                #Regul.Reg_Ok := FALSE;
+	                #Regul.Desc_Etape := 'STOP';
+	                #Regul.Etape_Memo := #Regul.Etape;
+	            END_IF;
+	        END_REGION  Preliminaire Stop
+	        REGION Cyclique Stop
+	            IF #Regul.Valid AND NOT #Regul.Susp THEN
+	                #Regul.Etape := #AVANT_MONTEE_CHARGE;
+	                RETURN;
+	            END_IF;
+	            "FC_Ctrl_Boucle"(#Regul);
+	        END_REGION Cyclique Stop
+	    #REGUL_MANU:
+	        REGION Preliminaire REGUL MANU
+	            IF #Regul.Etape <> #Regul.Etape_Memo THEN
+	                #Regul.Reg_Ok := TRUE;
+	                #Regul.Desc_Etape := 'REGUL MANU';
+	                #Regul.Etape_Memo := #Regul.Etape;
+	            END_IF;
+	        END_REGION Preliminaire REGUL MANU
+	        REGION Cyclique REGUL MANU
+	            "FC_Ctrl_Boucle"(#Regul);
+	            IF NOT #Regul.Mode_Manu THEN
+	                IF #Regul.Type_Reg = 'C' THEN
+	                    #Regul.Etape := #SUSPENSION;
+	                    RETURN;
+	                END_IF;
+	                #Regul.Etape := #REGULATION;
+	                RETURN;
+	            END_IF;
+	        END_REGION Cyclique REGUL MANU
+	    #SUSPENSION :
+	        REGION Preliminaire SUSPENSION
+	            IF #Regul.Etape <> #Regul.Etape_Memo THEN
+	                #Regul.Memo_SA := #Regul.SA;
+	                #Regul.Reg_Ok := FALSE;
+	                IF #Regul.Fg_Montee_Ap_Susp AND #Regul.Susp THEN
+	                    #Regul.SA := #Regul.SA_Debut;
+	                END_IF;
+	                #Regul.Desc_Etape := 'SUSPENSION';
+	                #Regul.Etape_Memo := #Regul.Etape;
+	            END_IF;
+	        END_REGION Preliminaire SUSPENSION
+	        REGION Cyclique Suspension
+	            IF NOT #Regul.Susp THEN
+	                #Regul.SA := #Regul.Memo_SA;
+	                IF #Regul.Fg_Montee_Ap_Susp THEN
+	                    #Regul.Etape := #AVANT_MONTEE_CHARGE;
+	                    RETURN;
+	                END_IF;
+	                #Regul.Etape := #REGULATION;
+	                RETURN;
+	            END_IF;
+	            "FC_Ctrl_Boucle"(#Regul);
+	        END_REGION Cyclique Suspension
+	    #AVANT_MONTEE_CHARGE:
+	        REGION Prelimiinaire AVANT MONTEE CHARGE
+	            IF #Regul.Etape <> #Regul.Etape_Memo THEN
+	                #Ret_RD_SYS_T:=RD_SYS_T(#Regul.Tps_Picke);
+	                #Regul.Desc_Etape := 'Av Montee Charge';
+	                #Regul.Etape_Memo:=#Regul.Etape;
+	            END_IF;
+	        END_REGION Prelimiinaire AVANT MONTEE CHARGE
+	        REGION Cyclique AVANT MONTEE CHARGE
+	            IF #Regul.Fg_Init_Vit_Debut THEN
+	                #Regul.SA := #Regul.SA_Debut;
+	            END_IF;
+	            "FC_Ctrl_Boucle"(#Regul);
+	            IF NOT "Tempo"(Duree := #Regul.Tps_Av_Regul, Tps_Picke := #Regul.Tps_Picke, Anticip := FALSE, Tps_Passe => #tps_passe) THEN
+	                RETURN;
+	            END_IF;
+	            #Regul.Etape := #MONTE_CHARGE;
+	            RETURN;
+	        END_REGION Cyclique AVANT MONTEE CHARGE
+	    #MONTE_CHARGE:
+	        REGION Preliminaire Monte Charge
+	            IF #Regul.Etape <> #Regul.Etape_Memo THEN
+	                #Regul.Reg_Rampe := TRUE;
+	                #Ret_RD_SYS_T := RD_SYS_T(#Regul.Tps_Picke);
+	                #Regul.Desc_Etape := 'Monte Charge';
+	                #Regul.Etape_Memo := #Regul.Etape;
+	            END_IF;
+	        END_REGION Preliminaire Monte Charge
+	        REGION Cyclique Monte Charge
+	            IF #Regul.Tps_Rampe = T#0s THEN
+	                IF #Regul.Type_Reg = 'C' THEN
+	                    #Regul.Etape := #VITESSE_FIXE;
+	                ELSE
+	                    #Regul.Etape := #REGULATION;
+	                END_IF;
+	                #Regul.Reg_Rampe := FALSE;
+	            ELSE
+	                IF #Regul.Mesure >= (#Regul.Consigne * #Regul.Coef_Fin_Rampe) OR #Regul.SA > #Regul.SA_Fin_Rampe THEN
+	                    #Regul.Reg_Rampe := FALSE;
+	                    #Regul.Etape := #REGULATION;
+	                END_IF;
+	                IF "Tempo"(Duree := #Regul.Tps_Rampe, Tps_Picke := #Regul.Tps_Picke, Anticip := FALSE, Tps_Passe => #tps_passe) THEN
+	                    #Regul.SA := #Regul.SA + #Regul.SA_Rampe;
+	                END_IF;
+	            END_IF;
+	            "FC_Ctrl_Boucle"(#Regul);
+	        END_REGION Cyclique Monte Charge
+	    #VITESSE_FIXE:
+	        REGION Preliminaire Vitesse Fixe
+	            IF #Regul.Etape <> #Regul.Etape_Memo THEN
+	                #Regul.Reg_Ok := TRUE;
+	                #Regul.Desc_Etape := 'Vitesse Fixe';
+	                #Regul.Etape_Memo := #Regul.Etape;
+	            END_IF;
+	        END_REGION Preliminaire Vitesse Fixe
+	        REGION Cyclique Vitesse Fixe
+	            #Regul.SA := #Regul.SA_Fixe;
+	            "FC_Ctrl_Boucle"(#Regul);
+	        END_REGION Cyclique Vitesse Fixe
+	    #REGULATION:
+	        REGION Preliminaire Regulation
+	            IF #Regul.Etape <> #Regul.Etape_Memo THEN
+	                #Regul.Memo_Consigne := #Regul.Consigne;
+	                #Regul.Memo_Mesure := #Regul.Mesure;
+	                IF  #Regul.Val_Incidence > 0 THEN
+	                    #Regul.Memo_Incidence := #Regul.Val_Incidence;
+	                END_IF;
+	                #Ret_RD_SYS_T := RD_SYS_T(#Regul.Tps_Picke);
+	                #Regul.Desc_Etape := 'REGULATION';
+	                #Regul.Etape_Memo := #Regul.Etape;
+	            END_IF;
+	        END_REGION Preliminaire Regulation
+	        REGION Cyclique Regulation
+	            IF #Regul.Type_Reg = 'C' THEN
+	                #Regul.Etape := #SUSPENSION;
+	            END_IF;
+	            IF NOT "Tempo"(Duree := #Regul.Tps_Inter_Regul, Tps_Picke := #Regul.Tps_Picke, Anticip := ABS(#Regul.Consigne-#Regul.Mesure) < #Regul.Delta_Anticip, Tps_Passe => #tps_passe) THEN
+	                 RETURN;
+	             END_IF;
+	            #Regul.Dem_Corr := 0;
+	            #Regul.Reg_Moins := FALSE;
+	            #Regul.Reg_Plus := FALSE;
+	            #Regul.Reg_Ok := FALSE;
+	            #Regul.Sens_Correct := 0;
+	            #Regul.Cor_Incidence := 0;
+	            IF #Regul.Val_Incidence > 0 AND #Regul.Coef_Incidence > 0 THEN
+	                #Regul.SA_Avant_Cor := #Regul.SA;
+	                #Regul.Cor_Incidence := (#Regul.Val_Incidence - #Regul.Memo_Incidence) * #Regul.Coef_Incidence;
+	                #Regul.SA := REAL_TO_USINT (#Regul.SA + #Regul.Cor_Incidence);
+	                #Regul.Memo_Incidence := #Regul.Val_Incidence;
+	            END_IF;
+	            #Regul.SA_Avant_Cor := #Regul.SA;
+	            IF (#Regul.Mesure > (#Regul.Consigne + #Regul.Tol_Sup)) THEN
+	                IF #Regul.Reg_Invers THEN
+	                    #Regul.Dem_Corr := 1;
+	                ELSE
+	                    #Regul.Dem_Corr := -1;
+	                END_IF;
+	            END_IF;
+	            IF (#Regul.Mesure < (#Regul.Consigne - #Regul.Tol_Inf)) THEN
+	                IF #Regul.Reg_Invers THEN
+	                    #Regul.Dem_Corr := -1;
+	                ELSE
+	                    #Regul.Dem_Corr := 1;
+	                END_IF;
+	            END_IF;
+	            IF (#Regul.Dem_Corr <> 0) (* AND NOT #Regul.Demar_Regul_Ok *) THEN
+	                #Regul.Reg_Ok := FALSE;
+	                IF #Regul.Dem_Corr > 0 THEN
+	                    #Regul.Reg_Moins := FALSE;
+	                    #Regul.Reg_Plus := TRUE;
+	                    #Regul.Sens_Correct := 1;
+	                ELSE
+	                    #Regul.Reg_Moins := TRUE;
+	                    #Regul.Reg_Plus := FALSE;
+	                    #Regul.Sens_Correct := -1;
+	                END_IF;
+	                IF NOT #Regul.Reg_Invers THEN
+	                    #Regul.Delta_Propo := (#Regul.Consigne - #Regul.Mesure);
+	                    #Regul.Delta_Deriv := ((#Regul.Consigne - #Regul.Mesure) - (#Regul.Memo_Consigne - #Regul.Memo_Mesure))*1000 / TIME_TO_INT(#Regul.Tps_Inter_Regul);
+	                    #Regul.Delta_Integr := (#Regul.Consigne - #Regul.Mesure) * TIME_TO_INT(#Regul.Tps_Inter_Regul)/1000;
+	                ELSE
+	                    #Regul.Delta_Propo := - (#Regul.Consigne - #Regul.Mesure);
+	                    #Regul.Delta_Deriv := - ((#Regul.Consigne - #Regul.Mesure) - (#Regul.Memo_Consigne - #Regul.Memo_Mesure)) / TIME_TO_INT(#Regul.Tps_Inter_Regul);
+	                    #Regul.Delta_Integr := - (#Regul.Consigne - #Regul.Mesure) * TIME_TO_INT(#Regul.Tps_Inter_Regul);
+	                END_IF;
+	                IF NOT #Regul.Fg_Sortie_Plus_Moins THEN
+	                    #Regul.Cor := #Regul.Coef_Propo * (#Regul.Delta_Propo + (1 / (#Regul.Coef_Integr * #Regul.Delta_Integr)) + (#Regul.Coef_Deriv * #Regul.Delta_Deriv));
+	                    IF #Regul.Cor > #Regul.Cor_Max THEN
+	                        #Regul.Cor := #Regul.Cor_Max;
+	                    END_IF;
+	                    IF #Regul.Cor < -#Regul.Cor_Max THEN
+	                        #Regul.Cor := - #Regul.Cor_Max;
+	                    END_IF;
+	                    #_SANV := #Regul.SA + #Regul.Cor;
+	                    IF #_SANV < 0 THEN #_SANV := 0;END_IF;
+	                    #Regul.SA := REAL_TO_USINT( #_SANV);
+	                ELSE
+	                    IF NOT #Regul.Reg_Invers THEN
+	                        IF NOT "Tempo"(Duree := INT_TO_TIME(REAL_TO_INT(#Regul.Cor)), Tps_Picke := #Regul.Tps_Picke, Anticip := #Regul.Susp OR NOT (#Regul.Valid) OR (#Regul.Mesure >= #Regul.Consigne), Tps_Passe => #tps_passe) THEN
+	                            RETURN;
+	                        END_IF;
+	                    ELSE
+	                        IF NOT "Tempo"(Duree := INT_TO_TIME(REAL_TO_INT(#Regul.Cor)), Tps_Picke := #Regul.Tps_Picke, Anticip := #Regul.Susp OR NOT (#Regul.Valid) OR (#Regul.Mesure <= #Regul.Consigne), Tps_Passe => #tps_passe) THEN
+	                            RETURN;
+	                        END_IF;
+	                    END_IF;
+	                    IF #Regul.Cor > 0 OR #Regul.Dem_Corr > 0 THEN
+	                        #Regul.Reg_Plus := TRUE;
+	                        #Regul.Reg_Moins := FALSE;
+	                    ELSE
+	                        #Regul.Reg_Plus := FALSE;
+	                        #Regul.Reg_Moins := TRUE;
+	                     
+	                    END_IF;
+	                    #Regul.Reg_Plus := FALSE;
+	                    #Regul.Reg_Moins := FALSE;
+	                END_IF;
+	            ELSE
+	                #Regul.Reg_Ok := TRUE;
+	                #Regul.Sens_Correct := 0;
+	                #Regul.Demar_Regul_Ok := TRUE;
+	            END_IF;
+	            #Regul.Memo_Consigne := #Regul.Consigne;
+	            #Regul.Memo_Mesure := #Regul.Mesure;
+	            #Ret_RD_SYS_T := RD_SYS_T(#Regul.Tps_Picke);
+	            "FC_Ctrl_Boucle"(#Regul);
+	            "Min_Max"(Min := #Regul.SA_Min,
+	                      Max := #Regul.SA_Max,
+	                      Val_Calc := REAL_TO_USINT(#Regul.Val_Max_Calc),
+	                      Sort_Ana := #Regul.SA);
+	        END_REGION Cyclique Regulation
+	END_CASE; 
+END_FUNCTION
+

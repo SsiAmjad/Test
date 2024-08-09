@@ -1,0 +1,16 @@
+﻿FUNCTION "Test_HS" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Index_Mob : Int;
+   END_VAR
+
+
+BEGIN
+	IF "Valid_Index"(#Index_Mob) THEN
+	    #Test_HS := "DB_BIBLIOTHEQUE".Mobile[#Index_Mob].HORS_SERVICE;
+	    RETURN;
+	END_IF;
+	#Test_HS := TRUE;
+END_FUNCTION
+

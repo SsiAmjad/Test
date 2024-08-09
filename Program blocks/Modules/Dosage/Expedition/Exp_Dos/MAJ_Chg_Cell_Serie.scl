@@ -1,0 +1,29 @@
+﻿FUNCTION "MAJ_Chg_Cell_Serie" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      Pt_Zs_Enc : "S_Suivi_Dosage";
+      Num_Zone_Enc : SInt;
+   END_VAR
+
+   VAR_TEMP 
+      i : SInt;
+   END_VAR
+
+
+BEGIN
+	FOR #i := 0 TO "Nbr_Max_Lots" DO
+	    IF ("DB_Data_Dosage"."THIS"[#i]._Cel_Dest = #Pt_Zs_Enc._Cel_Dest) AND
+	        ("DB_Data_Dosage"."THIS"[#i]._SuiviCommun._CdMat = #Pt_Zs_Enc._SuiviCommun._CdMat) AND
+	        ("DB_Data_Dosage"."THIS"[#i]._SuiviCommun._CdForm = #Pt_Zs_Enc._SuiviCommun._CdForm) AND
+	        ("DB_Data_Dosage"."THIS"[#i]._SuiviCommun._Version = #Pt_Zs_Enc._SuiviCommun._Version) AND
+	        ("DB_Data_Dosage"."THIS"[#i]._SuiviCommun._Repart = #Pt_Zs_Enc._SuiviCommun._Repart) AND
+	        #i<> #Num_Zone_Enc THEN
+	        "DB_Data_Dosage"."THIS"[#i]._Cel_Dest := #Pt_Zs_Enc._Cel_Dest;
+	
+	    END_IF;
+	END_FOR;
+	
+	
+END_FUNCTION
+

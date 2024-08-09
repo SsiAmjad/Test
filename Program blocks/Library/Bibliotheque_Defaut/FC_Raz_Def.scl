@@ -1,0 +1,12 @@
+﻿FUNCTION "FC_Raz_Def" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Index_Def : USInt;
+   END_VAR
+
+
+BEGIN
+	"DB_BIBLIOTHEQUE".Defaut[#Index_Def].Reponse_Lue := true;
+END_FUNCTION
+

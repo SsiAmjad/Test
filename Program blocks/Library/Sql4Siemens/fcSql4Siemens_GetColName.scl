@@ -1,0 +1,45 @@
+﻿FUNCTION "fcSql4Siemens_GetColName" : WString
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      diColumn : DInt;
+   END_VAR
+
+   VAR_IN_OUT 
+      stSql4SiemensInterface : "utSql4SiemensInterface";
+   END_VAR
+
+   VAR_TEMP 
+      diOffset : DInt;
+      iLength : Int;
+      sValue : WString[300];
+      xRet : Bool;
+   END_VAR
+
+
+BEGIN
+	// +------------------------------------------------------------------------------------------------------------------+
+	// | The method returns the column name by the parameter "diCol". (PARAMETERS ARE ZERO BASED)                         |
+	// +------------------------------------------------------------------------------------------------------------------+
+	
+	// +-------------+-------------+-------------+------------------------------------------------------------------------+
+	// | Version     | Date        | Author      | Comment                                                                |
+	// +-------------+-------------+-------------+------------------------------------------------------------------------+
+	// | 4.0.0.0     | 13.06.2019  | BaM         | Initial version                                                        |
+	// +-------------+-------------+-------------+------------------------------------------------------------------------+
+	
+	#sValue :=STRING_TO_WSTRING('');
+	IF (#diColumn >= 0) AND (#diColumn < #stSql4SiemensInterface.cdiResponseColumnSize) THEN
+	  // Read the offset position and length on the response buffer
+	  #diOffset := #stSql4SiemensInterface.adiResponseColumnName[#diColumn].diOffset;
+	  #iLength := #stSql4SiemensInterface.adiResponseColumnName[#diColumn].iLength;
+	  // Read the column name
+	  IF (#diOffset > 0) AND (#iLength > 0) THEN
+	      #xRet := "fcSql4Siemens_ReadString"(diOffset := #diOffset, iLength := #iLength, WsValue => #sValue, stSql4SiemensInterface := #stSql4SiemensInterface);
+	  END_IF;
+	END_IF;
+	
+	// Return the result
+	#fcSql4Siemens_GetColName := #sValue;
+END_FUNCTION
+

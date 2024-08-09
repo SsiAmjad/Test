@@ -1,0 +1,50 @@
+﻿FUNCTION "RECH_TRANSF" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      fgbase : Bool;
+   END_VAR
+
+
+BEGIN
+	(*      
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	                                                                        ╔════════════════════════════════════╗
+	                                                                        ║            TRANSFERT MP            ║
+	                                                                        ╚════════════════════════════════════╝
+	 *************************************** *************************************** *************************************** *************************************** ***************************************
+	*)
+	//  "DB_TRANSFERT".TRANSF[0]._pm := "PM1_REC1";
+	//  "DB_TRANSFERT".TRANSF[0]._pm2 := "PM2_REC1"; 
+	
+	
+	(* "Lect_Plan_Tra"(Marche_Transfert:= "_fgTestLot1" , //"R_TRIG_DB".Q OR
+	                fgbase:="GprodTransfert1"._PtModuleTransf.TransfCommun.CommunGeneral._FgBase,
+	                GprodTransfert:="GprodTransfert1"); *)
+	"TRAIT_TRANSF"(Fg_Base:=#fgbase,
+	               PT_Suiv_Trans=>"DB_PTSUIV_TRANSF"."THIS"[0],
+	               Pt_Gprod_Trans:="GprodTransfert1");
+	"Transfert"(PtSuiv:="DB_PTSUIV_TRANSF"."THIS"[0],
+	            fgbase:=#fgbase,
+	            Transf:= "DB_TRANSFERT".TRANSF[0]);
+	"Masquage_Cntrl_NH"(Duree :=  "DB_TRANSFERT".TRANSF[0]._TpMaskNh,
+	                    TpsPicke :=  "DB_TRANSFERT".TRANSF[0]._TransfCommun.CommunGeneral._TpsPicke,
+	                    FgMaskCtrlNh :=  "DB_TRANSFERT".TRANSF[0]._FgMaskCtrlNh);
+	"Calcul_Quantité"(ParCal:= "DB_TRANSFERT".TRANSF[0]._TransfCommun.CommunGeneral._ParCal );
+	"Calcul_Temps"(PARCAL :=  "DB_TRANSFERT".TRANSF[0]._TransfCommun.CommunGeneral._ParCal);
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+END_FUNCTION
+

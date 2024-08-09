@@ -1,0 +1,32 @@
+﻿FUNCTION "Masquage_Cntrl_NH" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Duree : Time;
+   END_VAR
+
+   VAR_IN_OUT 
+      TpsPicke : Date_And_Time;
+      FgMaskCtrlNh : Bool;
+   END_VAR
+
+   VAR_TEMP 
+      Ret_RD_Sys_T : Int;
+      TpsPasse : Time;
+      ret : Bool;
+   END_VAR
+
+
+BEGIN
+	IF #FgMaskCtrlNh = FALSE THEN
+	    #Ret_RD_Sys_T := RD_SYS_T(#TpsPicke);
+	END_IF;
+	
+	IF #FgMaskCtrlNh THEN
+	    #ret := "Tempo"(Duree := #Duree, Tps_Picke := #TpsPicke, Anticip := (#FgMaskCtrlNh = FALSE), Tps_Passe => #TpsPasse);
+	    IF #ret THEN
+	        #FgMaskCtrlNh := FALSE;
+	    END_IF;
+	END_IF;
+END_FUNCTION
+
